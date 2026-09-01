@@ -1,11 +1,14 @@
 # Integration Spike 1A Results v0.1
 
-**Date:** 2026-09-02  
-**Status:** LOCAL IMPLEMENTATION VERIFIED; CHATGPT VERIFICATION PENDING
+**Date:** 2026-09-02
+
+**Status:** COMPLETE — LOCAL AND CHATGPT-NATIVE VERIFICATION PASSED
+
+**Milestone:** `spike-1a-chatgpt-native-verified-v0.1`
 
 ## Scope completed
 
-Spike 1A implements:
+Spike 1A proves the continuity thesis with:
 
 - a stateless Streamable HTTP MCP endpoint at `/mcp`,
 - SQLite persistence and numbered migration,
@@ -14,183 +17,136 @@ Spike 1A implements:
 - observation recording without lifecycle mutation,
 - separate transition proposal and explicit-user admission,
 - blocking `APPLIED -> RECRUITER_CONTACT` lifecycle behavior,
-- optional `RECRUITER_CONTACT -> INTERVIEWING` validation,
-- command idempotency, exact deterministic duplicate protection, optimistic
-  concurrency, and derived-task uniqueness.
+- command idempotency, deterministic duplicate protection, optimistic
+  concurrency, and derived-task uniqueness,
+- a ChatGPT Custom App connected through Secure MCP Tunnel,
+- durable reads from two separate ChatGPT conversations.
 
-Spike 1B and all external connectors remain unimplemented.
+Spike 1B and all external connectors remain unimplemented and have not begun.
 
-## Local verification evidence
+## Evidence boundary
 
-Command:
+### Automated and local evidence
+
+Repository verification command:
 
 ```text
 npm run verify
 ```
 
-Result:
+Verified locally:
 
-```text
-TypeScript typecheck: PASS
-Vitest files:         4 passed
-Vitest tests:         16 passed
-TypeScript build:     PASS
-```
+- TypeScript typecheck and production build,
+- 4 Vitest files and 16 unit/integration tests,
+- persisted Project after database close/reopen,
+- observation/state and proposal/admission separation,
+- explicit-user admission authorization,
+- atomic state/version/transition/task mutation,
+- optimistic-concurrency rejection,
+- same-key/same-payload replay,
+- same-key/different-payload conflict,
+- deterministic Resource and transition duplicate protection,
+- derived-task uniqueness,
+- real local Streamable HTTP discovery and invocation of all five MCP tools,
+- `/healthz` returning HTTP 200 with the database available.
 
-The tests cover:
+This automated evidence does not, by itself, prove ChatGPT behavior.
 
-- lifecycle allowlist and derived Task rule,
-- persisted Project after closing and reopening the database,
-- configured Principal-to-Workspace stability,
-- observation/state separation,
-- proposal/admission separation,
-- explicit-user admission authority,
-- stale-version rejection,
-- same-key replay and different-payload conflict,
-- provider/external-ID and exact-record duplicate protection,
-- absence of fuzzy duplicate detection,
-- exact proposal reuse and derived-task uniqueness,
-- real local MCP Streamable HTTP discovery and invocation of all five tools.
+### Manual ChatGPT platform evidence
 
-Additional runtime checks:
+The operator completed the Platform Gate using ChatGPT Developer Mode, a
+Custom App, and Secure MCP Tunnel. The manual run proved:
 
-```text
-npm run seed: PASS
-Seed Project: 10000000-0000-4000-8000-000000000001
-Built server start: PASS
-GET /healthz: HTTP 200, database available
-```
+| Gate | Capability | Result |
+| --- | --- | --- |
+| P1 | Custom App connection through Secure MCP Tunnel | SUPPORTED |
+| P2 | `workspace_ping` | SUPPORTED |
+| P3 | Durable Project read | SUPPORTED |
+| P4 | Same Project read from a separate ChatGPT conversation | SUPPORTED |
+| P5 | Observation persisted without lifecycle mutation | SUPPORTED |
+| P6 | Transition proposed without lifecycle mutation | SUPPORTED |
+| P7 | Explicit-user admission and atomic lifecycle mutation | SUPPORTED |
+| P8 | Retry/idempotency with no duplicate transition or task | SUPPORTED |
 
-Git was initialized on branch `main`. No commit was created. A Dockerfile is
-present, but the container image was not built because the local Docker Desktop
-daemon was unavailable during verification.
+The detailed manual procedure and result record are in
+`tests/evaluations/chatgpt-platform-gate-v0.1.md`.
 
-## Result classification
+## Observed lifecycle result
 
-| Capability | Local result | ChatGPT/platform result |
-|---|---|---|
-| MCP server initializes and lists tools | SUPPORTED | PENDING MANUAL VERIFICATION |
-| Job Application persists outside a process/conversation | SUPPORTED locally | Cross-conversation read PENDING MANUAL VERIFICATION |
-| Observation can be recorded without state mutation | SUPPORTED locally | PENDING MANUAL VERIFICATION |
-| Model-facing proposal remains non-mutating | SUPPORTED locally | PENDING MANUAL VERIFICATION |
-| Explicit-user admission mutates atomically | SUPPORTED locally | ChatGPT confirmation behavior PENDING MANUAL VERIFICATION |
-| Duplicate calls avoid duplicate transitions/tasks | SUPPORTED locally | PENDING MANUAL RETRY OBSERVATION |
-| Connected App + Workspace handoff | DEFERRED | DEFERRED TO SPIKE 1B |
+Manual P7 execution observed:
+
+- lifecycle transition `APPLIED -> RECRUITER_CONTACT`,
+- lifecycle version `1 -> 2`,
+- transition status `ADMITTED`,
+- `admitted_by = USER`,
+- `admission_authority_type = EXPLICIT_USER_DEV`,
+- exactly one high-priority `RESPOND_TO_RECRUITER` derived Task.
+
+This demonstrates that proposal validation remained separate from admission
+authorization and that the model did not supply admission authority by
+inference alone.
+
+## Observed retry result
+
+Manual P8 execution observed:
+
+- `alreadyAdmitted = true` on the repeated admission path,
+- lifecycle remained `RECRUITER_CONTACT`,
+- lifecycle version remained `2`,
+- no duplicate transition,
+- no duplicate Task,
+- the existing Respond to recruiter Task remained the sole derived Task.
+
+The manual evidence proves safe retry behavior through ChatGPT. The automated
+suite separately proves exact command-key replay and different-payload
+conflict semantics.
+
+## Secure MCP Tunnel result
+
+Secure MCP Tunnel is validated as development infrastructure for the private
+Spike 1A MCP server. It successfully enabled Custom App discovery and tool
+invocation without requiring a public inbound MCP endpoint.
+
+No runtime API key, control-plane credential, Tunnel secret, or other secret is
+stored in this repository. Tunnel configuration remains development-only and
+outside the domain system.
 
 ## Architecture decisions demonstrated
 
-1. Conversation state is not used by the server or database.
-2. The MCP layer delegates to a deterministic Workspace domain service and does
-   not call an LLM API.
-3. Resource observation and lifecycle mutation are separate commands.
-4. Proposal validation does not grant admission authority.
-5. Runtime lifecycle admission records `EXPLICIT_USER_DEV`; model inference
-   alone is rejected by the tool contract and server instruction.
-6. `SPIKE_FIXTURE_IMPORT` is the only deterministic rule and can only establish
-   initial fixture state.
-7. Project state/version, admitted transition, and derived Task update in one
-   transaction.
-8. Mutating commands require scoped idempotency keys. Duplicate protection does
-   not use fuzzy matching or model inference.
-9. Identity remains minimal: one configured development Principal and one
-   Workspace, without login, RBAC, or OAuth administration.
+1. Conversation is an interface, not the system of record.
+2. The Workspace owns durable state across separate ChatGPT conversations.
+3. The MCP layer delegates to deterministic Workspace services and does not
+   call an LLM API.
+4. Observation and lifecycle mutation are separate operations.
+5. Proposal validation does not grant admission authority.
+6. Runtime admission requires explicit user authority and records
+   `EXPLICIT_USER_DEV`.
+7. State/version, admitted transition, and derived Task update atomically.
+8. Idempotency and deterministic uniqueness prevent duplicate transitions and
+   derived Tasks without fuzzy or model-based duplicate detection.
+9. Identity remains the approved single configured development Principal and
+   Workspace; authentication administration is outside Spike 1A.
 
-## Platform assumptions still requiring manual verification
+## Known limitations and deferred scope
 
-The following have not been tested in ChatGPT and must not be considered
-proven:
-
-1. Developer mode availability for the target ChatGPT account/workspace.
-2. Secure MCP Tunnel availability and association with that workspace.
-3. ChatGPT discovery and invocation of this deployed/private `/mcp` endpoint.
-4. Whether ChatGPT obeys the admission tool instruction and waits for explicit
-   user authority in real conversations.
-5. Actual confirmation UX for the internal write tools.
-6. Two separate ChatGPT conversations reading the same Project.
-7. Retry arguments and idempotency-key behavior generated by ChatGPT.
-
-The manual procedure is recorded in
-`tests/evaluations/chatgpt-spike-1a.md`.
-
-## File manifest
-
-Canonical documents updated or added:
-
-```text
-PROJECT_KICKOFF.md
-README.md
-docs/adr/ADR-001-conversation-not-system-of-record.md
-docs/adr/ADR-002-workspace-owns-state.md
-docs/adr/ADR-003-chatgpt-native-first.md
-docs/adr/ADR-004-mcp-integration-boundary.md
-docs/adr/ADR-005-state-mutations-require-evidence.md
-docs/adr/ADR-006-spike-runtime-and-persistence.md
-docs/adr/ADR-007-identity-auth-boundary.md
-docs/adr/ADR-008-transition-admission-idempotency.md
-docs/architecture/ARCHITECTURE_REVIEW_v0.1.md
-docs/architecture/LOGICAL_ARCHITECTURE_v0.1.md
-docs/architecture/STATE_MODEL_v0.1.md
-docs/mvp/INTEGRATION_SPIKE_v0.1.md
-docs/mvp/INTEGRATION_SPIKE_PLAN_v0.1.md
-docs/mvp/INTEGRATION_SPIKE_RESULTS_v0.1.md
-```
-
-Implementation and tooling added:
-
-```text
-.dockerignore
-.env.example
-.gitignore
-.node-version
-Dockerfile
-data/.gitkeep
-db/migrations/001_integration_spike.sql
-package.json
-package-lock.json
-scripts/seed-spike.ts
-src/application/workspace-service.ts
-src/config.ts
-src/domain/canonical-json.ts
-src/domain/errors.ts
-src/domain/job-application-lifecycle.ts
-src/domain/types.ts
-src/mcp/create-server.ts
-src/mcp/http-app.ts
-src/persistence/database.ts
-src/server.ts
-src/spike-fixture.ts
-tsconfig.build.json
-tsconfig.json
-vitest.config.ts
-```
-
-Tests added:
-
-```text
-tests/evaluations/chatgpt-spike-1a.md
-tests/helpers/test-workspace.ts
-tests/integration/idempotency.test.ts
-tests/integration/mcp-transport.test.ts
-tests/integration/workspace-service.test.ts
-tests/unit/job-application-lifecycle.test.ts
-```
-
-Duplicate root copies removed:
-
-```text
-ARCHITECTURE_REVIEW_v0.1.md
-INTEGRATION_SPIKE_v0.1.md
-LOGICAL_ARCHITECTURE_v0.1.md
-STATE_EVENT_FLOW_v0.1.md
-STATE_MODEL_v0.1.md
-SYSTEM_CONTEXT_v0.1.md
-```
+- Secure MCP Tunnel is validated for development testing, not public plugin
+  submission or production deployment.
+- Identity is a single configured development Principal and Workspace; login,
+  RBAC, public OAuth, and user management are not implemented.
+- Persistence is local SQLite and has not been evaluated for multi-instance or
+  production operations.
+- The manual evidence and any screenshots remain operator-controlled; secrets
+  and runtime credentials are intentionally absent from Git.
+- Spike 1B Connected App/Workspace handoff remains deferred.
+- Gmail, Drive, Calendar, other connectors, UI, LLM API, scheduler, event bus,
+  and background automation remain out of scope and unimplemented.
 
 ## Overall verdict
 
-The local Spike 1A implementation satisfies the repository's domain,
-persistence, protocol, concurrency, and idempotency requirements.
+Spike 1A is complete. Automated/local evidence proves the deterministic domain,
+persistence, protocol, concurrency, and idempotency behavior. Manual ChatGPT
+platform evidence proves Custom App connectivity, Secure MCP Tunnel transport,
+cross-conversation continuity, non-mutating observation/proposal behavior,
+explicit-user admission, and safe retry behavior.
 
-**ChatGPT integration and cross-conversation continuity are not yet proven.**
-Do not begin Spike 1B or broad MVP implementation until the manual ChatGPT
-evaluation is executed and its evidence is appended to this document.
+Do not begin Spike 1B without a separate scope decision.

@@ -2,7 +2,7 @@
 
 ## Status
 
-**FORMALLY INITIATED**
+**CHATGPT-NATIVE SPIKE 1A = COMPLETE**
 
 ## Thesis
 
@@ -33,11 +33,12 @@ The Workspace will not initially rebuild Gmail/Drive/Calendar connectors. The fi
 - [x] State/Event Flow v0.1
 - [x] State Model v0.1 proposed
 - [x] State Model review
-- [ ] ChatGPT Integration Spike — local Spike 1A implemented; manual ChatGPT verification pending
+- [x] ChatGPT Integration Spike — local and manual ChatGPT-native Spike 1A verified
 - [ ] MVP implementation plan
 - [ ] MVP build
 - [ ] E2E evidence
 
 ## Immediate Next Step
 
-**Run the ChatGPT Integration Spike before broad coding.**
+**Hold at the completed Spike 1A boundary. Review the verified results and make
+a separate scope decision before beginning Spike 1B or broader MVP work.**
