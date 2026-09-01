@@ -4,6 +4,8 @@
 
 **CHATGPT-NATIVE SPIKE 1A = COMPLETE**
 
+**SPIKE 1B = DESIGNED, NOT IMPLEMENTED, PLATFORM GATE NOT RUN**
+
 ## Thesis
 
 > Build a persistent work-state layer for ChatGPT that turns conversations and external events into long-running goals, projects, tasks, actions, and outcomes.
@@ -34,11 +36,15 @@ The Workspace will not initially rebuild Gmail/Drive/Calendar connectors. The fi
 - [x] State Model v0.1 proposed
 - [x] State Model review
 - [x] ChatGPT Integration Spike — local and manual ChatGPT-native Spike 1A verified
+- [x] Spike 1B architecture review and smallest-scope design
+- [ ] Spike 1B implementation
+- [ ] Spike 1B manual ChatGPT cross-app platform gate
 - [ ] MVP implementation plan
 - [ ] MVP build
 - [ ] E2E evidence
 
 ## Immediate Next Step
 
-**Hold at the completed Spike 1A boundary. Review the verified results and make
-a separate scope decision before beginning Spike 1B or broader MVP work.**
+**Review and approve the documented Spike 1B plan. If approved, implement only
+the narrow Job Application lookup delta, then run the manual Gmail -> ChatGPT ->
+Workspace platform gate. Do not add a Gmail connector or broader MVP scope.**

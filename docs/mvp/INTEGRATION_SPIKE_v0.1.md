@@ -15,10 +15,15 @@ Validate the critical ChatGPT-native assumptions before writing the full MVP.
 - separate transition proposal and admission
 - command idempotency and derived-task uniqueness
 
-### Spike 1B — deferred
+### Spike 1B — designed, not implemented
 
 - Connected App + Workspace orchestration
 - cross-app structured handoff
+- one narrow, read-only Job Application lookup by exact company and role
+
+Spike 1B preserves ChatGPT as the cross-app orchestration and reasoning host.
+Gmail remains authoritative for email facts, and Workspace does not implement a
+Gmail connector. See `INTEGRATION_SPIKE_1B_PLAN_v0.1.md`.
 
 Spike 1A must not implement Gmail, Drive, Calendar, or other external
 connectors. Test 3 below belongs to Spike 1B and is non-blocking for Spike 1A.
@@ -60,6 +65,15 @@ Prompt concept:
 - ChatGPT uses the source app,
 - ChatGPT uses the Workspace app,
 - both results participate in one reasoning flow.
+
+The Workspace lookup step uses:
+
+```text
+workspace_find_job_application(company, role)
+```
+
+It performs exact normalized matching within the configured Workspace and
+returns `EXACT`, `NOT_FOUND`, or `AMBIGUOUS`. It is not generic or fuzzy search.
 
 ## Test 4 — Cross-app handoff
 
@@ -123,5 +137,7 @@ NOT_SUPPORTED
 
 Do not build the broad MVP until these are known.
 
-For Spike 1A, Test 3 is recorded as `DEFERRED_TO_SPIKE_1B` rather than treated
-as an implementation failure.
+For Spike 1A, Test 3 was recorded as `DEFERRED_TO_SPIKE_1B` rather than treated
+as an implementation failure. Spike 1B remains `NOT_RUN` until its narrow tool
+delta is implemented and the Gmail + Workspace flow is manually exercised in
+ChatGPT.

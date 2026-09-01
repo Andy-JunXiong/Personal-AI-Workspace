@@ -1,6 +1,6 @@
 # State Model v0.1
 
-**Status:** ACCEPTED AS SPIKE 1A BASELINE
+**Status:** ACCEPTED AS SPIKE 1A BASELINE; SPIKE 1B ADDS NO SCHEMA
 
 ## 1. Key modeling decision
 
@@ -100,6 +100,34 @@ created_at: timestamp
 
 Default:
 **reference + relevant observed facts**, not full source replication.
+
+Spike 1B Gmail observation convention:
+
+```yaml
+resource_type: EMAIL
+provider: gmail
+external_id: <stable individual message ID>
+external_uri: <optional Gmail deep link>
+title: <minimal or sanitized subject>
+observed_at: <message timestamp>
+observed_facts:
+  contractVersion: gmail-job-observation-v0.1
+  sourceFacts:
+    receivedAt: timestamp
+    senderDomain: string?
+    threadId: string?
+  interpretation:
+    company: string
+    role: string
+    emailKind: RECRUITER_CONTACT | INTERVIEW_INVITATION | REJECTION | OTHER
+    summary: string
+    proposedInterviewAt: timestamp?
+```
+
+This is a payload convention, not a new entity or migration. `sourceFacts`
+records source-derived values while `interpretation` records ChatGPT's
+work-relevant reading. Do not persist full message bodies, HTML, attachments,
+threads, signatures, raw headers, tokens, or unrelated personal data.
 
 ### Action
 
@@ -272,3 +300,9 @@ Return:
 - blocked/high-priority work.
 
 `Today` is a derived view, not a domain object.
+
+### `workspace.find_job_application(company, role)`
+
+Proposed for Spike 1B. Return exact normalized matches in the current Workspace
+with an explicit `EXACT`, `NOT_FOUND`, or `AMBIGUOUS` status. This is a
+read-only lookup, not a domain object or generic search infrastructure.

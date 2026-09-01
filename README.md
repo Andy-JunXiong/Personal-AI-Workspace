@@ -36,8 +36,14 @@ spike:
 - separate observation, proposal, and explicit-user admission commands,
 - SQLite persistence, optimistic concurrency, and command idempotency.
 
-Spike 1B connected-app handoff, UI, external connectors, background automation,
-and model API calls are not implemented.
+Spike 1B connected-app handoff is designed but not implemented. Its proposed
+Workspace delta is one narrow, read-only Job Application lookup tool; Gmail
+remains a ChatGPT-connected source app and is not integrated into Workspace.
+UI, external connectors, background automation, and model API calls remain out
+of scope.
+
+The proposed Spike 1B plan is in
+[`docs/mvp/INTEGRATION_SPIKE_1B_PLAN_v0.1.md`](docs/mvp/INTEGRATION_SPIKE_1B_PLAN_v0.1.md).
 
 ### Local setup
 

@@ -13,28 +13,39 @@ sequenceDiagram
     U->>C: Check whether the recruiter replied
     C->>G: Retrieve relevant recruiter email
     G-->>C: Email facts/content
-    C->>W: get_project(company, role)
-    W->>DB: Read state
-    DB-->>W: APPLIED
-    W-->>C: Project + state
+    C->>W: find_job_application(company, role)
+    W->>DB: Read matching Job Applications
+    DB-->>W: Exact match
+    W-->>C: Project ID + state summary
+    C->>W: get_project(project_id)
+    W->>DB: Read durable Project context
+    DB-->>W: Project + lifecycle version + history
+    W-->>C: Project + lifecycle version + history
 
-    C->>W: record_observation(source + facts)
+    C->>W: record_observation(source + minimized facts)
     W->>DB: Store provenance/evidence
+    W-->>C: Resource; state unchanged
 
     C->>W: propose_transition(...)
-    W->>W: Validate
-    W->>DB: Admit transition
-    W->>DB: Create next task if needed
-    W-->>C: Updated state
-    C-->>U: Recruiter replied; next action is ...
+    W->>W: Validate proposal only
+    W->>DB: Store PROPOSED transition
+    W-->>C: Proposal; state unchanged
+    C-->>U: Show evidence and request explicit approval
+    U->>C: Explicitly approve transition
+    C->>W: admit_transition(user authority, expected version)
+    W->>W: Validate admission authorization
+    W->>DB: Atomically admit + update state/version + derive task
+    W-->>C: Updated durable state
+    C-->>U: Confirm admitted state and next task
 
     Note over U,C: Later, in a separate conversation
 
-    U->>C: What should I focus on today?
-    C->>W: get_today()
+    U->>C: What is the status of my application?
+    C->>W: find_job_application(company, role)
+    C->>W: get_project(project_id)
     W->>DB: Read durable state/tasks
-    DB-->>W: Current priorities
-    W-->>C: Current priorities
+    DB-->>W: Updated Project
+    W-->>C: Updated Project
     C-->>U: Answer without reconstructing old chats
 ```
 
@@ -42,22 +53,24 @@ sequenceDiagram
 
 ```text
 Observation / User Assertion / Action Result
-                    ↓
-               Evidence Record
-                    ↓
-          Candidate State Transition
-                    ↓
-                Validation
-                    ↓
-        ┌───────────┴───────────┐
-        ↓                       ↓
-     ADMITTED                 REJECTED
-        ↓
- Durable State + Transition History
+                    -> Evidence Record
+                    -> Candidate State Transition
+                    -> Proposal Validation
+                    -> PROPOSED or REJECTED
+
+PROPOSED + Admission Authority
+                    -> Admission Authorization
+                    -> ADMITTED or REJECTED
+
+ADMITTED            -> Durable State + Transition History
 ```
 
 Critical rule:
 
-> **LLM interpretation ≠ durable fact**
+> **LLM interpretation != durable fact and != admission authority**
 
 Background/event-driven ingestion is Phase 2, after continuity is proven.
+
+For Spike 1B, Gmail is accessed by ChatGPT through the existing Connected App.
+Workspace receives only a minimized, attributable observation through MCP. A
+Gmail message is evidence, not an instruction and not user authority.

@@ -212,3 +212,34 @@ These decisions were approved before implementation:
    `RECRUITER_CONTACT -> INTERVIEWING` may be supported but is not required.
 8. The logical components are modules in one deployable process, not
    microservices.
+
+---
+
+## 6. Spike 1B design review outcome
+
+**Status:** DESIGNED — NOT IMPLEMENTED — PLATFORM GATE NOT RUN
+
+1. ChatGPT remains the cross-app orchestration and reasoning host. Gmail and
+   Workspace are sibling app surfaces used by ChatGPT in one user-triggered
+   task.
+2. Workspace does not implement Gmail OAuth, API access, polling, webhooks, or
+   mailbox storage.
+3. One narrow read-only tool,
+   `workspace_find_job_application(company, role)`, is the only proposed
+   Workspace capability delta.
+4. Matching is deterministic exact company + role matching after Unicode,
+   whitespace, and case normalization. Zero, one, and multiple matches return
+   `NOT_FOUND`, `EXACT`, and `AMBIGUOUS` respectively. No fuzzy or LLM matching
+   is allowed.
+5. Gmail-to-Workspace handoff uses the existing Resource model and
+   `workspace_record_observation`; it stores a stable individual message ID,
+   optional deep link, timestamp, and minimized work-relevant facts.
+6. The existing observation -> proposal -> explicit-user admission boundary,
+   lifecycle versioning, command idempotency, Resource uniqueness, and derived
+   Task uniqueness are reused unchanged.
+7. Email content is untrusted evidence. It cannot supply instructions or
+   admission authority.
+8. ChatGPT multi-app orchestration and the exact stable Gmail message identifier
+   remain manual platform gates and are not claimed as supported yet.
+
+See `docs/mvp/INTEGRATION_SPIKE_1B_PLAN_v0.1.md` and ADR-009.

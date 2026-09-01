@@ -22,7 +22,8 @@ Spike 1A proves the continuity thesis with:
 - a ChatGPT Custom App connected through Secure MCP Tunnel,
 - durable reads from two separate ChatGPT conversations.
 
-Spike 1B and all external connectors remain unimplemented and have not begun.
+Spike 1B architecture design is now documented separately. Its implementation,
+manual cross-app platform gate, and all external connectors remain unimplemented.
 
 ## Evidence boundary
 
@@ -137,7 +138,8 @@ outside the domain system.
   production operations.
 - The manual evidence and any screenshots remain operator-controlled; secrets
   and runtime credentials are intentionally absent from Git.
-- Spike 1B Connected App/Workspace handoff remains deferred.
+- Spike 1B Connected App/Workspace handoff is designed but not implemented or
+  manually validated.
 - Gmail, Drive, Calendar, other connectors, UI, LLM API, scheduler, event bus,
   and background automation remain out of scope and unimplemented.
 
@@ -149,4 +151,5 @@ platform evidence proves Custom App connectivity, Secure MCP Tunnel transport,
 cross-conversation continuity, non-mutating observation/proposal behavior,
 explicit-user admission, and safe retry behavior.
 
-Do not begin Spike 1B without a separate scope decision.
+These Spike 1A results remain frozen. Spike 1B planning and future evidence are
+tracked separately and do not alter the completed Spike 1A result.

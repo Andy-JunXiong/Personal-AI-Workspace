@@ -40,39 +40,31 @@ flowchart TB
     PROV --> DB
 ```
 
-## Initial ChatGPT-facing capability surface
+## ChatGPT-facing capability surface
 
-Keep it small:
-
-```text
-workspace.get_today()
-workspace.get_project()
-workspace.search_projects()
-workspace.create_job_application()
-workspace.record_observation()
-workspace.propose_transition()
-workspace.create_task()
-workspace.complete_task()
-```
-
-Prefer domain actions over low-level CRUD.
-
-Bad:
+### Verified Spike 1A surface
 
 ```text
-set_project_field(...)
-update_database_row(...)
+workspace_ping
+workspace_get_project
+workspace_record_observation
+workspace_propose_transition
+workspace_admit_transition
 ```
 
-Better:
+### Proposed Spike 1B delta
 
 ```text
-record_recruiter_contact(...)
-record_interview_scheduled(...)
-record_application_outcome(...)
+workspace_find_job_application(company, role)
 ```
 
-The final tool granularity is an Integration Spike decision.
+This is a read-only domain lookup for the cross-app handoff. It uses exact
+normalized company + role matching inside the current Workspace and returns an
+explicit `EXACT`, `NOT_FOUND`, or `AMBIGUOUS` result. It is not a generic search
+service and does not use fuzzy or model-based matching.
+
+Broader tools such as `workspace_get_today`, project creation, task mutation,
+and general search remain unapproved future scope.
 
 ## Deliberately absent in MVP
 
@@ -111,3 +103,13 @@ workspace_admit_transition
 
 `workspace_admit_transition` records user authority; its name does not assign
 admission authority to ChatGPT.
+
+## Spike 1B deployment interpretation
+
+Spike 1B reuses the verified Spike 1A server, persistence, identity mapping,
+Secure MCP Tunnel development path, and write tools. The only proposed server
+capability change is `workspace_find_job_application`.
+
+Gmail access remains on the ChatGPT Connected App side. No Gmail client,
+provider OAuth, email table, polling process, or second orchestration layer is
+added to Workspace.
