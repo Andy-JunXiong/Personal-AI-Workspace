@@ -1,6 +1,6 @@
 # Real Job Search MVP Plan v0.1
 
-**Status:** APPROVED WITH MODIFICATIONS — M1 LOCAL FIX VERIFIED; PLATFORM RETEST PENDING
+**Status:** APPROVED WITH MODIFICATIONS — SLICE M1 COMPLETE; M2 NOT STARTED
 
 ## 1. Product objective and scope rule
 
@@ -127,6 +127,12 @@ adding schema.
 ## 5. Acceptance gates
 
 ### M1 gate
+
+**Result:** COMPLETE. Local automated verification passed, the original
+duplicate-protection defect was remediated, and the successful fresh-DB
+ChatGPT platform rerun supports creation, listing, metadata update, record
+versioning, lifecycle isolation, and exact active duplicate protection. See
+`REAL_JOB_SEARCH_M1_RESULTS_v0.1.md`.
 
 1. Create persists one real Job Application without fixture APIs.
 2. Creation is command-idempotent and records explicit authority for the

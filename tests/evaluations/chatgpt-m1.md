@@ -1,13 +1,47 @@
 # ChatGPT M1 Smoke Evaluation
 
-**Current status:** M1 duplicate-protection smoke gate = FAILED / DEFECT FOUND
+**Current status:** SUPPORTED — Slice M1 overall COMPLETE
 
-M1 is not ChatGPT-integration complete. Do not begin M2 until the defect fix is
-deployed against a fresh external DB and this gate passes.
+## Final status
 
-## Defect evidence
+| Gate | Result |
+| --- | --- |
+| M1 local implementation | COMPLETE |
+| M1 ChatGPT platform integration | SUPPORTED |
+| M1 duplicate protection | SUPPORTED |
+| Slice M1 overall | COMPLETE |
 
-The controlled smoke database contained one active application:
+Automated/local evidence and manual ChatGPT platform evidence are separate.
+The platform result does not expand the scope of the automated assertions.
+
+## Automated and local evidence
+
+The final M1 suite verifies:
+
+- user-authorized creation at `APPLIED` with an attributable initial admitted
+  transition;
+- command idempotency;
+- Workspace-scoped, active-by-default listing and exact lookup;
+- narrow registration metadata updates with optimistic concurrency;
+- `recordVersion` increments without changing lifecycle state, lifecycle
+  version, or Project status;
+- bounded Project readback;
+- exact active duplicate detection after NFKC, whitespace, and case
+  normalization;
+- zero writes for a blocked duplicate, including no Project, transition, or
+  idempotency record;
+- separation of ordinary creation authority from duplicate-override authority;
+- the structured distinct-duplicate contract, including invalid partial
+  overrides, a different sanitized posting reference, and idempotent retry;
+- runtime DB path enforcement outside the repository and OneDrive; and
+- all frozen Spike 1A and Spike 1B behavior.
+
+At finalization, `npm run verify` and `git diff --check` passed. The exact final
+test counts are recorded in the M1 results document and milestone commit.
+
+## Original platform defect
+
+The first ChatGPT smoke run contained one active controlled application:
 
 ```text
 M1 Test Co — AI Platform Engineer
@@ -34,52 +68,68 @@ evidence reconstructs the effective second request as:
 }
 ```
 
-The three optional registration fields were absent or explicit `null`; the
-pre-fix normalization and request hash do not preserve that distinction. No
+The optional registration fields were absent or explicit `null`; the pre-fix
+normalization and request hash did not preserve that distinction. No
 duplicate-override field existed in the schema or request.
 
-## Remediation status
+### Root cause
 
-The server-side guard and regression suite pass locally. A fixed server is
-running against a new database under
-`%LOCALAPPDATA%\PersonalAIWorkspace\data\`; the failed smoke database was not
-reused. ChatGPT tool metadata was refreshed and now exposes the structured
-`allowDistinctDuplicate` contract.
+`createJobApplication` normalized registration metadata and then entered the
+idempotent write path without querying for an exact active company and role.
+The exact lookup normalization was correct but was not used by creation.
+Creation had no active-status duplicate filter and the MCP schema had no
+separate structured override boundary. Idempotency protected only retries with
+the same key, while the second ChatGPT request used a new key.
 
-The first platform retest create reached Workspace and produced exactly one
-synthetic active Project, one initial transition, and one idempotency record.
-ChatGPT then showed a temporary request-rate limit before returning the final
-conversation response, so the remaining list, update, and duplicate scenarios
-were not executed. The platform gate therefore remains failed/pending and must
-not be recorded as passed from this partial evidence.
+ADR-010 also contained an incompatible assumption that exact duplicates could
+be created and surfaced later as `AMBIGUOUS`. That architecture drift was
+corrected.
 
-## Fresh-DB retest gate
+### Remediation
 
-Use a new DB filename outside the repository and OneDrive. Do not copy or reuse
-the failed smoke DB.
+The server now:
 
-1. Start the fixed server with `PAW_DB_PATH` pointing to the fresh DB.
-2. Refresh the Personal AI Workspace app/tool metadata in ChatGPT and confirm
-   `workspace_create_job_application` exposes optional
-   `allowDistinctDuplicate` with literal value `true`.
-3. Create `M1 Retest Co — AI Reliability Engineer` with applied date, location,
-   explicit creation authority, and no duplicate override. Expect `CREATED`.
-4. List applications. Expect exactly one matching active Project.
-5. Update only its location using `expectedRecordVersion`. Confirm lifecycle
-   remains `APPLIED` version 1 and registration `recordVersion` increments.
-6. From a separate ChatGPT conversation, create the same company + role using
-   only explicit creation authority. Expect `POSSIBLE_DUPLICATE`; capture the
-   exact tool arguments/result.
-7. List again. Expect exactly one matching active Project and no extra initial
-   transition or idempotency record from the blocked duplicate attempt.
-8. Call create with `allowDistinctDuplicate=true` but no `postingReference`.
-   Expect a validation error and zero writes.
-9. Supply a different sanitized synthetic posting URL but omit
-   `allowDistinctDuplicate`. Expect `POSSIBLE_DUPLICATE` and zero writes.
-10. Only after an explicit user instruction to create a distinct second
-    application, call with `allowDistinctDuplicate=true` and the different
-    synthetic posting URL. Expect `CREATED`.
-11. Retry step 10 with identical arguments and idempotency key. Expect
-    `replayed=true` and exactly two matching Projects total.
+- returns `POSSIBLE_DUPLICATE` for an exact active match before writing;
+- repeats the duplicate check inside the write transaction;
+- performs zero writes for the blocked attempt;
+- treats creation authority and duplicate-override authority as separate;
+- accepts a deliberate distinct duplicate only with both
+  `allowDistinctDuplicate=true` and a different sanitized `postingReference`;
+  and
+- preserves idempotent replay for a previously valid command.
 
-Record the gate as PASS only after all steps succeed on the fresh external DB.
+ChatGPT MCP metadata was refreshed and confirmed to expose the new structured
+flag and the duplicate-protection description.
+
+## Manual ChatGPT platform evidence
+
+The final canonical smoke used a fresh SQLite database under the configured
+`PAW_DB_PATH` boundary outside both the repository and OneDrive. The failed
+smoke database was not reused. Only controlled synthetic application data was
+used.
+
+| Platform scenario | Observed result |
+| --- | --- |
+| Real Job Application creation | SUPPORTED |
+| Active application listing | SUPPORTED |
+| Registration metadata update | SUPPORTED |
+| Registration record version increment | SUPPORTED |
+| Lifecycle isolation during metadata update | SUPPORTED |
+| Exact active duplicate protection | SUPPORTED |
+
+For the duplicate retest, an active `M1 Test Co — AI Platform Engineer`
+application already existed. A second create request supplied ordinary explicit
+user creation authority only. Workspace detected the exact active duplicate,
+created no second application, and ChatGPT explained that a distinct second
+application requires a unique posting reference. Creation authority did not
+act as duplicate-override authority.
+
+The earlier temporary ChatGPT rate limit did not determine the final result;
+the successful fresh-DB rerun above is the canonical platform evidence.
+
+## Decision
+
+The original duplicate-protection platform defect is closed. M1 is locally
+complete, its ChatGPT platform integration and duplicate boundary are
+supported, and Slice M1 overall is complete. No M2 capability was implemented
+or verified as part of this milestone.
