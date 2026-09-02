@@ -4,6 +4,7 @@ import {
   ConcurrencyConflictError,
   IdempotencyConflictError,
   NotFoundError,
+  ValidationError,
 } from "../../src/domain/errors.js";
 import {
   createEmptyTestWorkspace,
@@ -26,7 +27,7 @@ function createApplication(
   service: WorkspaceService,
   idempotencyKey = "create-example-role",
 ) {
-  return service.createJobApplication({
+  const result = service.createJobApplication({
     company: "  Example   Co  ",
     role: " Software\tEngineer ",
     appliedDate: "2026-09-01",
@@ -40,6 +41,10 @@ function createApplication(
     },
     idempotencyKey,
   });
+  if (result.creationStatus !== "CREATED") {
+    throw new Error("Test setup unexpectedly found a duplicate");
+  }
+  return result;
 }
 
 describe("Real Job Search MVP Slice M1 inventory", () => {
@@ -127,10 +132,234 @@ describe("Real Job Search MVP Slice M1 inventory", () => {
     ).toThrow(IdempotencyConflictError);
   });
 
+  it("returns POSSIBLE_DUPLICATE with zero writes for the platform failure payload", () => {
+    const workspace = setup();
+    const existing = workspace.service.createJobApplication({
+      company: "M1 Test Co",
+      role: "AI Platform Engineer",
+      appliedDate: "2026-09-02",
+      location: "Sydney, NSW",
+      authority: {
+        type: "EXPLICIT_USER_DEV",
+        confirmed: true,
+        reference: "User explicitly requested the original application",
+      },
+      idempotencyKey: "create-original-m1-smoke-application",
+    });
+    expect(existing.creationStatus).toBe("CREATED");
+    const beforeChanges = (
+      workspace.database.prepare("SELECT total_changes() AS count").get() as {
+        count: number;
+      }
+    ).count;
+    const beforeCounts = {
+      projects: workspace.database
+        .prepare("SELECT COUNT(*) AS count FROM projects")
+        .get(),
+      transitions: workspace.database
+        .prepare("SELECT COUNT(*) AS count FROM state_transitions")
+        .get(),
+      idempotency: workspace.database
+        .prepare("SELECT COUNT(*) AS count FROM idempotency_records")
+        .get(),
+    };
+
+    const duplicate = workspace.service.createJobApplication({
+      company: "M1 Test Co",
+      role: "AI Platform Engineer",
+      authority: {
+        type: "EXPLICIT_USER_DEV",
+        confirmed: true,
+        reference:
+          "User explicitly requested creation of another active job application in this conversation.",
+      },
+      idempotencyKey:
+        "create-another-m1-test-co-ai-platform-engineer-20260902-turn-2",
+    });
+
+    expect(duplicate).toMatchObject({
+      creationStatus: "POSSIBLE_DUPLICATE",
+      matches: [{ projectId: expect.any(String) }],
+      replayed: false,
+    });
+    expect(
+      workspace.database.prepare("SELECT total_changes() AS count").get(),
+    ).toEqual({ count: beforeChanges });
+    expect(
+      workspace.database.prepare("SELECT COUNT(*) AS count FROM projects").get(),
+    ).toEqual(beforeCounts.projects);
+    expect(
+      workspace.database
+        .prepare("SELECT COUNT(*) AS count FROM state_transitions")
+        .get(),
+    ).toEqual(beforeCounts.transitions);
+    expect(
+      workspace.database
+        .prepare("SELECT COUNT(*) AS count FROM idempotency_records")
+        .get(),
+    ).toEqual(beforeCounts.idempotency);
+  });
+
+  it("normalizes company and role before applying the duplicate guard", () => {
+    const workspace = setup();
+    createApplication(workspace.service);
+
+    const duplicate = workspace.service.createJobApplication({
+      company: "  EXAMPLE   CO ",
+      role: " software\tengineer ",
+      authority: {
+        type: "EXPLICIT_USER_DEV",
+        confirmed: true,
+        reference: "Explicit creation authority is not duplicate override",
+      },
+      idempotencyKey: "normalized-duplicate-attempt",
+    });
+
+    expect(duplicate.creationStatus).toBe("POSSIBLE_DUPLICATE");
+    expect(
+      workspace.database.prepare("SELECT COUNT(*) AS count FROM projects").get(),
+    ).toEqual({ count: 1 });
+  });
+
+  it("applies the duplicate guard only to ACTIVE Projects", () => {
+    const workspace = setup();
+    const existing = createApplication(workspace.service);
+    workspace.database
+      .prepare("UPDATE projects SET status = 'CLOSED' WHERE id = ?")
+      .run(existing.project.id);
+
+    const replacement = workspace.service.createJobApplication({
+      company: "Example Co",
+      role: "Software Engineer",
+      authority: {
+        type: "EXPLICIT_USER_DEV",
+        confirmed: true,
+        reference: "User registered a new application after the prior one closed",
+      },
+      idempotencyKey: "create-after-closed",
+    });
+
+    expect(replacement.creationStatus).toBe("CREATED");
+    expect(
+      workspace.database.prepare("SELECT COUNT(*) AS count FROM projects").get(),
+    ).toEqual({ count: 2 });
+  });
+
+  it("rejects duplicate override without a distinguishing posting reference", () => {
+    const workspace = setup();
+    createApplication(workspace.service);
+    const before = (
+      workspace.database.prepare("SELECT total_changes() AS count").get() as {
+        count: number;
+      }
+    ).count;
+
+    expect(() =>
+      workspace.service.createJobApplication({
+        company: "Example Co",
+        role: "Software Engineer",
+        allowDistinctDuplicate: true,
+        authority: {
+          type: "EXPLICIT_USER_DEV",
+          confirmed: true,
+          reference: "User requested a distinct duplicate",
+        },
+        idempotencyKey: "override-without-reference",
+      }),
+    ).toThrow(ValidationError);
+    expect(
+      workspace.database.prepare("SELECT total_changes() AS count").get(),
+    ).toEqual({ count: before });
+  });
+
+  it("does not treat a posting reference as duplicate override by itself", () => {
+    const workspace = setup();
+    createApplication(workspace.service);
+
+    const result = workspace.service.createJobApplication({
+      company: "Example Co",
+      role: "Software Engineer",
+      postingReference: "https://jobs.example.test/roles/456?tracking=removed",
+      authority: {
+        type: "EXPLICIT_USER_DEV",
+        confirmed: true,
+        reference: "User requested application creation only",
+      },
+      idempotencyKey: "reference-without-override",
+    });
+
+    expect(result.creationStatus).toBe("POSSIBLE_DUPLICATE");
+    expect(
+      workspace.database.prepare("SELECT COUNT(*) AS count FROM projects").get(),
+    ).toEqual({ count: 1 });
+  });
+
+  it("creates and idempotently replays a valid distinct-duplicate override", () => {
+    const workspace = setup();
+    createApplication(workspace.service);
+    const input = {
+      company: "Example Co",
+      role: "Software Engineer",
+      postingReference: "https://jobs.example.test/roles/456?tracking=removed",
+      allowDistinctDuplicate: true as const,
+      authority: {
+        type: "EXPLICIT_USER_DEV" as const,
+        confirmed: true as const,
+        reference:
+          "User explicitly chose a second distinct application after the warning",
+      },
+      idempotencyKey: "valid-distinct-duplicate",
+    };
+
+    const created = workspace.service.createJobApplication(input);
+    const replay = workspace.service.createJobApplication(input);
+
+    expect(created).toMatchObject({
+      creationStatus: "CREATED",
+      project: {
+        metadata: {
+          postingReference: "https://jobs.example.test/roles/456",
+        },
+      },
+      replayed: false,
+    });
+    expect(replay).toMatchObject({
+      creationStatus: "CREATED",
+      replayed: true,
+    });
+    expect(
+      workspace.database.prepare("SELECT COUNT(*) AS count FROM projects").get(),
+    ).toEqual({ count: 2 });
+  });
+
+  it("rejects an override reference already used by an exact active match", () => {
+    const workspace = setup();
+    createApplication(workspace.service);
+
+    expect(() =>
+      workspace.service.createJobApplication({
+        company: "Example Co",
+        role: "Software Engineer",
+        postingReference:
+          "https://jobs.example.test/roles/123?different-tracking=value",
+        allowDistinctDuplicate: true,
+        authority: {
+          type: "EXPLICIT_USER_DEV",
+          confirmed: true,
+          reference: "User requested a second distinct application",
+        },
+        idempotencyKey: "same-reference-override",
+      }),
+    ).toThrow(/does not distinguish/u);
+    expect(
+      workspace.database.prepare("SELECT COUNT(*) AS count FROM projects").get(),
+    ).toEqual({ count: 1 });
+  });
+
   it("lists only this Workspace and excludes closed applications by default", () => {
     const workspace = setup();
     const active = createApplication(workspace.service, "create-active");
-    const closed = workspace.service.createJobApplication({
+    const closedResult = workspace.service.createJobApplication({
       company: "Closed Co",
       role: "Analyst",
       authority: {
@@ -140,6 +369,10 @@ describe("Real Job Search MVP Slice M1 inventory", () => {
       },
       idempotencyKey: "create-closed",
     });
+    if (closedResult.creationStatus !== "CREATED") {
+      throw new Error("Expected closed test application creation");
+    }
+    const closed = closedResult;
     workspace.database
       .prepare("UPDATE projects SET status = 'CLOSED' WHERE id = ?")
       .run(closed.project.id);

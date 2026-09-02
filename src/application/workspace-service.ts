@@ -132,9 +132,23 @@ export interface CreateJobApplicationInput {
   appliedDate?: string | null;
   location?: string | null;
   postingReference?: string | null;
+  allowDistinctDuplicate?: true;
   authority: ExplicitUserDevAuthority;
   idempotencyKey: string;
 }
+
+export type CreateJobApplicationResult =
+  | {
+      creationStatus: "CREATED";
+      project: ProjectRecord;
+      initialTransition: TransitionRecord;
+      replayed: boolean;
+    }
+  | {
+      creationStatus: "POSSIBLE_DUPLICATE";
+      matches: JobApplicationSummary[];
+      replayed: false;
+    };
 
 export interface UpdateJobApplicationInput {
   projectId: string;
@@ -195,6 +209,12 @@ interface ReplayableResult {
 
 const PROJECT_HISTORY_LIMIT = 10;
 const JOB_APPLICATION_LIST_LIMIT = 100;
+
+class PossibleDuplicateDetected extends Error {
+  constructor(readonly matches: JobApplicationSummary[]) {
+    super("An exact active Job Application already exists");
+  }
+}
 
 export class WorkspaceService {
   constructor(
@@ -359,11 +379,7 @@ export class WorkspaceService {
     return this.getProject(input.projectId);
   }
 
-  createJobApplication(input: CreateJobApplicationInput): {
-    project: ProjectRecord;
-    initialTransition: TransitionRecord;
-    replayed: boolean;
-  } {
+  createJobApplication(input: CreateJobApplicationInput): CreateJobApplicationResult {
     const identity = this.resolveDevelopmentIdentity();
     const authorityReference = input.authority.reference.trim();
     if (
@@ -379,6 +395,7 @@ export class WorkspaceService {
     const registration = normalizeJobApplicationRegistration(input);
     const payload = {
       ...registration,
+      allowDistinctDuplicate: input.allowDistinctDuplicate === true,
       authority: {
         type: input.authority.type,
         confirmed: input.authority.confirmed,
@@ -386,12 +403,51 @@ export class WorkspaceService {
       },
     };
 
-    return this.runIdempotent(
+    const replay = this.readIdempotentReplay<CreateJobApplicationResult>(
       identity.workspaceId,
       "workspace_create_job_application",
       input.idempotencyKey,
       payload,
-      () => {
+    );
+    if (replay) {
+      return replay;
+    }
+
+    const existingMatches = this.findExactActiveJobApplications(
+      identity.workspaceId,
+      registration.company,
+      registration.role,
+    );
+    const hasDistinctOverride = validateDistinctDuplicateOverride(
+      input.allowDistinctDuplicate === true,
+      registration.postingReference,
+      existingMatches,
+    );
+    if (existingMatches.length > 0 && !hasDistinctOverride) {
+      return possibleDuplicateResult(existingMatches);
+    }
+
+    try {
+      return this.runIdempotent(
+        identity.workspaceId,
+        "workspace_create_job_application",
+        input.idempotencyKey,
+        payload,
+        () => {
+          const currentMatches = this.findExactActiveJobApplications(
+            identity.workspaceId,
+            registration.company,
+            registration.role,
+          );
+          const currentOverride = validateDistinctDuplicateOverride(
+            input.allowDistinctDuplicate === true,
+            registration.postingReference,
+            currentMatches,
+          );
+          if (currentMatches.length > 0 && !currentOverride) {
+            throw new PossibleDuplicateDetected(currentMatches);
+          }
+
         const projectId = randomUUID();
         const transitionId = randomUUID();
         const now = new Date().toISOString();
@@ -446,12 +502,19 @@ export class WorkspaceService {
           );
 
         return {
+          creationStatus: "CREATED" as const,
           project: this.getAuthorizedProject(projectId, identity.workspaceId),
           initialTransition: this.getTransition(transitionId),
           replayed: false,
         };
-      },
-    );
+        },
+      );
+    } catch (error) {
+      if (error instanceof PossibleDuplicateDetected) {
+        return possibleDuplicateResult(error.matches);
+      }
+      throw error;
+    }
   }
 
   listJobApplications(includeClosed = false): ListJobApplicationsResult {
@@ -1112,27 +1175,13 @@ export class WorkspaceService {
     }
 
     return this.database.transaction(() => {
-      const requestHash = canonicalHash(payload);
-      const existing = this.database
-        .prepare(
-          `SELECT request_hash, response_json
-           FROM idempotency_records
-           WHERE workspace_id = ? AND operation = ? AND idempotency_key = ?`,
-        )
-        .get(workspaceId, operation, normalizedKey) as
-        | IdempotencyRow
-        | undefined;
-
-      if (existing) {
-        if (existing.request_hash !== requestHash) {
-          throw new IdempotencyConflictError(
-            "The idempotency key was already used with a different payload",
-          );
-        }
-
-        const replayed = JSON.parse(existing.response_json) as T;
-        return { ...replayed, replayed: true };
-      }
+      const replay = this.readIdempotentReplay<T>(
+        workspaceId,
+        operation,
+        normalizedKey,
+        payload,
+      );
+      if (replay) return replay;
 
       const response = work();
       this.database
@@ -1146,12 +1195,72 @@ export class WorkspaceService {
           workspaceId,
           operation,
           normalizedKey,
-          requestHash,
+          canonicalHash(payload),
           canonicalJson(response),
           new Date().toISOString(),
         );
       return response;
     })();
+  }
+
+  private readIdempotentReplay<T extends ReplayableResult>(
+    workspaceId: string,
+    operation: string,
+    idempotencyKey: string,
+    payload: unknown,
+  ): T | null {
+    const normalizedKey = idempotencyKey.trim();
+    if (!normalizedKey) {
+      throw new ValidationError("idempotencyKey is required");
+    }
+
+    const existing = this.database
+      .prepare(
+        `SELECT request_hash, response_json
+         FROM idempotency_records
+         WHERE workspace_id = ? AND operation = ? AND idempotency_key = ?`,
+      )
+      .get(workspaceId, operation, normalizedKey) as IdempotencyRow | undefined;
+    if (!existing) return null;
+
+    if (existing.request_hash !== canonicalHash(payload)) {
+      throw new IdempotencyConflictError(
+        "The idempotency key was already used with a different payload",
+      );
+    }
+
+    const replayed = JSON.parse(existing.response_json) as T;
+    return { ...replayed, replayed: true };
+  }
+
+  private findExactActiveJobApplications(
+    workspaceId: string,
+    company: string,
+    role: string,
+  ): JobApplicationSummary[] {
+    const normalizedCompany = normalizeJobApplicationLookupValue(company);
+    const normalizedRole = normalizeJobApplicationLookupValue(role);
+    const rows = this.database
+      .prepare(
+        `SELECT id, workspace_id, project_type, title, status,
+                lifecycle_state, lifecycle_version, record_version,
+                metadata_json, created_at, updated_at
+         FROM projects
+         WHERE workspace_id = ?
+           AND project_type = 'job_application'
+           AND status = 'ACTIVE'
+         ORDER BY updated_at DESC, id ASC`,
+      )
+      .all(workspaceId) as unknown as ProjectRow[];
+
+    return rows
+      .map((row) => mapJobApplicationSummary(row))
+      .filter(
+        (application) =>
+          normalizeJobApplicationLookupValue(application.company) ===
+            normalizedCompany &&
+          normalizeJobApplicationLookupValue(application.role) === normalizedRole,
+      );
   }
 
   private getAuthorizedProject(
@@ -1329,6 +1438,39 @@ interface NormalizedJobApplicationRegistration {
 type JobApplicationRegistrationPatch = Partial<
   NormalizedJobApplicationRegistration
 >;
+
+function possibleDuplicateResult(
+  matches: JobApplicationSummary[],
+): CreateJobApplicationResult {
+  return {
+    creationStatus: "POSSIBLE_DUPLICATE",
+    matches,
+    replayed: false,
+  };
+}
+
+function validateDistinctDuplicateOverride(
+  allowDistinctDuplicate: boolean,
+  postingReference: string | null,
+  matches: JobApplicationSummary[],
+): boolean {
+  if (!allowDistinctDuplicate) return false;
+  if (postingReference === null) {
+    throw new ValidationError(
+      "allowDistinctDuplicate requires a sanitized postingReference",
+    );
+  }
+  if (
+    matches.some(
+      (match) => match.postingReference === postingReference,
+    )
+  ) {
+    throw new ValidationError(
+      "postingReference does not distinguish this application from the existing active match",
+    );
+  }
+  return true;
+}
 
 function normalizeJobApplicationRegistration(
   input: Pick<

@@ -1,6 +1,6 @@
 # Real Job Search MVP Plan v0.1
 
-**Status:** APPROVED WITH MODIFICATIONS — SLICE M1 AUTHORIZED
+**Status:** APPROVED WITH MODIFICATIONS — M1 LOCAL FIX VERIFIED; PLATFORM RETEST PENDING
 
 ## 1. Product objective and scope rule
 
@@ -61,6 +61,11 @@ reference. It uses a Project registration `recordVersion`; it never changes
 latest 10 Resources, the latest 10 StateTransitions, and total counts. Outcomes
 are omitted until an Outcome persistence model actually exists. No generic
 pagination framework is added.
+
+Creation must return `POSSIBLE_DUPLICATE` with zero writes when an exact active
+company + role match exists. Ordinary creation authority never overrides this
+guard. A deliberate second distinct application requires both structured
+`allowDistinctDuplicate = true` and a different sanitized `postingReference`.
 
 ### Slice M2 — Task + Today
 
@@ -126,21 +131,27 @@ adding schema.
 1. Create persists one real Job Application without fixture APIs.
 2. Creation is command-idempotent and records explicit authority for the
    initial admitted transition.
-3. List is Workspace-scoped, active-only by default, deterministically ordered,
+3. Exact active duplicates return `POSSIBLE_DUPLICATE` with zero writes; company
+   and role use the frozen exact normalization behavior.
+4. Creation authority, model tool choice, and free-form prose cannot bypass the
+   duplicate guard.
+5. A distinct-duplicate override requires both the explicit structured flag and
+   a different sanitized posting reference; retry is idempotent.
+6. List is Workspace-scoped, active-only by default, deterministically ordered,
    and bounded without introducing pagination.
-4. Exact company + role lookup retains `EXACT`, `NOT_FOUND`, and `AMBIGUOUS`.
-5. Update accepts only approved registration metadata, requires
+7. Exact company + role lookup retains `EXACT`, `NOT_FOUND`, and `AMBIGUOUS`.
+8. Update accepts only approved registration metadata, requires
    `expectedRecordVersion`, and is idempotent.
-6. A stale update fails without changing registration or lifecycle state.
-7. Posting references retain only an HTTP(S) origin/path; credentials, query,
+9. A stale update fails without changing registration or lifecycle state.
+10. Posting references retain only an HTTP(S) origin/path; credentials, query,
    and fragment are not durable.
-8. `get_project` returns at most 10 Resources and 10 transitions plus accurate
+11. `get_project` returns at most 10 Resources and 10 transitions plus accurate
    total counts and all open Tasks.
-9. Cross-Workspace reads and writes fail.
-10. Real runtime DB configuration defaults outside the repository and rejects
+12. Cross-Workspace reads and writes fail.
+13. Real runtime DB configuration defaults outside the repository and rejects
     repository/known OneDrive paths.
-11. `npm run verify` and `git diff --check` pass.
-12. All frozen Spike behavior remains green.
+14. `npm run verify` and `git diff --check` pass.
+15. All frozen Spike behavior remains green.
 
 ### M2 gate
 

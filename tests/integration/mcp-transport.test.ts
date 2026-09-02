@@ -64,6 +64,18 @@ describe("Streamable HTTP MCP transport", () => {
           required: ["company", "role"],
         },
       });
+      expect(
+        tools.tools.find(
+          (tool) => tool.name === "workspace_create_job_application",
+        ),
+      ).toMatchObject({
+        inputSchema: {
+          properties: {
+            allowDistinctDuplicate: { const: true },
+            postingReference: expect.any(Object),
+          },
+        },
+      });
 
       const ping = await client.callTool({
         name: "workspace_ping",
@@ -102,6 +114,26 @@ describe("Streamable HTTP MCP transport", () => {
         result: { project: { id: string; recordVersion: number } };
       };
       expect(creationResult.result.project.recordVersion).toBe(1);
+
+      const duplicateCreation = await client.callTool({
+        name: "workspace_create_job_application",
+        arguments: {
+          company: "  m1   example co ",
+          role: "DATA ENGINEER",
+          userConfirmed: true,
+          authorityReference:
+            "Explicit creation authority does not override duplicates",
+          idempotencyKey: "mcp-duplicate-job-application-1",
+        },
+      });
+      expect(duplicateCreation.isError).not.toBe(true);
+      expect(duplicateCreation.structuredContent).toMatchObject({
+        result: {
+          creationStatus: "POSSIBLE_DUPLICATE",
+          matches: [{ projectId: creationResult.result.project.id }],
+          replayed: false,
+        },
+      });
 
       const listing = await client.callTool({
         name: "workspace_list_job_applications",

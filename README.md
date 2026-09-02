@@ -55,6 +55,10 @@ The approved Real Job Search MVP baseline and M1 -> M2 -> M3 gates are in
 Slice M1 replaces fixture-only inventory with user-authorized creation,
 Workspace-scoped listing, narrow versioned registration updates, exact lookup,
 and bounded Project readback. M2 and M3 remain gated and are not implemented.
+Exact active creation duplicates return `POSSIBLE_DUPLICATE` with zero writes;
+ordinary creation authority is not a duplicate override. A deliberate distinct
+duplicate requires `allowDistinctDuplicate=true` and a different sanitized
+posting reference.
 
 ### Local setup
 

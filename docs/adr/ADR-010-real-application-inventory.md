@@ -17,6 +17,16 @@ Creation starts at `APPLIED` and records `NONE -> APPLIED` as an admitted
 `USER_ASSERTION` attributable to explicit user authority. Creation is
 idempotent.
 
+Before creation, Workspace performs the same exact normalized company + role
+comparison used by lookup, restricted to `Project.status = ACTIVE`. If a match
+exists, the default result is `POSSIBLE_DUPLICATE` and the command performs zero
+writes. Creation authority is not duplicate-override authority.
+
+A second distinct active application is permitted only when the tool input
+contains both `allowDistinctDuplicate = true` and a sanitized `postingReference`
+different from every exact active match. Model choice, repeated creation prose,
+and the ordinary explicit creation-authority fields cannot supply this override.
+
 Registration updates may change only company, role, applied date, location, and
 a sanitized HTTP(S) posting reference. They use `Project.recordVersion` for
 optimistic concurrency and command idempotency. They never mutate
@@ -39,8 +49,9 @@ directories and migrates data but never resets or deletes it.
 - Real inventory no longer depends on seed fixtures.
 - Registration correction and lifecycle concurrency cannot collide because
   their versions are independent.
-- Exact duplicate company/role registrations remain possible and are surfaced
-  as `AMBIGUOUS`; Workspace does not guess or fuzzy-match.
+- Accidental exact active duplicates are blocked before persistence.
+- Deliberate distinct applications with the same company and role remain
+  representable only through the narrow structured override contract.
 - Context remains bounded for normal ChatGPT reads.
 - Backup and reset are explicit offline operations.
 
@@ -48,6 +59,7 @@ directories and migrates data but never resets or deletes it.
 
 - Reusing `lifecycleVersion` for metadata edits.
 - Allowing the update command to write lifecycle fields or arbitrary metadata.
+- Treating ordinary creation authority or free-form prose as duplicate override.
 - Persisting full posting URLs with tracking or candidate query parameters.
 - Generic pagination, search, fuzzy matching, or a new JobApplication entity.
 - Keeping real SQLite state in the repository or OneDrive directory.
