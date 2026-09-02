@@ -163,6 +163,9 @@ until all platform observations are supported and recorded.
 
 ## Session closeout — 2026-09-02
 
+- Final closeout re-verification completed at 23:47 AEST: 11 test files and 74
+  tests passed, with typecheck, production build, and `git diff --check` also
+  passing.
 - Server-side invariant hardening and all requested regression coverage are
   complete locally.
 - `npm run verify` passes: 11 test files, 74 tests, typecheck, and production

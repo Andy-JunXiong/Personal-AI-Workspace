@@ -63,6 +63,9 @@ tag M2 before that retest passes.**
 
 ## Session Closeout — 2026-09-02 (M2 defect remediation)
 
+- Closeout verification was refreshed at 23:47 AEST against commit `f55e493`;
+  the repository remained clean and aligned with `origin/main` before this
+  documentation-only closeout update.
 - The M2 platform run stopped at the first manual Task creation after reporting
   a durable ACTIVE/APPLIED Job Application.
 - The historical raw MCP payload was unavailable. Recoverable evidence showed
