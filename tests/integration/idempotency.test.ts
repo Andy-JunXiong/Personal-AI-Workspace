@@ -70,6 +70,54 @@ describe("command idempotency and deterministic duplicate protection", () => {
     expect(second.resource.id).toBe(first.resource.id);
   });
 
+  it("deduplicates a Gmail observation by stable individual message ID", () => {
+    const workspace = setup();
+    const base = {
+      projectId: workspace.projectId,
+      resourceType: "EMAIL",
+      provider: "gmail",
+      externalId: "synthetic-message-001",
+      externalUri: null,
+      title: "Example Co — Software Engineer application update",
+      observedFacts: {
+        contractVersion: "gmail-job-observation-v0.1",
+        sourceFacts: {
+          receivedAt: "2026-09-02T10:00:00+10:00",
+          senderDomain: "example.test",
+        },
+        interpretation: {
+          company: "Example Co",
+          role: "Software Engineer",
+          emailKind: "RECRUITER_CONTACT",
+          summary: "Recruiter requested an initial conversation.",
+        },
+      },
+      observedAt: "2026-09-02T10:00:00+10:00",
+    } as const;
+
+    const first = workspace.service.recordObservation({
+      ...base,
+      idempotencyKey: "gmail-observation-1",
+    });
+    const second = workspace.service.recordObservation({
+      ...base,
+      observedFacts: {
+        ...base.observedFacts,
+        interpretation: {
+          ...base.observedFacts.interpretation,
+          summary: "Equivalent evidence interpreted again.",
+        },
+      },
+      idempotencyKey: "gmail-observation-2",
+    });
+
+    expect(second.deduplicated).toBe(true);
+    expect(second.resource.id).toBe(first.resource.id);
+    expect(
+      workspace.database.prepare("SELECT COUNT(*) AS count FROM resources").get(),
+    ).toEqual({ count: 1 });
+  });
+
   it("does not fuzzy-deduplicate similar non-identical records", () => {
     const workspace = setup();
     const base = observationInput(workspace.projectId, "exact-1");

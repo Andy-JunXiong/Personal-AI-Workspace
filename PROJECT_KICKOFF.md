@@ -4,7 +4,7 @@
 
 **CHATGPT-NATIVE SPIKE 1A = COMPLETE**
 
-**SPIKE 1B = DESIGNED, NOT IMPLEMENTED, PLATFORM GATE NOT RUN**
+**SPIKE 1B = IMPLEMENTED AND AUTOMATED-VERIFIED LOCALLY; PLATFORM GATE NOT RUN**
 
 ## Thesis
 
@@ -37,7 +37,7 @@ The Workspace will not initially rebuild Gmail/Drive/Calendar connectors. The fi
 - [x] State Model review
 - [x] ChatGPT Integration Spike — local and manual ChatGPT-native Spike 1A verified
 - [x] Spike 1B architecture review and smallest-scope design
-- [ ] Spike 1B implementation
+- [x] Spike 1B implementation
 - [ ] Spike 1B manual ChatGPT cross-app platform gate
 - [ ] MVP implementation plan
 - [ ] MVP build
@@ -45,6 +45,7 @@ The Workspace will not initially rebuild Gmail/Drive/Calendar connectors. The fi
 
 ## Immediate Next Step
 
-**Review and approve the documented Spike 1B plan. If approved, implement only
-the narrow Job Application lookup delta, then run the manual Gmail -> ChatGPT ->
-Workspace platform gate. Do not add a Gmail connector or broader MVP scope.**
+**Refresh the Workspace Custom App metadata, then manually run Spike 1B-A. Only
+if its Gmail -> ChatGPT -> exact Workspace object read path passes, continue to
+Spike 1B-B evidence/proposal/explicit-approval/admission/readback. Do not claim
+platform support before that evidence exists.**

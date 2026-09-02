@@ -119,15 +119,18 @@ observed_facts:
   interpretation:
     company: string
     role: string
-    emailKind: RECRUITER_CONTACT | INTERVIEW_INVITATION | REJECTION | OTHER
+    emailKind: RECRUITER_CONTACT | OTHER
     summary: string
-    proposedInterviewAt: timestamp?
 ```
 
 This is a payload convention, not a new entity or migration. `sourceFacts`
 records source-derived values while `interpretation` records ChatGPT's
 work-relevant reading. Do not persist full message bodies, HTML, attachments,
 threads, signatures, raw headers, tokens, or unrelated personal data.
+
+The canonical Spike 1B fixture uses `RECRUITER_CONTACT` only and can support
+only the approved `APPLIED -> RECRUITER_CONTACT` proof. This convention does
+not add a lifecycle edge or schema field.
 
 ### Action
 
@@ -303,6 +306,6 @@ Return:
 
 ### `workspace.find_job_application(company, role)`
 
-Proposed for Spike 1B. Return exact normalized matches in the current Workspace
+Implemented for Spike 1B. Return exact normalized matches in the current Workspace
 with an explicit `EXACT`, `NOT_FOUND`, or `AMBIGUOUS` status. This is a
 read-only lookup, not a domain object or generic search infrastructure.

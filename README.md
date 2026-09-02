@@ -25,24 +25,25 @@ First proof: **cross-conversation continuity**.
 
 A recruiter message is interpreted in one ChatGPT conversation, the Job Application state is persisted in the Workspace, and a later conversation can continue from the same durable state without reconstructing prior chats.
 
-## Spike 1A
+## Spike status
 
-The repository currently implements only the approved Workspace continuity
-spike:
+Spike 1A is complete and frozen. The repository also implements the approved
+local Spike 1B delta:
 
 - a Streamable HTTP MCP endpoint at `/mcp`,
 - one configured development Principal and Workspace,
 - one seeded Job Application,
 - separate observation, proposal, and explicit-user admission commands,
 - SQLite persistence, optimistic concurrency, and command idempotency.
+- one read-only exact Job Application lookup scoped to the current Workspace.
 
-Spike 1B connected-app handoff is designed but not implemented. Its proposed
-Workspace delta is one narrow, read-only Job Application lookup tool; Gmail
-remains a ChatGPT-connected source app and is not integrated into Workspace.
-UI, external connectors, background automation, and model API calls remain out
-of scope.
+Spike 1B local implementation and automated verification are complete. Its
+manual Gmail + Workspace ChatGPT platform gate remains `NOT_RUN`. Gmail remains
+a ChatGPT-connected source app and is not integrated into Workspace. UI,
+external connectors, background automation, and model API calls remain out of
+scope.
 
-The proposed Spike 1B plan is in
+The approved Spike 1B plan is in
 [`docs/mvp/INTEGRATION_SPIKE_1B_PLAN_v0.1.md`](docs/mvp/INTEGRATION_SPIKE_1B_PLAN_v0.1.md).
 
 ### Local setup

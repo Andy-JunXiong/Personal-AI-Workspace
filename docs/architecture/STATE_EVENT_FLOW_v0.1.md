@@ -30,7 +30,7 @@ sequenceDiagram
     W->>W: Validate proposal only
     W->>DB: Store PROPOSED transition
     W-->>C: Proposal; state unchanged
-    C-->>U: Show evidence and request explicit approval
+    C-->>U: Show evidence; WAIT FOR EXPLICIT USER APPROVAL
     U->>C: Explicitly approve transition
     C->>W: admit_transition(user authority, expected version)
     W->>W: Validate admission authorization
@@ -58,7 +58,9 @@ Observation / User Assertion / Action Result
                     -> Proposal Validation
                     -> PROPOSED or REJECTED
 
-PROPOSED + Admission Authority
+PROPOSED            -> WAIT FOR EXPLICIT USER APPROVAL
+
+PROPOSED + Explicit User Approval
                     -> Admission Authorization
                     -> ADMITTED or REJECTED
 
@@ -68,6 +70,9 @@ ADMITTED            -> Durable State + Transition History
 Critical rule:
 
 > **LLM interpretation != durable fact and != admission authority**
+
+There is no implicit `PROPOSED -> ADMITTED` path. The Workspace admission tool
+may be called only after an explicit user approval message.
 
 Background/event-driven ingestion is Phase 2, after continuity is proven.
 

@@ -19,7 +19,7 @@ afterEach(async () => {
 });
 
 describe("Streamable HTTP MCP transport", () => {
-  it("discovers and invokes the Spike 1A tools locally", async () => {
+  it("discovers and invokes the Spike 1A tools and Spike 1B lookup locally", async () => {
     const workspace = createTestWorkspace();
     cleanups.push(workspace.cleanup);
     const app = createWorkspaceHttpApp(workspace.service);
@@ -41,17 +41,44 @@ describe("Streamable HTTP MCP transport", () => {
       const tools = await client.listTools();
       expect(tools.tools.map((tool) => tool.name).sort()).toEqual([
         "workspace_admit_transition",
+        "workspace_find_job_application",
         "workspace_get_project",
         "workspace_ping",
         "workspace_propose_transition",
         "workspace_record_observation",
       ]);
+      expect(
+        tools.tools.find(
+          (tool) => tool.name === "workspace_find_job_application",
+        ),
+      ).toMatchObject({
+        annotations: {
+          readOnlyHint: true,
+          destructiveHint: false,
+          openWorldHint: false,
+        },
+        inputSchema: {
+          required: ["company", "role"],
+        },
+      });
 
       const ping = await client.callTool({
         name: "workspace_ping",
         arguments: {},
       });
       expect(ping.isError).not.toBe(true);
+
+      const lookup = await client.callTool({
+        name: "workspace_find_job_application",
+        arguments: { company: " example   co ", role: "SOFTWARE ENGINEER" },
+      });
+      expect(lookup.isError).not.toBe(true);
+      expect(lookup.structuredContent).toMatchObject({
+        result: {
+          matchStatus: "EXACT",
+          matches: [{ projectId: workspace.projectId }],
+        },
+      });
 
       const project = await client.callTool({
         name: "workspace_get_project",

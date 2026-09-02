@@ -103,6 +103,22 @@ export interface ProjectDetails {
   openTasks: TaskRecord[];
 }
 
+export interface JobApplicationMatch {
+  projectId: string;
+  title: string;
+  company: string;
+  role: string;
+  projectStatus: "ACTIVE" | "PAUSED" | "CLOSED";
+  lifecycleState: string;
+  lifecycleVersion: number;
+  updatedAt: string;
+}
+
+export interface FindJobApplicationResult {
+  matchStatus: "EXACT" | "NOT_FOUND" | "AMBIGUOUS";
+  matches: JobApplicationMatch[];
+}
+
 export interface RecordObservationInput {
   projectId: string;
   resourceType: string;
@@ -337,6 +353,71 @@ export class WorkspaceService {
       resources: resources.map((row) => this.mapResource(row)),
       transitions: transitionRows.map((row) => this.mapTransition(row)),
       openTasks: tasks.map((row) => this.mapTask(row)),
+    };
+  }
+
+  findJobApplication(company: string, role: string): FindJobApplicationResult {
+    const identity = this.resolveDevelopmentIdentity();
+    const normalizedCompany = normalizeJobApplicationLookupValue(company);
+    const normalizedRole = normalizeJobApplicationLookupValue(role);
+
+    if (!normalizedCompany || !normalizedRole) {
+      throw new ValidationError("Company and role are required");
+    }
+
+    const rows = this.database
+      .prepare(
+        `SELECT id, workspace_id, project_type, title, status,
+                lifecycle_state, lifecycle_version, metadata_json,
+                created_at, updated_at
+         FROM projects
+         WHERE workspace_id = ?
+           AND project_type = 'job_application'
+           AND status <> 'CLOSED'
+         ORDER BY updated_at DESC, id ASC`,
+      )
+      .all(identity.workspaceId) as unknown as ProjectRow[];
+
+    const matches = rows.flatMap((row): JobApplicationMatch[] => {
+      const metadata = JSON.parse(row.metadata_json) as Record<
+        string,
+        JsonValue
+      >;
+      const candidateCompany = metadata.company;
+      const candidateRole = metadata.role;
+
+      if (
+        typeof candidateCompany !== "string" ||
+        typeof candidateRole !== "string" ||
+        normalizeJobApplicationLookupValue(candidateCompany) !==
+          normalizedCompany ||
+        normalizeJobApplicationLookupValue(candidateRole) !== normalizedRole
+      ) {
+        return [];
+      }
+
+      return [
+        {
+          projectId: row.id,
+          title: row.title,
+          company: candidateCompany,
+          role: candidateRole,
+          projectStatus: row.status,
+          lifecycleState: row.lifecycle_state,
+          lifecycleVersion: row.lifecycle_version,
+          updatedAt: row.updated_at,
+        },
+      ];
+    });
+
+    return {
+      matchStatus:
+        matches.length === 0
+          ? "NOT_FOUND"
+          : matches.length === 1
+            ? "EXACT"
+            : "AMBIGUOUS",
+      matches,
     };
   }
 
@@ -945,4 +1026,8 @@ export class WorkspaceService {
       updatedAt: row.updated_at,
     };
   }
+}
+
+function normalizeJobApplicationLookupValue(value: string): string {
+  return value.normalize("NFKC").trim().replace(/\s+/gu, " ").toLowerCase();
 }

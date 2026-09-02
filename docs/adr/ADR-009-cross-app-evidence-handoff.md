@@ -1,13 +1,15 @@
 # ADR-009 — ChatGPT-mediated cross-app evidence handoff
 
-**Status:** Proposed for Spike 1B
+**Status:** Accepted for Spike 1B
 
 ## Context
 
 Spike 1A proved that the Workspace can persist Job Application work state and
-expose it to separate ChatGPT conversations. Spike 1B must prove that a real
-source-app fact can participate in the same continuity flow without moving
-source integration or orchestration into Workspace.
+expose it to separate ChatGPT conversations. Spike 1B must prove that a fact
+retrieved through the real Gmail ChatGPT app can participate in the same
+continuity flow without moving source integration or orchestration into
+Workspace. The canonical proof uses a controlled synthetic recruiter-style
+message rather than real recruiter correspondence.
 
 The target source is Gmail, accessed through the existing ChatGPT Gmail app.
 Users should not need to know a Workspace Project UUID, but a broad search or
@@ -43,6 +45,10 @@ Mutation remain separate. Email content and model inference cannot authorize
 admission. Spike 1B reuses the Spike 1A explicit-user development admission
 mechanism and introduces no policy engine or deterministic admission rule.
 
+The canonical Spike 1B lifecycle proof is limited to
+`APPLIED -> RECRUITER_CONTACT`. Existing Spike 1A domain behavior remains
+frozen; Spike 1B does not add or expand an interviewing transition.
+
 ## Consequences
 
 - Natural project selection is possible without exposing generic search.
@@ -54,6 +60,8 @@ mechanism and introduces no policy engine or deterministic admission rule.
   content.
 - ChatGPT platform support for Gmail + Custom App use in one flow and the exact
   Gmail identifier shape remain manual gates.
+- The manual gate is split: 1B-A proves cross-app read/object resolution with
+  no Workspace writes; only after it passes may 1B-B prove evidence-to-state.
 
 ## Rejected alternatives
 

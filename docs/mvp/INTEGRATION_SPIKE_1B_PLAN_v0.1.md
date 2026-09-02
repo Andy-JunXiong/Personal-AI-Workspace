@@ -1,13 +1,13 @@
 # Integration Spike 1B Plan v0.1
 
-**Status:** PROPOSED DESIGN BASELINE — NOT IMPLEMENTED
+**Status:** APPROVED IMPLEMENTATION BASELINE — IMPLEMENTED LOCALLY
 
 **Platform result:** `NOT_RUN`
 
 ## 1. Objective
 
-Prove this user-triggered path with one real Job Application already stored in
-the Workspace:
+Prove this user-triggered path with one seeded Job Application and one
+controlled synthetic recruiter-style email sent through the real Gmail app:
 
 ```text
 Gmail Connected App
@@ -21,6 +21,9 @@ existing Gmail app, match it to a durable Workspace Project, record a minimized
 observation, propose a justified lifecycle transition, wait for explicit user
 approval, admit the transition, and retrieve the updated state in a later
 conversation.
+
+The canonical evidence run is synthetic data through real integrations. It
+must not use or commit real recruiter correspondence.
 
 ## 2. Architecture understanding
 
@@ -105,6 +108,14 @@ If the email is irrelevant, already represented, does not justify an allowed
 edge, or cannot be matched unambiguously, the flow stops or records only an
 observation. Admission is never automatic.
 
+The manual sequence is split into two checkpoints. Spike 1B-A ends after steps
+1-5 and performs no Workspace writes. Do not begin Spike 1B-B (steps 6-11)
+until 1B-A passes.
+
+The only lifecycle edge in the canonical proof is
+`APPLIED -> RECRUITER_CONTACT`. Spike 1B does not implement or expand
+`RECRUITER_CONTACT -> INTERVIEWING`.
+
 ## 5. Project matching strategy
 
 Candidate scope:
@@ -151,9 +162,8 @@ observedFacts:
   interpretation:
     company: <matched company>
     role: <matched role>
-    emailKind: RECRUITER_CONTACT | INTERVIEW_INVITATION | REJECTION | OTHER
+    emailKind: RECRUITER_CONTACT | OTHER
     summary: <short work-relevant summary>
-    proposedInterviewAt: <optional timestamp>
 ```
 
 The individual Gmail message ID is the deterministic provenance and Resource
@@ -169,6 +179,22 @@ gmail-admit:<transition-id>
 ```
 
 The proposal references the Resource ID returned by observation recording.
+
+### Canonical synthetic Gmail fixture
+
+Send this controlled message through Gmail to the test account:
+
+```text
+Subject: Example Co — Software Engineer application update
+
+Thanks for applying for the Software Engineer role at Example Co.
+I’d like to arrange an initial conversation regarding your application.
+```
+
+The body contains no interview date, attachment, instruction to ChatGPT, or
+other lifecycle signal. Gmail supplies the message ID and timestamp at runtime;
+those values must be captured from the individual message and must not be
+invented.
 
 ## 7. State and provenance impact
 
@@ -227,20 +253,27 @@ introduced for Spike 1B.
 
 ### Manual ChatGPT platform gate
 
+#### Spike 1B-A — cross-app read / object resolution
+
 1. ChatGPT can use Gmail and Personal AI Workspace in one user-triggered flow.
-2. Gmail returns the intended latest relevant individual message and exposes a
+2. Gmail returns the controlled synthetic individual message and exposes a
    stable message identifier or an explicitly documented equivalent.
 3. ChatGPT naturally matches company + role through the narrow lookup tool.
-4. The observation payload follows the minimization contract.
-5. Observation recording does not mutate lifecycle state/version.
-6. Proposal recording does not mutate lifecycle state/version.
-7. ChatGPT does not call admission before explicit user approval.
-8. After approval, admission updates state/version atomically and preserves the
+4. The lookup returns `EXACT`, followed by `workspace_get_project` using the
+   returned stable Project ID.
+5. No Workspace write occurs.
+
+#### Spike 1B-B — evidence to durable state
+
+1. The observation payload follows the minimization contract.
+2. Observation recording does not mutate lifecycle state/version.
+3. Proposal recording does not mutate lifecycle state/version.
+4. ChatGPT pauses and does not call admission before explicit user approval.
+5. After approval, admission updates state/version atomically and preserves the
    evidence relationship.
-9. Retry behavior creates no duplicate Resource, transition, or Task.
-10. A separate conversation reads the updated durable state.
-11. Ambiguous matching causes no write.
-12. A relevant but non-transitioning email follows an observation-only path.
+6. Retry behavior creates no duplicate Resource, transition, or Task.
+7. A separate conversation finds and reads the updated durable state without
+   Gmail or previous-chat context.
 
 Each manual gate is classified `SUPPORTED`, `SUPPORTED_WITH_CONSTRAINT`, or
 `NOT_SUPPORTED`. Until executed, the result remains `NOT_RUN`.
@@ -287,15 +320,16 @@ The following are unnecessary for proving Spike 1B and must not be added:
 - production identity, RBAC, or OAuth redesign;
 - Spike 1B results claims before manual execution.
 
-## 12. Delivery sequence after approval
+## 12. Delivery sequence
 
-1. Accept ADR-009 and this plan as the implementation baseline.
-2. Implement only the deterministic lookup service and MCP tool.
+1. Accept ADR-009 and this plan as the implementation baseline. **Complete.**
+2. Implement only the deterministic lookup service and MCP tool. **Complete.**
 3. Add focused unit/integration/MCP tests and rerun all Spike 1A verification.
+   **Complete.**
 4. Refresh the ChatGPT Custom App tool metadata after the server tool change.
-5. Execute `tests/evaluations/chatgpt-spike-1b.md` manually.
-6. Record results in a separate Spike 1B results document without rewriting the
-   frozen Spike 1A evidence.
+5. Execute 1B-A, then 1B-B in `tests/evaluations/chatgpt-spike-1b.md` manually.
+6. Only after actual manual evidence, record results in a separate Spike 1B
+   results document without rewriting the frozen Spike 1A evidence.
 
 ## References
 

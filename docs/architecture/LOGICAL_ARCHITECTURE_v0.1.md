@@ -52,7 +52,7 @@ workspace_propose_transition
 workspace_admit_transition
 ```
 
-### Proposed Spike 1B delta
+### Approved Spike 1B delta
 
 ```text
 workspace_find_job_application(company, role)
@@ -107,8 +107,8 @@ admission authority to ChatGPT.
 ## Spike 1B deployment interpretation
 
 Spike 1B reuses the verified Spike 1A server, persistence, identity mapping,
-Secure MCP Tunnel development path, and write tools. The only proposed server
-capability change is `workspace_find_job_application`.
+Secure MCP Tunnel development path, and write tools. The only server capability
+change is the implemented read-only `workspace_find_job_application` lookup.
 
 Gmail access remains on the ChatGPT Connected App side. No Gmail client,
 provider OAuth, email table, polling process, or second orchestration layer is
