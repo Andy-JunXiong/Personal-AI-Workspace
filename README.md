@@ -59,11 +59,25 @@ The verified milestone is frozen at
 `m1-real-application-inventory-verified-v0.1`.
 It replaces fixture-only inventory with user-authorized creation,
 Workspace-scoped listing, narrow versioned registration updates, exact lookup,
-and bounded Project readback. M2 and M3 remain gated and are not implemented.
+and bounded Project readback. Slice M2 is now locally implemented and awaiting
+ChatGPT platform verification; M3 remains gated and is not implemented.
 Exact active creation duplicates return `POSSIBLE_DUPLICATE` with zero writes;
 ordinary creation authority is not a duplicate override. A deliberate distinct
 duplicate requires `allowDistinctDuplicate=true` and a different sanitized
 posting reference.
+
+M2 adds explicitly authorized, idempotent, versioned single-Task creation and
+updates plus a deterministic read-only `workspace_get_today`. Workspace—not a
+model—classifies overdue, due-today, high/critical undated, blocked, and
+upcoming work using `PAW_TIME_ZONE` (default `Australia/Sydney`) and server
+time. It also returns active applications without an open Task and at most five
+recent admitted lifecycle changes. `DONE` and `CANCELLED` Tasks are terminal.
+See the frozen M2 contract in
+[`docs/mvp/REAL_JOB_SEARCH_M2_PLAN_v0.1.md`](docs/mvp/REAL_JOB_SEARCH_M2_PLAN_v0.1.md)
+and ADR-011 in
+[`docs/adr/ADR-011-task-attention-today-view.md`](docs/adr/ADR-011-task-attention-today-view.md).
+Local M2 results and platform readiness are recorded in
+[`docs/mvp/REAL_JOB_SEARCH_M2_RESULTS_v0.1.md`](docs/mvp/REAL_JOB_SEARCH_M2_RESULTS_v0.1.md).
 
 ### Local setup
 
@@ -75,6 +89,7 @@ npm install
 $dataRoot = Join-Path $env:LOCALAPPDATA "PersonalAIWorkspace\data"
 New-Item -ItemType Directory -Force -Path $dataRoot
 $env:PAW_DB_PATH = Join-Path $dataRoot "workspace.db"
+$env:PAW_TIME_ZONE = "Australia/Sydney"
 npm run dev
 ```
 

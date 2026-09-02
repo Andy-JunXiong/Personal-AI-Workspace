@@ -19,6 +19,7 @@ describe("real-data database path boundary", () => {
     expect(config.databasePath).toBe(
       join(localAppData, "PersonalAIWorkspace", "data", "workspace.db"),
     );
+    expect(config.timeZone).toBe("Australia/Sydney");
   });
 
   it("expands the documented LOCALAPPDATA reference", () => {
@@ -58,5 +59,23 @@ describe("real-data database path boundary", () => {
         PAW_DB_PATH: join(oneDrive, "WorkspaceData", "workspace.db"),
       }),
     ).toThrow(/configured OneDrive/u);
+  });
+
+  it("accepts a configured IANA timezone and rejects an invalid one", () => {
+    const localAppData = resolve("..", "paw-local-app-data");
+    expect(
+      loadConfig({
+        ...principalEnvironment,
+        LOCALAPPDATA: localAppData,
+        PAW_TIME_ZONE: "Pacific/Auckland",
+      }).timeZone,
+    ).toBe("Pacific/Auckland");
+    expect(() =>
+      loadConfig({
+        ...principalEnvironment,
+        LOCALAPPDATA: localAppData,
+        PAW_TIME_ZONE: "Not/AZone",
+      }),
+    ).toThrow(/Invalid PAW_TIME_ZONE/u);
   });
 });

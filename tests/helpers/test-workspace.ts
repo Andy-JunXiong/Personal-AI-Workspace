@@ -2,6 +2,7 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { WorkspaceService } from "../../src/application/workspace-service.js";
+import type { Clock } from "../../src/application/task-service.js";
 import { openDatabase } from "../../src/persistence/database.js";
 import { spikeFixture } from "../../src/spike-fixture.js";
 
@@ -11,13 +12,20 @@ export const testPrincipal = {
   workspaceName: "Test Workspace",
 };
 
-export function createEmptyTestWorkspace(options?: { fileBacked?: boolean }) {
+export function createEmptyTestWorkspace(options?: {
+  fileBacked?: boolean;
+  timeZone?: string;
+  clock?: Clock;
+}) {
   const directory = mkdtempSync(join(tmpdir(), "paw-spike-"));
   const databasePath = options?.fileBacked
     ? join(directory, "workspace.db")
     : ":memory:";
   const database = openDatabase(databasePath, resolve("db/migrations"));
-  const service = new WorkspaceService(database, testPrincipal);
+  const service = new WorkspaceService(database, testPrincipal, {
+    timeZone: options?.timeZone,
+    clock: options?.clock,
+  });
   const identity = service.ensureDevelopmentIdentity();
 
   return {
@@ -35,7 +43,11 @@ export function createEmptyTestWorkspace(options?: { fileBacked?: boolean }) {
   };
 }
 
-export function createTestWorkspace(options?: { fileBacked?: boolean }) {
+export function createTestWorkspace(options?: {
+  fileBacked?: boolean;
+  timeZone?: string;
+  clock?: Clock;
+}) {
   const workspace = createEmptyTestWorkspace(options);
   const details = workspace.service.seedJobApplication(spikeFixture);
   return {

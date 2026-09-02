@@ -1,6 +1,6 @@
 # State Model v0.1
 
-**Status:** SPIKE 1A/1B BASELINE FROZEN; REAL JOB SEARCH MVP PLAN APPROVED
+**Status:** SPIKE 1A/1B AND M1 FROZEN; M2 LOCALLY IMPLEMENTED
 
 ## 1. Key modeling decision
 
@@ -74,14 +74,26 @@ interview_type: HM | TECHNICAL | PANEL | OTHER?
 id: uuid
 project_id: uuid
 title: string
+task_kind: FOLLOW_UP | PREPARE_FOR_INTERVIEW | RESPOND_TO_RECRUITER | OTHER
 status: TODO | IN_PROGRESS | BLOCKED | DONE | CANCELLED
 priority: LOW | MEDIUM | HIGH | CRITICAL
 due_at: timestamp?
+record_version: integer
 created_by: USER | CHATGPT | SYSTEM
+updated_by: USER | CHATGPT | SYSTEM
 source_transition_id: uuid?
 created_at: timestamp
 updated_at: timestamp
+completed_at: timestamp?
 ```
+
+Task state is independent of Project lifecycle state. Manual Task mutations
+require explicit user authority, command idempotency, and optimistic
+concurrency. Every effective mutation increments `record_version`.
+
+`DONE` and `CANCELLED` are terminal. `DONE` sets `completed_at`; `CANCELLED`
+does not. Work that resumes is represented by a new Task. Open Tasks may move
+among `TODO`, `IN_PROGRESS`, and `BLOCKED`, or to either terminal state.
 
 ### Resource
 
@@ -309,13 +321,19 @@ of MVP v0.1.
 ### `workspace.get_today()`
 
 Return:
-- overdue tasks,
-- tasks due soon,
-- upcoming dated events,
-- recently changed projects,
-- blocked/high-priority work.
 
-`Today` is a derived view, not a domain object.
+- overdue and due-today Tasks;
+- high/critical-priority undated Tasks;
+- blocked Tasks;
+- Tasks upcoming within seven local calendar days;
+- active Job Applications with no open Task; and
+- at most five recent admitted lifecycle changes.
+
+`Today` is a derived view, not a domain object. It uses a configured IANA
+timezone and injected clock. One Task appears at most once in `attention`; all
+applicable state-backed reasons are ordered `OVERDUE`, `DUE_TODAY`,
+`HIGH_PRIORITY`, then `BLOCKED`. No model ranking, external-source scan,
+reminder, inference, or write occurs in the query.
 
 ### `workspace.find_job_application(company, role)`
 

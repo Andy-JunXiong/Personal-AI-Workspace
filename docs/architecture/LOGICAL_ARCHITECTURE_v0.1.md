@@ -11,7 +11,7 @@ flowchart TB
 
     subgraph WS["Personal AI Workspace"]
         MCP[MCP / Apps SDK Surface]
-        QRY[Query / Context Service]
+        QRY[Today Query Service]
         CMD[Command Handler]
         DOM[Domain State Service]
         TRANS[Transition Validator]
@@ -28,6 +28,7 @@ flowchart TB
 
     MCP --> QRY
     MCP --> CMD
+    MCP --> TASK
     QRY --> DB
     CMD --> DOM
     DOM --> TRANS
@@ -63,8 +64,29 @@ normalized company + role matching inside the current Workspace and returns an
 explicit `EXACT`, `NOT_FOUND`, or `AMBIGUOUS` result. It is not a generic search
 service and does not use fuzzy or model-based matching.
 
-Broader tools such as `workspace_get_today`, project creation, task mutation,
-and general search remain unapproved future scope.
+### Real Job Search Slice M1 surface
+
+```text
+workspace_create_job_application
+workspace_list_job_applications
+workspace_update_job_application
+```
+
+M1 also bounds `workspace_get_project` while retaining the exact Spike 1B
+lookup.
+
+### Real Job Search Slice M2 surface
+
+```text
+workspace_create_task
+workspace_update_task
+workspace_get_today
+```
+
+`TaskService` owns the two explicit-authority, idempotent, versioned commands.
+`TodayQueryService` owns the read-only timezone/clock-aware derived view. The
+MCP adapter routes to those modules; ChatGPT explains and orchestrates their
+results but does not calculate Today ordering.
 
 ## Deliberately absent in MVP
 
@@ -77,6 +99,13 @@ and general search remain unapproved future scope.
 - broad connector framework.
 
 ChatGPT is the initial cognitive/orchestration host.
+
+## Slice M2 deployment interpretation
+
+M2 remains in the same TypeScript process and SQLite database. The dedicated
+Task and Today modules are logical/application boundaries, not network
+services. There is no stored Today object, scheduler, reminder, connector,
+Calendar/Gmail query, or internal model call.
 
 ## Spike 1A deployment interpretation
 

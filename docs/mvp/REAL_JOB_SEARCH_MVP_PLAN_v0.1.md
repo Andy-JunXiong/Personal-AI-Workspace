@@ -1,6 +1,6 @@
 # Real Job Search MVP Plan v0.1
 
-**Status:** APPROVED WITH MODIFICATIONS — SLICE M1 COMPLETE; M2 NOT STARTED
+**Status:** APPROVED WITH MODIFICATIONS — SLICE M1 COMPLETE; M2 LOCAL GATE PASSED, PLATFORM VERIFICATION PENDING
 
 ## 1. Product objective and scope rule
 
@@ -81,6 +81,12 @@ After M1 approval, implement:
 state/change timestamps. It performs no Gmail scan, Calendar lookup, inferred
 urgency, LLM ranking, or background work.
 
+**Implementation result:** the three tools are implemented through dedicated
+`TaskService` and `TodayQueryService` modules. Terminal Tasks do not reopen;
+Today uses the configured Workspace timezone and an injected clock. The exact
+result and ordering contract is frozen in
+`REAL_JOB_SEARCH_M2_PLAN_v0.1.md`.
+
 ### Slice M3 — Real Lifecycle
 
 After M2 approval, implement only the approved lifecycle and effects:
@@ -115,7 +121,8 @@ lifecycle field is introduced.
 
 Add Task mutation audit/concurrency fields: `record_version`, `updated_by`, and
 `completed_at`. Existing `due_at` and `created_by` columns are reused and exposed.
-Exact column details are frozen only when M2 begins.
+This is implemented as `003_task_attention.sql`; existing Tasks migrate at
+record version 1 with `updated_by = SYSTEM` and `completed_at = NULL`.
 
 ### M3 migration
 
@@ -164,6 +171,13 @@ versioning, lifecycle isolation, and exact active duplicate protection. See
 Task commands must be Workspace-scoped, versioned, idempotent, and auditable.
 `get_today` must be deterministic under an injected clock/timezone and return
 only state-backed attention reasons. M1 and frozen Spike gates remain green.
+
+**Local result:** PASSED. Focused automated tests cover Task authority,
+isolation, idempotency, optimistic concurrency, completion/terminal semantics,
+all Today categories, the seven-day inclusive boundary, deterministic
+ordering, Workspace isolation, read-only behavior, and injected-clock timezone
+boundaries. Manual ChatGPT platform verification remains a separate gate; M3
+must not begin before that decision.
 
 ### M3 gate
 

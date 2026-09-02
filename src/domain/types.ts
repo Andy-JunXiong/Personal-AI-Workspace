@@ -76,13 +76,33 @@ export interface TaskRecord {
   id: string;
   projectId: string;
   title: string;
-  taskKind: string;
-  status: "TODO" | "IN_PROGRESS" | "BLOCKED" | "DONE" | "CANCELLED";
-  priority: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+  taskKind: TaskKind;
+  priority: TaskPriority;
+  status: TaskStatus;
+  dueAt: string | null;
+  recordVersion: number;
+  createdBy: "USER" | "CHATGPT" | "SYSTEM";
+  updatedBy: "USER" | "CHATGPT" | "SYSTEM";
   sourceTransitionId: string | null;
   createdAt: string;
   updatedAt: string;
+  completedAt: string | null;
 }
+
+export type TaskKind =
+  | "FOLLOW_UP"
+  | "PREPARE_FOR_INTERVIEW"
+  | "RESPOND_TO_RECRUITER"
+  | "OTHER";
+
+export type TaskPriority = "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+
+export type TaskStatus =
+  | "TODO"
+  | "IN_PROGRESS"
+  | "BLOCKED"
+  | "DONE"
+  | "CANCELLED";
 
 export interface ExplicitUserDevAuthority {
   type: "EXPLICIT_USER_DEV";

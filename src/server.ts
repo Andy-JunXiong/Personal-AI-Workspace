@@ -8,6 +8,7 @@ const database = openDatabase(config.databasePath, config.migrationsDirectory);
 const workspaceService = new WorkspaceService(
   database,
   config.developmentPrincipal,
+  { timeZone: config.timeZone },
 );
 const identity = workspaceService.ensureDevelopmentIdentity();
 const app = createWorkspaceHttpApp(workspaceService);

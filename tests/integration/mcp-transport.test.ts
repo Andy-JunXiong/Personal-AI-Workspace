@@ -19,7 +19,7 @@ afterEach(async () => {
 });
 
 describe("Streamable HTTP MCP transport", () => {
-  it("discovers and invokes the frozen Spike tools plus Slice M1 inventory locally", async () => {
+  it("discovers and invokes frozen Spike/M1 tools plus Slice M2 locally", async () => {
     const workspace = createTestWorkspace();
     cleanups.push(workspace.cleanup);
     const app = createWorkspaceHttpApp(workspace.service);
@@ -42,13 +42,16 @@ describe("Streamable HTTP MCP transport", () => {
       expect(tools.tools.map((tool) => tool.name).sort()).toEqual([
         "workspace_admit_transition",
         "workspace_create_job_application",
+        "workspace_create_task",
         "workspace_find_job_application",
         "workspace_get_project",
+        "workspace_get_today",
         "workspace_list_job_applications",
         "workspace_ping",
         "workspace_propose_transition",
         "workspace_record_observation",
         "workspace_update_job_application",
+        "workspace_update_task",
       ]);
       expect(
         tools.tools.find(
@@ -75,6 +78,16 @@ describe("Streamable HTTP MCP transport", () => {
             postingReference: expect.any(Object),
           },
         },
+      });
+      expect(
+        tools.tools.find((tool) => tool.name === "workspace_get_today"),
+      ).toMatchObject({
+        annotations: {
+          readOnlyHint: true,
+          destructiveHint: false,
+          openWorldHint: false,
+        },
+        inputSchema: { type: "object" },
       });
 
       const ping = await client.callTool({
@@ -248,6 +261,55 @@ describe("Streamable HTTP MCP transport", () => {
             admissionAuthorityType: "EXPLICIT_USER_DEV",
           },
           derivedTask: { taskKind: "RESPOND_TO_RECRUITER" },
+        },
+      });
+
+      const taskCreation = await client.callTool({
+        name: "workspace_create_task",
+        arguments: {
+          projectId: workspace.projectId,
+          title: "Send requested portfolio",
+          taskKind: "OTHER",
+          priority: "HIGH",
+          dueAt: "2026-09-03T09:00:00+10:00",
+          userConfirmed: true,
+          authorityReference: "MCP test explicit Task request",
+          idempotencyKey: "mcp-task-create-1",
+        },
+      });
+      expect(taskCreation.isError).not.toBe(true);
+      const taskResult = taskCreation.structuredContent as {
+        result: { task: { id: string; recordVersion: number } };
+      };
+
+      const taskUpdate = await client.callTool({
+        name: "workspace_update_task",
+        arguments: {
+          taskId: taskResult.result.task.id,
+          expectedRecordVersion: taskResult.result.task.recordVersion,
+          status: "IN_PROGRESS",
+          userConfirmed: true,
+          authorityReference: "MCP test explicit Task update",
+          idempotencyKey: "mcp-task-update-1",
+        },
+      });
+      expect(taskUpdate.isError).not.toBe(true);
+      expect(taskUpdate.structuredContent).toMatchObject({
+        result: { task: { status: "IN_PROGRESS", recordVersion: 2 } },
+      });
+
+      const today = await client.callTool({
+        name: "workspace_get_today",
+        arguments: {},
+      });
+      expect(today.isError).not.toBe(true);
+      expect(today.structuredContent).toMatchObject({
+        result: {
+          timeZone: "Australia/Sydney",
+          attention: expect.any(Array),
+          upcoming: expect.any(Array),
+          applicationsWithoutOpenTask: expect.any(Array),
+          recentLifecycleChanges: expect.any(Array),
         },
       });
     } finally {

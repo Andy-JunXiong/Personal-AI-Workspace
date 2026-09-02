@@ -1,5 +1,7 @@
 import { randomUUID } from "node:crypto";
 import type { WorkspaceDatabase } from "../persistence/database.js";
+import { TaskService, type Clock, mapTask } from "./task-service.js";
+import { TodayQueryService } from "./today-query-service.js";
 import { canonicalHash, canonicalJson } from "../domain/canonical-json.js";
 import {
   AuthorizationError,
@@ -84,12 +86,17 @@ interface TaskRow {
   id: string;
   project_id: string;
   title: string;
-  task_kind: string;
+  task_kind: "FOLLOW_UP" | "PREPARE_FOR_INTERVIEW" | "RESPOND_TO_RECRUITER" | "OTHER";
   status: "TODO" | "IN_PROGRESS" | "BLOCKED" | "DONE" | "CANCELLED";
   priority: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+  due_at: string | null;
+  record_version: number;
+  created_by: "USER" | "CHATGPT" | "SYSTEM";
+  updated_by: "USER" | "CHATGPT" | "SYSTEM";
   source_transition_id: string | null;
   created_at: string;
   updated_at: string;
+  completed_at: string | null;
 }
 
 interface IdempotencyRow {
@@ -217,10 +224,23 @@ class PossibleDuplicateDetected extends Error {
 }
 
 export class WorkspaceService {
+  readonly taskService: TaskService;
+  readonly todayQueryService: TodayQueryService;
+
   constructor(
     private readonly database: WorkspaceDatabase,
     private readonly developmentPrincipal: DevelopmentPrincipalConfig,
-  ) {}
+    options: { timeZone?: string; clock?: Clock } = {},
+  ) {
+    const resolveIdentity = () => this.resolveDevelopmentIdentity();
+    this.taskService = new TaskService(database, resolveIdentity, options.clock);
+    this.todayQueryService = new TodayQueryService(
+      database,
+      resolveIdentity,
+      options.timeZone,
+      options.clock,
+    );
+  }
 
   ensureDevelopmentIdentity(): IdentityContext {
     return this.database.transaction(() => {
@@ -665,8 +685,9 @@ export class WorkspaceService {
 
     const tasks = this.database
       .prepare(
-        `SELECT id, project_id, title, task_kind, status, priority,
-                source_transition_id, created_at, updated_at
+        `SELECT id, project_id, title, task_kind, status, priority, due_at,
+                record_version, created_by, updated_by, source_transition_id,
+                created_at, updated_at, completed_at
          FROM tasks
          WHERE project_id = ? AND status NOT IN ('DONE', 'CANCELLED')
          ORDER BY created_at DESC`,
@@ -691,7 +712,7 @@ export class WorkspaceService {
       project,
       resources: resources.map((row) => this.mapResource(row)),
       transitions: transitionRows.map((row) => this.mapTransition(row)),
-      openTasks: tasks.map((row) => this.mapTask(row)),
+      openTasks: tasks.map((row) => mapTask(row)),
       totalCounts: {
         resources: totalCounts.resources,
         transitions: totalCounts.transitions,
@@ -1136,8 +1157,10 @@ export class WorkspaceService {
             .prepare(
               `INSERT OR IGNORE INTO tasks(
                  id, project_id, title, task_kind, status, priority, due_at,
-                 created_by, source_transition_id, created_at, updated_at
-               ) VALUES (?, ?, ?, ?, 'TODO', ?, NULL, 'SYSTEM', ?, ?, ?)`,
+                 record_version, created_by, updated_by, source_transition_id,
+                 created_at, updated_at, completed_at
+               ) VALUES (?, ?, ?, ?, 'TODO', ?, NULL, 1, 'SYSTEM', 'SYSTEM',
+                         ?, ?, ?, NULL)`,
             )
             .run(
               randomUUID(),
@@ -1357,12 +1380,13 @@ export class WorkspaceService {
   private getTaskForTransition(transitionId: string): TaskRecord | null {
     const row = this.database
       .prepare(
-        `SELECT id, project_id, title, task_kind, status, priority,
-                source_transition_id, created_at, updated_at
+        `SELECT id, project_id, title, task_kind, status, priority, due_at,
+                record_version, created_by, updated_by, source_transition_id,
+                created_at, updated_at, completed_at
          FROM tasks WHERE source_transition_id = ? ORDER BY created_at LIMIT 1`,
       )
       .get(transitionId) as TaskRow | undefined;
-    return row ? this.mapTask(row) : null;
+    return row ? mapTask(row) : null;
   }
 
   private mapResource(row: ResourceRow): ResourceRecord {
@@ -1412,19 +1436,6 @@ export class WorkspaceService {
     };
   }
 
-  private mapTask(row: TaskRow): TaskRecord {
-    return {
-      id: row.id,
-      projectId: row.project_id,
-      title: row.title,
-      taskKind: row.task_kind,
-      status: row.status,
-      priority: row.priority,
-      sourceTransitionId: row.source_transition_id,
-      createdAt: row.created_at,
-      updatedAt: row.updated_at,
-    };
-  }
 }
 
 interface NormalizedJobApplicationRegistration {

@@ -5,6 +5,7 @@ export interface AppConfig {
   port: number;
   databasePath: string;
   migrationsDirectory: string;
+  timeZone: string;
   developmentPrincipal: {
     issuer: string;
     subject: string;
@@ -89,11 +90,21 @@ export function loadConfig(
     expandEnvironmentReferences(configuredDatabasePath, environment),
   );
   assertRealDataPathBoundary(databasePath, environment);
+  const timeZone = requiredValue(
+    environment.PAW_TIME_ZONE,
+    "Australia/Sydney",
+  );
+  try {
+    new Intl.DateTimeFormat("en-AU", { timeZone }).format(new Date(0));
+  } catch {
+    throw new Error(`Invalid PAW_TIME_ZONE: ${timeZone}`);
+  }
 
   return {
     port,
     databasePath,
     migrationsDirectory: resolve("db/migrations"),
+    timeZone,
     developmentPrincipal: {
       issuer: requiredValue(
         environment.PAW_DEV_PRINCIPAL_ISSUER,
