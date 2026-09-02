@@ -39,6 +39,7 @@ interface ProjectRow {
   status: "ACTIVE" | "PAUSED" | "CLOSED";
   lifecycle_state: string;
   lifecycle_version: number;
+  record_version: number;
   metadata_json: string;
   created_at: string;
   updated_at: string;
@@ -101,6 +102,11 @@ export interface ProjectDetails {
   resources: ResourceRecord[];
   transitions: TransitionRecord[];
   openTasks: TaskRecord[];
+  totalCounts: {
+    resources: number;
+    transitions: number;
+    openTasks: number;
+  };
 }
 
 export interface JobApplicationMatch {
@@ -111,12 +117,47 @@ export interface JobApplicationMatch {
   projectStatus: "ACTIVE" | "PAUSED" | "CLOSED";
   lifecycleState: string;
   lifecycleVersion: number;
+  recordVersion: number;
   updatedAt: string;
 }
 
 export interface FindJobApplicationResult {
   matchStatus: "EXACT" | "NOT_FOUND" | "AMBIGUOUS";
   matches: JobApplicationMatch[];
+}
+
+export interface CreateJobApplicationInput {
+  company: string;
+  role: string;
+  appliedDate?: string | null;
+  location?: string | null;
+  postingReference?: string | null;
+  authority: ExplicitUserDevAuthority;
+  idempotencyKey: string;
+}
+
+export interface UpdateJobApplicationInput {
+  projectId: string;
+  expectedRecordVersion: number;
+  company?: string;
+  role?: string;
+  appliedDate?: string | null;
+  location?: string | null;
+  postingReference?: string | null;
+  idempotencyKey: string;
+}
+
+export interface JobApplicationSummary extends JobApplicationMatch {
+  appliedDate: string | null;
+  location: string | null;
+  postingReference: string | null;
+}
+
+export interface ListJobApplicationsResult {
+  applications: JobApplicationSummary[];
+  totalCount: number;
+  truncated: boolean;
+  includeClosed: boolean;
 }
 
 export interface RecordObservationInput {
@@ -151,6 +192,9 @@ export interface AdmitTransitionInput {
 interface ReplayableResult {
   replayed: boolean;
 }
+
+const PROJECT_HISTORY_LIMIT = 10;
+const JOB_APPLICATION_LIST_LIMIT = 100;
 
 export class WorkspaceService {
   constructor(
@@ -315,6 +359,222 @@ export class WorkspaceService {
     return this.getProject(input.projectId);
   }
 
+  createJobApplication(input: CreateJobApplicationInput): {
+    project: ProjectRecord;
+    initialTransition: TransitionRecord;
+    replayed: boolean;
+  } {
+    const identity = this.resolveDevelopmentIdentity();
+    const authorityReference = input.authority.reference.trim();
+    if (
+      input.authority.type !== "EXPLICIT_USER_DEV" ||
+      !input.authority.confirmed ||
+      authorityReference.length === 0
+    ) {
+      throw new AuthorizationError(
+        "Job Application registration requires explicit user authority",
+      );
+    }
+
+    const registration = normalizeJobApplicationRegistration(input);
+    const payload = {
+      ...registration,
+      authority: {
+        type: input.authority.type,
+        confirmed: input.authority.confirmed,
+        reference: authorityReference,
+      },
+    };
+
+    return this.runIdempotent(
+      identity.workspaceId,
+      "workspace_create_job_application",
+      input.idempotencyKey,
+      payload,
+      () => {
+        const projectId = randomUUID();
+        const transitionId = randomUUID();
+        const now = new Date().toISOString();
+        const metadata = registrationMetadata(registration);
+        const title = jobApplicationTitle(
+          registration.company,
+          registration.role,
+        );
+
+        this.database
+          .prepare(
+            `INSERT INTO projects(
+               id, workspace_id, project_type, title, status,
+               lifecycle_state, lifecycle_version, record_version,
+               metadata_json, created_at, updated_at
+             ) VALUES (?, ?, 'job_application', ?, 'ACTIVE', 'APPLIED', 1, 1,
+                       ?, ?, ?)`,
+          )
+          .run(
+            projectId,
+            identity.workspaceId,
+            title,
+            canonicalJson(metadata),
+            now,
+            now,
+          );
+
+        this.database
+          .prepare(
+            `INSERT INTO state_transitions(
+               id, project_id, from_state, to_state, from_version, to_version,
+               trigger_type, status, proposed_by, proposal_rationale,
+               canonical_hash, admitted_by, admission_authority_type,
+               admission_authority_reference, proposed_at, admitted_at
+             ) VALUES (?, ?, 'NONE', 'APPLIED', 0, 1, 'USER_ASSERTION',
+                       'ADMITTED', 'USER', 'Job Application registered by user',
+                       ?, 'USER', 'EXPLICIT_USER_DEV', ?, ?, ?)`,
+          )
+          .run(
+            transitionId,
+            projectId,
+            canonicalHash({
+              projectId,
+              fromState: "NONE",
+              toState: "APPLIED",
+              triggerType: "USER_ASSERTION",
+              authorityReference,
+            }),
+            authorityReference,
+            now,
+            now,
+          );
+
+        return {
+          project: this.getAuthorizedProject(projectId, identity.workspaceId),
+          initialTransition: this.getTransition(transitionId),
+          replayed: false,
+        };
+      },
+    );
+  }
+
+  listJobApplications(includeClosed = false): ListJobApplicationsResult {
+    const identity = this.resolveDevelopmentIdentity();
+    const statusClause = includeClosed ? "" : "AND status <> 'CLOSED'";
+    const total = this.database
+      .prepare(
+        `SELECT COUNT(*) AS count
+         FROM projects
+         WHERE workspace_id = ? AND project_type = 'job_application'
+         ${statusClause}`,
+      )
+      .get(identity.workspaceId) as { count: number };
+
+    const rows = this.database
+      .prepare(
+        `SELECT id, workspace_id, project_type, title, status,
+                lifecycle_state, lifecycle_version, record_version,
+                metadata_json, created_at, updated_at
+         FROM projects
+         WHERE workspace_id = ? AND project_type = 'job_application'
+         ${statusClause}
+         ORDER BY updated_at DESC, id ASC
+         LIMIT ?`,
+      )
+      .all(
+        identity.workspaceId,
+        JOB_APPLICATION_LIST_LIMIT,
+      ) as unknown as ProjectRow[];
+
+    return {
+      applications: rows.map((row) => mapJobApplicationSummary(row)),
+      totalCount: total.count,
+      truncated: total.count > rows.length,
+      includeClosed,
+    };
+  }
+
+  updateJobApplication(input: UpdateJobApplicationInput): {
+    project: ProjectRecord;
+    changed: boolean;
+    replayed: boolean;
+  } {
+    const identity = this.resolveDevelopmentIdentity();
+    if (!Number.isInteger(input.expectedRecordVersion) || input.expectedRecordVersion < 1) {
+      throw new ValidationError("expectedRecordVersion must be a positive integer");
+    }
+    const patch = normalizeJobApplicationUpdate(input);
+    if (Object.keys(patch).length === 0) {
+      throw new ValidationError("At least one registration metadata field is required");
+    }
+
+    const payload = {
+      projectId: input.projectId,
+      expectedRecordVersion: input.expectedRecordVersion,
+      patch,
+    };
+
+    return this.runIdempotent(
+      identity.workspaceId,
+      "workspace_update_job_application",
+      input.idempotencyKey,
+      payload,
+      () => {
+        const project = this.getAuthorizedProject(
+          input.projectId,
+          identity.workspaceId,
+        );
+        if (project.projectType !== "job_application") {
+          throw new ValidationError("Project is not a Job Application");
+        }
+        if (project.recordVersion !== input.expectedRecordVersion) {
+          throw new ConcurrencyConflictError(
+            "Project registration metadata changed after it was read",
+          );
+        }
+
+        const current = readJobApplicationRegistration(project.metadata);
+        const next = { ...current, ...patch };
+        const changed = canonicalJson(current) !== canonicalJson(next);
+        if (!changed) {
+          return { project, changed: false, replayed: false };
+        }
+
+        const now = new Date().toISOString();
+        const nextMetadata: Record<string, JsonValue> = {
+          ...project.metadata,
+          ...patch,
+          company: next.company,
+          role: next.role,
+        };
+        const update = this.database
+          .prepare(
+            `UPDATE projects
+             SET title = ?, metadata_json = ?, record_version = record_version + 1,
+                 updated_at = ?
+             WHERE id = ? AND workspace_id = ? AND project_type = 'job_application'
+               AND record_version = ?`,
+          )
+          .run(
+            jobApplicationTitle(next.company, next.role),
+            canonicalJson(nextMetadata),
+            now,
+            project.id,
+            identity.workspaceId,
+            input.expectedRecordVersion,
+          );
+
+        if (update.changes !== 1) {
+          throw new ConcurrencyConflictError(
+            "Concurrent registration update prevented this change",
+          );
+        }
+
+        return {
+          project: this.getAuthorizedProject(project.id, identity.workspaceId),
+          changed: true,
+          replayed: false,
+        };
+      },
+    );
+  }
+
   getProject(projectId: string): ProjectDetails {
     const identity = this.resolveDevelopmentIdentity();
     const project = this.getAuthorizedProject(projectId, identity.workspaceId);
@@ -323,9 +583,10 @@ export class WorkspaceService {
       .prepare(
         `SELECT id, project_id, resource_type, provider, external_id,
                 external_uri, title, observed_facts_json, observed_at, created_at
-         FROM resources WHERE project_id = ? ORDER BY created_at DESC`,
+         FROM resources WHERE project_id = ? ORDER BY created_at DESC, id ASC
+         LIMIT ?`,
       )
-      .all(projectId) as unknown as ResourceRow[];
+      .all(projectId, PROJECT_HISTORY_LIMIT) as unknown as ResourceRow[];
 
     const transitionRows = this.database
       .prepare(
@@ -334,9 +595,10 @@ export class WorkspaceService {
                 admitted_by, admission_authority_type,
                 admission_authority_reference, proposed_at, admitted_at,
                 rejection_reason
-         FROM state_transitions WHERE project_id = ? ORDER BY proposed_at DESC`,
+         FROM state_transitions WHERE project_id = ?
+         ORDER BY proposed_at DESC, id ASC LIMIT ?`,
       )
-      .all(projectId) as unknown as TransitionRow[];
+      .all(projectId, PROJECT_HISTORY_LIMIT) as unknown as TransitionRow[];
 
     const tasks = this.database
       .prepare(
@@ -348,11 +610,30 @@ export class WorkspaceService {
       )
       .all(projectId) as unknown as TaskRow[];
 
+    const totalCounts = this.database
+      .prepare(
+        `SELECT
+           (SELECT COUNT(*) FROM resources WHERE project_id = ?) AS resources,
+           (SELECT COUNT(*) FROM state_transitions WHERE project_id = ?) AS transitions,
+           (SELECT COUNT(*) FROM tasks
+            WHERE project_id = ? AND status NOT IN ('DONE', 'CANCELLED')) AS open_tasks`,
+      )
+      .get(projectId, projectId, projectId) as {
+      resources: number;
+      transitions: number;
+      open_tasks: number;
+    };
+
     return {
       project,
       resources: resources.map((row) => this.mapResource(row)),
       transitions: transitionRows.map((row) => this.mapTransition(row)),
       openTasks: tasks.map((row) => this.mapTask(row)),
+      totalCounts: {
+        resources: totalCounts.resources,
+        transitions: totalCounts.transitions,
+        openTasks: totalCounts.open_tasks,
+      },
     };
   }
 
@@ -368,7 +649,7 @@ export class WorkspaceService {
     const rows = this.database
       .prepare(
         `SELECT id, workspace_id, project_type, title, status,
-                lifecycle_state, lifecycle_version, metadata_json,
+                lifecycle_state, lifecycle_version, record_version, metadata_json,
                 created_at, updated_at
          FROM projects
          WHERE workspace_id = ?
@@ -405,6 +686,7 @@ export class WorkspaceService {
           projectStatus: row.status,
           lifecycleState: row.lifecycle_state,
           lifecycleVersion: row.lifecycle_version,
+          recordVersion: row.record_version,
           updatedAt: row.updated_at,
         },
       ];
@@ -879,7 +1161,8 @@ export class WorkspaceService {
     const row = this.database
       .prepare(
         `SELECT id, workspace_id, project_type, title, status,
-                lifecycle_state, lifecycle_version, metadata_json,
+                lifecycle_state, lifecycle_version, record_version,
+                metadata_json,
                 created_at, updated_at
          FROM projects WHERE id = ? AND workspace_id = ?`,
       )
@@ -902,6 +1185,7 @@ export class WorkspaceService {
       status: row.status,
       lifecycleState: row.lifecycle_state,
       lifecycleVersion: row.lifecycle_version,
+      recordVersion: row.record_version,
       metadata: JSON.parse(row.metadata_json) as Record<string, JsonValue>,
       createdAt: row.created_at,
       updatedAt: row.updated_at,
@@ -1032,6 +1316,190 @@ export class WorkspaceService {
       updatedAt: row.updated_at,
     };
   }
+}
+
+interface NormalizedJobApplicationRegistration {
+  company: string;
+  role: string;
+  appliedDate: string | null;
+  location: string | null;
+  postingReference: string | null;
+}
+
+type JobApplicationRegistrationPatch = Partial<
+  NormalizedJobApplicationRegistration
+>;
+
+function normalizeJobApplicationRegistration(
+  input: Pick<
+    CreateJobApplicationInput,
+    "company" | "role" | "appliedDate" | "location" | "postingReference"
+  >,
+): NormalizedJobApplicationRegistration {
+  return {
+    company: normalizeRequiredRegistrationText(input.company, "company"),
+    role: normalizeRequiredRegistrationText(input.role, "role"),
+    appliedDate: normalizeAppliedDate(input.appliedDate ?? null),
+    location: normalizeOptionalRegistrationText(input.location ?? null, "location"),
+    postingReference: normalizePostingReference(input.postingReference ?? null),
+  };
+}
+
+function normalizeJobApplicationUpdate(
+  input: UpdateJobApplicationInput,
+): JobApplicationRegistrationPatch {
+  const patch: JobApplicationRegistrationPatch = {};
+  if (Object.hasOwn(input, "company")) {
+    if (input.company === undefined) {
+      throw new ValidationError("company must not be undefined when supplied");
+    }
+    patch.company = normalizeRequiredRegistrationText(input.company, "company");
+  }
+  if (Object.hasOwn(input, "role")) {
+    if (input.role === undefined) {
+      throw new ValidationError("role must not be undefined when supplied");
+    }
+    patch.role = normalizeRequiredRegistrationText(input.role, "role");
+  }
+  if (Object.hasOwn(input, "appliedDate")) {
+    patch.appliedDate = normalizeAppliedDate(input.appliedDate ?? null);
+  }
+  if (Object.hasOwn(input, "location")) {
+    patch.location = normalizeOptionalRegistrationText(
+      input.location ?? null,
+      "location",
+    );
+  }
+  if (Object.hasOwn(input, "postingReference")) {
+    patch.postingReference = normalizePostingReference(
+      input.postingReference ?? null,
+    );
+  }
+  return patch;
+}
+
+function normalizeRequiredRegistrationText(value: string, field: string): string {
+  const normalized = value.normalize("NFKC").trim().replace(/\s+/gu, " ");
+  if (!normalized) {
+    throw new ValidationError(`${field} is required`);
+  }
+  if (normalized.length > 500) {
+    throw new ValidationError(`${field} must not exceed 500 characters`);
+  }
+  return normalized;
+}
+
+function normalizeOptionalRegistrationText(
+  value: string | null,
+  field: string,
+): string | null {
+  if (value === null) return null;
+  return normalizeRequiredRegistrationText(value, field);
+}
+
+function normalizeAppliedDate(value: string | null): string | null {
+  if (value === null) return null;
+  if (!/^\d{4}-\d{2}-\d{2}$/u.test(value)) {
+    throw new ValidationError("appliedDate must use YYYY-MM-DD");
+  }
+  const parsed = new Date(`${value}T00:00:00.000Z`);
+  if (Number.isNaN(parsed.valueOf()) || parsed.toISOString().slice(0, 10) !== value) {
+    throw new ValidationError("appliedDate must be a valid calendar date");
+  }
+  return value;
+}
+
+function normalizePostingReference(value: string | null): string | null {
+  if (value === null) return null;
+  const trimmed = value.trim();
+  if (!trimmed || trimmed.length > 2_000) {
+    throw new ValidationError(
+      "postingReference must be a non-empty URL of at most 2000 characters",
+    );
+  }
+
+  let parsed: URL;
+  try {
+    parsed = new URL(trimmed);
+  } catch {
+    throw new ValidationError("postingReference must be a valid HTTP(S) URL");
+  }
+  if (
+    (parsed.protocol !== "https:" && parsed.protocol !== "http:") ||
+    parsed.username ||
+    parsed.password
+  ) {
+    throw new ValidationError(
+      "postingReference must be an HTTP(S) URL without credentials",
+    );
+  }
+  parsed.search = "";
+  parsed.hash = "";
+  const sanitized = parsed.toString();
+  if (emailAddressPattern.test(sanitized)) {
+    throw new ValidationError("postingReference must not contain an email address");
+  }
+  return sanitized;
+}
+
+function registrationMetadata(
+  registration: NormalizedJobApplicationRegistration,
+): Record<string, JsonValue> {
+  return {
+    company: registration.company,
+    role: registration.role,
+    appliedDate: registration.appliedDate,
+    location: registration.location,
+    postingReference: registration.postingReference,
+  };
+}
+
+function readJobApplicationRegistration(
+  metadata: Record<string, JsonValue>,
+): NormalizedJobApplicationRegistration {
+  if (typeof metadata.company !== "string" || typeof metadata.role !== "string") {
+    throw new ValidationError("Job Application registration metadata is invalid");
+  }
+  return {
+    company: normalizeRequiredRegistrationText(metadata.company, "company"),
+    role: normalizeRequiredRegistrationText(metadata.role, "role"),
+    appliedDate:
+      typeof metadata.appliedDate === "string"
+        ? normalizeAppliedDate(metadata.appliedDate)
+        : null,
+    location:
+      typeof metadata.location === "string"
+        ? normalizeOptionalRegistrationText(metadata.location, "location")
+        : null,
+    postingReference:
+      typeof metadata.postingReference === "string"
+        ? normalizePostingReference(metadata.postingReference)
+        : null,
+  };
+}
+
+function jobApplicationTitle(company: string, role: string): string {
+  return `${company} — ${role}`;
+}
+
+function mapJobApplicationSummary(row: ProjectRow): JobApplicationSummary {
+  const metadata = readJobApplicationRegistration(
+    JSON.parse(row.metadata_json) as Record<string, JsonValue>,
+  );
+  return {
+    projectId: row.id,
+    title: row.title,
+    company: metadata.company,
+    role: metadata.role,
+    appliedDate: metadata.appliedDate,
+    location: metadata.location,
+    postingReference: metadata.postingReference,
+    projectStatus: row.status,
+    lifecycleState: row.lifecycle_state,
+    lifecycleVersion: row.lifecycle_version,
+    recordVersion: row.record_version,
+    updatedAt: row.updated_at,
+  };
 }
 
 function normalizeJobApplicationLookupValue(value: string): string {

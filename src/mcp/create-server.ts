@@ -77,7 +77,7 @@ export function createWorkspaceMcpServer(
     {
       title: "Get a Workspace Project",
       description:
-        "Read one durable Project, including its lifecycle, observations, transitions, and open tasks.",
+        "Read one durable Project with current state, all open tasks, the latest 10 Resources and transitions, and total counts. History is bounded by default.",
       inputSchema: {
         projectId: z.string().uuid(),
       },
@@ -91,6 +91,121 @@ export function createWorkspaceMcpServer(
     async ({ projectId }) => {
       try {
         return successResult(workspaceService.getProject(projectId));
+      } catch (error) {
+        return errorResult(error);
+      }
+    },
+  );
+
+  server.registerTool(
+    "workspace_create_job_application",
+    {
+      title: "Register a Job Application",
+      description:
+        "Create a durable Job Application at APPLIED from an explicit user registration command. Records NONE to APPLIED as an admitted transition with attributable user authority. The command is idempotent.",
+      inputSchema: {
+        company: z.string().trim().min(1).max(500),
+        role: z.string().trim().min(1).max(500),
+        appliedDate: z
+          .string()
+          .regex(/^\d{4}-\d{2}-\d{2}$/u)
+          .nullable()
+          .optional(),
+        location: z.string().trim().min(1).max(500).nullable().optional(),
+        postingReference: z.string().trim().url().max(2_000).nullable().optional(),
+        userConfirmed: z.literal(true).describe(
+          "True only when the user explicitly requested this registration.",
+        ),
+        authorityReference: z.string().trim().min(1).max(500),
+        idempotencyKey: z.string().trim().min(1).max(200),
+      },
+      outputSchema: resultOutputSchema,
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        openWorldHint: false,
+      },
+    },
+    async (input) => {
+      try {
+        return successResult(
+          workspaceService.createJobApplication({
+            company: input.company,
+            role: input.role,
+            appliedDate: input.appliedDate,
+            location: input.location,
+            postingReference: input.postingReference,
+            authority: {
+              type: "EXPLICIT_USER_DEV",
+              confirmed: input.userConfirmed,
+              reference: input.authorityReference,
+            },
+            idempotencyKey: input.idempotencyKey,
+          }),
+        );
+      } catch (error) {
+        return errorResult(error);
+      }
+    },
+  );
+
+  server.registerTool(
+    "workspace_list_job_applications",
+    {
+      title: "List Job Applications",
+      description:
+        "List current Workspace Job Applications, excluding closed applications by default. Results are deterministically ordered and capped at 100 without pagination.",
+      inputSchema: {
+        includeClosed: z.boolean().default(false),
+      },
+      outputSchema: resultOutputSchema,
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        openWorldHint: false,
+      },
+    },
+    async ({ includeClosed }) => {
+      try {
+        return successResult(
+          workspaceService.listJobApplications(includeClosed),
+        );
+      } catch (error) {
+        return errorResult(error);
+      }
+    },
+  );
+
+  server.registerTool(
+    "workspace_update_job_application",
+    {
+      title: "Update Job Application registration metadata",
+      description:
+        "Update only company, role, applied date, location, or a sanitized posting reference. Requires registration record optimistic concurrency and never changes lifecycle state, lifecycle version, or Project status.",
+      inputSchema: {
+        projectId: z.string().uuid(),
+        expectedRecordVersion: z.number().int().min(1),
+        company: z.string().trim().min(1).max(500).optional(),
+        role: z.string().trim().min(1).max(500).optional(),
+        appliedDate: z
+          .string()
+          .regex(/^\d{4}-\d{2}-\d{2}$/u)
+          .nullable()
+          .optional(),
+        location: z.string().trim().min(1).max(500).nullable().optional(),
+        postingReference: z.string().trim().url().max(2_000).nullable().optional(),
+        idempotencyKey: z.string().trim().min(1).max(200),
+      },
+      outputSchema: resultOutputSchema,
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        openWorldHint: false,
+      },
+    },
+    async (input) => {
+      try {
+        return successResult(workspaceService.updateJobApplication(input));
       } catch (error) {
         return errorResult(error);
       }

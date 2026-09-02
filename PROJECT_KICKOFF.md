@@ -41,11 +41,12 @@ The Workspace will not initially rebuild Gmail/Drive/Calendar connectors. The fi
 - [x] Spike 1B functional ChatGPT cross-app E2E
 - [x] Spike 1B fresh-DB privacy/data-minimization rerun
 - [x] Spike 1B final verification
-- [ ] MVP implementation plan
-- [ ] MVP build
+- [x] Real Job Search MVP implementation plan approved with M1/M2/M3 gates
+- [ ] MVP build — Slice M1 inventory implemented and locally verified; M2/M3 gated
 - [ ] E2E evidence
 
 ## Immediate Next Step
 
-**Spike 1B is closed at `spike-1b-cross-app-verified-v0.1`. Do not begin the Real
-Job Search MVP without a separate, explicitly approved implementation plan.**
+**Spike 1B remains frozen at `spike-1b-cross-app-verified-v0.1`. Execute the
+approved Real Job Search MVP one slice at a time. Do not begin M2 until M1 has
+passed its acceptance gate and received a readiness decision.**

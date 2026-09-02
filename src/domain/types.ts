@@ -30,6 +30,7 @@ export interface ProjectRecord {
   status: "ACTIVE" | "PAUSED" | "CLOSED";
   lifecycleState: LifecycleState;
   lifecycleVersion: number;
+  recordVersion: number;
   metadata: Record<string, JsonValue>;
   createdAt: string;
   updatedAt: string;

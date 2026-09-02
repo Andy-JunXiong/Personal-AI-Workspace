@@ -19,7 +19,7 @@ afterEach(async () => {
 });
 
 describe("Streamable HTTP MCP transport", () => {
-  it("discovers and invokes the Spike 1A tools and Spike 1B lookup locally", async () => {
+  it("discovers and invokes the frozen Spike tools plus Slice M1 inventory locally", async () => {
     const workspace = createTestWorkspace();
     cleanups.push(workspace.cleanup);
     const app = createWorkspaceHttpApp(workspace.service);
@@ -41,11 +41,14 @@ describe("Streamable HTTP MCP transport", () => {
       const tools = await client.listTools();
       expect(tools.tools.map((tool) => tool.name).sort()).toEqual([
         "workspace_admit_transition",
+        "workspace_create_job_application",
         "workspace_find_job_application",
         "workspace_get_project",
+        "workspace_list_job_applications",
         "workspace_ping",
         "workspace_propose_transition",
         "workspace_record_observation",
+        "workspace_update_job_application",
       ]);
       expect(
         tools.tools.find(
@@ -77,6 +80,62 @@ describe("Streamable HTTP MCP transport", () => {
         result: {
           matchStatus: "EXACT",
           matches: [{ projectId: workspace.projectId }],
+        },
+      });
+
+      const creation = await client.callTool({
+        name: "workspace_create_job_application",
+        arguments: {
+          company: "M1 Example Co",
+          role: "Data Engineer",
+          appliedDate: "2026-09-02",
+          location: "Sydney",
+          postingReference:
+            "https://jobs.example.test/data-engineer?tracking=removed#apply",
+          userConfirmed: true,
+          authorityReference: "MCP test user requested registration",
+          idempotencyKey: "mcp-create-job-application-1",
+        },
+      });
+      expect(creation.isError).not.toBe(true);
+      const creationResult = creation.structuredContent as {
+        result: { project: { id: string; recordVersion: number } };
+      };
+      expect(creationResult.result.project.recordVersion).toBe(1);
+
+      const listing = await client.callTool({
+        name: "workspace_list_job_applications",
+        arguments: {},
+      });
+      expect(listing.isError).not.toBe(true);
+      expect(listing.structuredContent).toMatchObject({
+        result: {
+          totalCount: 2,
+          truncated: false,
+          includeClosed: false,
+        },
+      });
+
+      const registrationUpdate = await client.callTool({
+        name: "workspace_update_job_application",
+        arguments: {
+          projectId: creationResult.result.project.id,
+          expectedRecordVersion: 1,
+          role: "Senior Data Engineer",
+          location: null,
+          idempotencyKey: "mcp-update-job-application-1",
+        },
+      });
+      expect(registrationUpdate.isError).not.toBe(true);
+      expect(registrationUpdate.structuredContent).toMatchObject({
+        result: {
+          project: {
+            lifecycleState: "APPLIED",
+            lifecycleVersion: 1,
+            recordVersion: 2,
+            metadata: { role: "Senior Data Engineer", location: null },
+          },
+          changed: true,
         },
       });
 

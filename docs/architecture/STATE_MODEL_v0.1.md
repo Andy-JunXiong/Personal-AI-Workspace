@@ -1,6 +1,6 @@
 # State Model v0.1
 
-**Status:** ACCEPTED AS SPIKE 1A BASELINE; SPIKE 1B ADDS NO SCHEMA
+**Status:** SPIKE 1A/1B BASELINE FROZEN; REAL JOB SEARCH MVP PLAN APPROVED
 
 ## 1. Key modeling decision
 
@@ -47,6 +47,7 @@ title: string
 status: ACTIVE | PAUSED | CLOSED
 lifecycle_state: string
 lifecycle_version: integer
+record_version: integer
 
 metadata: object
 
@@ -60,8 +61,8 @@ Job Application metadata:
 company: string
 role: string
 location: string?
-application_url: string?
-applied_at: timestamp?
+postingReference: string? # sanitized HTTP(S) origin + path only
+appliedDate: date? # YYYY-MM-DD
 current_round: integer?
 next_interview_at: timestamp?
 interview_type: HM | TECHNICAL | PANEL | OTHER?
@@ -234,6 +235,7 @@ stateDiagram-v2
     [*] --> APPLIED
 
     APPLIED --> RECRUITER_CONTACT
+    APPLIED --> INTERVIEWING
     APPLIED --> REJECTED
     APPLIED --> WITHDRAWN
 
@@ -241,14 +243,13 @@ stateDiagram-v2
     RECRUITER_CONTACT --> REJECTED
     RECRUITER_CONTACT --> WITHDRAWN
 
-    INTERVIEWING --> INTERVIEWING: next round
     INTERVIEWING --> OFFER
     INTERVIEWING --> REJECTED
     INTERVIEWING --> WITHDRAWN
 
-    OFFER --> CLOSED
-    REJECTED --> CLOSED
-    WITHDRAWN --> CLOSED
+    OFFER --> ACCEPTED
+    OFFER --> REJECTED
+    OFFER --> WITHDRAWN
 ```
 
 ### Meanings
@@ -257,9 +258,14 @@ stateDiagram-v2
 - **RECRUITER_CONTACT** — meaningful employer/recruiter progression contact.
 - **INTERVIEWING** — interview process active or an interview is scheduled.
 - **OFFER** — concrete offer received.
+- **ACCEPTED** — user accepted the offer; successful terminal business outcome.
 - **REJECTED** — employer explicitly closes/rejects.
 - **WITHDRAWN** — user withdraws.
-- **CLOSED** — terminal administrative closure.
+
+`ACCEPTED`, `REJECTED`, and `WITHDRAWN` are terminal lifecycle states. Admitting
+one atomically sets `Project.status = CLOSED`; `CLOSED` is not a lifecycle
+state. Lifecycle represents the business outcome while Project status
+represents administrative active/closed state.
 
 Interview round is metadata, not a new lifecycle state.
 
@@ -293,9 +299,12 @@ Return:
 - lifecycle,
 - key metadata,
 - open tasks,
-- recent resources,
-- recent admitted transitions,
-- recent outcomes.
+- latest 10 resources plus total count,
+- latest 10 transitions plus total count,
+- latest 10 outcomes plus total count if Outcome persistence exists.
+
+The default read is bounded. A generic history pagination framework is not part
+of MVP v0.1.
 
 ### `workspace.get_today()`
 

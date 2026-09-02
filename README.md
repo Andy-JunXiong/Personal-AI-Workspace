@@ -50,16 +50,35 @@ The approved Spike 1B plan is in
 Final evidence is in
 [`docs/mvp/INTEGRATION_SPIKE_1B_RESULTS_v0.1.md`](docs/mvp/INTEGRATION_SPIKE_1B_RESULTS_v0.1.md).
 
+The approved Real Job Search MVP baseline and M1 -> M2 -> M3 gates are in
+[`docs/mvp/REAL_JOB_SEARCH_MVP_PLAN_v0.1.md`](docs/mvp/REAL_JOB_SEARCH_MVP_PLAN_v0.1.md).
+Slice M1 replaces fixture-only inventory with user-authorized creation,
+Workspace-scoped listing, narrow versioned registration updates, exact lookup,
+and bounded Project readback. M2 and M3 remain gated and are not implemented.
+
 ### Local setup
 
-```text
+For real-data dogfooding on Windows, keep the SQLite database outside both the
+repository and OneDrive. `PAW_DB_PATH` is the configuration boundary:
+
+```powershell
 npm install
-npm run seed
+$dataRoot = Join-Path $env:LOCALAPPDATA "PersonalAIWorkspace\data"
+New-Item -ItemType Directory -Force -Path $dataRoot
+$env:PAW_DB_PATH = Join-Path $dataRoot "workspace.db"
 npm run dev
 ```
 
-The seeded Project ID is printed by `npm run seed`. Use `/healthz` for a basic
-health check and `/mcp` with MCP Inspector or a ChatGPT development connection.
+The runtime rejects database paths inside the repository or a configured
+OneDrive root. Use `/healthz` for a basic health check and `/mcp` with MCP
+Inspector or a ChatGPT development connection. `npm run seed` remains only for
+the frozen synthetic Spike fixture; real inventory should use
+`workspace_create_job_application`.
+
+Before backing up or restoring, stop the Workspace process. Back up the closed
+`workspace.db` to a user-controlled encrypted location. To reset, stop the
+process and move the DB to a dated quarantine filename before restarting; the
+runtime will create and migrate a fresh DB. Startup never deletes existing data.
 
 ### Verification
 

@@ -11,7 +11,7 @@ export const testPrincipal = {
   workspaceName: "Test Workspace",
 };
 
-export function createTestWorkspace(options?: { fileBacked?: boolean }) {
+export function createEmptyTestWorkspace(options?: { fileBacked?: boolean }) {
   const directory = mkdtempSync(join(tmpdir(), "paw-spike-"));
   const databasePath = options?.fileBacked
     ? join(directory, "workspace.db")
@@ -19,7 +19,6 @@ export function createTestWorkspace(options?: { fileBacked?: boolean }) {
   const database = openDatabase(databasePath, resolve("db/migrations"));
   const service = new WorkspaceService(database, testPrincipal);
   const identity = service.ensureDevelopmentIdentity();
-  const details = service.seedJobApplication(spikeFixture);
 
   return {
     database,
@@ -27,12 +26,20 @@ export function createTestWorkspace(options?: { fileBacked?: boolean }) {
     directory,
     service,
     identity,
-    projectId: details.project.id,
     cleanup(): void {
       if (database.open) {
         database.close();
       }
       rmSync(directory, { recursive: true, force: true });
     },
+  };
+}
+
+export function createTestWorkspace(options?: { fileBacked?: boolean }) {
+  const workspace = createEmptyTestWorkspace(options);
+  const details = workspace.service.seedJobApplication(spikeFixture);
+  return {
+    ...workspace,
+    projectId: details.project.id,
   };
 }
