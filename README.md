@@ -37,11 +37,13 @@ local Spike 1B delta:
 - SQLite persistence, optimistic concurrency, and command idempotency.
 - one read-only exact Job Application lookup scoped to the current Workspace.
 
-Spike 1B local implementation and automated verification are complete. Its
-manual Gmail + Workspace ChatGPT platform gate remains `NOT_RUN`. Gmail remains
-a ChatGPT-connected source app and is not integrated into Workspace. UI,
-external connectors, background automation, and model API calls remain out of
-scope.
+Spike 1B local implementation, automated verification, and functional
+Gmail + Workspace cross-conversation E2E are complete. A sender-address
+data-minimization drift was repaired locally and the Gmail observation boundary
+was hardened; a fresh-DB manual privacy rerun is still required before final
+verification/tagging. Gmail remains a ChatGPT-connected source app and is not
+integrated into Workspace. UI, external connectors, background automation, and
+model API calls remain out of scope.
 
 The approved Spike 1B plan is in
 [`docs/mvp/INTEGRATION_SPIKE_1B_PLAN_v0.1.md`](docs/mvp/INTEGRATION_SPIKE_1B_PLAN_v0.1.md).

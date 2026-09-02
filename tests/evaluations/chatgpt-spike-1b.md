@@ -1,15 +1,18 @@
 # ChatGPT Cross-App Platform Gate v0.1 — Spike 1B
 
-**Execution status:** `NOT_RUN`
+**Execution status:** `EXECUTED — PRIVACY REMEDIATION RETEST PENDING`
 
-**Overall result (select exactly one only after manual execution):**
+**Functional E2E result:** `SUPPORTED`
 
-- [ ] `SUPPORTED`
-- [ ] `SUPPORTED_WITH_CONSTRAINT`
-- [ ] `NOT_SUPPORTED`
+**Privacy/data-minimization result:** `PENDING_RETEST`
 
-This document defines a manual gate. It does not claim that Gmail + Personal AI
-Workspace orchestration has been executed or is supported.
+**Final Spike 1B verification:** `PENDING`
+
+The functional Gmail -> ChatGPT -> Workspace -> separate-conversation readback
+completed successfully. The first run persisted an unapproved full sender
+identity in `observedFacts.sender`; the local Resource and idempotency response
+were repaired and the server boundary was hardened. Repeat the canonical run
+on a fresh DB before recording privacy support or final verification.
 
 ## Evidence boundary
 
@@ -142,6 +145,9 @@ no transition-derived Task
 ```
 
 The tool transcript must show an explicit pause. A proposal cannot admit itself.
+The server must reject the write with no durable Resource or idempotency record
+if provider is Gmail and the payload contains a full sender identity/address,
+an unapproved field, or a shape other than `gmail-job-observation-v0.1`.
 
 ### 1B-B2 — explicit-user admission
 
@@ -183,16 +189,32 @@ Use Personal AI Workspace only. Call workspace_find_job_application with company
 
 Expected: the new conversation finds the same Project without a UUID supplied by
 the user and reads `RECRUITER_CONTACT`, version `2`, the minimized Gmail
-observation, the admitted evidence relationship, and the sole derived Task.
+observation, the admitted evidence relationship, and the sole derived Task. The
+readback must show `senderDomain` only and must not show a sender name or full
+email address.
+
+## Required privacy remediation rerun
+
+Refresh the Workspace Custom App tool metadata and repeat 1B-A through 1B-B4
+against a fresh seeded DB. The functional result above remains `SUPPORTED`, but
+privacy/data-minimization becomes `SUPPORTED` only when:
+
+1. the accepted observation has exactly the approved contract fields;
+2. the server rejects the original drifted shape before any write;
+3. Resource and idempotency storage contain no full sender address; and
+4. the completely separate Workspace-only readback displays `senderDomain`
+   only.
 
 ## Overall exit rule
 
-- `SUPPORTED`: 1B-A and every 1B-B step pass exactly through the real Gmail and
-  Workspace apps.
+- Functional `SUPPORTED`: 1B-A and every 1B-B step pass exactly through the real
+  Gmail and Workspace apps. This has been observed.
+- Privacy `SUPPORTED`: the required fresh-DB rerun also satisfies every privacy
+  remediation condition above.
 - `SUPPORTED_WITH_CONSTRAINT`: the path works only with a documented platform,
   account, identifier, permission, prompt, or confirmation constraint.
 - `NOT_SUPPORTED`: the platform cannot complete the cross-app path or cannot
   provide deterministic individual-message provenance.
 
-Do not create `INTEGRATION_SPIKE_1B_RESULTS_v0.1.md`, check a result box, or
-claim platform support until the operator actually executes this gate.
+Do not create `INTEGRATION_SPIKE_1B_RESULTS_v0.1.md`, create the final verified
+tag, or claim final Spike 1B verification until the privacy rerun passes.

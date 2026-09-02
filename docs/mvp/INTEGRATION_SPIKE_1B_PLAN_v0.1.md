@@ -2,7 +2,9 @@
 
 **Status:** APPROVED IMPLEMENTATION BASELINE — IMPLEMENTED LOCALLY
 
-**Platform result:** `NOT_RUN`
+**Functional platform result:** `SUPPORTED`
+
+**Privacy/data-minimization result:** `PENDING_RETEST AFTER LOCAL REMEDIATION`
 
 ## 1. Objective
 
@@ -180,6 +182,12 @@ gmail-admit:<transition-id>
 
 The proposal references the Resource ID returned by observation recording.
 
+The Workspace service enforces this convention for any case-insensitive Gmail
+provider value. It normalizes the provider to `gmail` and rejects, before any
+write, full email addresses, sender identities, extra fields, missing contract
+fields, non-EMAIL Resources, or missing stable message IDs. Non-Gmail Spike 1A
+observation semantics are unchanged.
+
 ### Canonical synthetic Gmail fixture
 
 Send this controlled message through Gmail to the test account:
@@ -328,6 +336,7 @@ The following are unnecessary for proving Spike 1B and must not be added:
    **Complete.**
 4. Refresh the ChatGPT Custom App tool metadata after the server tool change.
 5. Execute 1B-A, then 1B-B in `tests/evaluations/chatgpt-spike-1b.md` manually.
+   **Functional E2E complete; privacy remediation rerun pending.**
 6. Only after actual manual evidence, record results in a separate Spike 1B
    results document without rewriting the frozen Spike 1A evidence.
 

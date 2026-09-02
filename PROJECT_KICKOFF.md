@@ -4,7 +4,7 @@
 
 **CHATGPT-NATIVE SPIKE 1A = COMPLETE**
 
-**SPIKE 1B = IMPLEMENTED AND AUTOMATED-VERIFIED LOCALLY; PLATFORM GATE NOT RUN**
+**SPIKE 1B = FUNCTIONAL E2E SUPPORTED; PRIVACY REMEDIATION RETEST PENDING**
 
 ## Thesis
 
@@ -38,14 +38,16 @@ The Workspace will not initially rebuild Gmail/Drive/Calendar connectors. The fi
 - [x] ChatGPT Integration Spike — local and manual ChatGPT-native Spike 1A verified
 - [x] Spike 1B architecture review and smallest-scope design
 - [x] Spike 1B implementation
-- [ ] Spike 1B manual ChatGPT cross-app platform gate
+- [x] Spike 1B functional ChatGPT cross-app E2E
+- [ ] Spike 1B fresh-DB privacy/data-minimization rerun
+- [ ] Spike 1B final verification and tag
 - [ ] MVP implementation plan
 - [ ] MVP build
 - [ ] E2E evidence
 
 ## Immediate Next Step
 
-**Refresh the Workspace Custom App metadata, then manually run Spike 1B-A. Only
-if its Gmail -> ChatGPT -> exact Workspace object read path passes, continue to
-Spike 1B-B evidence/proposal/explicit-approval/admission/readback. Do not claim
-platform support before that evidence exists.**
+**Refresh the Workspace Custom App metadata and repeat the canonical 1B-A/1B-B
+flow against a fresh DB. Confirm the accepted Resource and the separate-chat
+readback contain senderDomain only. Do not create the final verified tag until
+the privacy/data-minimization rerun passes.**

@@ -62,6 +62,10 @@ frozen; Spike 1B does not add or expand an interviewing transition.
   Gmail identifier shape remain manual gates.
 - The manual gate is split: 1B-A proves cross-app read/object resolution with
   no Workspace writes; only after it passes may 1B-B prove evidence-to-state.
+- The Workspace boundary strictly validates Gmail EMAIL observations against
+  `gmail-job-observation-v0.1`, normalizes the provider to `gmail`, and rejects
+  full addresses, sender identities, or extra payload fields before writing.
+  Other providers retain the frozen Spike 1A observation behavior.
 
 ## Rejected alternatives
 

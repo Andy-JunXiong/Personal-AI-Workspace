@@ -427,29 +427,33 @@ export class WorkspaceService {
     deduplicated: boolean;
     replayed: boolean;
   } {
+    const normalizedInput = normalizeRecordObservationInput(input);
     const identity = this.resolveDevelopmentIdentity();
     const payload = {
-      projectId: input.projectId,
-      resourceType: input.resourceType,
-      provider: input.provider,
-      externalId: input.externalId,
-      externalUri: input.externalUri,
-      title: input.title,
-      observedFacts: input.observedFacts,
-      observedAt: input.observedAt,
+      projectId: normalizedInput.projectId,
+      resourceType: normalizedInput.resourceType,
+      provider: normalizedInput.provider,
+      externalId: normalizedInput.externalId,
+      externalUri: normalizedInput.externalUri,
+      title: normalizedInput.title,
+      observedFacts: normalizedInput.observedFacts,
+      observedAt: normalizedInput.observedAt,
     };
 
     return this.runIdempotent(
       identity.workspaceId,
       "workspace_record_observation",
-      input.idempotencyKey,
+      normalizedInput.idempotencyKey,
       payload,
       () => {
-        this.getAuthorizedProject(input.projectId, identity.workspaceId);
+        this.getAuthorizedProject(
+          normalizedInput.projectId,
+          identity.workspaceId,
+        );
         const exactHash = canonicalHash(payload);
 
         let existing: ResourceRow | undefined;
-        if (input.externalId) {
+        if (normalizedInput.externalId) {
           existing = this.database
             .prepare(
               `SELECT id, project_id, resource_type, provider, external_id,
@@ -459,9 +463,9 @@ export class WorkspaceService {
                WHERE project_id = ? AND provider = ? AND external_id = ?`,
             )
             .get(
-              input.projectId,
-              input.provider,
-              input.externalId,
+              normalizedInput.projectId,
+              normalizedInput.provider,
+              normalizedInput.externalId,
             ) as ResourceRow | undefined;
         } else {
           existing = this.database
@@ -472,7 +476,9 @@ export class WorkspaceService {
                FROM resources
                WHERE project_id = ? AND canonical_hash = ?`,
             )
-            .get(input.projectId, exactHash) as ResourceRow | undefined;
+            .get(normalizedInput.projectId, exactHash) as
+            | ResourceRow
+            | undefined;
         }
 
         if (existing) {
@@ -496,14 +502,14 @@ export class WorkspaceService {
           )
           .run(
             id,
-            input.projectId,
-            input.resourceType,
-            input.provider,
-            input.externalId,
-            input.externalUri,
-            input.title,
-            canonicalJson(input.observedFacts),
-            input.observedAt,
+            normalizedInput.projectId,
+            normalizedInput.resourceType,
+            normalizedInput.provider,
+            normalizedInput.externalId,
+            normalizedInput.externalUri,
+            normalizedInput.title,
+            canonicalJson(normalizedInput.observedFacts),
+            normalizedInput.observedAt,
             exactHash,
             now,
           );
@@ -1030,4 +1036,182 @@ export class WorkspaceService {
 
 function normalizeJobApplicationLookupValue(value: string): string {
   return value.normalize("NFKC").trim().replace(/\s+/gu, " ").toLowerCase();
+}
+
+const emailAddressPattern = /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/iu;
+const senderDomainPattern =
+  /^(?=.{1,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/u;
+
+function normalizeRecordObservationInput(
+  input: RecordObservationInput,
+): RecordObservationInput {
+  const provider = input.provider.trim();
+  if (provider.toLowerCase() !== "gmail") {
+    return input;
+  }
+
+  if (input.resourceType !== "EMAIL" || !input.externalId?.trim()) {
+    throw new ValidationError(
+      "Canonical Gmail observations require resourceType EMAIL and a stable individual message ID",
+    );
+  }
+
+  if (
+    containsEmailAddress(input.observedFacts) ||
+    (input.title !== null && emailAddressPattern.test(input.title)) ||
+    (input.externalUri !== null && emailAddressPattern.test(input.externalUri))
+  ) {
+    throw new ValidationError(
+      "Canonical Gmail observations must not contain full email addresses; store senderDomain instead",
+    );
+  }
+
+  return {
+    ...input,
+    provider: "gmail",
+    externalId: input.externalId.trim(),
+    observedFacts: normalizeCanonicalGmailObservedFacts(input.observedFacts),
+  };
+}
+
+function normalizeCanonicalGmailObservedFacts(
+  observedFacts: Record<string, JsonValue>,
+): Record<string, JsonValue> {
+  assertExactKeys(
+    observedFacts,
+    ["contractVersion", "sourceFacts", "interpretation"],
+    "Canonical Gmail observedFacts",
+  );
+  if (observedFacts.contractVersion !== "gmail-job-observation-v0.1") {
+    throw new ValidationError(
+      "Canonical Gmail observations require contractVersion gmail-job-observation-v0.1",
+    );
+  }
+
+  const sourceFacts = requireJsonObject(
+    observedFacts.sourceFacts,
+    "Canonical Gmail sourceFacts",
+  );
+  assertAllowedAndRequiredKeys(
+    sourceFacts,
+    ["receivedAt", "senderDomain", "threadId"],
+    ["receivedAt"],
+    "Canonical Gmail sourceFacts",
+  );
+
+  const interpretation = requireJsonObject(
+    observedFacts.interpretation,
+    "Canonical Gmail interpretation",
+  );
+  assertExactKeys(
+    interpretation,
+    ["company", "role", "emailKind", "summary"],
+    "Canonical Gmail interpretation",
+  );
+
+  const receivedAt = requireNonEmptyString(
+    sourceFacts.receivedAt,
+    "Canonical Gmail sourceFacts.receivedAt",
+  );
+  const company = requireNonEmptyString(
+    interpretation.company,
+    "Canonical Gmail interpretation.company",
+  );
+  const role = requireNonEmptyString(
+    interpretation.role,
+    "Canonical Gmail interpretation.role",
+  );
+  const summary = requireNonEmptyString(
+    interpretation.summary,
+    "Canonical Gmail interpretation.summary",
+  );
+  const emailKind = requireNonEmptyString(
+    interpretation.emailKind,
+    "Canonical Gmail interpretation.emailKind",
+  );
+  if (emailKind !== "RECRUITER_CONTACT" && emailKind !== "OTHER") {
+    throw new ValidationError(
+      "Canonical Gmail interpretation.emailKind must be RECRUITER_CONTACT or OTHER",
+    );
+  }
+
+  const normalizedSourceFacts: Record<string, JsonValue> = { receivedAt };
+  if (sourceFacts.senderDomain !== undefined) {
+    const senderDomain = requireNonEmptyString(
+      sourceFacts.senderDomain,
+      "Canonical Gmail sourceFacts.senderDomain",
+    ).toLowerCase();
+    if (!senderDomainPattern.test(senderDomain)) {
+      throw new ValidationError(
+        "Canonical Gmail sourceFacts.senderDomain must be a domain, not a sender identity",
+      );
+    }
+    normalizedSourceFacts.senderDomain = senderDomain;
+  }
+  if (sourceFacts.threadId !== undefined) {
+    normalizedSourceFacts.threadId = requireNonEmptyString(
+      sourceFacts.threadId,
+      "Canonical Gmail sourceFacts.threadId",
+    );
+  }
+
+  return {
+    contractVersion: "gmail-job-observation-v0.1",
+    sourceFacts: normalizedSourceFacts,
+    interpretation: { company, role, emailKind, summary },
+  };
+}
+
+function containsEmailAddress(value: JsonValue): boolean {
+  if (typeof value === "string") return emailAddressPattern.test(value);
+  if (Array.isArray(value)) return value.some(containsEmailAddress);
+  if (value && typeof value === "object") {
+    return Object.values(value).some(containsEmailAddress);
+  }
+  return false;
+}
+
+function requireJsonObject(
+  value: JsonValue | undefined,
+  label: string,
+): Record<string, JsonValue> {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    throw new ValidationError(`${label} must be an object`);
+  }
+  return value;
+}
+
+function requireNonEmptyString(
+  value: JsonValue | undefined,
+  label: string,
+): string {
+  if (typeof value !== "string" || !value.trim()) {
+    throw new ValidationError(`${label} must be a non-empty string`);
+  }
+  return value.trim();
+}
+
+function assertExactKeys(
+  value: Record<string, JsonValue>,
+  keys: string[],
+  label: string,
+): void {
+  assertAllowedAndRequiredKeys(value, keys, keys, label);
+}
+
+function assertAllowedAndRequiredKeys(
+  value: Record<string, JsonValue>,
+  allowedKeys: string[],
+  requiredKeys: string[],
+  label: string,
+): void {
+  const actualKeys = Object.keys(value);
+  if (
+    actualKeys.some((key) => !allowedKeys.includes(key)) ||
+    requiredKeys.some((key) => !Object.hasOwn(value, key))
+  ) {
+    throw new ValidationError(
+      `${label} must contain only the approved provenance fields`,
+    );
+  }
 }

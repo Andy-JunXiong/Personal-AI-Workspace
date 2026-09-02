@@ -128,7 +128,7 @@ export function createWorkspaceMcpServer(
     {
       title: "Record a Project observation",
       description:
-        "Persist attributable observed facts as a Resource without changing Project lifecycle state. This is an internal Workspace write.",
+        "Persist attributable observed facts as a Resource without changing Project lifecycle state. This is an internal Workspace write. Gmail EMAIL observations are accepted only with provider gmail, a stable message ID, and the strict gmail-job-observation-v0.1 minimized provenance contract; full sender identities or email addresses are rejected.",
       inputSchema: {
         projectId: z.string().uuid(),
         resourceType: z.enum([
@@ -143,7 +143,11 @@ export function createWorkspaceMcpServer(
         externalId: z.string().trim().min(1).max(500).optional(),
         externalUri: z.string().trim().min(1).max(2_000).optional(),
         title: z.string().trim().min(1).max(500).optional(),
-        observedFacts: z.record(z.string(), z.unknown()),
+        observedFacts: z
+          .record(z.string(), z.unknown())
+          .describe(
+            "For Gmail EMAIL observations, use exactly contractVersion, sourceFacts {receivedAt, optional senderDomain, optional threadId}, and interpretation {company, role, emailKind, summary}. Never include a sender name or full email address.",
+          ),
         observedAt: z.string().datetime({ offset: true }),
         idempotencyKey: z.string().trim().min(1).max(200),
       },

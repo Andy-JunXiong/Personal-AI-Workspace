@@ -132,6 +132,10 @@ The canonical Spike 1B fixture uses `RECRUITER_CONTACT` only and can support
 only the approved `APPLIED -> RECRUITER_CONTACT` proof. This convention does
 not add a lifecycle edge or schema field.
 
+For `provider=gmail`, the application boundary enforces this exact convention
+before persistence. Full sender identities/addresses and unapproved fields are
+validation errors; they are not silently retained or moved elsewhere.
+
 ### Action
 
 ```yaml
