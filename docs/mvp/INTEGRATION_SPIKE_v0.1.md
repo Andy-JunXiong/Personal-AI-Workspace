@@ -6,7 +6,7 @@ Validate the critical ChatGPT-native assumptions before writing the full MVP.
 
 ## Scope split
 
-### Spike 1A — current implementation scope
+### Spike 1A — complete
 
 - Workspace MCP connectivity
 - durable Job Application persistence
@@ -15,7 +15,7 @@ Validate the critical ChatGPT-native assumptions before writing the full MVP.
 - separate transition proposal and admission
 - command idempotency and derived-task uniqueness
 
-### Spike 1B — designed, not implemented
+### Spike 1B — complete
 
 - Connected App + Workspace orchestration
 - cross-app structured handoff
@@ -23,7 +23,8 @@ Validate the critical ChatGPT-native assumptions before writing the full MVP.
 
 Spike 1B preserves ChatGPT as the cross-app orchestration and reasoning host.
 Gmail remains authoritative for email facts, and Workspace does not implement a
-Gmail connector. See `INTEGRATION_SPIKE_1B_PLAN_v0.1.md`.
+Gmail connector. See `INTEGRATION_SPIKE_1B_PLAN_v0.1.md` and
+`INTEGRATION_SPIKE_1B_RESULTS_v0.1.md`.
 
 Spike 1A must not implement Gmail, Drive, Calendar, or other external
 connectors. Test 3 below belongs to Spike 1B and is non-blocking for Spike 1A.
@@ -138,6 +139,6 @@ NOT_SUPPORTED
 Do not build the broad MVP until these are known.
 
 For Spike 1A, Test 3 was recorded as `DEFERRED_TO_SPIKE_1B` rather than treated
-as an implementation failure. Spike 1B remains `NOT_RUN` until its narrow tool
-delta is implemented and the Gmail + Workspace flow is manually exercised in
-ChatGPT.
+as an implementation failure. Spike 1B later implemented the narrow tool and
+completed the Gmail + Workspace manual ChatGPT gate with functional and privacy
+results classified `SUPPORTED`.

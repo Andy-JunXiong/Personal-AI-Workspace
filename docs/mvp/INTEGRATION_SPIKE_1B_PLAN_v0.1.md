@@ -1,10 +1,10 @@
 # Integration Spike 1B Plan v0.1
 
-**Status:** APPROVED IMPLEMENTATION BASELINE — IMPLEMENTED LOCALLY
+**Status:** COMPLETE — VERIFIED LOCALLY AND THROUGH CHATGPT/GMAIL
 
 **Functional platform result:** `SUPPORTED`
 
-**Privacy/data-minimization result:** `PENDING_RETEST AFTER LOCAL REMEDIATION`
+**Privacy/data-minimization result:** `SUPPORTED`
 
 ## 1. Objective
 
@@ -284,7 +284,8 @@ introduced for Spike 1B.
    Gmail or previous-chat context.
 
 Each manual gate is classified `SUPPORTED`, `SUPPORTED_WITH_CONSTRAINT`, or
-`NOT_SUPPORTED`. Until executed, the result remains `NOT_RUN`.
+`NOT_SUPPORTED`. The final canonical run classified Spike 1B-A, Spike 1B-B,
+and privacy/data minimization as `SUPPORTED`.
 
 ## 10. Risks and platform assumptions
 
@@ -335,10 +336,11 @@ The following are unnecessary for proving Spike 1B and must not be added:
 3. Add focused unit/integration/MCP tests and rerun all Spike 1A verification.
    **Complete.**
 4. Refresh the ChatGPT Custom App tool metadata after the server tool change.
+   **Complete.**
 5. Execute 1B-A, then 1B-B in `tests/evaluations/chatgpt-spike-1b.md` manually.
-   **Functional E2E complete; privacy remediation rerun pending.**
-6. Only after actual manual evidence, record results in a separate Spike 1B
-   results document without rewriting the frozen Spike 1A evidence.
+   **Complete — all functional and privacy gates SUPPORTED.**
+6. Record results separately without rewriting the frozen Spike 1A evidence.
+   **Complete in `INTEGRATION_SPIKE_1B_RESULTS_v0.1.md`.**
 
 ## References
 

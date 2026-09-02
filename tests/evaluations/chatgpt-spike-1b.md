@@ -1,18 +1,18 @@
 # ChatGPT Cross-App Platform Gate v0.1 — Spike 1B
 
-**Execution status:** `EXECUTED — PRIVACY REMEDIATION RETEST PENDING`
+**Execution status:** `EXECUTED — COMPLETE`
 
 **Functional E2E result:** `SUPPORTED`
 
-**Privacy/data-minimization result:** `PENDING_RETEST`
+**Privacy/data-minimization result:** `SUPPORTED`
 
-**Final Spike 1B verification:** `PENDING`
+**Final Spike 1B verification:** `COMPLETE`
 
 The functional Gmail -> ChatGPT -> Workspace -> separate-conversation readback
 completed successfully. The first run persisted an unapproved full sender
 identity in `observedFacts.sender`; the local Resource and idempotency response
-were repaired and the server boundary was hardened. Repeat the canonical run
-on a fresh DB before recording privacy support or final verification.
+were repaired and the server boundary was hardened. The final fresh canonical
+run confirmed the strict minimized payload and clean separate-chat readback.
 
 ## Evidence boundary
 
@@ -88,6 +88,8 @@ Runtime values to capture and reuse exactly:
 
 ## Spike 1B-A — cross-app read / object resolution
 
+**Result:** `SUPPORTED`
+
 1B-A proves only:
 
 ```text
@@ -123,10 +125,14 @@ begin 1B-B and do not write to Workspace.
 
 ## Spike 1B-B — evidence to durable state
 
+**Result:** `SUPPORTED`
+
 Run 1B-B only after 1B-A passes. Reuse the exact selected Gmail metadata and
 Project returned by 1B-A.
 
 ### 1B-B1 — record evidence, propose, and pause
+
+**Result:** `SUPPORTED`
 
 Replace only the angle-bracket runtime values. Send this exact prompt:
 
@@ -151,6 +157,8 @@ an unapproved field, or a shape other than `gmail-job-observation-v0.1`.
 
 ### 1B-B2 — explicit-user admission
 
+**Result:** `SUPPORTED`
+
 Only after checking the 1B-B1 evidence, replace `<TRANSITION_ID>` and send:
 
 ```text
@@ -170,6 +178,8 @@ exactly one HIGH RESPOND_TO_RECRUITER Task linked to <TRANSITION_ID>
 
 ### 1B-B3 — deterministic retry
 
+**Result:** `SUPPORTED`
+
 Send in the same conversation:
 
 ```text
@@ -180,6 +190,8 @@ Expected: one Resource, one admitted transition, version `2`, and one derived
 Task. Replays must not duplicate any durable record.
 
 ### 1B-B4 — separate-conversation durable readback
+
+**Result:** `SUPPORTED`
 
 Open a completely new ChatGPT conversation with no copied transcript. Send:
 
@@ -193,11 +205,13 @@ observation, the admitted evidence relationship, and the sole derived Task. The
 readback must show `senderDomain` only and must not show a sender name or full
 email address.
 
-## Required privacy remediation rerun
+## Privacy remediation rerun — complete
 
-Refresh the Workspace Custom App tool metadata and repeat 1B-A through 1B-B4
-against a fresh seeded DB. The functional result above remains `SUPPORTED`, but
-privacy/data-minimization becomes `SUPPORTED` only when:
+**Result:** `SUPPORTED`
+
+The Workspace Custom App metadata was refreshed, and 1B-A through 1B-B4 were
+repeated against a fresh seeded DB. The final run satisfied all required
+conditions:
 
 1. the accepted observation has exactly the approved contract fields;
 2. the server rejects the original drifted shape before any write;
@@ -210,11 +224,13 @@ privacy/data-minimization becomes `SUPPORTED` only when:
 - Functional `SUPPORTED`: 1B-A and every 1B-B step pass exactly through the real
   Gmail and Workspace apps. This has been observed.
 - Privacy `SUPPORTED`: the required fresh-DB rerun also satisfies every privacy
-  remediation condition above.
+  remediation condition above. This has been observed.
 - `SUPPORTED_WITH_CONSTRAINT`: the path works only with a documented platform,
   account, identifier, permission, prompt, or confirmation constraint.
 - `NOT_SUPPORTED`: the platform cannot complete the cross-app path or cannot
   provide deterministic individual-message provenance.
 
-Do not create `INTEGRATION_SPIKE_1B_RESULTS_v0.1.md`, create the final verified
-tag, or claim final Spike 1B verification until the privacy rerun passes.
+The final evidence record is
+`docs/mvp/INTEGRATION_SPIKE_1B_RESULTS_v0.1.md`. Runtime identifiers, personal
+data, credentials, databases, and operator-controlled transcripts remain
+outside Git.

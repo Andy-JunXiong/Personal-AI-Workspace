@@ -34,19 +34,21 @@ local Spike 1B delta:
 - one configured development Principal and Workspace,
 - one seeded Job Application,
 - separate observation, proposal, and explicit-user admission commands,
-- SQLite persistence, optimistic concurrency, and command idempotency.
+- SQLite persistence, optimistic concurrency, and command idempotency,
 - one read-only exact Job Application lookup scoped to the current Workspace.
 
-Spike 1B local implementation, automated verification, and functional
-Gmail + Workspace cross-conversation E2E are complete. A sender-address
-data-minimization drift was repaired locally and the Gmail observation boundary
-was hardened; a fresh-DB manual privacy rerun is still required before final
-verification/tagging. Gmail remains a ChatGPT-connected source app and is not
-integrated into Workspace. UI, external connectors, background automation, and
-model API calls remain out of scope.
+Spike 1B is complete at `spike-1b-cross-app-verified-v0.1`. Automated/local and
+manual ChatGPT/Gmail verification passed, including exact work-object
+resolution, minimized evidence handoff, explicit admission, retry safety,
+privacy/data minimization, and separate-conversation durable readback. Gmail
+remains a ChatGPT-connected source app and is not integrated into Workspace.
+UI, external connectors, background automation, and model API calls remain out
+of scope.
 
 The approved Spike 1B plan is in
 [`docs/mvp/INTEGRATION_SPIKE_1B_PLAN_v0.1.md`](docs/mvp/INTEGRATION_SPIKE_1B_PLAN_v0.1.md).
+Final evidence is in
+[`docs/mvp/INTEGRATION_SPIKE_1B_RESULTS_v0.1.md`](docs/mvp/INTEGRATION_SPIKE_1B_RESULTS_v0.1.md).
 
 ### Local setup
 
@@ -65,6 +67,6 @@ health check and `/mcp` with MCP Inspector or a ChatGPT development connection.
 npm run verify
 ```
 
-Local tests prove domain, persistence, idempotency, and MCP protocol behavior.
-They do not prove ChatGPT Developer mode, Secure MCP Tunnel, write-confirmation,
-or cross-conversation behavior; those require separate manual ChatGPT evidence.
+Local tests prove domain, persistence, privacy enforcement, idempotency, and MCP
+protocol behavior. Separate manual ChatGPT/Gmail evidence proves cross-app tool
+orchestration, explicit approval behavior, and cross-conversation continuity.

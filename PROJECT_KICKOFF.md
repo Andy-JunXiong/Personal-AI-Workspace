@@ -4,7 +4,7 @@
 
 **CHATGPT-NATIVE SPIKE 1A = COMPLETE**
 
-**SPIKE 1B = FUNCTIONAL E2E SUPPORTED; PRIVACY REMEDIATION RETEST PENDING**
+**SPIKE 1B = COMPLETE — FUNCTIONAL AND PRIVACY GATES SUPPORTED**
 
 ## Thesis
 
@@ -39,15 +39,13 @@ The Workspace will not initially rebuild Gmail/Drive/Calendar connectors. The fi
 - [x] Spike 1B architecture review and smallest-scope design
 - [x] Spike 1B implementation
 - [x] Spike 1B functional ChatGPT cross-app E2E
-- [ ] Spike 1B fresh-DB privacy/data-minimization rerun
-- [ ] Spike 1B final verification and tag
+- [x] Spike 1B fresh-DB privacy/data-minimization rerun
+- [x] Spike 1B final verification
 - [ ] MVP implementation plan
 - [ ] MVP build
 - [ ] E2E evidence
 
 ## Immediate Next Step
 
-**Refresh the Workspace Custom App metadata and repeat the canonical 1B-A/1B-B
-flow against a fresh DB. Confirm the accepted Resource and the separate-chat
-readback contain senderDomain only. Do not create the final verified tag until
-the privacy/data-minimization rerun passes.**
+**Spike 1B is closed at `spike-1b-cross-app-verified-v0.1`. Do not begin the Real
+Job Search MVP without a separate, explicitly approved implementation plan.**
