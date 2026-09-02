@@ -53,3 +53,12 @@ The Workspace will not initially rebuild Gmail/Drive/Calendar connectors. The fi
 **Spike 1B remains frozen at `spike-1b-cross-app-verified-v0.1`. Slice M1 is
 complete and frozen at `m1-real-application-inventory-verified-v0.1`. M2
 remains a separate gated change and was not started in the M1 milestone.**
+
+## Session Closeout — 2026-09-02
+
+- The verified M1 implementation, defect remediation, automated evidence, and
+  successful ChatGPT platform smoke are the repository baseline for the next
+  session.
+- No M2 implementation was started during this closeout.
+- Any M2 work must begin as a separate change under the approved M1 → M2 → M3
+  slice gates.

@@ -55,6 +55,8 @@ The approved Real Job Search MVP baseline and M1 -> M2 -> M3 gates are in
 Slice M1 is complete and verified locally and through the ChatGPT platform. Its
 final evidence is in
 [`docs/mvp/REAL_JOB_SEARCH_M1_RESULTS_v0.1.md`](docs/mvp/REAL_JOB_SEARCH_M1_RESULTS_v0.1.md).
+The verified milestone is frozen at
+`m1-real-application-inventory-verified-v0.1`.
 It replaces fixture-only inventory with user-authorized creation,
 Workspace-scoped listing, narrow versioned registration updates, exact lookup,
 and bounded Project readback. M2 and M3 remain gated and are not implemented.
