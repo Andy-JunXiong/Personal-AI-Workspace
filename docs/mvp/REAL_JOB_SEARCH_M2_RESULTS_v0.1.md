@@ -2,7 +2,7 @@
 
 **Milestone:** Task + Today
 
-**Decision:** LOCAL IMPLEMENTATION COMPLETE; CHATGPT PLATFORM VERIFICATION PENDING
+**Decision:** BLOCKED; M2 CREATE-TASK PLATFORM GATE FAILED / DEFECT FOUND
 
 ## Result summary
 
@@ -18,7 +18,72 @@ or edge and does not begin M3.
 | Today query tests | PASS |
 | Frozen Spike 1A/1B and M1 regression suite | PASS |
 | Local MCP transport/discovery | PASS |
-| ChatGPT platform smoke | PENDING |
+| ChatGPT platform smoke | FAILED / DEFECT FOUND |
+
+## Blocking platform defect investigation
+
+The M2 platform run reported that Project
+`feea9770-d834-4201-8ec1-b4e342e0a280` was returned as an ACTIVE/APPLIED
+Project by the application path and then reported as not found by
+`workspace_create_task`. M2-A, M2-B, M2-C, M3, tagging, and platform
+completion remain blocked.
+
+The historical raw MCP payload was not logged and cannot be recovered from
+the repository or current database. The best-recoverable request is therefore
+explicitly classified as reconstructed evidence:
+
+```json
+{
+  "projectId": "feea9770-d834-4201-8ec1-b4e342e0a280",
+  "title": "Send M2 follow-up",
+  "taskKind": "FOLLOW_UP",
+  "priority": "HIGH",
+  "dueAt": "unknown: omitted or null",
+  "userConfirmed": true,
+  "authorityReference": "unknown",
+  "idempotencyKey": "unknown"
+}
+```
+
+Repository inspection found that the MCP handler forwarded `input.projectId`
+unchanged to `TaskService`; `WorkspaceService` and `TaskService` received the
+same `better-sqlite3` database object and resolved the same development
+principal and Workspace. The Task lookup did not filter by Project type,
+Project status, lifecycle state, or UUID representation. No second database
+connection existed at the M2 module boundary.
+
+The recoverable running smoke environment pointed the tunnel at
+`http://127.0.0.1:3000/mcp`, and the server reported Workspace
+`6ef570b0-3c66-439f-bdfe-e2c8a2520014`. Its configured
+`%LOCALAPPDATA%\PersonalAIWorkspace\data\m2-platform-smoke.db` contained only
+the frozen Spike fixture: it contained neither the reported Project, a manual
+Task, nor M1/M2 idempotency records. A direct read through
+`workspace_get_project` also returned `NOT_FOUND` for the reported ID. This
+proves a runtime/database continuity discrepancy in the evidence available
+after the failure, but it does not prove which historical MCP payload or
+runtime instance produced the earlier success response.
+
+The server-side hardening removes TaskService's duplicate Project query.
+TaskService now delegates Project visibility to the exact authorized Project
+resolver used by `workspace_get_project`. Thus the invariant is structural:
+if that resolver can read a Project for the current Workspace, TaskService
+uses the same resolver before creating a Task. Workspace isolation and
+authorization remain unchanged.
+
+Regression coverage now uses the real M1 Job Application creation path,
+passes the generated ID directly to TaskService, checks ACTIVE/APPLIED
+visibility, checks exact idempotent replay, closes and reopens the same
+file-backed database, and verifies that both Project and Task remain visible.
+The MCP transport test now invokes the published `workspace_create_task`
+schema against the Project ID returned by
+`workspace_create_job_application`, with an undated HIGH `FOLLOW_UP`, and
+checks replay and Project readback. Existing cross-Workspace, nonexistent
+Project, fixture, M1, and Spike regressions remain in the full suite.
+
+The failed smoke database must be preserved as failed-run evidence and must
+not be used to claim a passing retest. Use a fresh external database for the
+next controlled platform run. The MCP tool schema and metadata did not
+change.
 
 ## Architecture decisions
 
@@ -67,7 +132,7 @@ Final local verification:
 ```text
 npm run verify
 Test Files  11 passed (11)
-Tests       73 passed (73)
+Tests       74 passed (74)
 TypeScript typecheck: passed
 Production build: passed
 git diff --check: passed
@@ -91,6 +156,7 @@ this slice.
 
 ## Readiness recommendation
 
-Proceed to the controlled ChatGPT M2 smoke in `tests/evaluations/chatgpt-m2.md`
-against a fresh external database. Do not tag/freeze M2 and do not start M3
+After the defect fix is deployed and the ChatGPT development connection is
+refreshed, restart the controlled M2 smoke from M2-A step 1 against a fresh
+external database. Do not continue the failed run, tag/freeze M2, or start M3
 until all platform observations are supported and recorded.

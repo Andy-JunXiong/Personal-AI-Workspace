@@ -233,7 +233,15 @@ export class WorkspaceService {
     options: { timeZone?: string; clock?: Clock } = {},
   ) {
     const resolveIdentity = () => this.resolveDevelopmentIdentity();
-    this.taskService = new TaskService(database, resolveIdentity, options.clock);
+    const assertProjectVisible = (projectId: string, workspaceId: string) => {
+      this.getAuthorizedProject(projectId, workspaceId);
+    };
+    this.taskService = new TaskService(
+      database,
+      resolveIdentity,
+      assertProjectVisible,
+      options.clock,
+    );
     this.todayQueryService = new TodayQueryService(
       database,
       resolveIdentity,

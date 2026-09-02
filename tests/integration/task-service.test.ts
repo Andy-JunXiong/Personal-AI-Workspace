@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { resolve } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { WorkspaceService } from "../../src/application/workspace-service.js";
 import {
@@ -8,7 +9,12 @@ import {
   ValidationError,
 } from "../../src/domain/errors.js";
 import type { TaskStatus } from "../../src/domain/types.js";
-import { createTestWorkspace } from "../helpers/test-workspace.js";
+import { openDatabase } from "../../src/persistence/database.js";
+import {
+  createEmptyTestWorkspace,
+  createTestWorkspace,
+  testPrincipal,
+} from "../helpers/test-workspace.js";
 
 const cleanups: Array<() => void> = [];
 const authority = {
@@ -45,6 +51,81 @@ function createTask(
 }
 
 describe("TaskService creation", () => {
+  it("creates a Task for an ACTIVE Project from the real M1 path and persists both across reopen", () => {
+    const testWorkspace = createEmptyTestWorkspace({ fileBacked: true });
+    cleanups.push(testWorkspace.cleanup);
+    const creation = testWorkspace.service.createJobApplication({
+      company: "M2 Smoke Co",
+      role: "Platform Engineer",
+      authority,
+      idempotencyKey: "m1-create-for-task-regression",
+    });
+    if (creation.creationStatus !== "CREATED") {
+      throw new Error("Expected the M1 creation path to create a Project");
+    }
+
+    const projectId = creation.project.id;
+    expect(testWorkspace.service.getProject(projectId).project).toMatchObject({
+      id: projectId,
+      status: "ACTIVE",
+      lifecycleState: "APPLIED",
+    });
+
+    const command = {
+      projectId,
+      title: "Send M2 follow-up",
+      taskKind: "FOLLOW_UP" as const,
+      priority: "HIGH" as const,
+      dueAt: null,
+      authority,
+      idempotencyKey: "m2-create-task-on-m1-project",
+    };
+    const created = testWorkspace.service.taskService.createTask(command);
+    const replay = testWorkspace.service.taskService.createTask(command);
+
+    expect(created).toMatchObject({
+      task: { projectId, title: "Send M2 follow-up", dueAt: null },
+      replayed: false,
+    });
+    expect(replay).toMatchObject({
+      task: { id: created.task.id },
+      replayed: true,
+    });
+    expect(
+      testWorkspace.database
+        .prepare("SELECT COUNT(*) AS count FROM tasks WHERE project_id = ?")
+        .get(projectId),
+    ).toEqual({ count: 1 });
+
+    testWorkspace.database.close();
+    const reopenedDatabase = openDatabase(
+      testWorkspace.databasePath,
+      resolve("db/migrations"),
+    );
+    try {
+      const reopenedService = new WorkspaceService(
+        reopenedDatabase,
+        testPrincipal,
+      );
+      reopenedService.ensureDevelopmentIdentity();
+      const persisted = reopenedService.getProject(projectId);
+      expect(persisted.project).toMatchObject({
+        id: projectId,
+        status: "ACTIVE",
+        lifecycleState: "APPLIED",
+      });
+      expect(persisted.openTasks).toEqual([
+        expect.objectContaining({
+          id: created.task.id,
+          projectId,
+          title: "Send M2 follow-up",
+        }),
+      ]);
+    } finally {
+      reopenedDatabase.close();
+    }
+  });
+
   it("creates an authorized, Project-scoped, versioned manual Task", () => {
     const testWorkspace = workspace();
     const result = createTask(testWorkspace, "authorized");

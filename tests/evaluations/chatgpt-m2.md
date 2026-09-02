@@ -1,6 +1,13 @@
 # ChatGPT M2 Platform Evaluation
 
-**Current status:** READY FOR PLATFORM VERIFICATION
+**Current status:** BLOCKED - M2 CREATE-TASK PLATFORM GATE FAILED / DEFECT FOUND
+
+The first M2-A run created and returned an ACTIVE/APPLIED Project but the next
+manual Task creation reported that Project as not found. Do not continue
+M2-A, M2-B, M2-C, M3, or tagging from that run. Preserve the failed database
+and evidence. After the server-side invariant fix is deployed, start again at
+the preconditions with a fresh external database and a refreshed ChatGPT
+development connection.
 
 Automated/local evidence and manual ChatGPT platform evidence are separate.
 Run this evaluation against a fresh external SQLite database under the verified

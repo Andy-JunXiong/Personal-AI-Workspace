@@ -89,6 +89,25 @@ describe("Streamable HTTP MCP transport", () => {
         },
         inputSchema: { type: "object" },
       });
+      expect(
+        tools.tools.find((tool) => tool.name === "workspace_create_task"),
+      ).toMatchObject({
+        inputSchema: {
+          required: [
+            "projectId",
+            "title",
+            "taskKind",
+            "priority",
+            "userConfirmed",
+            "authorityReference",
+            "idempotencyKey",
+          ],
+          properties: {
+            projectId: { type: "string", format: "uuid" },
+            dueAt: expect.any(Object),
+          },
+        },
+      });
 
       const ping = await client.callTool({
         name: "workspace_ping",
@@ -267,11 +286,10 @@ describe("Streamable HTTP MCP transport", () => {
       const taskCreation = await client.callTool({
         name: "workspace_create_task",
         arguments: {
-          projectId: workspace.projectId,
-          title: "Send requested portfolio",
-          taskKind: "OTHER",
+          projectId: creationResult.result.project.id,
+          title: "Send M2 follow-up",
+          taskKind: "FOLLOW_UP",
           priority: "HIGH",
-          dueAt: "2026-09-03T09:00:00+10:00",
           userConfirmed: true,
           authorityReference: "MCP test explicit Task request",
           idempotencyKey: "mcp-task-create-1",
@@ -279,8 +297,67 @@ describe("Streamable HTTP MCP transport", () => {
       });
       expect(taskCreation.isError).not.toBe(true);
       const taskResult = taskCreation.structuredContent as {
-        result: { task: { id: string; recordVersion: number } };
+        result: {
+          task: {
+            id: string;
+            projectId: string;
+            title: string;
+            taskKind: string;
+            priority: string;
+            dueAt: string | null;
+            recordVersion: number;
+          };
+          replayed: boolean;
+        };
       };
+      expect(taskResult.result).toMatchObject({
+        task: {
+          projectId: creationResult.result.project.id,
+          title: "Send M2 follow-up",
+          taskKind: "FOLLOW_UP",
+          priority: "HIGH",
+          dueAt: null,
+          recordVersion: 1,
+        },
+        replayed: false,
+      });
+
+      const taskReplay = await client.callTool({
+        name: "workspace_create_task",
+        arguments: {
+          projectId: creationResult.result.project.id,
+          title: "Send M2 follow-up",
+          taskKind: "FOLLOW_UP",
+          priority: "HIGH",
+          userConfirmed: true,
+          authorityReference: "MCP test explicit Task request",
+          idempotencyKey: "mcp-task-create-1",
+        },
+      });
+      expect(taskReplay.isError).not.toBe(true);
+      expect(taskReplay.structuredContent).toMatchObject({
+        result: {
+          task: { id: taskResult.result.task.id },
+          replayed: true,
+        },
+      });
+
+      const createdProject = await client.callTool({
+        name: "workspace_get_project",
+        arguments: { projectId: creationResult.result.project.id },
+      });
+      expect(createdProject.isError).not.toBe(true);
+      expect(createdProject.structuredContent).toMatchObject({
+        result: {
+          project: {
+            id: creationResult.result.project.id,
+            status: "ACTIVE",
+            lifecycleState: "APPLIED",
+          },
+          openTasks: [{ id: taskResult.result.task.id }],
+          totalCounts: { openTasks: 1 },
+        },
+      });
 
       const taskUpdate = await client.callTool({
         name: "workspace_update_task",

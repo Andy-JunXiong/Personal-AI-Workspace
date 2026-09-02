@@ -18,6 +18,10 @@ import type {
 import type { WorkspaceDatabase } from "../persistence/database.js";
 
 export type Clock = () => Date;
+export type ProjectVisibilityResolver = (
+  projectId: string,
+  workspaceId: string,
+) => void;
 
 interface TaskRow {
   id: string;
@@ -90,6 +94,7 @@ export class TaskService {
   constructor(
     private readonly database: WorkspaceDatabase,
     private readonly resolveIdentity: () => IdentityContext,
+    private readonly assertProjectVisible: ProjectVisibilityResolver,
     private readonly clock: Clock = () => new Date(),
   ) {}
 
@@ -123,7 +128,7 @@ export class TaskService {
       input.idempotencyKey,
       payload,
       () => {
-        assertProjectInWorkspace(this.database, input.projectId, identity.workspaceId);
+        this.assertProjectVisible(input.projectId, identity.workspaceId);
         const sourceOwnedTask = this.database
           .prepare(
             `SELECT id FROM tasks
@@ -361,17 +366,6 @@ function normalizeDueAt(value: string | null): string | null {
     throw new ValidationError("dueAt must be a valid timestamp");
   }
   return parsed.toISOString();
-}
-
-function assertProjectInWorkspace(
-  database: WorkspaceDatabase,
-  projectId: string,
-  workspaceId: string,
-): void {
-  const project = database
-    .prepare("SELECT id FROM projects WHERE id = ? AND workspace_id = ?")
-    .get(projectId, workspaceId);
-  if (!project) throw new NotFoundError(`Project ${projectId} was not found`);
 }
 
 export function mapTask(row: TaskRow): TaskRecord {
