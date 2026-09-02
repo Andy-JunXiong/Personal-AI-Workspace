@@ -59,8 +59,11 @@ The verified milestone is frozen at
 `m1-real-application-inventory-verified-v0.1`.
 It replaces fixture-only inventory with user-authorized creation,
 Workspace-scoped listing, narrow versioned registration updates, exact lookup,
-and bounded Project readback. Slice M2 is now locally implemented and awaiting
-ChatGPT platform verification; M3 remains gated and is not implemented.
+and bounded Project readback. Slice M2 is locally implemented, but its first
+ChatGPT platform run found a blocking create-Task Project-visibility defect.
+The server-side visibility invariant is hardened and the full local suite is
+green; the M2 platform gate remains `FAILED / DEFECT FOUND` until a fresh-DB
+manual retest passes. M3 remains gated and is not implemented.
 Exact active creation duplicates return `POSSIBLE_DUPLICATE` with zero writes;
 ordinary creation authority is not a duplicate override. A deliberate distinct
 duplicate requires `allowDistinctDuplicate=true` and a different sanitized
@@ -76,7 +79,8 @@ See the frozen M2 contract in
 [`docs/mvp/REAL_JOB_SEARCH_M2_PLAN_v0.1.md`](docs/mvp/REAL_JOB_SEARCH_M2_PLAN_v0.1.md)
 and ADR-011 in
 [`docs/adr/ADR-011-task-attention-today-view.md`](docs/adr/ADR-011-task-attention-today-view.md).
-Local M2 results and platform readiness are recorded in
+Local M2 results, the blocking defect investigation, and platform retest status
+are recorded in
 [`docs/mvp/REAL_JOB_SEARCH_M2_RESULTS_v0.1.md`](docs/mvp/REAL_JOB_SEARCH_M2_RESULTS_v0.1.md).
 
 ### Local setup

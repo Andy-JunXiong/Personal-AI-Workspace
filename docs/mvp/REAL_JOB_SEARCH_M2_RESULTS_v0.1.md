@@ -160,3 +160,15 @@ After the defect fix is deployed and the ChatGPT development connection is
 refreshed, restart the controlled M2 smoke from M2-A step 1 against a fresh
 external database. Do not continue the failed run, tag/freeze M2, or start M3
 until all platform observations are supported and recorded.
+
+## Session closeout — 2026-09-02
+
+- Server-side invariant hardening and all requested regression coverage are
+  complete locally.
+- `npm run verify` passes: 11 test files, 74 tests, typecheck, and production
+  build.
+- The MCP schema and metadata are unchanged.
+- The platform gate remains `FAILED / DEFECT FOUND`; no M2 continuation, M3
+  implementation, or M2 tag was performed.
+- Next session begins with deployment/connection refresh and the exact
+  fresh-database defect retest before restarting M2-A.

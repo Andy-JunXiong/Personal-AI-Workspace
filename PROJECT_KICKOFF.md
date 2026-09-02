@@ -8,6 +8,8 @@
 
 **REAL JOB SEARCH MVP SLICE M1 = COMPLETE — CHATGPT PLATFORM SUPPORTED**
 
+**REAL JOB SEARCH MVP SLICE M2 = BLOCKED — PLATFORM DEFECT FIXED LOCALLY; FRESH-DB RETEST REQUIRED**
+
 ## Thesis
 
 > Build a persistent work-state layer for ChatGPT that turns conversations and external events into long-running goals, projects, tasks, actions, and outcomes.
@@ -46,19 +48,32 @@ The Workspace will not initially rebuild Gmail/Drive/Calendar connectors. The fi
 - [x] Real Job Search MVP implementation plan approved with M1/M2/M3 gates
 - [x] MVP build — Slice M1 Real Application Inventory verified locally and through ChatGPT
 - [x] M1 duplicate-protection defect remediated and fresh-DB platform retest supported
+- [x] MVP build — Slice M2 Task + Today implemented and verified locally
+- [x] M2 create-Task visibility invariant hardened with regression coverage
+- [ ] M2 fresh-DB ChatGPT platform retest
 - [ ] E2E evidence
 
 ## Immediate Next Step
 
 **Spike 1B remains frozen at `spike-1b-cross-app-verified-v0.1`. Slice M1 is
-complete and frozen at `m1-real-application-inventory-verified-v0.1`. M2
-remains a separate gated change and was not started in the M1 milestone.**
+complete and frozen at `m1-real-application-inventory-verified-v0.1`. Keep the
+M2 platform gate at `FAILED / DEFECT FOUND`; deploy the visibility fix and
+restart M2-A from step 1 against a fresh external database. Do not start M3 or
+tag M2 before that retest passes.**
 
-## Session Closeout — 2026-09-02
+## Session Closeout — 2026-09-02 (M2 defect remediation)
 
-- The verified M1 implementation, defect remediation, automated evidence, and
-  successful ChatGPT platform smoke are the repository baseline for the next
-  session.
-- No M2 implementation was started during this closeout.
-- Any M2 work must begin as a separate change under the approved M1 → M2 → M3
-  slice gates.
+- The M2 platform run stopped at the first manual Task creation after reporting
+  a durable ACTIVE/APPLIED Job Application.
+- The historical raw MCP payload was unavailable. Recoverable evidence showed
+  a runtime/database continuity discrepancy, so reconstructed fields are
+  explicitly labeled rather than presented as raw evidence.
+- TaskService now uses WorkspaceService's canonical authorized Project resolver;
+  the dedicated TaskService boundary and Workspace isolation remain intact.
+- The real M1 creation -> Task creation -> persisted reopen path and the
+  published MCP transport path are covered by regressions.
+- `npm run verify` passes with 11 test files and 74 tests; production build and
+  `git diff --check` also pass.
+- The M2 platform gate remains failed. Preserve the failed-run evidence and use
+  a fresh external database for the next manual retest. M3 and M2 tagging remain
+  blocked.

@@ -1,6 +1,6 @@
 # Real Job Search MVP Plan v0.1
 
-**Status:** APPROVED WITH MODIFICATIONS — SLICE M1 COMPLETE; M2 LOCAL GATE PASSED, PLATFORM VERIFICATION PENDING
+**Status:** APPROVED WITH MODIFICATIONS — SLICE M1 COMPLETE; M2 PLATFORM GATE FAILED / DEFECT FOUND; FRESH-DB RETEST REQUIRED
 
 ## 1. Product objective and scope rule
 
@@ -176,8 +176,12 @@ only state-backed attention reasons. M1 and frozen Spike gates remain green.
 isolation, idempotency, optimistic concurrency, completion/terminal semantics,
 all Today categories, the seven-day inclusive boundary, deterministic
 ordering, Workspace isolation, read-only behavior, and injected-clock timezone
-boundaries. Manual ChatGPT platform verification remains a separate gate; M3
-must not begin before that decision.
+boundaries. The first manual ChatGPT run found a blocking Project-visibility
+failure at `workspace_create_task`. The server-side invariant now makes
+TaskService use the same authorized Project resolver as
+`workspace_get_project`, and real M1-to-Task plus published-MCP regressions
+pass. The platform gate remains `FAILED / DEFECT FOUND` until the fixed build
+passes a fresh-external-database retest. M3 must not begin before that decision.
 
 ### M3 gate
 
