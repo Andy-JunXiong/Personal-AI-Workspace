@@ -13,132 +13,74 @@ This is not an AI-news log. Every entry must answer:
 
 > What does this change alter for Personal AI Workspace?
 
-The watch exists inside this repository because the result governs this
-product's scope. It is not a separate product or intelligence pipeline.
+The watch belongs in this repository because it governs this product's scope.
+It is not a separate project or intelligence pipeline.
 
-## Governing boundary
-
-The stable product boundary remains:
+## Stable product boundary
 
 **ChatGPT owns:**
 
-- primary interaction;
-- general reasoning and generic intelligence;
-- platform-provided connectors and source access;
-- generic automation primitives where they are sufficiently reliable; and
+- primary interaction, general reasoning, and generic intelligence;
+- platform connectors and source access;
+- generic automation primitives where sufficiently reliable; and
 - the host surface for compatible embedded UI.
 
 **Personal AI Workspace owns:**
 
-- authoritative domain state;
-- domain lifecycle and invariants;
-- provenance and evidence relationships;
-- mutation authority and admission;
-- version history and concurrency control;
-- durable coordination;
+- authoritative domain state, lifecycle, and invariants;
+- provenance, evidence relationships, and mutation authority;
+- version history, concurrency control, and durable coordination;
 - domain-specific operational models; and
-- formal inspection and control surfaces when conversation alone is
-  insufficient.
+- formal inspection and control surfaces where conversation is insufficient.
 
-**External providers own their native facts.** Gmail, Drive, Calendar, GitHub,
-and other providers remain authoritative for their own records. Workspace
-stores only the minimum evidence, references, and cross-system state needed for
-the domain workflow.
+External providers own their native facts. Workspace stores only the minimum
+references, evidence, and cross-system state needed for the domain workflow.
 
-Implementation boundaries may move as the platform changes. The product thesis
-must not drift in response to individual releases.
+Implementation boundaries may move. The thesis must not drift in response to
+individual releases.
 
 ## M4 constraint
 
-The active M4 feature freeze remains authoritative through the Day 28 decision
-defined in
-[the real-use evaluation](../dogfood/M4_REAL_USE_EVALUATION_v0.2.md).
+The feature freeze remains authoritative through the Day 28 decision in
+[M4 Real Use Evaluation](../dogfood/M4_REAL_USE_EVALUATION_v0.2.md).
 
-This document is advisory only. A Platform Watch entry does not authorize:
+This document is advisory only. An entry does not authorize a runtime feature,
+schema migration, connector, scheduler, MCP tool, model call, automatic
+admission, metric change, or retrospective M4 rescore. Before Day 28, only
+safety and correctness defects may change the frozen runtime under the existing
+M4 rules.
 
-- a runtime feature;
-- a schema migration;
-- a connector or scheduler;
-- a new MCP tool;
-- a model call;
-- automatic admission;
-- a change to frozen evaluation metrics; or
-- retrospective rescoring of M4 evidence.
+## Watch scope
 
-Before the Day 28 decision, only safety and correctness defects may change the
-frozen runtime under the existing M4 rules.
+| Category | Watch | Boundary question |
+| --- | --- | --- |
+| **Interaction / UI** | Interactive UI, MCP Apps, inline/full-screen views, deep links, navigation | Can ChatGPT host the domain inspection and control surface while Workspace owns state and rules? |
+| **Persistent State** | Memory, Projects, structured/versioned objects, long-running state, recovery/export | Is this authoritative domain state or only contextual recall? |
+| **Automation** | Scheduled tasks, event triggers, monitoring, background agents | Can generic triggering be delegated without delegating domain truth or admission? |
+| **Connectors / Sync** | Gmail, Drive, Calendar, GitHub, browser, indexing, sync | Can ChatGPT use provider-native facts/actions without a duplicate Workspace connector? |
+| **Ecosystem / Distribution** | Plugins, MCP, auth, permissions, publishing, packaging, monetization | Can the OpenAI ecosystem host and distribute Workspace as a domain/state product? |
 
-## Scope
-
-Record only changes in these five categories.
-
-### A. Interaction / UI
-
-Watch interactive and contextual UI, MCP Apps or equivalent embedded views,
-full-screen and inline presentation, deep linking, navigation, and
-domain-specific interface capabilities.
-
-**Boundary question:** Can ChatGPT host the inspection, confirmation, and
-navigation surface that the domain needs, while Workspace continues to own the
-underlying state and rules?
-
-### B. Persistent State
-
-Watch Memory, Projects, structured objects, versioned objects, long-running
-work state, history, recovery, export, and inspection controls.
-
-**Boundary question:** Does the platform now provide genuinely authoritative,
-structured, addressable, versioned domain state rather than helpful contextual
-recall?
-
-This is a thesis-level risk only if the platform capability can enforce domain
-invariants, explicit mutation authority, concurrency, version history, durable
-readback, and recovery.
-
-### C. Automation
-
-Watch scheduled tasks, event triggers, conditional monitoring, background
-execution, recurring workflows, and agent runtime primitives.
-
-**Boundary question:** Can Workspace delegate generic triggering and execution
-without delegating domain truth, lifecycle validation, or admission authority?
+A state capability threatens the thesis only when it supports addressable
+structured objects, domain invariants, explicit mutation authority, version
+history or concurrency, durable readback, and recovery.
 
 Workspace Today remains a deterministic domain query and classifier. It is not
 a generic scheduler.
 
-### D. Connectors / Sync
-
-Watch Gmail, Drive, Calendar, GitHub, browser, web, third-party apps, indexing,
-sync, and provider event access.
-
-**Boundary question:** Can ChatGPT obtain the source fact or perform the
-provider-native action reliably enough that Workspace does not need a duplicate
-connector layer?
-
-### E. Ecosystem / Distribution
-
-Watch Plugins, MCP, plugin directories, authentication, permissions,
-publication, reusable workflow packaging, and monetization.
-
-**Boundary question:** Is the OpenAI ecosystem becoming a viable distribution
-and host layer for Personal AI Workspace as a domain/state product?
-
 ## Evidence and maturity
 
-Use official OpenAI documentation or official OpenAI release notes as the
-primary source. Do not make a roadmap decision from social posts, commentary,
-rumours, or generic AI news.
+Use official OpenAI documentation or official release notes as the primary
+source. Do not change the roadmap from social posts, commentary, rumours, or
+generic AI news.
 
-Each entry records:
+Every entry records:
 
 - **Availability:** ANNOUNCED, PREVIEW, ELIGIBLE-PLANS, or GA;
 - **Workspace scenario verified:** YES, NO, or NOT APPLICABLE; and
-- an official source URL.
+- the official source URL.
 
-An announced or preview capability may justify observation or an experiment.
-It does not by itself justify removing a Workspace responsibility.
-
-Speculation about what GPT may provide soon can influence implementation
+An announcement may justify observation or an experiment. It does not justify
+removing a Workspace responsibility. Predictions may influence implementation
 reversibility, but cannot remove an accepted roadmap item.
 
 ## Decision labels
@@ -147,359 +89,185 @@ Each entry has one primary decision.
 
 | Decision | Meaning |
 | --- | --- |
-| **IGNORE** | A major or easily confused change was reviewed and does not alter the Workspace boundary or roadmap. |
-| **ADOPT** | Use the platform capability as a dependency; do not duplicate its generic implementation in Workspace. |
-| **REMOVE** | Remove an already accepted Workspace responsibility or roadmap item because the platform now replaces it. |
-| **DOUBLE-DOWN** | The platform change increases the importance of a Workspace-owned domain, state, evidence, authority, or coordination capability. |
+| **IGNORE** | A major or easily confused change was reviewed and does not alter the boundary or roadmap. |
+| **ADOPT** | Use the platform capability; do not duplicate its generic implementation. |
+| **REMOVE** | Remove an accepted Workspace responsibility or roadmap item because the platform replaces it. |
+| **DOUBLE-DOWN** | The change increases the value of a Workspace-owned domain, state, evidence, authority, or coordination capability. |
 
-When one platform change affects two different Workspace capabilities, record
-one primary decision and an optional **Secondary implication**. For example:
-
-- primary decision: ADOPT the platform event trigger;
-- secondary implication: DOUBLE-DOWN on Workspace admission and lifecycle
-  enforcement.
+If one release affects two different capabilities, add a short **Secondary
+implication**. Example: ADOPT a platform event trigger; DOUBLE-DOWN on Workspace
+admission and lifecycle enforcement.
 
 ### REMOVE gate
 
-REMOVE is deliberately harder than ADOPT. Before using it, confirm that:
+Use REMOVE only after confirming:
 
-1. the capability is available to the intended user and environment;
-2. the relevant Workspace scenario has been tested;
-3. reliability, permissions, failure visibility, and operating history are
-   adequate;
+1. the capability is available in the intended environment;
+2. the Workspace scenario has been tested;
+3. reliability, permissions, failure visibility, and run history are adequate;
 4. domain invariants and explicit authority remain enforceable;
 5. recovery, export, or a viable fallback exists; and
-6. an accepted Workspace responsibility or roadmap item actually exists to
-   remove.
+6. an accepted Workspace responsibility actually exists to remove.
 
-If Workspace never accepted the capability, use ADOPT with a “do not build”
-implication rather than claiming that something was removed.
+If Workspace never accepted the capability, use ADOPT with “do not build,” not
+REMOVE.
 
-## Operating cadence
+## Cadence
 
 ### Weekly platform scan
 
-Spend no more than 15–20 minutes reviewing official OpenAI sources, including:
+Spend at most 15–20 minutes on official ChatGPT, Memory/Projects, automation,
+Plugins/MCP/UI, connector, and developer-platform updates.
 
-- ChatGPT and ChatGPT Work updates;
-- Memory and Projects;
-- Scheduled Tasks and automation;
-- Plugins, MCP, and UI;
-- connectors and sync; and
-- developer-platform changes that affect the Workspace integration boundary.
-
-No entry is the normal result when nothing materially affects Workspace.
-
-A scheduled scan may prepare a candidate assessment, but it must not
-automatically modify this repository or create an ADR.
+No entry is the normal result. A scheduled scan may draft a candidate finding,
+but must not modify the repository or create an ADR automatically.
 
 ### Monthly architecture boundary review
 
-Run only when the month contains at least one material entry. Answer:
+Run only when the month contains a material entry. Answer:
 
-1. What changed in GPT this month?
-2. What capability did the platform absorb?
-3. What can Workspace stop implementing?
-4. What became easier to build?
-5. What still clearly belongs to Workspace?
-6. Has the thesis changed?
+- What changed?
+- What did the platform absorb?
+- What can Workspace stop implementing?
+- What became easier?
+- What still belongs to Workspace?
+- Has the thesis changed?
 
-Record exactly one conclusion:
+Record one conclusion:
 
 | Conclusion | Meaning |
 | --- | --- |
-| **NO DRIFT** | The thesis and Workspace-owned capability set remain unchanged. |
-| **NARROW** | The Workspace-owned implementation boundary becomes smaller. |
-| **EXPAND** | A platform change makes an additional Workspace-owned domain capability justified. |
-| **REPOSITION** | The product thesis or ecosystem role must materially change. |
+| **NO DRIFT** | Thesis and Workspace-owned capability set remain unchanged. |
+| **NARROW** | Workspace-owned implementation scope becomes smaller. |
+| **EXPAND** | A platform change justifies an additional Workspace-owned capability. |
+| **REPOSITION** | The thesis or ecosystem role must materially change. |
 
 ADOPT can still result in NO DRIFT when the current architecture already
-delegates that capability to ChatGPT.
+delegates that capability.
 
 ### Major release review
 
-Do not wait for the monthly review when a release introduces or materially
-changes:
-
-- authoritative structured state;
-- versioned persistent objects;
-- formal domain workflows;
-- rich custom domain UI;
-- automation or runtime primitives;
-- major connector behavior; or
-- plugin/app distribution, authentication, or permissions.
+Review immediately when OpenAI materially changes authoritative structured
+state, versioned objects, formal domain workflows, rich custom UI, automation
+runtime, major connectors, or plugin distribution/authentication.
 
 ## Relationship to ADRs
 
-Do not create an ADR for every platform announcement.
+Platform change → Platform Watch → impact review → ADR only if the architecture
+must change → implementation.
 
-~~~text
-OpenAI platform change
-        |
-        v
-OpenAI Platform Watch entry
-        |
-        v
-Evidence and impact review
-        |
-        v
-Architecture change actually required?
-        |
-        +-- No --> No ADR
-        |
-        +-- Yes --> New ADR --> Architecture / implementation
-~~~
-
-A Platform Watch entry identifies a candidate decision. Only an accepted ADR
-may change an established architecture boundary.
+A Watch entry is a candidate decision. Only an accepted ADR may change an
+established architecture boundary.
 
 ## New-feature ownership test
 
-Before adding a new feature, ask:
+Before adding a feature, ask:
 
 1. Does the OpenAI platform already provide it?
-2. Is it officially announced, available, and verified, or merely predicted?
-3. Is it generic AI/platform capability or domain-specific operational value?
-4. If GPT became ten times more capable tomorrow, would this feature still need
-   authoritative state, lifecycle, evidence, authority, or coordination?
-5. Can the implementation remain small and reversible until the platform
-   boundary is verified?
+2. Is it officially announced, available, and verified, or only predicted?
+3. Is it generic platform capability or domain-specific operational value?
+4. If GPT became ten times more capable, would authoritative state, lifecycle,
+   evidence, authority, or coordination still be required?
+5. Can implementation remain small and reversible until verified?
 
-Prefer the platform for generic reasoning, contextual recall, search,
-scheduling, connectors, and chat UI.
-
-Prefer Workspace for domain state, lifecycle, evidence, authority, version
-history, cross-system coordination, deterministic domain rules, and formal
-inspection or control.
+Prefer the platform for generic reasoning, recall, search, scheduling,
+connectors, and chat UI. Prefer Workspace for domain state, lifecycle, evidence,
+authority, version history, deterministic domain rules, coordination, and
+formal inspection/control.
 
 ## Entry template
 
 ~~~markdown
 ## YYYY-MM-DD — Change title
 
-Official source:
-<URL>
+Official source: <URL>
+Availability: ANNOUNCED / PREVIEW / ELIGIBLE-PLANS / GA
+Workspace scenario verified: YES / NO / NOT APPLICABLE
+Category: Interaction / UI | Persistent State | Automation |
+  Connectors / Sync | Ecosystem / Distribution
+Affected Workspace boundary: <specific capability or roadmap item>
 
-Availability:
-ANNOUNCED / PREVIEW / ELIGIBLE-PLANS / GA
-
-Workspace scenario verified:
-YES / NO / NOT APPLICABLE
-
-Category:
-Interaction / UI | Persistent State | Automation | Connectors / Sync |
-Ecosystem / Distribution
-
-Affected Workspace boundary:
-<Specific capability or accepted roadmap item>
-
-Change:
-<One sentence>
-
-Workspace implication:
-<What Workspace should stop doing, adopt, or emphasize>
-
-Decision:
-IGNORE / ADOPT / REMOVE / DOUBLE-DOWN
-
-Secondary implication:
-<Optional>
-
-Action now:
-NONE / EXPERIMENT / ADR CANDIDATE
-
-Revisit trigger:
-<Concrete condition that would justify reassessment>
-
-Architecture review required:
-YES / NO
+Change: <one sentence>
+Workspace implication: <one or two sentences>
+Decision: IGNORE / ADOPT / REMOVE / DOUBLE-DOWN
+Secondary implication: <optional>
+Action now: NONE / EXPERIMENT / ADR CANDIDATE
+Revisit trigger: <concrete condition>
+Architecture review required: YES / NO
 ~~~
 
 Do not write a long news summary.
 
 ## Baseline — 2026-09-04
 
-### 2026-09-04 — Memory remains a recall layer
+### Memory remains a recall layer
 
-Official source:
-https://learn.chatgpt.com/docs/customization/memories
+- **Official source:** https://learn.chatgpt.com/docs/customization/memories
+- **Availability:** ELIGIBLE-PLANS
+- **Workspace scenario verified:** NOT APPLICABLE
+- **Category:** Persistent State
+- **Affected boundary:** Authoritative domain state and durable rules
+- **Change:** OpenAI describes Memory as cross-chat recall and advises keeping required guidance in checked-in documentation rather than relying on Memory alone.
+- **Workspace implication:** Use Memory for context, not as the system of record for lifecycle, evidence, concurrency, or admission.
+- **Decision:** DOUBLE-DOWN
+- **Action now:** NONE
+- **Revisit trigger:** OpenAI provides structured, addressable, versioned objects with domain validation, mutation authority, and recovery.
+- **Architecture review required:** NO
 
-Availability:
-ELIGIBLE-PLANS
+### Scheduled and event-triggered tasks
 
-Workspace scenario verified:
-NOT APPLICABLE
+- **Official source:** https://learn.chatgpt.com/docs/automations
+- **Availability:** ELIGIBLE-PLANS
+- **Workspace scenario verified:** NO
+- **Category:** Automation
+- **Affected boundary:** Generic scheduling, polling, and provider-event triggers
+- **Change:** ChatGPT supports recurring tasks and eligible-plan event triggers from Gmail, Slack, and GitHub.
+- **Workspace implication:** Use platform automation when verified; do not add a generic Workspace scheduler. Keep lifecycle validation, Today classification, evidence, and admission in Workspace.
+- **Decision:** ADOPT
+- **Secondary implication:** DOUBLE-DOWN on domain authority as more signals become available.
+- **Action now:** NONE
+- **Revisit trigger:** A post-M4 background workflow is accepted and passes a controlled scenario test.
+- **Architecture review required:** NO
 
-Category:
-Persistent State
+### MCP Apps embedded UI
 
-Affected Workspace boundary:
-Authoritative domain state and durable rules
+- **Official source:** https://developers.openai.com/plugins/build/chatgpt-ui
+- **Availability:** GA
+- **Workspace scenario verified:** NO
+- **Category:** Interaction / UI
+- **Affected boundary:** Domain inspection and control surfaces
+- **Change:** ChatGPT can render MCP Apps UI inline or full-screen for structured inspection, editing, confirmation, and navigation.
+- **Workspace implication:** Prefer ChatGPT-hosted UI over an independent generic shell; keep underlying state and rules in Workspace and tools usable without UI.
+- **Decision:** ADOPT
+- **Secondary implication:** DOUBLE-DOWN on domain-specific formal surfaces where conversation is insufficient.
+- **Action now:** NONE
+- **Revisit trigger:** The post-M4 roadmap accepts its first domain UI slice.
+- **Architecture review required:** NO
 
-Change:
-OpenAI documents Memory as cross-chat recall and explicitly advises keeping
-required guidance in checked-in documentation rather than relying on Memory as
-the only source.
+### Shared plugin ecosystem
 
-Workspace implication:
-Memory can improve interaction context, but it does not replace versioned domain
-objects, lifecycle invariants, evidence, concurrency, or admission authority.
-
-Decision:
-DOUBLE-DOWN
-
-Secondary implication:
-Continue to use ChatGPT context and Memory where helpful without treating them
-as the system of record.
-
-Action now:
-NONE
-
-Revisit trigger:
-OpenAI exposes structured, addressable, versioned persistent objects with
-domain validation, mutation authority, and durable recovery guarantees.
-
-Architecture review required:
-NO
-
-### 2026-09-04 — Scheduled and event-triggered tasks
-
-Official source:
-https://learn.chatgpt.com/docs/automations
-
-Availability:
-ELIGIBLE-PLANS
-
-Workspace scenario verified:
-NO
-
-Category:
-Automation
-
-Affected Workspace boundary:
-Generic scheduling, polling, and provider-event triggering
-
-Change:
-ChatGPT supports recurring background tasks and, on eligible plans, event
-triggers from Gmail, Slack, and GitHub.
-
-Workspace implication:
-Use ChatGPT automation for generic triggering when it proves reliable. Do not
-add a generic Workspace scheduler or polling runtime. Preserve Workspace-owned
-lifecycle validation, deterministic Today classification, evidence, and
-admission.
-
-Decision:
-ADOPT
-
-Secondary implication:
-DOUBLE-DOWN on domain authority and observable transition handling as more
-external signals become available.
-
-Action now:
-NONE
-
-Revisit trigger:
-A post-M4 workflow requires background execution and passes a controlled
-Workspace scenario test.
-
-Architecture review required:
-NO
-
-### 2026-09-04 — MCP Apps embedded UI
-
-Official source:
-https://developers.openai.com/plugins/build/chatgpt-ui
-
-Availability:
-GA
-
-Workspace scenario verified:
-NO
-
-Category:
-Interaction / UI
-
-Affected Workspace boundary:
-Domain-specific inspection and control surfaces
-
-Change:
-ChatGPT can render MCP Apps UI inline or full-screen for structured inspection,
-comparison, editing, confirmation, and navigation.
-
-Workspace implication:
-Prefer ChatGPT-hosted MCP Apps UI over an independent generic application shell.
-Workspace should still own the underlying state, lifecycle, evidence, and
-control rules, and its tools must remain usable without UI.
-
-Decision:
-ADOPT
-
-Secondary implication:
-DOUBLE-DOWN on domain-specific formal surfaces where conversation is
-insufficient.
-
-Action now:
-NONE
-
-Revisit trigger:
-The post-M4 roadmap accepts its first domain UI slice.
-
-Architecture review required:
-NO
-
-### 2026-09-04 — Shared plugin ecosystem
-
-Official source:
-https://learn.chatgpt.com/docs/plugins
-
-Availability:
-GA
-
-Workspace scenario verified:
-NO
-
-Category:
-Ecosystem / Distribution
-
-Affected Workspace boundary:
-Packaging, discovery, installation, and distribution
-
-Change:
-ChatGPT and Codex use a shared plugin catalog, and plugins can package skills,
-connectors, MCP servers, UI, hooks, and scheduled-task templates.
-
-Workspace implication:
-Treat the OpenAI plugin ecosystem as the preferred future host and distribution
-path. Do not build a separate product entry point merely for discoverability
-before real utility and adoption are proven.
-
-Decision:
-ADOPT
-
-Secondary implication:
-The ecosystem strengthens the possible role of Workspace as a reusable
-domain/state layer rather than a competing assistant.
-
-Action now:
-NONE
-
-Revisit trigger:
-M4 reaches CONTINUE and productization or multi-user distribution becomes an
-accepted objective.
-
-Architecture review required:
-NO
+- **Official source:** https://learn.chatgpt.com/docs/plugins
+- **Availability:** GA
+- **Workspace scenario verified:** NO
+- **Category:** Ecosystem / Distribution
+- **Affected boundary:** Packaging, installation, and distribution
+- **Change:** ChatGPT and Codex share a plugin catalog; plugins can package skills, connectors, MCP servers, UI, hooks, and task templates.
+- **Workspace implication:** Prefer the plugin ecosystem as the future host/distribution path; do not build a separate entry point before utility and adoption are proven.
+- **Decision:** ADOPT
+- **Secondary implication:** This strengthens Workspace's possible role as a reusable domain/state layer rather than a competing assistant.
+- **Action now:** NONE
+- **Revisit trigger:** M4 reaches CONTINUE and productization or multi-user distribution becomes an accepted objective.
+- **Architecture review required:** NO
 
 ## Current boundary conclusion
 
-**Conclusion: NO DRIFT**
+**NO DRIFT**
 
 As of 2026-09-04, platform improvements reduce the need for generic connectors,
 schedulers, standalone navigation, and distribution infrastructure. They do not
 replace authoritative domain state, lifecycle, provenance, explicit authority,
 version history, or durable coordination.
 
-The current repository already delegates the affected generic capabilities to
-ChatGPT or keeps them outside the frozen MVP. No runtime feature or existing
-architecture responsibility should be removed during M4.
+The repository already delegates the affected generic capabilities to ChatGPT
+or keeps them outside the frozen MVP. M4 requires no runtime or architecture
+change.
