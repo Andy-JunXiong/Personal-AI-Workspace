@@ -2,6 +2,11 @@
 
 **Status:** SPIKE 1A/1B AND REAL JOB SEARCH MVP M1/M2/M3 VERIFIED AND FROZEN
 
+> This remains the canonical frozen MVP state model. Proposed post-M4 posting,
+> resume, skill, analysis, and change-set objects are defined in
+> [`JOB_SEARCH_INTELLIGENCE_ARCHITECTURE_v1.md`](JOB_SEARCH_INTELLIGENCE_ARCHITECTURE_v1.md)
+> and are not yet runtime schema.
+
 ## 1. Key modeling decision
 
 For MVP:

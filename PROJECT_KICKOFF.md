@@ -60,6 +60,7 @@ The Workspace will not initially rebuild Gmail/Drive/Calendar connectors. The fi
 - [x] E2E evidence
 - [x] M4 real-data Dogfood Day-0 gate
 - [x] M4 prospective real-use metrics locked before Day 2
+- [x] Post-M4 Job Search Intelligence v1 architecture baseline documented
 - [ ] M4 seven-day real-data trial
 - [ ] M4 Day-14 adoption gate
 - [ ] M4 Day-28 utility gate
@@ -74,6 +75,24 @@ Continue daily Today check-ins through Day 7 without expanding the frozen
 product scope. From Day 2, record the prospectively locked capture, friction,
 recovery, Today-actionability, and correction metrics. Evaluate the operational
 gate on 2026-09-10, adoption on 2026-09-17, and utility on 2026-10-01.**
+
+## Architecture Baseline — 2026-09-04 (post-M4 Job Search Intelligence v1)
+
+- Defined separate, versioned objects for postings, resume relationships,
+  canonical skills, requirements, capability evidence, analysis runs, match
+  assessments, and reviewable change sets.
+- Confirmed the authority matrix: providers own native facts, Workspace owns
+  cross-system work state and intelligence history, and Google Sheets is a
+  review/reporting projection.
+- Specified the `SCAN -> OBSERVE -> EXTRACT -> RESOLVE -> PROPOSE -> REVIEW ->
+  APPLY -> VERIFY` pipeline with confidence, risk, idempotency, concurrency,
+  and explicit-authority boundaries.
+- Defined explainable interval scoring, confidence-aware aggregate skill views,
+  read-only watch rules, immutable input manifests, successor assessments, and
+  field-level provenance.
+- Sequenced six post-M4 delivery slices. No runtime code, schema, tool,
+  connector, scheduler, or automatic write was added; the M4 feature freeze
+  and decision dates remain unchanged.
 
 ## Session Closeout — 2026-09-04 (M4 v0.2 metric lock)
 

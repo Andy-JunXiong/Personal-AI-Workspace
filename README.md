@@ -96,6 +96,20 @@ and
 The supported manual platform evidence is
 [`tests/evaluations/chatgpt-m3.md`](tests/evaluations/chatgpt-m3.md).
 
+### Proposed Job Search Intelligence architecture
+
+The post-M4 design baseline now covers versioned job descriptions and resume
+relationships, an evidence-backed skill taxonomy and matching ledger, a
+review-first ingestion pipeline, Google Sheets as a projection, and complete
+analysis provenance. It is documented in
+[`docs/architecture/JOB_SEARCH_INTELLIGENCE_ARCHITECTURE_v1.md`](docs/architecture/JOB_SEARCH_INTELLIGENCE_ARCHITECTURE_v1.md)
+and
+[`docs/adr/ADR-012-job-search-intelligence-boundary.md`](docs/adr/ADR-012-job-search-intelligence-boundary.md).
+
+This is an architecture baseline, not an active runtime feature. The M4
+feature freeze remains in force: no connector, scheduler, migration, new MCP
+tool, model call, or automatic admission has been added.
+
 ### M4 real-data Dogfood
 
 M4 is a seven-day operating evaluation of the frozen MVP, not a feature slice.

@@ -1,5 +1,10 @@
 # Logical Architecture v0.1
 
+> This document describes the verified and frozen MVP. The proposed post-M4
+> Job Search Intelligence extension is specified separately in
+> [`JOB_SEARCH_INTELLIGENCE_ARCHITECTURE_v1.md`](JOB_SEARCH_INTELLIGENCE_ARCHITECTURE_v1.md)
+> and does not change the active M4 runtime.
+
 ```mermaid
 flowchart TB
     subgraph HOST["ChatGPT Host"]
@@ -107,6 +112,30 @@ surface remains 12 tools.
 - broad connector framework.
 
 ChatGPT is the initial cognitive/orchestration host.
+
+## Proposed post-M4 intelligence extension
+
+The next architecture baseline preserves the existing boundary and adds
+versioned analytical records rather than placing inference directly on the
+canonical Project:
+
+```text
+Connected source facts
+    -> minimized evidence
+    -> extraction and identity candidates
+    -> reviewable change set
+    -> authorized Workspace mutation
+
+Versioned JD + submitted resume + capability evidence
+    -> immutable analysis run
+    -> match assessment and aggregate skill views
+    -> Google Sheets / other projections
+```
+
+Workspace remains the cross-system work-state and intelligence ledger;
+providers own native records, and Sheets remains a projection. Scheduled
+ingestion, automatic admission, new tools, and schema changes remain absent
+until a post-M4 implementation slice is separately approved and verified.
 
 ## Slice M2 deployment interpretation
 
