@@ -2,6 +2,10 @@
 
 **Status:** LOCAL CONTAINER PREFLIGHT PASSED; AWS PROVISIONING NOT STARTED
 
+This is the historical pre-provisioning record. Deployment and C1/C2 cloud
+acceptance subsequently passed in the same session; see the
+[runtime results](C1_C2_RUNTIME_RESULTS_v0.1.md) for current status.
+
 ## AWS discovery and proposed resources
 
 Read-only AWS Lightsail queries succeeded using the existing local `default`
@@ -9,7 +13,7 @@ profile with explicit configuration-file paths. Initial implicit-profile
 failures were local configuration visibility failures, not proof of invalid
 AWS credentials. No credential values or account identifiers are recorded here.
 
-Sydney currently has no Lightsail instances or attached disks. The API reports
+At initial discovery, Sydney had no Lightsail instances or attached disks. The API reported
 all three Sydney availability zones available, and the following target is
 available:
 

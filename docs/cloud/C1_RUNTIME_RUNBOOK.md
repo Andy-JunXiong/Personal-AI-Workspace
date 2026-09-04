@@ -1,6 +1,6 @@
 # Cloud Always-On MVP — C1 Runtime Runbook
 
-**Status:** REPOSITORY IMPLEMENTED; AWS RUNTIME EVIDENCE PENDING
+**Status:** AWS RUNTIME ACCEPTANCE PASSED — 2026-09-05, FRESH C1/C2 DATABASE
 
 **Target:** AWS Lightsail, `ap-southeast-2`
 
@@ -9,7 +9,8 @@
 Local Linux container preflight and the concrete AWS resource proposal are
 recorded in [the 2026-09-05 preflight](C1_C2_PREFLIGHT_2026-09-05.md). It repaired
 image build and startup blockers and verified synthetic container persistence
-and backup. AWS runtime acceptance remains pending.
+and backup. Subsequent AWS acceptance is recorded in
+[the C1/C2 runtime results](C1_C2_RUNTIME_RESULTS_v0.1.md).
 
 ## C1 boundary
 
@@ -36,6 +37,9 @@ provisioning: <https://aws.amazon.com/lightsail/pricing/>.
 
 - Do not add public firewall rules for ports 80, 443, or 3000.
 - Restrict SSH port 22 to the user's current public IP wherever practical.
+- If direct SSH is unavailable, the AWS-managed `lightsail-connect` source
+  alias can provide authenticated browser SSH administration. Keep the
+  operator `/32` and this bounded alias; do not use an all-address SSH rule.
 - The PAW container publishes port 3000 only on host loopback:
   `127.0.0.1:3000`.
 - C2 `tunnel-client` will require outbound HTTPS to `api.openai.com:443`.
@@ -90,6 +94,17 @@ git fetch --tags origin
 git checkout <accepted-C1-commit>
 ```
 
+Make Docker startup depend on the persistent mount before deploying PAW:
+
+```bash
+sudo mkdir -p /etc/systemd/system/docker.service.d
+printf '[Unit]\nRequiresMountsFor=/srv/paw\n' | sudo tee /etc/systemd/system/docker.service.d/paw-data.conf
+sudo systemctl daemon-reload
+```
+
+The deployment script's mount check protects explicit deployments; this
+systemd dependency also protects Docker's automatic container restart at boot.
+
 ## 3. Install application configuration
 
 The current single-user principal is safe only behind the private transport
@@ -99,6 +114,9 @@ the tunnel runtime API key in this file.
 ```bash
 sudo mkdir -p /etc/paw
 sudo cp deploy/cloud/paw.env.example /etc/paw/paw.env
+sudo chown root:ubuntu /etc/paw
+sudo chmod 0750 /etc/paw
+sudo chown ubuntu:ubuntu /etc/paw/paw.env
 sudo chmod 600 /etc/paw/paw.env
 sudoedit /etc/paw/paw.env
 ```
@@ -226,20 +244,26 @@ The restore is recoverable because the previous files remain under
 `/srv/paw/restore-quarantine/<timestamp>/`. Do not run the restore against the
 real database until the C3 migration and acceptance procedure authorizes it.
 
+Run these host scripts as the verified deployment user with Docker access,
+so restored files remain writable by the container's matching UID. If invoking
+restore from a larger inline script, redirect its stdin from `/dev/null`:
+Compose's one-off verification container otherwise may consume subsequent
+script input. The 2026-09-05 acceptance used the `ubuntu` deployment user.
+
 ## C1 evidence checklist
 
-- [ ] Instance and encrypted disk identifiers recorded
-- [ ] `/srv/paw` survives reboot as a distinct mounted disk
-- [ ] Container runs as non-root with a read-only root filesystem
-- [ ] Only `127.0.0.1:3000` is published
-- [ ] `/healthz` succeeds locally
-- [ ] Same Workspace ID before and after container restart
-- [ ] Same Workspace ID before and after instance reboot
-- [ ] Online backup succeeds and reports integrity `ok`
-- [ ] Restore test succeeds against the non-production database
-- [ ] Previous application image rollback succeeds
-- [ ] Measured total memory fits the 1 GB plan with safe headroom
-- [ ] Ports 80, 443, and 3000 are unreachable publicly
+- [x] Instance and encrypted disk identifiers recorded
+- [x] `/srv/paw` survives reboot as a distinct mounted disk
+- [x] Container runs as non-root with a read-only root filesystem
+- [x] Only `127.0.0.1:3000` is published
+- [x] `/healthz` succeeds locally
+- [x] Same Workspace ID before and after container restart
+- [x] Same Workspace ID before and after instance reboot
+- [x] Online backup succeeds and reports integrity `ok`
+- [x] Restore test succeeds against the non-production database
+- [x] Previous application image rollback succeeds (controlled metadata-only candidate)
+- [x] Measured idle total memory fits the 1 GB plan; load capacity is untested
+- [x] Ports 80, 443, and 3000 are unreachable publicly
 
-C1 is not complete until the runtime evidence above is recorded. Repository
-configuration alone is not acceptance evidence.
+C1 passed on the actual VM. See the [runtime evidence and its scope
+limitations](C1_C2_RUNTIME_RESULTS_v0.1.md); real-data migration remains C3.

@@ -160,12 +160,16 @@ runtime will create and migrate a fresh DB. Startup never deletes existing data.
 Cloud deployment is being developed separately from the frozen M4 product
 evaluation. The C0 architecture and readiness decision is recorded in
 [`docs/cloud/C0_READINESS_REVIEW.md`](docs/cloud/C0_READINESS_REVIEW.md).
-The repository-side C1 runtime and operations procedure is in
+The C1 runtime and operations procedure is in
 [`docs/cloud/C1_RUNTIME_RUNBOOK.md`](docs/cloud/C1_RUNTIME_RUNBOOK.md).
-The repository-side C2 private ChatGPT transport procedure is in
+The C2 private ChatGPT transport procedure is in
 [`docs/cloud/C2_SECURE_MCP_TUNNEL.md`](docs/cloud/C2_SECURE_MCP_TUNNEL.md).
-No AWS runtime or real-data migration should be inferred from these documents;
-those require separate runtime evidence in the later cloud stages.
+C1/C2 were deployed and accepted on Sydney Lightsail on 2026-09-05 using a
+fresh non-production database. Backup/restore, image rollback, private connector
+readback, authentication rejection, and whole-instance reboot recovery passed;
+see the [runtime results](docs/cloud/C1_C2_RUNTIME_RESULTS_v0.1.md).
+The current connector reads the empty cloud Workspace. C3 real-data migration
+has not started; the local M4 database and evaluation remain unchanged.
 
 ### Verification
 

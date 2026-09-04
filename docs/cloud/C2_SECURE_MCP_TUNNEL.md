@@ -1,6 +1,6 @@
 # Cloud Always-On MVP — C2 Secure MCP Tunnel
 
-**Status:** REPOSITORY IMPLEMENTED; CLOUD RUNTIME EVIDENCE PENDING
+**Status:** CLOUD RUNTIME ACCEPTANCE PASSED — 2026-09-05, FRESH C1/C2 DATABASE
 
 **Transport:** OpenAI Secure MCP Tunnel
 
@@ -177,15 +177,17 @@ answered.
 
 - [x] Existing tunnel is visible to the intended Personal organization and
   ChatGPT Workspace
-- [ ] Restricted runtime key has only Tunnels Read + Use
-- [ ] Pinned official runtime archive checksum succeeds
-- [ ] PAW `/healthz` succeeds on loopback
-- [ ] tunnel-client `/healthz` and `/readyz` succeed on loopback
-- [ ] Invalid or missing runtime authentication fails closed
-- [ ] No public listener exists on ports 80, 443, 3000, or 8080
-- [ ] Valid ChatGPT connection calls `workspace_ping`
-- [ ] Container restart returns PAW and tunnel connectivity
-- [ ] EC2/Lightsail reboot returns PAW and tunnel connectivity automatically
+- [x] Restricted runtime key has only Tunnels Read + Use
+- [x] Pinned official runtime archive checksum succeeds
+- [x] PAW `/healthz` succeeds on loopback
+- [x] tunnel-client `/healthz` and `/readyz` succeed on loopback
+- [x] Invalid or missing runtime authentication fails closed
+- [x] No public listener exists on ports 80, 443, 3000, or 8080
+- [x] Valid connected app calls `workspace_ping`
+- [x] Container restart returns PAW and tunnel connectivity
+- [x] Lightsail reboot returns PAW and tunnel connectivity automatically
 
-C2 is not complete until these checks are executed against the actual VM. Do
-not migrate the authoritative real database before C1 and C2 runtime acceptance.
+C2 passed on the actual VM through the existing connected app. The
+[runtime results](C1_C2_RUNTIME_RESULTS_v0.1.md) record authentication rejection,
+private readback, reboot recovery, and the bounded browser SSH administration
+path. Real database migration remains a separate C3 action.
