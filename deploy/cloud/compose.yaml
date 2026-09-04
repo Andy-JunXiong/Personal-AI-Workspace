@@ -1,0 +1,39 @@
+name: paw
+
+services:
+  paw:
+    image: paw:${PAW_IMAGE_TAG:-current}
+    build:
+      context: ../..
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    init: true
+    env_file:
+      - /etc/paw/paw.env
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      PAW_DB_PATH: /app/data/workspace.db
+      PAW_BACKUP_DIR: /app/backups
+    ports:
+      - "127.0.0.1:3000:3000"
+    volumes:
+      - type: bind
+        source: /srv/paw/data
+        target: /app/data
+      - type: bind
+        source: /srv/paw/backups
+        target: /app/backups
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=64m
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    stop_grace_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
