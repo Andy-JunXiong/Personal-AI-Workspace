@@ -172,6 +172,8 @@ The current connector reads the empty cloud Workspace. C3 real-data migration
 has not started; the local M4 database and evaluation remain unchanged. The
 gated, recoverable migration procedure is documented in
 [`docs/cloud/C3_REAL_DATABASE_MIGRATION.md`](docs/cloud/C3_REAL_DATABASE_MIGRATION.md).
+The post-migration ChatGPT and Windows-PC-OFF acceptance procedure is in
+[`docs/cloud/C4_C5_ACCEPTANCE_RUNBOOK.md`](docs/cloud/C4_C5_ACCEPTANCE_RUNBOOK.md).
 
 ### Verification
 
