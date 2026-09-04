@@ -12,6 +12,8 @@
 
 **REAL JOB SEARCH MVP SLICE M3 = COMPLETE — CHATGPT PLATFORM SUPPORTED**
 
+**M4 REAL-DATA DOGFOOD = DAY-0 PASSED — DAY 1 AWAITS FIRST AUTHORIZED REAL WRITE**
+
 ## Thesis
 
 > Build a persistent work-state layer for ChatGPT that turns conversations and external events into long-running goals, projects, tasks, actions, and outcomes.
@@ -56,12 +58,33 @@ The Workspace will not initially rebuild Gmail/Drive/Calendar connectors. The fi
 - [x] MVP build — Slice M3 Real Lifecycle implemented and verified locally
 - [x] M3 fresh-DB ChatGPT platform retest
 - [x] E2E evidence
+- [x] M4 real-data Dogfood Day-0 gate
+- [ ] M4 seven-day real-data trial
 
 ## Immediate Next Step
 
-**Spike 1B and Real Job Search MVP Slices M1/M2/M3 are complete and frozen at
-their verified milestone tags. The next product change requires a separately
-approved post-MVP objective and scope.**
+**Spike 1B and Real Job Search MVP Slices M1/M2/M3 remain frozen at their
+verified milestone tags. M4 Day 0 passed against the empty external real
+Workspace. Keep it closed and unseeded until the user explicitly authorizes
+the first real Job Application write, which starts Day 1.**
+
+## Session Closeout — 2026-09-04 (M4 Day-0 initialization)
+
+- The approved seven-day M4 operating scope, privacy rules, success gate, and
+  stop conditions are recorded in `docs/dogfood/M4_DOGFOOD_PLAN_v0.1.md`.
+- The production-like database was created at the Local App Data boundary,
+  outside both the repository and OneDrive. No previous database existed and
+  the synthetic seed command was not run.
+- All three committed migrations applied. One development Principal and one
+  Workspace were initialized; Projects, Resources, transitions, Tasks, and
+  idempotency records all remained empty.
+- HTTP health, MCP discovery, and `workspace_ping` passed against the frozen
+  12-tool surface. The Workspace ID is
+  `d3c0a312-9c12-4b73-a598-eebf1b1de974`.
+- The initialization server was stopped, port 3000 closed, SQLite integrity
+  returned `ok`, the WAL was checkpointed, and the external stderr log was
+  empty.
+- Day 1 has not started and no real job-search content has been written.
 
 ## Session Closeout — 2026-09-04 (M3 platform verification)
 

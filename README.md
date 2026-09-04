@@ -96,6 +96,20 @@ and
 The supported manual platform evidence is
 [`tests/evaluations/chatgpt-m3.md`](tests/evaluations/chatgpt-m3.md).
 
+### M4 real-data Dogfood
+
+M4 is a seven-day operating evaluation of the frozen MVP, not a feature slice.
+Its scope, privacy boundary, Day-0 gate, daily protocol, exit criteria, and stop
+conditions are in
+[`docs/dogfood/M4_DOGFOOD_PLAN_v0.1.md`](docs/dogfood/M4_DOGFOOD_PLAN_v0.1.md).
+Sanitized initialization evidence is recorded in
+[`docs/dogfood/M4_DAY0_RESULTS_v0.1.md`](docs/dogfood/M4_DAY0_RESULTS_v0.1.md).
+The seven-day aggregate log template is
+[`docs/dogfood/M4_DAILY_LOG_v0.1.md`](docs/dogfood/M4_DAILY_LOG_v0.1.md).
+Day 0 passed with a fresh, unseeded external Workspace and the frozen 12-tool
+surface. The trial clock starts only when the user explicitly authorizes the
+first real Job Application write.
+
 ### Local setup
 
 For real-data dogfooding on Windows, keep the SQLite database outside both the
