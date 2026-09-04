@@ -6,6 +6,11 @@
 
 **Budget gate:** USD 10/month maximum for the MVP baseline
 
+Local Linux container preflight and the concrete AWS resource proposal are
+recorded in [the 2026-09-05 preflight](C1_C2_PREFLIGHT_2026-09-05.md). It repaired
+image build and startup blockers and verified synthetic container persistence
+and backup. AWS runtime acceptance remains pending.
+
 ## C1 boundary
 
 C1 provisions and validates one always-on Docker runtime with persistent

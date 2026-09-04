@@ -1,15 +1,19 @@
 FROM node:24-bookworm-slim AS build
 
-WORKDIR /app
+WORKDIR /opt/paw
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends python3 make g++ \
+    && rm -rf /var/lib/apt/lists/*
 
 COPY package.json package-lock.json ./
 RUN npm ci
 
-COPY tsconfig.json ./
+COPY tsconfig.json tsconfig.build.json ./
 COPY src ./src
 COPY scripts ./scripts
 COPY db ./db
-RUN npm run build
+RUN npm run build && npm prune --omit=dev
 
 FROM node:24-bookworm-slim
 
@@ -17,11 +21,13 @@ ENV NODE_ENV=production
 ENV PORT=3000
 ENV PAW_DB_PATH=/app/data/workspace.db
 
-WORKDIR /app
+# Keep application code separate from the persistent /app/data mount so the
+# existing database path boundary remains enforced inside the container.
+WORKDIR /opt/paw
 
 COPY package.json package-lock.json ./
-RUN npm ci --omit=dev
-COPY --from=build /app/dist ./dist
+COPY --from=build /opt/paw/node_modules ./node_modules
+COPY --from=build /opt/paw/dist ./dist
 COPY db ./db
 
 RUN mkdir -p /app/data /app/backups \
