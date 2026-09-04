@@ -106,10 +106,15 @@ Sanitized initialization evidence is recorded in
 [`docs/dogfood/M4_DAY0_RESULTS_v0.1.md`](docs/dogfood/M4_DAY0_RESULTS_v0.1.md).
 The seven-day aggregate log template is
 [`docs/dogfood/M4_DAILY_LOG_v0.1.md`](docs/dogfood/M4_DAILY_LOG_v0.1.md).
+The prospectively locked adoption and utility metrics, definitions, and Day
+7/14/28 decisions are in
+[`docs/dogfood/M4_REAL_USE_EVALUATION_v0.2.md`](docs/dogfood/M4_REAL_USE_EVALUATION_v0.2.md).
 Day 0 passed with a fresh, unseeded external Workspace and the frozen 12-tool
 surface. Day 1 then imported the explicitly authorized inventory with minimized
-Gmail provenance and passed aggregate verification. The seven-day trial is
-active on the M4 branch.
+Gmail provenance and passed aggregate verification. Before Day 2, the
+prospective utility metrics were locked without changing or retrospectively
+rescoring the original seven-day gate. The frozen evaluation is active on the
+M4 branch.
 
 ### Local setup
 

@@ -59,7 +59,10 @@ The Workspace will not initially rebuild Gmail/Drive/Calendar connectors. The fi
 - [x] M3 fresh-DB ChatGPT platform retest
 - [x] E2E evidence
 - [x] M4 real-data Dogfood Day-0 gate
+- [x] M4 prospective real-use metrics locked before Day 2
 - [ ] M4 seven-day real-data trial
+- [ ] M4 Day-14 adoption gate
+- [ ] M4 Day-28 utility gate
 
 ## Immediate Next Step
 
@@ -68,7 +71,25 @@ verified milestone tags. M4 Day 1 imported the explicitly authorized real
 inventory with minimized Gmail provenance and passed aggregate verification.
 The independent new-conversation readback also passed with zero mutation.
 Continue daily Today check-ins through Day 7 without expanding the frozen
-product scope.**
+product scope. From Day 2, record the prospectively locked capture, friction,
+recovery, Today-actionability, and correction metrics. Evaluate the operational
+gate on 2026-09-10, adoption on 2026-09-17, and utility on 2026-10-01.**
+
+## Session Closeout — 2026-09-04 (M4 v0.2 metric lock)
+
+- The original seven-day M4 operating plan and Day 1 result remain unchanged;
+  Day 1 is not retrospectively included in the new utility thresholds.
+- Five prospective metrics are now defined: capture compliance, capture
+  friction, structured recovery value, Today actionability, and correction or
+  reconciliation cost.
+- A sanitized ledger records every eligible event, including bypassed events,
+  so the capture-compliance denominator cannot omit failures.
+- The fixed local-date decisions are Day 7 on 2026-09-10, Day 14 on
+  2026-09-17, and Day 28 on 2026-10-01. Insufficient evidence at Day 28 does
+  not extend the evaluation.
+- The feature freeze remains in force. Only real-use blockers, correctness
+  defects, and security or privacy defects may be fixed before the final
+  decision.
 
 ## Session Closeout — 2026-09-04 (M4 Day 1)
 

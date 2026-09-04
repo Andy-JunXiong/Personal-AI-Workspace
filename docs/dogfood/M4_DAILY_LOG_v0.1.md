@@ -1,6 +1,6 @@
 # M4 Sanitized Daily Log v0.1
 
-**Status:** ACTIVE — DAY 1 COMPLETE
+**Status:** ACTIVE — DAY 1 COMPLETE; v0.2 METRICS LOCKED BEFORE DAY 2
 
 Record aggregates and sanitized friction only. Do not record company names,
 roles, posting references, Task titles, message content, credentials, or other
@@ -34,6 +34,36 @@ Candidate decision: CONTINUE | REVISE | STOP
 
 Any stop-condition event must halt writes immediately and be recorded without
 sensitive payloads.
+
+## Prospective utility log — effective Day 2
+
+This section implements the locked definitions and gates in
+[`M4_REAL_USE_EVALUATION_v0.2.md`](M4_REAL_USE_EVALUATION_v0.2.md). Day 1
+historical import and scripted cross-session verification are excluded from
+these metrics. Add one sanitized row for every eligible event, including
+bypassed events; never record event content.
+
+### Eligible-event ledger
+
+| Sequence | Local date | Result | Effort band | Extra turns | Bypass reason | Correction | Reconciliation band |
+| --- | --- | --- | --- | ---: | --- | --- | --- |
+| — | — | `CAPTURED` / `BYPASSED` | `<1m` / `1-2m` / `3-5m` / `>5m` / `N/A` | — | `FRICTION` / `TRUST` / `FORGOT` / `UNAVAILABLE` / `OTHER` / `N/A` | `YES` / `NO` | `<1m` / `1-2m` / `3-5m` / `>5m` / `N/A` |
+
+### Today-actionability ledger
+
+| Sequence | Local date | Non-empty | Led to action | Action class |
+| --- | --- | --- | --- | --- |
+| — | — | `YES` / `NO` | `YES` / `NO` / `N/A` | `FOLLOW_UP` / `APPLICATION` / `TASK_COMPLETION` / `LIFECYCLE_CHECK` / `PRIORITY_CHANGE` / `NONE` |
+
+### Fresh-recovery ledger
+
+| Sequence | Local date | Fresh conversation | Structurally exact | Recap avoided | Correction required |
+| --- | --- | --- | --- | --- | --- |
+| — | — | `YES` | `YES` / `NO` | `YES` / `NO` | `YES` / `NO` |
+
+Scheduled decisions are Day 7 on 2026-09-10, Day 14 on 2026-09-17, and Day 28
+on 2026-10-01. Thresholds are locked before Day 2 and must not be changed based
+on observed results.
 
 Day: 1
 Category: OPERATIONS
