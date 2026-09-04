@@ -1,0 +1,9 @@
+[Unit]
+Description=Personal AI Workspace SQLite backup
+Requires=docker.service
+After=docker.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/paw
+ExecStart=/opt/paw/deploy/cloud/backup.sh

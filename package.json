@@ -10,6 +10,8 @@
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "dev": "tsx watch src/server.ts",
+    "db:backup": "node dist/scripts/backup-database.js",
+    "db:verify": "node dist/scripts/verify-database.js",
     "seed": "tsx scripts/seed-spike.ts",
     "start": "node dist/src/server.js",
     "test": "vitest run",
