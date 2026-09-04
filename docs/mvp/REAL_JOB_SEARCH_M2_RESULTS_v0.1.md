@@ -2,7 +2,7 @@
 
 **Milestone:** Task + Today
 
-**Decision:** BLOCKED; M2 CREATE-TASK PLATFORM GATE FAILED / DEFECT FOUND
+**Final decision:** COMPLETE
 
 ## Result summary
 
@@ -18,15 +18,18 @@ or edge and does not begin M3.
 | Today query tests | PASS |
 | Frozen Spike 1A/1B and M1 regression suite | PASS |
 | Local MCP transport/discovery | PASS |
-| ChatGPT platform smoke | FAILED / DEFECT FOUND |
+| ChatGPT platform M2-A — Daily Attention | SUPPORTED |
+| ChatGPT platform M2-B — Task Mutation Integrity | SUPPORTED |
+| ChatGPT platform M2-C — Determinism and cross-conversation read | SUPPORTED |
+| Slice M2 overall | COMPLETE |
 
-## Blocking platform defect investigation
+## Platform defect history and closure
 
 The M2 platform run reported that Project
 `feea9770-d834-4201-8ec1-b4e342e0a280` was returned as an ACTIVE/APPLIED
 Project by the application path and then reported as not found by
-`workspace_create_task`. M2-A, M2-B, M2-C, M3, tagging, and platform
-completion remain blocked.
+`workspace_create_task`. That run was stopped immediately and was not reused
+for the final platform decision.
 
 The historical raw MCP payload was not logged and cannot be recovered from
 the repository or current database. The best-recoverable request is therefore
@@ -80,10 +83,70 @@ schema against the Project ID returned by
 checks replay and Project readback. Existing cross-Workspace, nonexistent
 Project, fixture, M1, and Spike regressions remain in the full suite.
 
-The failed smoke database must be preserved as failed-run evidence and must
-not be used to claim a passing retest. Use a fresh external database for the
-next controlled platform run. The MCP tool schema and metadata did not
-change.
+The failed smoke database remains preserved as failed-run evidence and was not
+used to claim the passing retest. The MCP tool schema and metadata did not
+change. The canonical fresh-database rerun below closed the defect.
+
+## Manual ChatGPT platform evidence
+
+The canonical retest ran on 2026-09-04 through ChatGPT Work and the refreshed
+Personal AI Workspace development connection. It used a fresh external SQLite
+database named `m2-platform-retest-20260904-1551.db`, Workspace
+`e30f6fd2-4c69-43c5-a887-93b2c9e328fb`, `PAW_TIME_ZONE=Australia/Sydney`, and
+only controlled synthetic records. ChatGPT discovery showed all 12 Workspace
+tools before the run.
+
+The materialized time fixture was:
+
+```text
+TEST_DATE            = 2026-09-04
+OVERDUE_AT           = 2026-09-03T17:00:00+10:00
+DUE_TODAY_AT         = 2026-09-04T23:30:00+10:00
+UPCOMING_PLUS_7_AT   = 2026-09-11T09:00:00+10:00
+```
+
+| Checkpoint | Observed result |
+| --- | --- |
+| M2-A — Daily Attention | SUPPORTED |
+| M2-B — Task Mutation Integrity | SUPPORTED |
+| M2-C — Determinism and cross-conversation read | SUPPORTED |
+| Global negative-scope checks | SUPPORTED |
+
+M2-A created `M2 Smoke Co — Platform Engineer`, four open attention Tasks,
+one +7-day upcoming Task, and `M2 Gap Co — Data Analyst` without a Task.
+`workspace_get_today` returned date `2026-09-04`, timezone
+`Australia/Sydney`, and the exact attention order `M2 overdue` (`OVERDUE`),
+`M2 due today` (`DUE_TODAY`), `Send M2 follow-up` (`HIGH_PRIORITY`), then
+`M2 blocked` (`BLOCKED`). It returned `M2 upcoming seven` in `upcoming`, the
+Gap application in `applicationsWithoutOpenTask`, and both admitted creation
+transitions newest first in `recentLifecycleChanges`.
+
+M2-B moved `Send M2 follow-up` from TODO to IN_PROGRESS with
+`recordVersion` 1 -> 2. A one-time stale version-1 update returned
+`CONCURRENCY_CONFLICT` and did not change priority. Completion moved the Task
+to DONE with version 2 -> 3 and set
+`completedAt=2026-09-04T06:40:20.597Z`; the subsequent Project read excluded
+it from `openTasks`. A one-time DONE -> IN_PROGRESS attempt returned
+`VALIDATION_ERROR` and created no replacement Task.
+
+M2-C began in a separate ChatGPT conversation without reconstructed context.
+The first durable Today read returned the remaining attention order
+`OVERDUE`, `DUE_TODAY`, `BLOCKED`; the same upcoming Task, application gap,
+and lifecycle ordering; and no completed follow-up Task. Two additional
+read-only calls were identical field-for-field to the first.
+
+Direct read-only inspection of the external database matched the platform
+results: the follow-up Task was DONE at version 3 with the same `completedAt`;
+the four remaining Tasks had the expected status, priority, and normalized UTC
+timestamps; and the Gap application had no Task. Sanitized logs recorded MCP
+initialization for `personal-ai-workspace` 0.1.0 and forwarded platform calls
+throughout M2-A/B/C. An optional OAuth discovery warning and an unsupported
+`server/discover` probe did not prevent standard MCP initialization, tool
+discovery, or any checkpoint.
+
+No Gmail or Calendar scan, model ranking, reminder, scheduler, background
+processing, or M3 lifecycle behavior was invoked. No runtime credential,
+private database, or raw external log is committed.
 
 ## Architecture decisions
 
@@ -156,10 +219,23 @@ this slice.
 
 ## Readiness recommendation
 
-After the defect fix is deployed and the ChatGPT development connection is
-refreshed, restart the controlled M2 smoke from M2-A step 1 against a fresh
-external database. Do not continue the failed run, tag/freeze M2, or start M3
-until all platform observations are supported and recorded.
+Slice M2 is complete and may be frozen at
+`m2-task-today-verified-v0.1`. M3 may begin only as a separate implementation
+change that preserves the frozen M1/M2 and Spike gates.
+
+## Session closeout — 2026-09-04
+
+- The fresh-database ChatGPT M2-A/B/C platform retest passed every required
+  checkpoint and global negative-scope check.
+- The original failed-run evidence remains preserved as historical defect
+  evidence; it was not reused for the passing result.
+- Independent database inspection matched the structured platform results.
+- Final `npm run verify` passed with 11 test files and 74 tests, plus typecheck
+  and production build; `git diff --check` also passed.
+- Temporary runtime processes and repository-local scratch logs were removed,
+  and the one-time platform Runtime API key was revoked. The external database
+  and sanitized logs remain preserved as evidence.
+- M3 was not started.
 
 ## Session closeout — 2026-09-02
 

@@ -1,6 +1,51 @@
 # ChatGPT M2 Platform Evaluation
 
-**Current status:** BLOCKED - M2 CREATE-TASK PLATFORM GATE FAILED / DEFECT FOUND
+**Current status:** SUPPORTED — Slice M2 overall COMPLETE
+
+## Canonical retest result — 2026-09-04
+
+| Gate | Result |
+| --- | --- |
+| M2-A — Daily Attention | SUPPORTED |
+| M2-B — Task Mutation Integrity | SUPPORTED |
+| M2-C — Determinism and cross-conversation read | SUPPORTED |
+| Global negative-scope checks | SUPPORTED |
+| Slice M2 overall | COMPLETE |
+
+The canonical retest used fresh external database
+`m2-platform-retest-20260904-1551.db`, Workspace
+`e30f6fd2-4c69-43c5-a887-93b2c9e328fb`, and a refreshed ChatGPT development
+connection that exposed all 12 Workspace tools. The test date and all fixture
+timestamps were materialized before the first write:
+
+```text
+TEST_DATE            = 2026-09-04
+OVERDUE_AT           = 2026-09-03T17:00:00+10:00
+DUE_TODAY_AT         = 2026-09-04T23:30:00+10:00
+UPCOMING_PLUS_7_AT   = 2026-09-11T09:00:00+10:00
+```
+
+M2-A returned the exact attention order `OVERDUE`, `DUE_TODAY`,
+`HIGH_PRIORITY`, `BLOCKED`; the exact +7-day Task in `upcoming`; the Gap
+application without an open Task; both application-creation transitions newest
+first; date `2026-09-04`; and timezone `Australia/Sydney`.
+
+M2-B returned TODO -> IN_PROGRESS with `recordVersion` 1 -> 2, rejected the
+stale version-1 priority update with `CONCURRENCY_CONFLICT`, completed the Task
+with version 2 -> 3 and `completedAt=2026-09-04T06:40:20.597Z`, excluded it
+from Project `openTasks`, and rejected DONE -> IN_PROGRESS with
+`VALIDATION_ERROR`. No retry or replacement Task occurred.
+
+M2-C started in a separate conversation without reconstructed context. Its
+first Today read recovered the durable state and excluded the completed Task.
+Two more read-only Today calls were identical field-for-field to the first.
+
+Direct read-only database inspection matched the structured ChatGPT results.
+Sanitized server/tunnel logs recorded the expected MCP initialization and
+forwarded calls. No Gmail/Calendar scan, model ranking, reminder, scheduler,
+background processing, M3 behavior, or unapproved write occurred.
+
+## Historical failed run
 
 The first M2-A run created and returned an ACTIVE/APPLIED Project but the next
 manual Task creation reported that Project as not found. Do not continue
@@ -41,18 +86,18 @@ DUE_TODAY_AT          = TEST_DATE at 23:30:00 with explicit offset
 UPCOMING_PLUS_7_AT    = TEST_DATE + 7 calendar days at 09:00:00 with explicit offset
 ```
 
-For the planned canonical run on 2 September 2026, the materialized values are:
+For the executed canonical run on 4 September 2026, the materialized values are:
 
 ```text
-TEST_DATE             = 2026-09-02
-OVERDUE_AT             = 2026-09-01T17:00:00+10:00
-DUE_TODAY_AT           = 2026-09-02T23:30:00+10:00
-UPCOMING_PLUS_7_AT     = 2026-09-09T09:00:00+10:00
+TEST_DATE             = 2026-09-04
+OVERDUE_AT             = 2026-09-03T17:00:00+10:00
+DUE_TODAY_AT           = 2026-09-04T23:30:00+10:00
+UPCOMING_PLUS_7_AT     = 2026-09-11T09:00:00+10:00
 ```
 
-The prompts below are materialized for that planned run. If the actual test
-date differs, update all three explicit timestamp strings in a preserved copy
-of the prompts immediately before execution. The canonical evidence must
+The prompts below are the preserved materialized prompts from the executed
+run. For a future rerun, update all three explicit timestamp strings in a
+separate preserved copy immediately before execution. Canonical evidence must
 contain the resulting absolute timestamp strings,
 not `yesterday`, `today at 5pm`, `seven days from today`, or unresolved tokens.
 The user-facing text may explain their human meaning after giving the exact
@@ -75,15 +120,15 @@ prompt as a separate user turn in one ChatGPT conversation.
 
 4. "I explicitly want you to create an OTHER Task on `M2 Smoke Co — Platform
    Engineer` titled `M2 overdue`, priority LOW, with exact dueAt
-   `2026-09-01T17:00:00+10:00` (the prior Sydney day at 5:00 PM)."
+   `2026-09-03T17:00:00+10:00` (the prior Sydney day at 5:00 PM)."
 
 5. "I explicitly want you to create an OTHER Task on `M2 Smoke Co — Platform
    Engineer` titled `M2 due today`, priority MEDIUM, with exact dueAt
-   `2026-09-02T23:30:00+10:00` (11:30 PM on the recorded Sydney test date)."
+   `2026-09-04T23:30:00+10:00` (11:30 PM on the recorded Sydney test date)."
 
 6. "I explicitly want you to create an OTHER Task on `M2 Smoke Co — Platform
    Engineer` titled `M2 upcoming seven`, priority LOW, with exact dueAt
-   `2026-09-09T09:00:00+10:00` (9:00 AM on Sydney calendar date plus seven)."
+   `2026-09-11T09:00:00+10:00` (9:00 AM on Sydney calendar date plus seven)."
 
 7. "I explicitly want you to create an OTHER Task on `M2 Smoke Co — Platform
    Engineer` titled `M2 blocked`, priority MEDIUM, with no due date, and then

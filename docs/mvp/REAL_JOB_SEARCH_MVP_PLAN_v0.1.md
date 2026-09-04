@@ -1,6 +1,6 @@
 # Real Job Search MVP Plan v0.1
 
-**Status:** APPROVED WITH MODIFICATIONS — SLICE M1 COMPLETE; M2 PLATFORM GATE FAILED / DEFECT FOUND; FRESH-DB RETEST REQUIRED
+**Status:** APPROVED WITH MODIFICATIONS — SLICES M1 AND M2 COMPLETE; M3 NOT STARTED
 
 ## 1. Product objective and scope rule
 
@@ -172,7 +172,7 @@ Task commands must be Workspace-scoped, versioned, idempotent, and auditable.
 `get_today` must be deterministic under an injected clock/timezone and return
 only state-backed attention reasons. M1 and frozen Spike gates remain green.
 
-**Local result:** PASSED. Focused automated tests cover Task authority,
+**Result:** COMPLETE. Focused automated tests cover Task authority,
 isolation, idempotency, optimistic concurrency, completion/terminal semantics,
 all Today categories, the seven-day inclusive boundary, deterministic
 ordering, Workspace isolation, read-only behavior, and injected-clock timezone
@@ -180,8 +180,10 @@ boundaries. The first manual ChatGPT run found a blocking Project-visibility
 failure at `workspace_create_task`. The server-side invariant now makes
 TaskService use the same authorized Project resolver as
 `workspace_get_project`, and real M1-to-Task plus published-MCP regressions
-pass. The platform gate remains `FAILED / DEFECT FOUND` until the fixed build
-passes a fresh-external-database retest. M3 must not begin before that decision.
+pass. A canonical fresh-external-database ChatGPT retest then passed M2-A daily
+attention, M2-B mutation integrity, and M2-C deterministic cross-conversation
+readback. See `REAL_JOB_SEARCH_M2_RESULTS_v0.1.md` and
+`tests/evaluations/chatgpt-m2.md`.
 
 ### M3 gate
 

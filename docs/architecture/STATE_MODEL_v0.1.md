@@ -1,6 +1,6 @@
 # State Model v0.1
 
-**Status:** SPIKE 1A/1B AND M1 FROZEN; M2 LOCALLY IMPLEMENTED
+**Status:** SPIKE 1A/1B, M1, AND M2 FROZEN
 
 ## 1. Key modeling decision
 
