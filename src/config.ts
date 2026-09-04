@@ -47,6 +47,12 @@ function expandEnvironmentReferences(
   });
 }
 
+function normalizeConfiguredPath(value: string): string {
+  // Keep the documented Windows-style %LOCALAPPDATA% path usable when
+  // configuration is validated from a Linux build or deployment host.
+  return process.platform === "win32" ? value : value.replaceAll("\\", "/");
+}
+
 function isWithinPath(candidate: string, root: string): boolean {
   const comparisonCandidate = process.platform === "win32" ? candidate.toLowerCase() : candidate;
   const comparisonRoot = process.platform === "win32" ? root.toLowerCase() : root;
@@ -87,7 +93,9 @@ export function loadConfig(
     defaultDatabasePath(environment),
   );
   const databasePath = resolve(
-    expandEnvironmentReferences(configuredDatabasePath, environment),
+    normalizeConfiguredPath(
+      expandEnvironmentReferences(configuredDatabasePath, environment),
+    ),
   );
   assertRealDataPathBoundary(databasePath, environment);
   const timeZone = requiredValue(
