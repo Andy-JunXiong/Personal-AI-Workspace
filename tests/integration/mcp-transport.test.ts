@@ -105,6 +105,34 @@ describe("Streamable HTTP MCP transport", () => {
           properties: {
             projectId: { type: "string", format: "uuid" },
             dueAt: expect.any(Object),
+            taskKind: {
+              enum: [
+                "FOLLOW_UP",
+                "PREPARE_FOR_INTERVIEW",
+                "RESPOND_TO_RECRUITER",
+                "OTHER",
+              ],
+            },
+          },
+        },
+      });
+      expect(
+        tools.tools.find(
+          (tool) => tool.name === "workspace_propose_transition",
+        ),
+      ).toMatchObject({
+        inputSchema: {
+          properties: {
+            toState: {
+              enum: [
+                "RECRUITER_CONTACT",
+                "INTERVIEWING",
+                "OFFER",
+                "ACCEPTED",
+                "REJECTED",
+                "WITHDRAWN",
+              ],
+            },
           },
         },
       });
@@ -388,6 +416,118 @@ describe("Streamable HTTP MCP transport", () => {
           applicationsWithoutOpenTask: expect.any(Array),
           recentLifecycleChanges: expect.any(Array),
         },
+      });
+
+      const interviewingProposal = await client.callTool({
+        name: "workspace_propose_transition",
+        arguments: {
+          projectId: workspace.projectId,
+          expectedLifecycleVersion: 2,
+          toState: "INTERVIEWING",
+          triggerType: "USER_ASSERTION",
+          evidenceResourceIds: [],
+          rationale: "MCP test interview progression",
+          idempotencyKey: "mcp-m3-interview-proposal",
+        },
+      });
+      expect(interviewingProposal.isError).not.toBe(true);
+      const interviewingProposalResult = interviewingProposal.structuredContent as {
+        result: { transition: { id: string } };
+      };
+      const interviewingAdmission = await client.callTool({
+        name: "workspace_admit_transition",
+        arguments: {
+          transitionId: interviewingProposalResult.result.transition.id,
+          expectedLifecycleVersion: 2,
+          userConfirmed: true,
+          authorityReference: "MCP test explicit interview admission",
+          idempotencyKey: "mcp-m3-interview-admission",
+        },
+      });
+      expect(interviewingAdmission.isError).not.toBe(true);
+      expect(interviewingAdmission.structuredContent).toMatchObject({
+        result: {
+          project: { lifecycleState: "INTERVIEWING", lifecycleVersion: 3 },
+          derivedTask: { taskKind: "PREPARE_FOR_INTERVIEW", priority: "HIGH" },
+        },
+      });
+
+      const offerProposal = await client.callTool({
+        name: "workspace_propose_transition",
+        arguments: {
+          projectId: workspace.projectId,
+          expectedLifecycleVersion: 3,
+          toState: "OFFER",
+          triggerType: "USER_ASSERTION",
+          evidenceResourceIds: [],
+          rationale: "MCP test offer progression",
+          idempotencyKey: "mcp-m3-offer-proposal",
+        },
+      });
+      const offerProposalResult = offerProposal.structuredContent as {
+        result: { transition: { id: string } };
+      };
+      const offerAdmission = await client.callTool({
+        name: "workspace_admit_transition",
+        arguments: {
+          transitionId: offerProposalResult.result.transition.id,
+          expectedLifecycleVersion: 3,
+          userConfirmed: true,
+          authorityReference: "MCP test explicit offer admission",
+          idempotencyKey: "mcp-m3-offer-admission",
+        },
+      });
+      expect(offerAdmission.isError).not.toBe(true);
+      expect(offerAdmission.structuredContent).toMatchObject({
+        result: {
+          project: { lifecycleState: "OFFER", lifecycleVersion: 4 },
+          derivedTask: { taskKind: "REVIEW_OFFER", priority: "HIGH" },
+        },
+      });
+
+      const acceptedProposal = await client.callTool({
+        name: "workspace_propose_transition",
+        arguments: {
+          projectId: workspace.projectId,
+          expectedLifecycleVersion: 4,
+          toState: "ACCEPTED",
+          triggerType: "USER_ASSERTION",
+          evidenceResourceIds: [],
+          rationale: "MCP test accepted outcome",
+          idempotencyKey: "mcp-m3-accepted-proposal",
+        },
+      });
+      const acceptedProposalResult = acceptedProposal.structuredContent as {
+        result: { transition: { id: string } };
+      };
+      const acceptedAdmission = await client.callTool({
+        name: "workspace_admit_transition",
+        arguments: {
+          transitionId: acceptedProposalResult.result.transition.id,
+          expectedLifecycleVersion: 4,
+          userConfirmed: true,
+          authorityReference: "MCP test explicit accepted admission",
+          idempotencyKey: "mcp-m3-accepted-admission",
+        },
+      });
+      expect(acceptedAdmission.isError).not.toBe(true);
+      expect(acceptedAdmission.structuredContent).toMatchObject({
+        result: {
+          project: {
+            status: "CLOSED",
+            lifecycleState: "ACCEPTED",
+            lifecycleVersion: 5,
+          },
+          derivedTask: null,
+        },
+      });
+
+      const closedProject = await client.callTool({
+        name: "workspace_get_project",
+        arguments: { projectId: workspace.projectId },
+      });
+      expect(closedProject.structuredContent).toMatchObject({
+        result: { openTasks: [], totalCounts: { openTasks: 0 } },
       });
     } finally {
       await client.close();

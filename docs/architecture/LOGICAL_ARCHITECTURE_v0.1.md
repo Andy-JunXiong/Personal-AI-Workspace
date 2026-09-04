@@ -88,6 +88,14 @@ workspace_get_today
 MCP adapter routes to those modules; ChatGPT explains and orchestrates their
 results but does not calculate Today ordering.
 
+### Real Job Search Slice M3 surface
+
+M3 adds no tool. It expands the existing `workspace_propose_transition`
+destination schema and the transactional behavior behind
+`workspace_admit_transition` to cover the approved lifecycle graph, derived
+Tasks, and terminal Project closure plus open-Task cancellation. The public MCP
+surface remains 12 tools.
+
 ## Deliberately absent in MVP
 
 - internal LLM gateway,
@@ -106,6 +114,13 @@ M2 remains in the same TypeScript process and SQLite database. The dedicated
 Task and Today modules are logical/application boundaries, not network
 services. There is no stored Today object, scheduler, reminder, connector,
 Calendar/Gmail query, or internal model call.
+
+## Slice M3 deployment interpretation
+
+M3 remains in the same TypeScript process, application service, and SQLite
+transaction boundary. It adds no schema migration, service, connector,
+scheduler, background worker, or internal model call. Terminal closure and Task
+cancellation commit or roll back with the admitted lifecycle transition.
 
 ## Spike 1A deployment interpretation
 

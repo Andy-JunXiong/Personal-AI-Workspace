@@ -7,7 +7,11 @@ export type JsonValue =
 export type LifecycleState =
   | "APPLIED"
   | "RECRUITER_CONTACT"
-  | "INTERVIEWING";
+  | "INTERVIEWING"
+  | "OFFER"
+  | "ACCEPTED"
+  | "REJECTED"
+  | "WITHDRAWN";
 
 export type TransitionStatus = "PROPOSED" | "ADMITTED" | "REJECTED";
 
@@ -93,6 +97,7 @@ export type TaskKind =
   | "FOLLOW_UP"
   | "PREPARE_FOR_INTERVIEW"
   | "RESPOND_TO_RECRUITER"
+  | "REVIEW_OFFER"
   | "OTHER";
 
 export type TaskPriority = "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";

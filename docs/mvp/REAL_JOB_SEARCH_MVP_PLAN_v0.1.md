@@ -1,6 +1,6 @@
 # Real Job Search MVP Plan v0.1
 
-**Status:** APPROVED WITH MODIFICATIONS — SLICES M1 AND M2 COMPLETE; M3 NOT STARTED
+**Status:** APPROVED WITH MODIFICATIONS — M1/M2 COMPLETE; M3 LOCALLY IMPLEMENTED, PLATFORM GATE PENDING
 
 ## 1. Product objective and scope rule
 
@@ -108,6 +108,11 @@ Approved derived effects are limited to:
 - `OFFER` -> `REVIEW_OFFER`;
 - terminal admission -> close Project and atomically cancel obsolete open Tasks.
 
+**Implementation result:** the full graph and effects are implemented without
+a migration or new MCP tool. Derived lifecycle Tasks are HIGH priority;
+`REVIEW_OFFER` is source-owned and remains outside manual Task creation. The
+local result is recorded in `REAL_JOB_SEARCH_M3_RESULTS_v0.1.md`.
+
 ## 4. Migration plan by slice
 
 ### M1 migration
@@ -192,6 +197,12 @@ state. Admission requires explicit user authority, checks lifecycle version,
 and applies lifecycle, derived Task, terminal closure, and Task cancellation in
 one transaction. Retry creates no duplicate transition or Task. M1, M2, and
 frozen Spike gates remain green.
+
+**Local result:** PASS. Automated coverage proves all 13 approved edges, all 36
+rejected state pairs, derived-Task retry safety, terminal effects, rollback,
+and the 12-tool MCP transport. The fresh-external-database ChatGPT M3-A/B/C
+platform evaluation remains pending; M3 must not be merged or tagged before it
+passes.
 
 ## 6. Frozen Spike 1A/1B evidence and tests
 

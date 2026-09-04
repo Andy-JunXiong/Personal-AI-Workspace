@@ -310,7 +310,14 @@ export function createWorkspaceMcpServer(
       inputSchema: {
         projectId: z.string().uuid(),
         expectedLifecycleVersion: z.number().int().min(1),
-        toState: z.enum(["RECRUITER_CONTACT", "INTERVIEWING"]),
+        toState: z.enum([
+          "RECRUITER_CONTACT",
+          "INTERVIEWING",
+          "OFFER",
+          "ACCEPTED",
+          "REJECTED",
+          "WITHDRAWN",
+        ]),
         triggerType: z.enum([
           "USER_ASSERTION",
           "EXTERNAL_EVIDENCE",
@@ -341,7 +348,7 @@ export function createWorkspaceMcpServer(
     {
       title: "Admit a transition with explicit user authority",
       description:
-        "Admit one valid proposal only after the user explicitly requests or confirms admission. The model must not call this from inference alone. Spike 1A has no automatic runtime lifecycle admission rules.",
+        "Admit one valid proposal only after the user explicitly requests or confirms admission. The model must not call this from inference alone. Terminal Job Application admissions close the Project and cancel its obsolete open Tasks atomically.",
       inputSchema: {
         transitionId: z.string().uuid(),
         expectedLifecycleVersion: z.number().int().min(1),

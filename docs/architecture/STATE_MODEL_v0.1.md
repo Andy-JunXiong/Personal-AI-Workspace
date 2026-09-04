@@ -1,6 +1,6 @@
 # State Model v0.1
 
-**Status:** SPIKE 1A/1B, M1, AND M2 FROZEN
+**Status:** SPIKE 1A/1B, M1, AND M2 FROZEN; M3 LOCALLY IMPLEMENTED
 
 ## 1. Key modeling decision
 
@@ -74,7 +74,7 @@ interview_type: HM | TECHNICAL | PANEL | OTHER?
 id: uuid
 project_id: uuid
 title: string
-task_kind: FOLLOW_UP | PREPARE_FOR_INTERVIEW | RESPOND_TO_RECRUITER | OTHER
+task_kind: FOLLOW_UP | PREPARE_FOR_INTERVIEW | RESPOND_TO_RECRUITER | REVIEW_OFFER | OTHER
 status: TODO | IN_PROGRESS | BLOCKED | DONE | CANCELLED
 priority: LOW | MEDIUM | HIGH | CRITICAL
 due_at: timestamp?
@@ -296,7 +296,8 @@ Interview round is metadata, not a new lifecycle state.
 9. A valid proposal cannot admit itself; admission authority is recorded
    separately.
 10. Project lifecycle state and version change atomically with admission and
-    any transition-derived Task.
+    any transition-derived Task. Terminal admission also atomically closes the
+    Project and cancels obsolete open Tasks.
 11. Command idempotency keys are mandatory for mutations. Fuzzy or LLM-based
     deduplication is not part of the model.
 

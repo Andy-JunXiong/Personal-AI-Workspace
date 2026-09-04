@@ -10,6 +10,8 @@
 
 **REAL JOB SEARCH MVP SLICE M2 = COMPLETE — CHATGPT PLATFORM SUPPORTED**
 
+**REAL JOB SEARCH MVP SLICE M3 = LOCALLY COMPLETE — CHATGPT PLATFORM RETEST PENDING**
+
 ## Thesis
 
 > Build a persistent work-state layer for ChatGPT that turns conversations and external events into long-running goals, projects, tasks, actions, and outcomes.
@@ -51,16 +53,31 @@ The Workspace will not initially rebuild Gmail/Drive/Calendar connectors. The fi
 - [x] MVP build — Slice M2 Task + Today implemented and verified locally
 - [x] M2 create-Task visibility invariant hardened with regression coverage
 - [x] M2 fresh-DB ChatGPT platform retest
+- [x] MVP build — Slice M3 Real Lifecycle implemented and verified locally
+- [ ] M3 fresh-DB ChatGPT platform retest
 - [ ] E2E evidence
 
 ## Immediate Next Step
 
-**Spike 1B remains frozen at `spike-1b-cross-app-verified-v0.1`. Slice M1 is
-complete and frozen at `m1-real-application-inventory-verified-v0.1`. Slice M2
-is locally complete and its canonical fresh-database ChatGPT platform retest
-passed all M2-A/B/C checkpoints. Freeze M2 at
-`m2-task-today-verified-v0.1`; begin M3 only as a separate implementation
-change under the already-approved lifecycle boundary.**
+**Spike 1B, Slice M1, and Slice M2 remain frozen at their verified tags. Slice
+M3 is implemented on its separate branch and passes the local gate. Run the
+fresh-external-database ChatGPT evaluation in `tests/evaluations/chatgpt-m3.md`
+against a refreshed 12-tool development connection. Do not merge or tag M3
+until M3-A/B/C are supported and the evidence is recorded.**
+
+## Session Closeout — 2026-09-04 (M3 local implementation)
+
+- The exact approved seven-state, 13-edge lifecycle is implemented; all 36
+  rejected state pairs remain non-mutating proposals.
+- Admissions derive the approved HIGH Tasks for recruiter contact, interview,
+  and offer states. `REVIEW_OFFER` remains source-owned and cannot be created
+  through the frozen M2 manual Task surface.
+- Terminal admission atomically closes the Project and cancels obsolete open
+  Tasks with SYSTEM audit attribution while preserving terminal Tasks.
+- No migration or MCP tool was added; the existing proposal schema now exposes
+  the full approved destinations.
+- Automated, transport, rollback, concurrency, and retry coverage passes
+  locally. The fresh-database ChatGPT M3-A/B/C platform gate remains pending.
 
 ## Session Closeout — 2026-09-04 (M2 platform verification)
 

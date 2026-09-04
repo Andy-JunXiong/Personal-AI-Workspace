@@ -14,6 +14,7 @@ import {
   derivedTaskForTransition,
   isAllowedTransition,
   isLifecycleState,
+  isTerminalLifecycleState,
 } from "../domain/job-application-lifecycle.js";
 import type {
   ExplicitUserDevAuthority,
@@ -86,7 +87,12 @@ interface TaskRow {
   id: string;
   project_id: string;
   title: string;
-  task_kind: "FOLLOW_UP" | "PREPARE_FOR_INTERVIEW" | "RESPOND_TO_RECRUITER" | "OTHER";
+  task_kind:
+    | "FOLLOW_UP"
+    | "PREPARE_FOR_INTERVIEW"
+    | "RESPOND_TO_RECRUITER"
+    | "REVIEW_OFFER"
+    | "OTHER";
   status: "TODO" | "IN_PROGRESS" | "BLOCKED" | "DONE" | "CANCELLED";
   priority: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
   due_at: string | null;
@@ -962,7 +968,7 @@ export class WorkspaceService {
         let rejectionReason: string | null = null;
 
         if (!isAllowedTransition(project.lifecycleState, input.toState)) {
-          rejectionReason = `Transition ${project.lifecycleState} -> ${input.toState} is not allowed in Spike 1A`;
+          rejectionReason = `Transition ${project.lifecycleState} -> ${input.toState} is not allowed for a Job Application`;
         }
 
         if (
@@ -1117,16 +1123,20 @@ export class WorkspaceService {
 
         const now = new Date().toISOString();
         const nextVersion = project.lifecycleVersion + 1;
+        const terminalAdmission = isTerminalLifecycleState(transition.toState);
+        const nextProjectStatus = terminalAdmission ? "CLOSED" : project.status;
         const projectUpdate = this.database
           .prepare(
             `UPDATE projects
-             SET lifecycle_state = ?, lifecycle_version = ?, updated_at = ?
+             SET lifecycle_state = ?, lifecycle_version = ?, status = ?,
+                 updated_at = ?
              WHERE id = ? AND workspace_id = ?
                AND lifecycle_state = ? AND lifecycle_version = ?`,
           )
           .run(
             transition.toState,
             nextVersion,
+            nextProjectStatus,
             now,
             project.id,
             identity.workspaceId,
@@ -1154,6 +1164,19 @@ export class WorkspaceService {
           throw new ConcurrencyConflictError(
             "Concurrent transition update prevented admission",
           );
+        }
+
+        if (terminalAdmission) {
+          this.database
+            .prepare(
+              `UPDATE tasks
+               SET status = 'CANCELLED',
+                   record_version = record_version + 1,
+                   updated_by = 'SYSTEM', updated_at = ?, completed_at = NULL
+               WHERE project_id = ?
+                 AND status NOT IN ('DONE', 'CANCELLED')`,
+            )
+            .run(now, project.id);
         }
 
         const taskDefinition = derivedTaskForTransition(
