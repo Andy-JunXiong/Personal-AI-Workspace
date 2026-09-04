@@ -107,8 +107,9 @@ Sanitized initialization evidence is recorded in
 The seven-day aggregate log template is
 [`docs/dogfood/M4_DAILY_LOG_v0.1.md`](docs/dogfood/M4_DAILY_LOG_v0.1.md).
 Day 0 passed with a fresh, unseeded external Workspace and the frozen 12-tool
-surface. The trial clock starts only when the user explicitly authorizes the
-first real Job Application write.
+surface. Day 1 then imported the explicitly authorized inventory with minimized
+Gmail provenance and passed aggregate verification. The seven-day trial is
+active on the M4 branch.
 
 ### Local setup
 

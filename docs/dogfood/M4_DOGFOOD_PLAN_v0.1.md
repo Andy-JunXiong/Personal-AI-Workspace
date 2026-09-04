@@ -1,6 +1,6 @@
 # M4 Real-Data Dogfood Plan v0.1
 
-**Status:** APPROVED — DAY-0 PASSED; DAY 1 AWAITS FIRST AUTHORIZED REAL WRITE
+**Status:** ACTIVE — DAY 1 STARTED; 1 OF 7 DAILY CHECK-INS COMPLETE
 
 ## Objective
 

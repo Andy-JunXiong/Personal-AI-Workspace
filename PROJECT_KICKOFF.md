@@ -12,7 +12,7 @@
 
 **REAL JOB SEARCH MVP SLICE M3 = COMPLETE — CHATGPT PLATFORM SUPPORTED**
 
-**M4 REAL-DATA DOGFOOD = DAY-0 PASSED — DAY 1 AWAITS FIRST AUTHORIZED REAL WRITE**
+**M4 REAL-DATA DOGFOOD = ACTIVE — DAY 1 OF 7 COMPLETE**
 
 ## Thesis
 
@@ -64,9 +64,31 @@ The Workspace will not initially rebuild Gmail/Drive/Calendar connectors. The fi
 ## Immediate Next Step
 
 **Spike 1B and Real Job Search MVP Slices M1/M2/M3 remain frozen at their
-verified milestone tags. M4 Day 0 passed against the empty external real
-Workspace. Keep it closed and unseeded until the user explicitly authorizes
-the first real Job Application write, which starts Day 1.**
+verified milestone tags. M4 Day 1 imported the explicitly authorized real
+inventory with minimized Gmail provenance and passed aggregate verification.
+Continue daily Today/readback check-ins through Day 7 without expanding the
+frozen product scope.**
+
+## Session Closeout — 2026-09-04 (M4 Day 1)
+
+- With explicit user authority, the first real-data batch created 22 Job
+  Application Projects and 22 minimized Gmail evidence Resources through the
+  frozen MCP surface.
+- Aggregate state is 9 APPLIED, 1 INTERVIEWING, and 12 CLOSED/REJECTED. The
+  INTERVIEWING admission created the expected single HIGH interview-preparation
+  Task; all terminal admissions created no Task.
+- All 35 transitions were admitted with explicit user authority. Thirteen
+  runtime lifecycle transitions reference their Gmail evidence Resources.
+- The 70 mutation commands produced 70 idempotency records with no rejected
+  command or duplicate. Today reported one attention Task and nine active
+  applications without an open Task.
+- Direct read-only inspection matched MCP readback. All 22 Resources used
+  distinct stable message IDs, and no persisted Resource contained a full
+  email address.
+- The server was stopped, SQLite integrity returned `ok`, the WAL checkpoint
+  was not busy, and the external stderr log was empty.
+- Day 1 is complete. Cross-session durability remains scheduled for a later
+  daily check-in.
 
 ## Session Closeout — 2026-09-04 (M4 Day-0 initialization)
 
