@@ -1,6 +1,6 @@
 # Real Job Search MVP Slice M3 Plan v0.1
 
-**Status:** APPROVED BASELINE — LOCAL GATE PASSED; CHATGPT PLATFORM GATE PENDING
+**Status:** COMPLETE — LOCAL AND CHATGPT PLATFORM GATES PASSED
 
 ## Objective
 
@@ -82,6 +82,6 @@ M3 local verification must prove:
    the manual Task-kind enum; and
 9. `npm run verify` and `git diff --check` pass with all frozen regressions.
 
-Manual ChatGPT verification then follows
-`tests/evaluations/chatgpt-m3.md`. M3 is not complete or eligible for a verified
-tag until both local and platform gates pass.
+Manual ChatGPT verification follows `tests/evaluations/chatgpt-m3.md`. Both
+local and fresh-database platform gates passed on 2026-09-04, making M3
+eligible for the verified milestone tag.

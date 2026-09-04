@@ -10,7 +10,7 @@
 
 **REAL JOB SEARCH MVP SLICE M2 = COMPLETE — CHATGPT PLATFORM SUPPORTED**
 
-**REAL JOB SEARCH MVP SLICE M3 = LOCALLY COMPLETE — CHATGPT PLATFORM RETEST PENDING**
+**REAL JOB SEARCH MVP SLICE M3 = COMPLETE — CHATGPT PLATFORM SUPPORTED**
 
 ## Thesis
 
@@ -54,16 +54,37 @@ The Workspace will not initially rebuild Gmail/Drive/Calendar connectors. The fi
 - [x] M2 create-Task visibility invariant hardened with regression coverage
 - [x] M2 fresh-DB ChatGPT platform retest
 - [x] MVP build — Slice M3 Real Lifecycle implemented and verified locally
-- [ ] M3 fresh-DB ChatGPT platform retest
-- [ ] E2E evidence
+- [x] M3 fresh-DB ChatGPT platform retest
+- [x] E2E evidence
 
 ## Immediate Next Step
 
-**Spike 1B, Slice M1, and Slice M2 remain frozen at their verified tags. Slice
-M3 is implemented on its separate branch and passes the local gate. Run the
-fresh-external-database ChatGPT evaluation in `tests/evaluations/chatgpt-m3.md`
-against a refreshed 12-tool development connection. Do not merge or tag M3
-until M3-A/B/C are supported and the evidence is recorded.**
+**Spike 1B and Real Job Search MVP Slices M1/M2/M3 are complete and frozen at
+their verified milestone tags. The next product change requires a separately
+approved post-MVP objective and scope.**
+
+## Session Closeout — 2026-09-04 (M3 platform verification)
+
+- The canonical fresh-external-database M3-A/B/C run passed through the
+  refreshed 12-tool ChatGPT development connection.
+- M3-A verified non-mutating proposals and exactly one approved HIGH derived
+  Task for recruiter contact, interview, and offer admissions.
+- M3-B verified terminal ACCEPTED closure, atomic cancellation of all four
+  open Tasks, idempotent replay, closed-list behavior, and rejection of a
+  terminal outgoing edge.
+- M3-C verified REJECTED and WITHDRAWN closure plus durable no-write readback
+  of all three terminal Projects from a separate ChatGPT conversation.
+- Direct read-only SQLite inspection matched ChatGPT: ACCEPTED v5, REJECTED
+  v2, and WITHDRAWN v2 were CLOSED with zero open Tasks. Sanitized server and
+  tunnel stderr logs were empty.
+- The active-only exact lookup returned `NOT_FOUND` for terminal Projects as
+  frozen by M1; the independent readback resolved them through the
+  closed-inclusive list, with no contract change.
+- Full verification remained at 12 test files and 129 tests, plus typecheck,
+  production build, and `git diff --check`.
+- The one-time Runtime API key was revoked and temporary runtime processes
+  were stopped. The external database and sanitized logs remain preserved as
+  evidence.
 
 ## Session Closeout — 2026-09-04 (M3 local implementation)
 

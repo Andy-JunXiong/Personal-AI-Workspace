@@ -64,9 +64,9 @@ ChatGPT platform. Its first platform run found a blocking create-Task
 Project-visibility defect; the server-side visibility invariant was hardened,
 regression coverage was added, and the canonical fresh-database M2-A/B/C
 retest passed. The verified milestone is frozen at
-`m2-task-today-verified-v0.1`. Slice M3 is implemented on a separate branch and
-passes its local gate; the fresh-database ChatGPT platform evaluation is still
-pending, so M3 is not yet merged or frozen.
+`m2-task-today-verified-v0.1`. Slice M3 is complete locally and through the
+fresh-database ChatGPT platform gate and is frozen at
+`m3-real-lifecycle-verified-v0.1`.
 Exact active creation duplicates return `POSSIBLE_DUPLICATE` with zero writes;
 ordinary creation authority is not a duplicate override. A deliberate distinct
 duplicate requires `allowDistinctDuplicate=true` and a different sanitized
@@ -88,12 +88,12 @@ are recorded in
 
 M3 implements the complete approved lifecycle graph, transition-derived Tasks,
 and atomic terminal Project closure plus cancellation of obsolete open Tasks.
-It adds no migration or MCP tool. The scoped implementation contract and local
-results are in
+It adds no migration or MCP tool. The scoped implementation contract and
+verified local/platform results are in
 [`docs/mvp/REAL_JOB_SEARCH_M3_PLAN_v0.1.md`](docs/mvp/REAL_JOB_SEARCH_M3_PLAN_v0.1.md)
 and
 [`docs/mvp/REAL_JOB_SEARCH_M3_RESULTS_v0.1.md`](docs/mvp/REAL_JOB_SEARCH_M3_RESULTS_v0.1.md).
-The pending manual platform procedure is
+The supported manual platform evidence is
 [`tests/evaluations/chatgpt-m3.md`](tests/evaluations/chatgpt-m3.md).
 
 ### Local setup

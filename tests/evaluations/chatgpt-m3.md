@@ -1,11 +1,27 @@
 # ChatGPT M3 Platform Evaluation
 
-**Current status:** PENDING — LOCAL IMPLEMENTATION PASSED
+**Current status:** SUPPORTED — FRESH-DATABASE CHATGPT PLATFORM GATE PASSED
 
 Automated/local evidence and manual ChatGPT platform evidence remain separate.
 Run this evaluation against a fresh external SQLite database with the committed
 M3 build, `PAW_TIME_ZONE=Australia/Sydney`, a refreshed development connection,
 and the 12-tool Personal AI Workspace app. Use only the synthetic names below.
+
+## Recorded result — 2026-09-04
+
+| Evaluation | Result |
+| --- | --- |
+| M3-A — proposal separation and non-terminal derived effects | SUPPORTED |
+| M3-B — terminal outcome, cleanup, negative edge, and retry | SUPPORTED |
+| M3-C — other terminal outcomes and cross-conversation durability | SUPPORTED |
+
+The run used fresh external database
+`%LOCALAPPDATA%\PersonalAIWorkspace\data\m3-platform-20260904-171917.db`,
+Workspace `08a0662e-1c8f-47b5-a1c1-0a5f2b1e613f`, and the refreshed 12-tool
+development connection. The original M3-A/B/C conversation is
+<https://chatgpt.com/c/6a9a71c9-0f0c-83ec-bc4e-fe39ec9b4327>; the independent
+M3-C readback conversation is
+<https://chatgpt.com/c/6a9a75cc-4e7c-83e8-a968-833ad4253490>.
 
 ## M3-A — Proposal separation and non-terminal derived effects
 
@@ -126,6 +142,13 @@ WITHDRAWN respectively; each terminal Project has zero open Tasks; default
 active listing excludes all three; include-closed listing contains all three;
 and no prior-conversation context is needed.
 
+`workspace_find_job_application` retains the frozen active-only lookup
+contract, so exact lookup of these terminal Projects returns `NOT_FOUND`.
+This is expected rather than an M3 defect: resolve each exact company/role pair
+from `workspace_list_job_applications(includeClosed=true)`, then perform the
+bounded Project readback by ID. The recorded run followed this path without
+mutation.
+
 ## Global negative-scope checks
 
 - Every admission follows a separate explicit user-authority turn.
@@ -133,6 +156,6 @@ and no prior-conversation context is needed.
 - No transition leaves a terminal state.
 - No Gmail/Calendar scan, background job, reminder, notification, LLM ranking,
   new lifecycle state, new MCP tool, or manual `REVIEW_OFFER` creation occurs.
-- Record M3-A, M3-B, and M3-C separately as `SUPPORTED`, `NOT SUPPORTED`, or
-  `INCONCLUSIVE`, with structured results, fresh database identity, and
-  sanitized logs.
+- M3-A, M3-B, and M3-C are recorded separately above with structured results,
+  fresh database identity, independent-conversation evidence, and sanitized
+  external logs.

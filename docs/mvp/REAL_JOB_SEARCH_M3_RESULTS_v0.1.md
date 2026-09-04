@@ -2,7 +2,7 @@
 
 **Milestone:** Real Lifecycle
 
-**Decision:** LOCALLY COMPLETE — CHATGPT PLATFORM GATE PENDING
+**Decision:** COMPLETE — CHATGPT PLATFORM SUPPORTED
 
 ## Result summary
 
@@ -16,7 +16,7 @@
 | Optimistic concurrency and idempotency regressions | PASS |
 | MCP schema and transport | PASS |
 | Frozen Spike, M1, and M2 regressions | PASS |
-| ChatGPT platform evaluation | PENDING |
+| ChatGPT platform evaluation | PASS |
 
 ## Implemented behavior
 
@@ -70,9 +70,43 @@ and the source-owned `REVIEW_OFFER` boundary. The transport test drives
 `RECRUITER_CONTACT -> INTERVIEWING -> OFFER -> ACCEPTED` through MCP and checks
 the final closed Project has no open Tasks.
 
-## Readiness recommendation
+## ChatGPT platform evidence
 
-Refresh the ChatGPT development connection against this branch and execute the
-fresh-database platform gate in `tests/evaluations/chatgpt-m3.md`. Do not merge
-to `main`, tag/freeze M3, or claim the overall MVP complete before that gate is
-recorded as supported.
+The fresh-database M3-A/B/C evaluation passed on 2026-09-04 through the
+refreshed 12-tool ChatGPT development connection. The run used Workspace
+`08a0662e-1c8f-47b5-a1c1-0a5f2b1e613f` and external database
+`%LOCALAPPDATA%\PersonalAIWorkspace\data\m3-platform-20260904-171917.db`.
+
+- M3-A preserved proposal/admission separation through
+  `APPLIED -> RECRUITER_CONTACT -> INTERVIEWING -> OFFER`, producing exactly
+  the three approved HIGH derived Tasks.
+- M3-B admitted `OFFER -> ACCEPTED` at version 5, closed the Project,
+  atomically cancelled all four open Tasks with SYSTEM attribution and one
+  version increment, safely replayed the same admission, and rejected the
+  terminal outgoing edge without mutation.
+- M3-C independently admitted APPLIED applications to `REJECTED` and
+  `WITHDRAWN`, then a separate conversation read all three terminal Projects
+  from the same database with zero open Tasks and no mutation.
+
+Direct read-only SQLite inspection matched the ChatGPT results: ACCEPTED v5,
+REJECTED v2, and WITHDRAWN v2 were all CLOSED with zero open Tasks. The four
+ACCEPTED-flow Tasks were all CANCELLED at record version 2; the disallowed
+`ACCEPTED -> INTERVIEWING` proposal was durably REJECTED. Server and tunnel
+stderr logs were empty.
+
+The frozen exact lookup remains active-only, so terminal exact lookups return
+`NOT_FOUND`. M3-C correctly resolved exact company/role pairs from the
+closed-inclusive list before bounded Project readback. This does not change the
+M1 lookup contract.
+
+Platform conversations:
+
+- M3-A/B/C: <https://chatgpt.com/c/6a9a71c9-0f0c-83ec-bc4e-fe39ec9b4327>
+- Independent M3-C readback: <https://chatgpt.com/c/6a9a75cc-4e7c-83e8-a968-833ad4253490>
+
+## Completion recommendation
+
+Both required gates are supported. Merge M3 to `main` and freeze the verified
+milestone as `m3-real-lifecycle-verified-v0.1`. The scoped Real Job Search MVP
+M1/M2/M3 implementation is complete; post-MVP work requires a separately
+approved scope.

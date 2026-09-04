@@ -1,6 +1,6 @@
 # State Model v0.1
 
-**Status:** SPIKE 1A/1B, M1, AND M2 FROZEN; M3 LOCALLY IMPLEMENTED
+**Status:** SPIKE 1A/1B AND REAL JOB SEARCH MVP M1/M2/M3 VERIFIED AND FROZEN
 
 ## 1. Key modeling decision
 
