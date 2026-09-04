@@ -8,7 +8,7 @@ real job-search details in this file.
 
 | Day | Local date | Check-in | Active | Closed | Open Tasks | Today attention | Writes attempted | Writes rejected | Cross-session readback | Friction categories |
 | ---: | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | --- | --- |
-| 1 | 2026-09-04 | PASS | 10 | 12 | 1 | 1 | 70 | 0 | PASS | OPERATIONS |
+| 1 | 2026-09-04 | PASS | 11 | 12 | 1 | 1 | 72 | 0 | PASS | OPERATIONS |
 | 2 | — | PENDING | — | — | — | — | — | — | — | — |
 | 3 | — | PENDING | — | — | — | — | — | — | — | — |
 | 4 | — | PENDING | — | — | — | — | — | — | — | — |
@@ -103,3 +103,27 @@ Task, and 70 idempotency records, confirming zero mutation. The one-time tunnel
 credential was revoked, both processes were stopped, port 3000 closed, SQLite
 integrity remained `ok`, the WAL checkpoint was not busy, and both external
 stderr logs were empty.
+
+Day: 1
+Category: OPERATIONS
+Severity: LOW
+Observation: A same-day authorized delta was durably written, but the first
+verification report expected an obsolete readback field and stopped after the
+two writes had completed.
+Workaround: The same idempotency keys replayed the exact Project and Resource;
+the corrected readback and direct audit confirmed zero duplicates.
+Candidate decision: CONTINUE
+
+After that snapshot, a read-only Gmail delta scan found one additional same-day
+Application event. With explicit user authority, the frozen MCP surface created
+one ACTIVE/APPLIED Project and one minimized Gmail Resource. The first local
+reporting attempt failed only after both writes committed; its idempotent retry
+returned the same Project and Resource with no duplicate. Final Day 1 state is
+23 Projects, 23 Resources, 36 admitted transitions, 13 evidence links, one open
+Task, and 72 idempotency records. The lifecycle distribution is 10 APPLIED, 1
+INTERVIEWING, and 12 REJECTED; Today remains at 1 attention item, with 10 active
+Applications without an open Task and 0 upcoming Tasks. No Resource contains a
+full email address. SQLite integrity and the WAL checkpoint passed, the server
+was stopped, port 3000 closed, and the delta stderr log was empty. Because the
+v0.2 metrics take effect on Day 2, this same-day delta is not included in their
+prospective denominator.

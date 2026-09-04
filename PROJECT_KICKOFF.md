@@ -96,26 +96,33 @@ gate on 2026-09-10, adoption on 2026-09-17, and utility on 2026-10-01.**
 - With explicit user authority, the first real-data batch created 22 Job
   Application Projects and 22 minimized Gmail evidence Resources through the
   frozen MCP surface.
-- Aggregate state is 9 APPLIED, 1 INTERVIEWING, and 12 CLOSED/REJECTED. The
+- Final Day 1 aggregate state is 10 APPLIED, 1 INTERVIEWING, and 12
+  CLOSED/REJECTED. The
   INTERVIEWING admission created the expected single HIGH interview-preparation
   Task; all terminal admissions created no Task.
-- All 35 transitions were admitted with explicit user authority. Thirteen
+- All 36 transitions were admitted with explicit user authority. Thirteen
   runtime lifecycle transitions reference their Gmail evidence Resources.
-- The 70 mutation commands produced 70 idempotency records with no rejected
-  command or duplicate. Today reported one attention Task and nine active
+- The 72 mutation commands produced 72 idempotency records with no rejected
+  command or duplicate. Today reported one attention Task and ten active
   applications without an open Task.
-- Direct read-only inspection matched MCP readback. All 22 Resources used
+- Direct read-only inspection matched MCP readback. All 23 Resources used
   distinct stable message IDs, and no persisted Resource contained a full
   email address.
 - The server was stopped, SQLite integrity returned `ok`, the WAL checkpoint
   was not busy, and the external stderr log was empty.
-- A completely new ChatGPT conversation performed only the approved read-only
-  calls and independently returned 10 active / 22 total applications, the same
-  lifecycle distribution, and Today counts of 1 attention, 9 applications
-  without an open Task, and 0 upcoming Tasks.
-- The post-readback database audit remained at 22 Projects, 22 Resources, 35
-  admitted transitions, 13 evidence links, one open Task, and 70 idempotency
-  records, confirming zero mutation.
+- Before the later same-day delta, a completely new ChatGPT conversation
+  performed only the approved read-only calls and independently returned 10
+  active / 22 total applications, the then-current lifecycle distribution, and
+  Today counts of 1 attention, 9 applications without an open Task, and 0
+  upcoming Tasks.
+- Its immediate post-readback database audit remained at 22 Projects, 22
+  Resources, 35 admitted transitions, 13 evidence links, one open Task, and 70
+  idempotency records, confirming zero mutation at that snapshot.
+- A later read-only Gmail delta scan found one new same-day Application event.
+  Explicit user authority created one ACTIVE/APPLIED Project and one minimized
+  Gmail Resource. An idempotent reporting retry returned the same records with
+  no duplicate; final counts are 23 Projects, 23 Resources, 36 admitted
+  transitions, one open Task, and 72 idempotency records.
 - The one-time tunnel credential was deleted from temporary storage and
   revoked. The tunnel and server were stopped, port 3000 closed, SQLite
   integrity remained `ok`, the WAL checkpoint was not busy, and both external
