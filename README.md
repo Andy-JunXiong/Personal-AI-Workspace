@@ -162,6 +162,8 @@ evaluation. The C0 architecture and readiness decision is recorded in
 [`docs/cloud/C0_READINESS_REVIEW.md`](docs/cloud/C0_READINESS_REVIEW.md).
 The repository-side C1 runtime and operations procedure is in
 [`docs/cloud/C1_RUNTIME_RUNBOOK.md`](docs/cloud/C1_RUNTIME_RUNBOOK.md).
+The repository-side C2 private ChatGPT transport procedure is in
+[`docs/cloud/C2_SECURE_MCP_TUNNEL.md`](docs/cloud/C2_SECURE_MCP_TUNNEL.md).
 No AWS runtime or real-data migration should be inferred from these documents;
 those require separate runtime evidence in the later cloud stages.
 
