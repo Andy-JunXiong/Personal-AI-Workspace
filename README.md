@@ -155,6 +155,14 @@ Before backing up or restoring, stop the Workspace process. Back up the closed
 process and move the DB to a dated quarantine filename before restarting; the
 runtime will create and migrate a fresh DB. Startup never deletes existing data.
 
+### Cloud always-on deployment
+
+Cloud deployment is being developed separately from the frozen M4 product
+evaluation. The C0 architecture and readiness decision is recorded in
+[`docs/cloud/C0_READINESS_REVIEW.md`](docs/cloud/C0_READINESS_REVIEW.md).
+No AWS runtime or real-data migration should be inferred from that readiness
+record; those require separate runtime evidence in the later cloud stages.
+
 ### Verification
 
 ```text
