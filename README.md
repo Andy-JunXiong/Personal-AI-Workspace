@@ -169,7 +169,9 @@ fresh non-production database. Backup/restore, image rollback, private connector
 readback, authentication rejection, and whole-instance reboot recovery passed;
 see the [runtime results](docs/cloud/C1_C2_RUNTIME_RESULTS_v0.1.md).
 The current connector reads the empty cloud Workspace. C3 real-data migration
-has not started; the local M4 database and evaluation remain unchanged.
+has not started; the local M4 database and evaluation remain unchanged. The
+gated, recoverable migration procedure is documented in
+[`docs/cloud/C3_REAL_DATABASE_MIGRATION.md`](docs/cloud/C3_REAL_DATABASE_MIGRATION.md).
 
 ### Verification
 
