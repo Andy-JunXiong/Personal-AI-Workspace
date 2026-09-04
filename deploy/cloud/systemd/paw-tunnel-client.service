@@ -1,0 +1,42 @@
+[Unit]
+Description=Personal AI Workspace OpenAI Secure MCP Tunnel
+Documentation=https://developers.openai.com/api/docs/guides/secure-mcp-tunnels
+Wants=network-online.target
+After=network-online.target docker.service
+Requires=docker.service
+
+[Service]
+Type=simple
+DynamicUser=yes
+EnvironmentFile=/etc/paw/tunnel-client.env
+LoadCredential=control-plane-api-key:/etc/paw/secrets/control-plane-api-key
+ExecStartPre=/usr/bin/curl --fail --silent --show-error --max-time 5 http://127.0.0.1:3000/healthz
+ExecStart=/usr/local/bin/tunnel-client-runtime run --control-plane.api-key=file:%d/control-plane-api-key --log.level=info --log.format=json
+Restart=always
+RestartSec=2s
+TimeoutStopSec=30s
+UMask=0077
+
+NoNewPrivileges=yes
+PrivateDevices=yes
+PrivateTmp=yes
+ProtectClock=yes
+ProtectControlGroups=yes
+ProtectHome=yes
+ProtectHostname=yes
+ProtectKernelLogs=yes
+ProtectKernelModules=yes
+ProtectKernelTunables=yes
+ProtectSystem=strict
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+RestrictNamespaces=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+CapabilityBoundingSet=
+AmbientCapabilities=
+SystemCallArchitectures=native
+
+[Install]
+WantedBy=multi-user.target
