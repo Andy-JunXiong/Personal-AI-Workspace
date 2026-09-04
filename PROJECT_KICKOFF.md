@@ -66,8 +66,9 @@ The Workspace will not initially rebuild Gmail/Drive/Calendar connectors. The fi
 **Spike 1B and Real Job Search MVP Slices M1/M2/M3 remain frozen at their
 verified milestone tags. M4 Day 1 imported the explicitly authorized real
 inventory with minimized Gmail provenance and passed aggregate verification.
-Continue daily Today/readback check-ins through Day 7 without expanding the
-frozen product scope.**
+The independent new-conversation readback also passed with zero mutation.
+Continue daily Today check-ins through Day 7 without expanding the frozen
+product scope.**
 
 ## Session Closeout — 2026-09-04 (M4 Day 1)
 
@@ -87,8 +88,19 @@ frozen product scope.**
   email address.
 - The server was stopped, SQLite integrity returned `ok`, the WAL checkpoint
   was not busy, and the external stderr log was empty.
-- Day 1 is complete. Cross-session durability remains scheduled for a later
-  daily check-in.
+- A completely new ChatGPT conversation performed only the approved read-only
+  calls and independently returned 10 active / 22 total applications, the same
+  lifecycle distribution, and Today counts of 1 attention, 9 applications
+  without an open Task, and 0 upcoming Tasks.
+- The post-readback database audit remained at 22 Projects, 22 Resources, 35
+  admitted transitions, 13 evidence links, one open Task, and 70 idempotency
+  records, confirming zero mutation.
+- The one-time tunnel credential was deleted from temporary storage and
+  revoked. The tunnel and server were stopped, port 3000 closed, SQLite
+  integrity remained `ok`, the WAL checkpoint was not busy, and both external
+  stderr logs were empty.
+- Day 1, including its cross-session durability gate, is complete. Day 2 must
+  remain pending until a later local calendar date.
 
 ## Session Closeout — 2026-09-04 (M4 Day-0 initialization)
 
