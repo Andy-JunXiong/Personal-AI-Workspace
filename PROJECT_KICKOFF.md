@@ -14,14 +14,18 @@
 
 **M4 REAL-DATA DOGFOOD = ACTIVE — DAY 1 OF 7 COMPLETE**
 
-**CLOUD C1/C2 = DEPLOYED AND ACCEPTED — FRESH DATABASE; C3 MIGRATION NOT STARTED**
+**CLOUD C1/C2/C3/C4 = ACCEPTED — REAL DATABASE ON CLOUD; C5 PC-OFF TEST PENDING**
 
 Cloud acceptance on 2026-09-05 verified Sydney Lightsail persistence,
 backup/restore, controlled image rollback, restricted private tunnel access,
 and automatic recovery after an actual instance reboot. See the
 [C1/C2 runtime results](docs/cloud/C1_C2_RUNTIME_RESULTS_v0.1.md).
-The existing connector now reads the empty cloud Workspace. Real M4 data
-remains local; migration/cutover is the separate C3 gate.
+The existing connector now reads the original real M4 Workspace on the cloud.
+[C3 migration](docs/cloud/C3_RUNTIME_RESULTS_v0.1.md) preserved all source rows
+and passed independent new-conversation readback. The local original remains
+stopped and retained for rollback. [C4 controlled-write acceptance](docs/cloud/C4_C5_RUNTIME_RESULTS_v0.1.md)
+also passed, including independent conversation readback and authorized test-Task
+completion. C5 still needs the user to power off Windows and test from iPhone.
 
 ## Thesis
 

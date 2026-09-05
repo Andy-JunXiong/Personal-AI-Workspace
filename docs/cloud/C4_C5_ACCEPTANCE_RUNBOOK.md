@@ -1,6 +1,9 @@
 # C4/C5 ChatGPT and PC-OFF Acceptance
 
-**Status:** procedure ready; execution blocked on C3 read-only acceptance
+**Status:** C3/C4 PASSED; C5 PC-OFF MOBILE TEST PENDING
+
+See [runtime evidence](C4_C5_RUNTIME_RESULTS_v0.1.md) for completed checks and
+the remaining user-operated mobile test.
 
 This runbook validates the milestone-defining user outcome after the real
 database has passed C3. It does not authorize skipping C3, changing Job Search
@@ -15,6 +18,13 @@ semantics, or expanding the frozen MCP tool surface.
 - The connected Personal AI Workspace app resolves the cloud Workspace ID.
 - A known synthetic, non-terminal Project may be selected for the controlled
   mutation. Do not use a real application when a synthetic Project is suitable.
+
+On 2026-09-05, all 23 existing applications were real. The user explicitly
+selected a clearly labelled low-priority acceptance Task on an existing
+application, followed by marking the test Task complete. For this run, references
+below to the synthetic Project mean that user-approved existing Project. Preserve
+its original Task and lifecycle, and exclude acceptance Tasks from M4 utility
+metrics. No extra application or lifecycle transition is needed.
 
 ## C4 — ChatGPT platform validation
 

@@ -168,12 +168,17 @@ C1/C2 were deployed and accepted on Sydney Lightsail on 2026-09-05 using a
 fresh non-production database. Backup/restore, image rollback, private connector
 readback, authentication rejection, and whole-instance reboot recovery passed;
 see the [runtime results](docs/cloud/C1_C2_RUNTIME_RESULTS_v0.1.md).
-The current connector reads the empty cloud Workspace. C3 real-data migration
-has not started; the local M4 database and evaluation remain unchanged. The
-gated, recoverable migration procedure is documented in
+C3 subsequently migrated the real M4 database and passed complete read-only
+comparison plus an independent new ChatGPT conversation. The current connector
+reads the original real Workspace on the cloud; the local original remains
+stopped and retained for rollback. See [C3 runtime results](docs/cloud/C3_RUNTIME_RESULTS_v0.1.md).
+The gated, recoverable migration procedure is documented in
 [`docs/cloud/C3_REAL_DATABASE_MIGRATION.md`](docs/cloud/C3_REAL_DATABASE_MIGRATION.md).
 The post-migration ChatGPT and Windows-PC-OFF acceptance procedure is in
 [`docs/cloud/C4_C5_ACCEPTANCE_RUNBOOK.md`](docs/cloud/C4_C5_ACCEPTANCE_RUNBOOK.md).
+C4 controlled-write persistence passed and its test Task is complete. C5 still
+requires the user to power off Windows and verify from iPhone; see
+[C4/C5 runtime results](docs/cloud/C4_C5_RUNTIME_RESULTS_v0.1.md).
 
 ### Verification
 

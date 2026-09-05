@@ -1,6 +1,9 @@
 # C3 Real Database Migration
 
-**Status:** procedure ready; authoritative Windows database not transferred
+**Status:** C3 REAL DATABASE MIGRATION AND INDEPENDENT READBACK PASSED — 2026-09-05
+
+See [C3 runtime results](C3_RUNTIME_RESULTS_v0.1.md) for the current acceptance
+status and retained rollback artifacts. C4/C5 remain separate acceptance gates.
 
 C3 replaces the accepted empty cloud database with a verified copy of the real
 M4 database. It does not change Job Search behavior, MCP tools, identity policy,
@@ -63,6 +66,20 @@ manifest if it contains locally sensitive metadata. Do not use GitHub as the
 transfer path.
 
 ## Gate 3: verified and recoverable cutover
+
+Before importing, read the source's single Principal-to-Workspace mapping
+without printing its subject into logs. Preserve the source `issuer` and
+`subject` in `/etc/paw/paw.env`; the C1/C2 empty-cloud identity can differ.
+The application initializes an identity at startup, so importing the file with
+the old cloud principal configuration can create a second, empty Workspace.
+This configuration alignment preserves the existing identity policy and source
+rows. It does not change the restricted tunnel credential or its permissions.
+
+Pause the tunnel and backup timer during cutover. Retain a mode-0600 backup of
+the previous application environment file alongside the database rollback
+artifacts. If import or readback fails, restore both the prior environment and
+prior database, recreate the container with that environment, and verify health
+before restarting the tunnel. Resume the timer after a successful manual backup.
 
 Update `/opt/paw` to the accepted commit containing the C3 scripts. From that
 checkout, run:
