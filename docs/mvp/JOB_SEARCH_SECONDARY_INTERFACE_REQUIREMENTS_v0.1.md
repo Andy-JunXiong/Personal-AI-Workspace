@@ -1,12 +1,22 @@
 # Job Search Secondary Interface — Product Requirements v0.1
 
-**Status:** Refined requirements and delivery checklist; implementation pending.
+**Status:** Refined requirements; local S1-01 through S1-03 verified;
+public/device and full-product acceptance remain pending.
 
 **Date:** 2026-09-05.
 
-**Confirmed work scope:** The user selected requirements and development
-checklist only. This update does not start first-version development or change
-the M4 freeze.
+**Confirmed work scope:** The user initially selected requirements and a
+development checklist, then requested P0 technical planning. The
+[P0 technical plan](JOB_SEARCH_SECONDARY_INTERFACE_P0_v0.1.md) defines identity
+linking, browser ingress and two-stage delivery. The user subsequently approved
+[local S1 implementation and synthetic testing](S1_LOCAL_SCOPE_DECISION_2026-09-05.md).
+[S1-01 identity results](S1_01_IDENTITY_RESULTS_v0.1.md) record the first local
+package; public setup and cloud release remain separately reviewed.
+[S1-02 query results](S1_02_QUERY_RESULTS_v0.1.md) record authenticated bounded
+reads and the local terminal-task MCP tool.
+[S1-03 page results](S1_03_WEB_RESULTS_v0.1.md) record responsive read-only views
+and local synthetic browser checks. Public/mobile acceptance remains pending;
+these results do not complete the first product increment.
 
 **Basis:** The user's Multi-Domain Secondary Interface Requirements and the
 subsequent product analysis. This document makes the first Job Search experience
@@ -202,11 +212,20 @@ Do not retrospectively modify the current M4 metrics.
 
 ## 7. Development checklist and release order
 
-The [current M4 boundary](../dogfood/M4_REAL_USE_EVALUATION_v0.2.md) freezes new UI,
-tools and schemas through its 2026-10-01 decision. This requirements update is
-design work. Immediate runtime expansion requires an explicit change to that
-arrangement; public access also needs the concrete authentication design
-required by [ADR-007](../adr/ADR-007-identity-auth-boundary.md).
+The [P0 technical plan](JOB_SEARCH_SECONDARY_INTERFACE_P0_v0.1.md) refines delivery
+into S1 (existing application/task operations) and S2 (recommendation continuity).
+For S1, sequence P0 → P1 → P2 → the task-completion subset of P4, including its
+audit and exact terminal-task MCP readback. P3 is not a dependency of that subset.
+The table retains package IDs; its row order is not a requirement to deliver
+candidate storage before task completion. S2 completes P3/P5 and the full P6
+acceptance gate. Broader P4 browser editing remains later work. A read-only S1a
+preview is intermediate; S1 is usable but does not complete the full increment.
+
+The [M4 boundary](../dogfood/M4_REAL_USE_EVALUATION_v0.2.md) retains its deployed
+runtime freeze through the 2026-10-01 decision, with the explicitly approved
+local S1 exception linked above. Public access still requires acceptance of the
+concrete authentication design under [ADR-007](../adr/ADR-007-identity-auth-boundary.md)
+and separate cloud publication review.
 
 | Order | Concrete implementation package | Dependencies / exit evidence |
 | --- | --- | --- |

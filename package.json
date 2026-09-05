@@ -8,20 +8,21 @@
     "node": ">=24.0.0"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
+    "build": "tsc -p tsconfig.build.json && node dist/scripts/copy-web-assets.js",
     "dev": "tsx watch src/server.ts",
     "db:backup": "node dist/scripts/backup-database.js",
     "db:verify": "node dist/scripts/verify-database.js",
     "seed": "tsx scripts/seed-spike.ts",
     "start": "node dist/src/server.js",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && tsc -p tsconfig.browser.json",
     "verify": "npm run typecheck && npm test && npm run build"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.30.0",
     "better-sqlite3": "^13.0.3",
     "express": "^5.2.1",
+    "openid-client": "6.8.8",
     "zod": "^4.5.4"
   },
   "devDependencies": {

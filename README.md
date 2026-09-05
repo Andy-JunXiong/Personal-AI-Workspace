@@ -126,6 +126,26 @@ scenarios and a concrete development checklist. A read-only interface is an
 intermediate release; completing the first increment also requires durable
 candidate decisions and cross-entry task readback.
 
+The [P0 technical plan](docs/mvp/JOB_SEARCH_SECONDARY_INTERFACE_P0_v0.1.md)
+specifies a proposed Google login association with the existing Workspace,
+separate browser HTTPS ingress, an S1 application/task operating release and
+an S2 recommendation-continuity release. It includes the terminal-task MCP read
+gap, audit and retry boundaries, rollback, and stage-specific acceptance.
+The user subsequently approved a
+[local S1 scope exception](docs/mvp/S1_LOCAL_SCOPE_DECISION_2026-09-05.md).
+[S1-01 identity linking and login](docs/mvp/S1_01_IDENTITY_RESULTS_v0.1.md) are
+implemented locally and passed 153 tests, typechecking and build. Real Google
+login, public authentication acceptance and cloud release remain pending.
+[S1-02 bounded reads and terminal-task readback](docs/mvp/S1_02_QUERY_RESULTS_v0.1.md)
+are also implemented locally (166-test milestone). The subsequent
+[S1-03 responsive pages](docs/mvp/S1_03_WEB_RESULTS_v0.1.md) pass 171 tests,
+server/browser typechecking, build and synthetic Chrome checks at desktop,
+390px and 320px viewports. Local MCP discovery has 13 tools, with the original
+twelve contracts preserved. Task completion/audit is the next local package.
+The [2026-09-05 handoff](docs/mvp/S1_HANDOFF_2026-09-05.md) records today's stopping
+point and the concrete S1-04 resume steps. Publishing this source checkpoint to
+GitHub does not deploy the new web interface.
+
 Start with an authenticated Job Search inventory, Today, and application detail
 including completed Tasks. Reuse application services and preserve authority,
 versioning, idempotency, and ownership checks. Browser login and HTTPS ingress
@@ -137,9 +157,17 @@ filtering; its recommendations are not durable Workspace records. The proposal
 therefore includes a separately gated candidate/history integration with short
 advisory fit reasons, without requiring full resume or skill analysis.
 
-This is design documentation only. No UI, API, authentication change, candidate
-schema, or digest write integration has been implemented. The M4 freeze remains
-in force through its Day 28 decision unless its scope is explicitly revised.
+Local S1-01 adds an optional loopback authentication listener, immutable request
+identity, identity-link migration and an operator command. It defaults off and
+exposes no business-write or MCP route. S1-02 adds authenticated web read APIs and
+the private `workspace_get_task` MCP read. S1-03 adds read-only Today, inventory,
+application/task detail, evidence/history and context-copy pages. Browser
+completion, candidate storage and digest recording are not implemented yet.
+For a synthetic local UI preview, run `npm.cmd exec tsx tests/manual/web-preview.ts`;
+this test-only fixture accepts no real database or account and is excluded from
+the production build.
+The original 12-tool cloud deployment and real-data M4 evaluation remain frozen;
+local synthetic S1 work proceeds under the recorded exception.
 
 ### M4 real-data Dogfood
 

@@ -3,6 +3,8 @@ import type { WorkspaceDatabase } from "../persistence/database.js";
 import { TaskService, type Clock, mapTask } from "./task-service.js";
 import { TodayQueryService } from "./today-query-service.js";
 import { canonicalHash, canonicalJson } from "../domain/canonical-json.js";
+import { verifiedRequestContext, type RequestContext } from "./request-context.js";
+import { JobSearchQueryService } from "./job-search-query-service.js";
 import {
   AuthorizationError,
   ConcurrencyConflictError,
@@ -232,13 +234,16 @@ class PossibleDuplicateDetected extends Error {
 export class WorkspaceService {
   readonly taskService: TaskService;
   readonly todayQueryService: TodayQueryService;
+  readonly jobSearchQueryService: JobSearchQueryService;
 
   constructor(
     private readonly database: WorkspaceDatabase,
-    private readonly developmentPrincipal: DevelopmentPrincipalConfig,
+    private readonly identitySource: DevelopmentPrincipalConfig | RequestContext,
     options: { timeZone?: string; clock?: Clock } = {},
   ) {
-    const resolveIdentity = () => this.resolveDevelopmentIdentity();
+    this.identitySource = Object.freeze({ ...identitySource });
+    const resolveIdentity = () => this.resolveIdentity();
+    this.jobSearchQueryService = new JobSearchQueryService(database, resolveIdentity, options.clock);
     const assertProjectVisible = (projectId: string, workspaceId: string) => {
       this.getAuthorizedProject(projectId, workspaceId);
     };
@@ -247,6 +252,7 @@ export class WorkspaceService {
       resolveIdentity,
       assertProjectVisible,
       options.clock,
+      () => this.assertLegacyMutationAllowed(),
     );
     this.todayQueryService = new TodayQueryService(
       database,
@@ -257,13 +263,17 @@ export class WorkspaceService {
   }
 
   ensureDevelopmentIdentity(): IdentityContext {
+    if ("channel" in this.identitySource) {
+      throw new AuthorizationError("Request-scoped services cannot initialize identities");
+    }
+    const principalConfig = this.identitySource;
     return this.database.transaction(() => {
       const now = new Date().toISOString();
       let principal = this.database
         .prepare("SELECT id FROM principals WHERE issuer = ? AND subject = ?")
         .get(
-          this.developmentPrincipal.issuer,
-          this.developmentPrincipal.subject,
+          principalConfig.issuer,
+          principalConfig.subject,
         ) as { id: string } | undefined;
 
       if (!principal) {
@@ -275,9 +285,9 @@ export class WorkspaceService {
           )
           .run(
             principal.id,
-            this.developmentPrincipal.issuer,
-            this.developmentPrincipal.subject,
-            this.developmentPrincipal.subject,
+            principalConfig.issuer,
+            principalConfig.subject,
+            principalConfig.subject,
             now,
           );
       }
@@ -296,7 +306,7 @@ export class WorkspaceService {
           .run(
             workspace.id,
             principal.id,
-            this.developmentPrincipal.workspaceName,
+            principalConfig.workspaceName,
             now,
           );
       }
@@ -309,6 +319,17 @@ export class WorkspaceService {
   }
 
   resolveDevelopmentIdentity(): IdentityContext {
+    if ("channel" in this.identitySource) {
+      throw new AuthorizationError("Request-scoped services have no development identity");
+    }
+    return this.resolveIdentity();
+  }
+
+  resolveIdentity(): IdentityContext {
+    if ("channel" in this.identitySource) {
+      const context = this.identitySource;
+      return verifiedRequestContext(this.database, context, context.channel, context.requestId);
+    }
     const row = this.database
       .prepare(
         `SELECT p.id AS principal_id, w.id AS workspace_id
@@ -317,8 +338,8 @@ export class WorkspaceService {
          WHERE p.issuer = ? AND p.subject = ?`,
       )
       .get(
-        this.developmentPrincipal.issuer,
-        this.developmentPrincipal.subject,
+        this.identitySource.issuer,
+        this.identitySource.subject,
       ) as { principal_id: string; workspace_id: string } | undefined;
 
     if (!row) {
@@ -340,7 +361,7 @@ export class WorkspaceService {
     workspaceId: string;
   } {
     this.database.prepare("SELECT 1").get();
-    const identity = this.resolveDevelopmentIdentity();
+    const identity = this.resolveIdentity();
     return {
       service: "personal-ai-workspace",
       version: "0.1.0",
@@ -356,7 +377,8 @@ export class WorkspaceService {
     company: string;
     role: string;
   }): ProjectDetails {
-    const identity = this.resolveDevelopmentIdentity();
+    this.assertLegacyMutationAllowed();
+    const identity = this.resolveIdentity();
 
     this.database.transaction(() => {
       const existing = this.database
@@ -414,7 +436,7 @@ export class WorkspaceService {
   }
 
   createJobApplication(input: CreateJobApplicationInput): CreateJobApplicationResult {
-    const identity = this.resolveDevelopmentIdentity();
+    const identity = this.resolveIdentity();
     const authorityReference = input.authority.reference.trim();
     if (
       input.authority.type !== "EXPLICIT_USER_DEV" ||
@@ -552,7 +574,7 @@ export class WorkspaceService {
   }
 
   listJobApplications(includeClosed = false): ListJobApplicationsResult {
-    const identity = this.resolveDevelopmentIdentity();
+    const identity = this.resolveIdentity();
     const statusClause = includeClosed ? "" : "AND status <> 'CLOSED'";
     const total = this.database
       .prepare(
@@ -592,7 +614,7 @@ export class WorkspaceService {
     changed: boolean;
     replayed: boolean;
   } {
-    const identity = this.resolveDevelopmentIdentity();
+    const identity = this.resolveIdentity();
     if (!Number.isInteger(input.expectedRecordVersion) || input.expectedRecordVersion < 1) {
       throw new ValidationError("expectedRecordVersion must be a positive integer");
     }
@@ -673,7 +695,7 @@ export class WorkspaceService {
   }
 
   getProject(projectId: string): ProjectDetails {
-    const identity = this.resolveDevelopmentIdentity();
+    const identity = this.resolveIdentity();
     const project = this.getAuthorizedProject(projectId, identity.workspaceId);
 
     const resources = this.database
@@ -736,7 +758,7 @@ export class WorkspaceService {
   }
 
   findJobApplication(company: string, role: string): FindJobApplicationResult {
-    const identity = this.resolveDevelopmentIdentity();
+    const identity = this.resolveIdentity();
     const normalizedCompany = normalizeJobApplicationLookupValue(company);
     const normalizedRole = normalizeJobApplicationLookupValue(role);
 
@@ -808,7 +830,7 @@ export class WorkspaceService {
     replayed: boolean;
   } {
     const normalizedInput = normalizeRecordObservationInput(input);
-    const identity = this.resolveDevelopmentIdentity();
+    const identity = this.resolveIdentity();
     const payload = {
       projectId: normalizedInput.projectId,
       resourceType: normalizedInput.resourceType,
@@ -910,7 +932,7 @@ export class WorkspaceService {
     deduplicated: boolean;
     replayed: boolean;
   } {
-    const identity = this.resolveDevelopmentIdentity();
+    const identity = this.resolveIdentity();
     const evidenceResourceIds = [...new Set(input.evidenceResourceIds)].sort();
     const payload = {
       projectId: input.projectId,
@@ -1041,7 +1063,7 @@ export class WorkspaceService {
     alreadyAdmitted: boolean;
     replayed: boolean;
   } {
-    const identity = this.resolveDevelopmentIdentity();
+    const identity = this.resolveIdentity();
     const authorityReference = input.authority.reference.trim();
     if (!input.authority.confirmed || authorityReference.length === 0) {
       throw new AuthorizationError(
@@ -1223,6 +1245,7 @@ export class WorkspaceService {
     payload: unknown,
     work: () => T,
   ): T {
+    this.assertLegacyMutationAllowed();
     const normalizedKey = idempotencyKey.trim();
     if (!normalizedKey) {
       throw new ValidationError("idempotencyKey is required");
@@ -1263,6 +1286,7 @@ export class WorkspaceService {
     idempotencyKey: string,
     payload: unknown,
   ): T | null {
+    this.assertLegacyMutationAllowed();
     const normalizedKey = idempotencyKey.trim();
     if (!normalizedKey) {
       throw new ValidationError("idempotencyKey is required");
@@ -1285,6 +1309,12 @@ export class WorkspaceService {
 
     const replayed = JSON.parse(existing.response_json) as T;
     return { ...replayed, replayed: true };
+  }
+
+  private assertLegacyMutationAllowed(): void {
+    if ("channel" in this.identitySource && this.identitySource.channel === "WEB") {
+      throw new AuthorizationError("Browser business mutations are not enabled in S1-01");
+    }
   }
 
   private findExactActiveJobApplications(

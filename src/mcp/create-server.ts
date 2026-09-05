@@ -98,6 +98,23 @@ export function createWorkspaceMcpServer(
   );
 
   server.registerTool(
+    "workspace_get_task",
+    {
+      title: "Get an exact Workspace Task",
+      description:
+        "Read one authorized Job Application Task by exact ID, including DONE or CANCELLED tasks on closed applications. Returns the current status, completion time and record version without changing state.",
+      inputSchema: { taskId: z.string().uuid() },
+      outputSchema: resultOutputSchema,
+      annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
+    },
+    async ({ taskId }) => {
+      try {
+        return successResult({ task: workspaceService.jobSearchQueryService.getTask(taskId) });
+      } catch (error) { return errorResult(error); }
+    },
+  );
+
+  server.registerTool(
     "workspace_create_job_application",
     {
       title: "Register a Job Application",

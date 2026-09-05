@@ -96,9 +96,11 @@ export class TaskService {
     private readonly resolveIdentity: () => IdentityContext,
     private readonly assertProjectVisible: ProjectVisibilityResolver,
     private readonly clock: Clock = () => new Date(),
+    private readonly assertMutationAllowed: () => void = () => {},
   ) {}
 
   createTask(input: CreateTaskInput): { task: TaskRecord; replayed: boolean } {
+    this.assertMutationAllowed();
     const identity = this.resolveIdentity();
     const authorityReference = validateAuthority(input.authority);
     const title = input.title.trim();
@@ -176,6 +178,7 @@ export class TaskService {
     changed: boolean;
     replayed: boolean;
   } {
+    this.assertMutationAllowed();
     const identity = this.resolveIdentity();
     const authorityReference = validateAuthority(input.authority);
     if (

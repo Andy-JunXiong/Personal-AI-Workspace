@@ -29,6 +29,12 @@ gate.
 
 ## Frozen evaluation boundary
 
+**Prospective scope exception, 2026-09-05:** The user authorized
+[S1 local development and synthetic-data testing](../mvp/S1_LOCAL_SCOPE_DECISION_2026-09-05.md).
+The exception applies to local S1 work only. The deployed M4 runtime, real-data
+boundary, original observations, thresholds and decision dates remain unchanged.
+The original freeze text below remains the baseline for all other work.
+
 The feature freeze continues through the Day 28 decision.
 
 Permitted changes are limited to defects that block real use or threaten

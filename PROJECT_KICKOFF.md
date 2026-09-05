@@ -14,7 +14,14 @@
 
 **M4 REAL-DATA DOGFOOD = ACTIVE — DAY 1 OF 7 COMPLETE**
 
-**CLOUD C1/C2/C3/C4 = ACCEPTED — REAL DATABASE ON CLOUD; C5 PC-OFF TEST PENDING**
+**CLOUD C1/C2/C3/C4/C5 = ACCEPTED — REAL DATABASE ON CLOUD; PC-OFF MOBILE TEST PASSED**
+
+**SECONDARY JOB SEARCH ENTRY S1-01/S1-02/S1-03 = LOCALLY VERIFIED — 171 TESTS; S1-04 NEXT**
+
+The 2026-09-05 work session stopped at this checkpoint. See the
+[end-of-day handoff](docs/mvp/S1_HANDOFF_2026-09-05.md) for completed work,
+verification, reproduction and the next package. Source publication to GitHub
+`main` is authorized; the new web surface has not been deployed.
 
 Cloud acceptance on 2026-09-05 verified Sydney Lightsail persistence,
 backup/restore, controlled image rollback, restricted private tunnel access,
@@ -25,7 +32,10 @@ The existing connector now reads the original real M4 Workspace on the cloud.
 and passed independent new-conversation readback. The local original remains
 stopped and retained for rollback. [C4 controlled-write acceptance](docs/cloud/C4_C5_RUNTIME_RESULTS_v0.1.md)
 also passed, including independent conversation readback and authorized test-Task
-completion. C5 still needs the user to power off Windows and test from iPhone.
+completion. C5 passed with user-confirmed Windows-off testing in two independent
+iPhone conversations and subsequent read-only cloud verification of the completed
+test Task and unchanged original Task. The C4/C5 results distinguish the C4
+aggregate checkpoint from the later C5-specific evidence.
 
 ## Thesis
 
@@ -79,6 +89,26 @@ The Workspace will not initially rebuild Gmail/Drive/Calendar connectors. The fi
 - [ ] M4 Day-28 utility gate
 
 ## Immediate Next Step
+
+The latest design deliverable is the
+[Job Search P0 technical plan](docs/mvp/JOB_SEARCH_SECONDARY_INTERFACE_P0_v0.1.md),
+which refines the
+[interface requirements and P0–P6 checklist](docs/mvp/JOB_SEARCH_SECONDARY_INTERFACE_REQUIREMENTS_v0.1.md)
+into an S1 application/task release and S2 recommendation continuity. It proposes
+login identity linking, browser ingress, exact terminal-task MCP readback, audit,
+rollback and acceptance. The user subsequently approved
+[local S1 implementation and synthetic testing](docs/mvp/S1_LOCAL_SCOPE_DECISION_2026-09-05.md).
+[S1-01 identity/login](docs/mvp/S1_01_IDENTITY_RESULTS_v0.1.md) passed local
+verification (17 files / 153 tests, typecheck and build).
+[S1-02 bounded queries and terminal-task readback](docs/mvp/S1_02_QUERY_RESULTS_v0.1.md)
+subsequently passed 18 files / 166 tests, typecheck and build, with 13 local MCP
+tools and unchanged original contracts.
+[S1-03 responsive read-only pages](docs/mvp/S1_03_WEB_RESULTS_v0.1.md) now pass
+171 tests, typecheck/build and desktop/390px/320px synthetic browser checks.
+The next local package is S1-04 task completion with authority, audit,
+idempotency and conflict/recovery verification. Public login acceptance and
+cloud publication remain pending. Cloud acceptance is complete and does not
+substitute for M4 Day 2 actual job-search use and user-observed effort/actionability.
 
 **Spike 1B and Real Job Search MVP Slices M1/M2/M3 remain frozen at their
 verified milestone tags. M4 Day 1 imported the explicitly authorized real

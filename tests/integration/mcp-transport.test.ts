@@ -4,6 +4,7 @@ import type { Server } from "node:http";
 import { afterEach, describe, expect, it } from "vitest";
 import { createWorkspaceHttpApp } from "../../src/mcp/http-app.js";
 import { createTestWorkspace } from "../helpers/test-workspace.js";
+import { randomUUID } from "node:crypto";
 
 let httpServer: Server | undefined;
 const cleanups: Array<() => void> = [];
@@ -45,6 +46,7 @@ describe("Streamable HTTP MCP transport", () => {
         "workspace_create_task",
         "workspace_find_job_application",
         "workspace_get_project",
+        "workspace_get_task",
         "workspace_get_today",
         "workspace_list_job_applications",
         "workspace_ping",
@@ -53,6 +55,10 @@ describe("Streamable HTTP MCP transport", () => {
         "workspace_update_job_application",
         "workspace_update_task",
       ]);
+      expect(
+        tools.tools.find((tool) => tool.name === "workspace_get_task"),
+      ).toMatchObject({ annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
+        inputSchema: { required: ["taskId"] } });
       expect(
         tools.tools.find(
           (tool) => tool.name === "workspace_find_job_application",
@@ -532,5 +538,36 @@ describe("Streamable HTTP MCP transport", () => {
     } finally {
       await client.close();
     }
+  });
+
+  it("rereads exact terminal Tasks on a closed application from independent MCP clients", async () => {
+    const workspace = createTestWorkspace(); cleanups.push(workspace.cleanup);
+    const authority = { type: "EXPLICIT_USER_DEV" as const, confirmed: true as const, reference: "Synthetic terminal readback" };
+    const completed = workspace.service.taskService.createTask({ projectId: workspace.projectId, title: "Complete synthetic work", taskKind: "OTHER", priority: "LOW", authority, idempotencyKey: randomUUID() }).task;
+    const cancelled = workspace.service.taskService.createTask({ projectId: workspace.projectId, title: "Cancel synthetic work", taskKind: "OTHER", priority: "LOW", authority, idempotencyKey: randomUUID() }).task;
+    workspace.service.taskService.updateTask({ taskId: completed.id, expectedRecordVersion: 1, status: "DONE", authority, idempotencyKey: randomUUID() });
+    const proposal = workspace.service.proposeTransition({ projectId: workspace.projectId, expectedLifecycleVersion: 1,
+      toState: "REJECTED", triggerType: "USER_ASSERTION", evidenceResourceIds: [], rationale: "Synthetic closure", idempotencyKey: randomUUID() });
+    workspace.service.admitTransition({ transitionId: proposal.transition.id, expectedLifecycleVersion: 1, authority, idempotencyKey: randomUUID() });
+    httpServer = createWorkspaceHttpApp(workspace.service).listen(0, "127.0.0.1");
+    await new Promise<void>((resolve) => httpServer?.once("listening", resolve));
+    const address = httpServer.address();
+    if (!address || typeof address === "string") throw new Error("Missing listener");
+    const before = workspace.database.prepare("SELECT total_changes() AS n").get();
+    for (const name of ["first-readback", "independent-readback"]) {
+      const client = new Client({ name, version: "1.0.0" });
+      try {
+        await client.connect(new StreamableHTTPClientTransport(new URL(`http://127.0.0.1:${address.port}/mcp`)));
+        for (const taskId of [completed.id, cancelled.id]) {
+          const result = await client.callTool({ name: "workspace_get_task", arguments: { taskId } });
+          expect(result.isError).not.toBe(true);
+          expect(result.structuredContent).toEqual({ result: { task: workspace.service.jobSearchQueryService.getTask(taskId) } });
+        }
+        const missing = await client.callTool({ name: "workspace_get_task", arguments: { taskId: randomUUID() } });
+        expect(missing.isError).toBe(true);
+        expect(missing.content).toEqual([{ type: "text", text: JSON.stringify({ error: { code: "NOT_FOUND", message: "Task was not found" } }) }]);
+      } finally { await client.close(); }
+    }
+    expect(workspace.database.prepare("SELECT total_changes() AS n").get()).toEqual(before);
   });
 });
