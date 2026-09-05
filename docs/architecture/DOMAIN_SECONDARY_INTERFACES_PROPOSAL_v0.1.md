@@ -8,6 +8,14 @@ ingress, change authentication, migrate data, or admit another domain.
 **Input:** User-supplied “Multi-Domain Secondary Interface Requirements”,
 particularly the repository assessment and A–F outputs requested in sections 18–19.
 
+**Product refinement:** [Job Search interface requirements](../mvp/JOB_SEARCH_SECONDARY_INTERFACE_REQUIREMENTS_v0.1.md)
+define the subsequent user journeys, R01–R16 requirements, A01–A12 acceptance
+scenarios and P0–P6 implementation checklist. They make candidate continuity part
+of the complete first product increment; the read-only UI remains an intermediate
+release. The architectural slices below describe dependencies, while that
+checklist supplies the refined product delivery order. No new runtime capability
+is implied by this refinement.
+
 The product direction is sound: ChatGPT provides conversation and reasoning;
 Workspace owns durable business state; domain interfaces provide structured
 inspection and governed operations. Implement this through two adapters over

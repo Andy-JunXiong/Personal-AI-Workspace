@@ -119,6 +119,13 @@ Workspace state. The repository assessment, target architecture, Job Search UI
 MVP, future-domain boundaries, risks, and gated delivery sequence are in
 [`docs/architecture/DOMAIN_SECONDARY_INTERFACES_PROPOSAL_v0.1.md`](docs/architecture/DOMAIN_SECONDARY_INTERFACES_PROPOSAL_v0.1.md).
 
+The refined [Job Search interface requirements](docs/mvp/JOB_SEARCH_SECONDARY_INTERFACE_REQUIREMENTS_v0.1.md)
+define the complete recommendation-to-application-to-task journey, independent
+mobile entry, state/freshness rules, sixteen requirements, twelve acceptance
+scenarios and a concrete development checklist. A read-only interface is an
+intermediate release; completing the first increment also requires durable
+candidate decisions and cross-entry task readback.
+
 Start with an authenticated Job Search inventory, Today, and application detail
 including completed Tasks. Reuse application services and preserve authority,
 versioning, idempotency, and ownership checks. Browser login and HTTPS ingress
