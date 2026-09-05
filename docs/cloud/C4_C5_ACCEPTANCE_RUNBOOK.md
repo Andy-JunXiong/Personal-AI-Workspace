@@ -1,9 +1,9 @@
 # C4/C5 ChatGPT and PC-OFF Acceptance
 
-**Status:** C3/C4 PASSED; C5 PC-OFF MOBILE TEST PENDING
+**Status:** C3/C4/C5 PASSED — 2026-09-05
 
-See [runtime evidence](C4_C5_RUNTIME_RESULTS_v0.1.md) for completed checks and
-the remaining user-operated mobile test.
+See [runtime evidence](C4_C5_RUNTIME_RESULTS_v0.1.md) for completed checks,
+the user's PC-OFF/mobile confirmation, and independent cloud Task verification.
 
 This runbook validates the milestone-defining user outcome after the real
 database has passed C3. It does not authorize skipping C3, changing Job Search

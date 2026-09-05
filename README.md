@@ -14,6 +14,7 @@
 
 - **ChatGPT = primary interaction + reasoning host**
 - **Workspace = persistent state + coordination**
+- **Domain interfaces = proposed secondary structured views and governed operations**
 - **Connected services = source facts + capabilities**
 - **MCP / Apps SDK = integration surface**
 
@@ -110,6 +111,29 @@ This is an architecture baseline, not an active runtime feature. The M4
 feature freeze remains in force: no connector, scheduler, migration, new MCP
 tool, model call, or automatic admission has been added.
 
+### Proposed domain secondary interfaces
+
+ChatGPT remains the primary conversation and reasoning entry. Domain interfaces
+will provide structured inspection and operations over the same authoritative
+Workspace state. The repository assessment, target architecture, Job Search UI
+MVP, future-domain boundaries, risks, and gated delivery sequence are in
+[`docs/architecture/DOMAIN_SECONDARY_INTERFACES_PROPOSAL_v0.1.md`](docs/architecture/DOMAIN_SECONDARY_INTERFACES_PROPOSAL_v0.1.md).
+
+Start with an authenticated Job Search inventory, Today, and application detail
+including completed Tasks. Reuse application services and preserve authority,
+versioning, idempotency, and ownership checks. Browser login and HTTPS ingress
+are separate work from the verified private MCP cloud connection. Property,
+Travel, and Shopping remain future candidates, not implementation scope.
+
+The external ChatGPT daily job digest currently reads application state for
+filtering; its recommendations are not durable Workspace records. The proposal
+therefore includes a separately gated candidate/history integration with short
+advisory fit reasons, without requiring full resume or skill analysis.
+
+This is design documentation only. No UI, API, authentication change, candidate
+schema, or digest write integration has been implemented. The M4 freeze remains
+in force through its Day 28 decision unless its scope is explicitly revised.
+
 ### M4 real-data Dogfood
 
 M4 is a seven-day operating evaluation of the frozen MVP, not a feature slice.
@@ -176,8 +200,9 @@ The gated, recoverable migration procedure is documented in
 [`docs/cloud/C3_REAL_DATABASE_MIGRATION.md`](docs/cloud/C3_REAL_DATABASE_MIGRATION.md).
 The post-migration ChatGPT and Windows-PC-OFF acceptance procedure is in
 [`docs/cloud/C4_C5_ACCEPTANCE_RUNBOOK.md`](docs/cloud/C4_C5_ACCEPTANCE_RUNBOOK.md).
-C4 controlled-write persistence passed and its test Task is complete. C5 still
-requires the user to power off Windows and verify from iPhone; see
+C4 controlled-write persistence and C5 Windows-PC-OFF iPhone acceptance passed.
+The user confirmed two independent mobile conversations, and cloud readback
+verified the completed C5 test Task and preserved original Task; see
 [C4/C5 runtime results](docs/cloud/C4_C5_RUNTIME_RESULTS_v0.1.md).
 
 ### Verification

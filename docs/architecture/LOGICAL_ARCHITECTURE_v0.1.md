@@ -5,6 +5,10 @@
 > [`JOB_SEARCH_INTELLIGENCE_ARCHITECTURE_v1.md`](JOB_SEARCH_INTELLIGENCE_ARCHITECTURE_v1.md)
 > and does not change the active M4 runtime.
 
+> The proposed domain web adapter and its gated Job Search UI are described in
+> [Domain Secondary Interfaces](DOMAIN_SECONDARY_INTERFACES_PROPOSAL_v0.1.md).
+> No web API or browser login is implemented by this documentation update.
+
 ```mermaid
 flowchart TB
     subgraph HOST["ChatGPT Host"]
@@ -136,6 +140,32 @@ Workspace remains the cross-system work-state and intelligence ledger;
 providers own native records, and Sheets remains a projection. Scheduled
 ingestion, automatic admission, new tools, and schema changes remain absent
 until a post-M4 implementation slice is separately approved and verified.
+
+## Proposed secondary-interface boundary
+
+A future same-origin authenticated web API and the existing private MCP adapter
+will call the same application commands and queries. Browser code must not
+reimplement lifecycle admission, write directly to persistence, or treat a
+client-supplied confirmation field as authenticated user authority.
+
+Resolve immutable request identity at each trusted adapter and preserve the
+existing Principal/Workspace mapping. Add terminal-Task readback and bounded
+inventory/history queries before presenting the interface as a complete view.
+Current transition records and command idempotency do not constitute a full
+actor-attributed audit history of every edit.
+
+Keep Job Search lifecycle, task kinds and attention classification domain-specific.
+The current Project validator and Today projections require separation before
+a second domain can store records. A static Job Search navigation entry is
+sufficient now; no generic registry, workflow engine or universal UI is needed.
+
+The first useful UI is read-only inventory, Today and application detail.
+Individual commands follow with version-conflict handling, idempotent retry and
+readback verification. The candidate/digest recording slice is independent of
+the richer intelligence pipeline and does not introduce a backend scheduler.
+
+All of these are proposed post-gate changes; see the
+[delivery sequence](DOMAIN_SECONDARY_INTERFACES_PROPOSAL_v0.1.md#f-recommended-gated-sequence).
 
 ## Slice M2 deployment interpretation
 

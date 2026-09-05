@@ -87,6 +87,8 @@ readback remained identical to the pre-import source, confirming zero mutation.
 C3 is complete. [C4 controlled write/readback](C4_C5_RUNTIME_RESULTS_v0.1.md)
 subsequently passed after the user selected a clearly labelled low-priority
 acceptance Task on an existing application, followed by completion. C5
-fully-powered-off Windows/iPhone acceptance is still pending. Scripted deployment
+fully-powered-off Windows/iPhone acceptance subsequently passed with explicit
+user confirmation and independent cloud Task verification recorded in the same
+results document. Scripted deployment
 checks do not count as M4 real-use capture events or proof that Today led to a
 real job-search action.

@@ -4,7 +4,7 @@
 
 **C4:** PASS
 
-**C5:** PENDING — USER MUST POWER OFF WINDOWS AND TEST FROM IPHONE
+**C5:** PASS — USER-CONFIRMED PC-OFF MOBILE TEST; CLOUD TASK READBACK VERIFIED
 
 ## C4 scope and authority
 
@@ -42,7 +42,7 @@ was added, and the original interview-preparation Task was preserved.
    `Result=success` / `ExecMainStatus=0`; PAW health and tunnel liveness/readiness
    all passed.
 
-Final aggregate state: 23 applications (11 active), 23 Resources, 36 admitted
+C4 final aggregate state: 23 applications (11 active), 23 Resources, 36 admitted
 transitions, 13 evidence links, 2 Tasks (1 original open + 1 completed acceptance
 Task), and 74 idempotency records. Today remains 1 attention, 0 upcoming, and 10
 applications without an open Task. The scripted test is excluded from M4
@@ -53,23 +53,46 @@ retained in the user-visible acceptance chats and private operational evidence.
 `/srv/paw/deployments/c3-c4-acceptance.json` records the test Task ID and version.
 Private application details and provenance are omitted from Git.
 
-## C5 handoff
+## C5 executed evidence
 
-Windows was on during C3/C4. No PC-OFF result is inferred from cloud health,
-container restart, or a desktop-browser test. The remaining procedure is:
+On 2026-09-05, the user explicitly confirmed that Windows was completely powered
+off during the test and that creation and readback occurred in two independent
+iPhone ChatGPT conversations. This is user-attested device and conversation
+evidence; it is not inferred from the later desktop verification or cloud health.
 
-1. Fully shut down Windows and keep it off throughout both mobile conversations.
-2. On iPhone, open a new ChatGPT conversation with Personal AI Workspace enabled.
-3. Read ping, Today, and the exact C4 Project. Confirm the original Workspace,
-   original open Task, and completed C4 Task's absence from `openTasks`.
-4. Explicitly authorize one clearly labelled C5 `OTHER`, `LOW`, undated test
-   Task on that same Project; retain the returned Task ID and version.
-5. Open another new iPhone conversation, read the same Project, verify the
-   Task ID/content/status/version, then explicitly authorize completing only
-   that C5 test Task with its current record version. Verify it is absent from
-   `openTasks` and the original Task remains unchanged.
-6. Report PC power state, iPhone context, Task ID/versions, and tool results so
-   the C5 evidence can be finalized. Do not restart the old Windows Workspace.
+The user supplied the mobile completion report: the C5 test Task was read at
+`TODO / LOW / recordVersion 1 / no due date`, completed at record version 2,
+and then absent from the Project's `openTasks`.
+
+The subsequent independent verification used the current connected
+`workspace_get_project` and an authenticated AWS browser SSH session. SQLite
+connections to both the live cloud database and retained C3 source used
+`mode=ro`. The query selected the exact test Task by Task ID and Project ID,
+including terminal Tasks, and returned:
+
+| Check | Verified result |
+| --- | --- |
+| Task kind / priority / due date | `OTHER / LOW / null` |
+| Created at | `2026-09-05T06:24:34.052Z` (16:24:34.052 Sydney) |
+| Current status / record version | `DONE / 2` |
+| Completed at | `2026-09-05T06:26:08.268Z` (16:26:08.268 Sydney) |
+| Project status / lifecycle / lifecycle version | `ACTIVE / INTERVIEWING / 2` |
+| Original interview-preparation Task | `TODO / HIGH / recordVersion 1` |
+| Original Task compared with retained C3 source | Entire row equal |
+| Project open Tasks | Only the original Task; C5 test Task absent |
+
+The database completion timestamp exactly matches the supplied mobile report.
+The successful cloud readback plus the user's explicit PC-OFF and independent
+mobile-conversation confirmation satisfy the C5 pass condition. The later
+verification made no business-data writes and did not restart the local Workspace.
+
+The C4 aggregate counts above describe the earlier C4 checkpoint, not a new C5
+inventory audit. C5-specific ping/Today payloads and a new backup/health run were
+not independently captured in this follow-up; the last verified backup/health
+results remain those recorded under C4. Workspace, Project and Task IDs remain in the
+user-visible acceptance conversation and private operational evidence. The
+accepted deployment baseline remains the C4 baseline; this verification did not
+deploy an image or change the application contract.
 
 M4 Day 2 still requires actual job-search use and the user's action/friction
 observations. Deployment acceptance alone does not complete that daily trial.

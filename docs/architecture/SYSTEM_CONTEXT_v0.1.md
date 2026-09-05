@@ -1,5 +1,9 @@
 # System Context v0.1
 
+This document includes conceptual ownership as well as the verified Job Search
+runtime. Future interfaces and intelligence records below are proposals, not
+deployed capabilities.
+
 ```mermaid
 flowchart TD
     U[User] --> C[ChatGPT]
@@ -87,3 +91,25 @@ See
 [`JOB_SEARCH_INTELLIGENCE_ARCHITECTURE_v1.md`](JOB_SEARCH_INTELLIGENCE_ARCHITECTURE_v1.md)
 and
 [`ADR-012`](../adr/ADR-012-job-search-intelligence-boundary.md).
+
+## Proposed domain secondary interfaces
+
+ChatGPT remains the primary interaction and reasoning host. A domain web UI is
+a secondary entry for structured inventory, tasks, evidence and history. It
+calls authenticated Workspace APIs backed by the same application services and
+database as MCP; it does not own another copy of business state.
+
+Both entries resolve to the same internal Principal and Workspace through their
+respective trusted adapters. The existing private MCP tunnel does not provide
+browser login or web hosting. Stable object links connect conversation to the
+UI; a short object reference lets ChatGPT reread current state on return.
+
+Job Search is the first reference interface. Other domains remain conceptual.
+The external ChatGPT job digest is currently a reader of application state;
+durable candidate decisions and recommendation history require a separately
+gated recording integration. Neither conversation history nor a future UI
+cache is authoritative for those records.
+
+See the [secondary-interface proposal](DOMAIN_SECONDARY_INTERFACES_PROPOSAL_v0.1.md)
+for the current-state assessment, authentication boundary and implementation
+gates. This proposal does not change the active M4 runtime or evaluation scope.

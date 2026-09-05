@@ -7,6 +7,13 @@
 > [`JOB_SEARCH_INTELLIGENCE_ARCHITECTURE_v1.md`](JOB_SEARCH_INTELLIGENCE_ARCHITECTURE_v1.md)
 > and are not yet runtime schema.
 
+> The [secondary-interface proposal](DOMAIN_SECONDARY_INTERFACES_PROPOSAL_v0.1.md)
+> adds no runtime schema. It identifies shared ownership/versioning primitives,
+> existing Job Search lifecycle coupling, and a separately gated model for
+> discovered jobs and recommendation history. A recommended or saved job is
+> not an APPLIED Job Application. Future domain-specific lifecycles must not be
+> forced into the current Job Application validator.
+
 ## 1. Key modeling decision
 
 For MVP:

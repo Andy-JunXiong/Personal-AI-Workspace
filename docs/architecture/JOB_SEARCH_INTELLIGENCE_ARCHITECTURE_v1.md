@@ -6,6 +6,16 @@
 
 **Decision record:** [ADR-012](../adr/ADR-012-job-search-intelligence-boundary.md)
 
+**Related interface design:** [Domain Secondary Interfaces](DOMAIN_SECONDARY_INTERFACES_PROPOSAL_v0.1.md).
+Its first UI can display existing application/task state without waiting for
+this full intelligence model. Lightweight candidate recommendations and their
+history are a separate proposed slice; `ApplicationPosting` below remains
+application-bound. Define candidate-to-application linking before adding that
+model, and do not create an APPLIED application merely because a job was
+recommended. The external ChatGPT digest has no durable Workspace write
+integration today. These proposals neither reorder approved runtime work nor
+lift the active M4 freeze.
+
 ## 1. Purpose and boundary
 
 Job Search Intelligence extends the durable Job Application model with
