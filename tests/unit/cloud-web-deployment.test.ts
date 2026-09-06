@@ -126,4 +126,23 @@ describe("cloud Web deployment contract", () => {
     expect(health).toContain("Unexpected port 80 listener");
     expect(health).toContain("/mcp /healthz /admin");
   });
+
+  it("rehearses recovery with isolated current and previous image copies", () => {
+    const rehearsal = read("deploy/cloud/rehearse-database-copy.sh");
+    const fingerprint = read("deploy/cloud/database-logical-fingerprint.mjs");
+
+    expect(rehearsal).toContain("/srv/paw/recovery-rehearsal");
+    expect(rehearsal).toContain("--network none");
+    expect(rehearsal).toContain("--read-only");
+    expect(rehearsal).toContain("--cap-drop ALL");
+    expect(rehearsal).toContain("PAW_WEB_ENABLED=false");
+    expect(rehearsal).toContain('"${before_hash}" != "${after_hash}"');
+    expect(rehearsal).not.toContain("--publish");
+    expect(rehearsal).not.toContain("PAW_MCP_BEARER_TOKEN");
+    expect(rehearsal).not.toContain("PAW_GOOGLE_CLIENT_SECRET");
+    expect(rehearsal).not.toContain("deploy/cloud/restore.sh");
+    expect(fingerprint).toContain("readonly: true");
+    expect(fingerprint).toContain('database.pragma("query_only = ON")');
+    expect(fingerprint).toContain("name NOT LIKE 'sqlite_%'");
+  });
 });

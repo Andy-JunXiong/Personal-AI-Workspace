@@ -270,6 +270,25 @@ OOM events and restart count.
 
 ## 6. Recovery and rollback
 
+Before enabling browser writes, rehearse current-image and previous-image startup
+against separate copies of a named, integrity-checked backup. This command does
+not publish ports or replace the live database. Each temporary container has no
+network, a read-only root filesystem, a 384 MiB memory limit and a private copy
+of the backup. The command fails if either image is unhealthy, database
+integrity fails or any logical schema/row content changes during startup:
+
+```bash
+sudo ./deploy/cloud/rehearse-database-copy.sh \
+  workspace-YYYYMMDDTHHMMSSZ.db <current-image-tag> <previous-image-tag>
+```
+
+Use the active image tag and the immediately preceding accepted image, both by
+immutable local tag. The script obtains only the configured development
+principal fields from the running container; it does not copy MCP or OAuth
+credentials into the isolated containers. Keep the non-sensitive pass summary
+with private release evidence. Only an incident decision may restore the live
+database.
+
 Contain the browser surface without interrupting MCP:
 
 ```bash
