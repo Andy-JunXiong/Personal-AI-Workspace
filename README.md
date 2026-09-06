@@ -181,9 +181,11 @@ path. It exposes only Caddy on IPv4 TCP 443, keeps MCP/Web application ports on
 loopback, and does not modify the existing AI Radar application or DNS records.
 External identity, restart/reboot, database-copy recovery, concurrent capacity,
 one authorized synthetic browser completion and fresh ChatGPT exact-Task
-readback have passed. The deployment is back in read mode; Windows-PC-OFF
-iPhone Web acceptance remains pending. The exact stop state and resume sequence
-are recorded in the [2026-09-06 S1 handoff](docs/mvp/S1_HANDOFF_2026-09-06.md).
+readback have passed. The deployment is back in read mode; the
+Windows-PC-OFF iPhone Safari direct-Web read has since passed over cellular
+(see [S1-05B.3](docs/mvp/S1_05B3_IPHONE_SAFARI_ACCEPTANCE_RESULTS_v0.1.md)).
+The exact stop state and resume sequence are recorded in the
+[2026-09-06 S1 handoff](docs/mvp/S1_HANDOFF_2026-09-06.md).
 
 The first recommendation-continuity increment is
 [S2-01 candidate storage and decisions](docs/mvp/S2_01_CANDIDATE_RESULTS_v0.1.md).

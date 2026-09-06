@@ -324,8 +324,9 @@ business writes reconciled, never an automatic application rollback step.
 This is the original package responsibility map, not a delegation record.
 S1-01 through S1-05B.2 implementation evidence is linked above. External
 Route 53/Caddy, Google identity, recovery, capacity, controlled synthetic
-completion and fresh ChatGPT exact-Task readback passed on 2026-09-06;
-Windows-PC-OFF iPhone Web acceptance is next.
+completion and fresh ChatGPT exact-Task readback passed on 2026-09-06; the
+Windows-PC-OFF iPhone Safari direct-Web read then passed
+([S1-05B.3](S1_05B3_IPHONE_SAFARI_ACCEPTANCE_RESULTS_v0.1.md)).
 
 | Package | Intended ownership / work | Exit evidence |
 | --- | --- | --- |
@@ -344,8 +345,10 @@ preserving historical 12-tool acceptance records and existing command behavior.
 
 These full release gates have **not passed**. S1-05B.2 now provides real
 Google/Route 53/Caddy evidence plus bounded synthetic completion, recovery,
-capacity and cross-entry readback on the cloud deployment. Windows-PC-OFF
-iPhone Safari evidence remains pending, and the completed desktop synthetic
+capacity and cross-entry readback on the cloud deployment. The
+Windows-PC-OFF iPhone Safari direct-Web read has since passed
+([S1-05B.3](S1_05B3_IPHONE_SAFARI_ACCEPTANCE_RESULTS_v0.1.md)); an iPhone
+*completion* remains a separate decision. The completed desktop synthetic
 fixture must not be reused for another mutation. Existing C4/C5 evidence is
 groundwork, not a pass for the new Web interface. Use synthetic data for every
 remaining acceptance mutation.

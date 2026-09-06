@@ -19,7 +19,9 @@ and local synthetic browser checks. [S1-04 completion results](S1_04_TASK_COMPLE
 record atomic browser Task completion, audit and recovery checks.
 [S1-05A operations results](S1_05A_LOCAL_OPERATIONS_RESULTS_v0.1.md) record the
 local staged deployment, secret, tunnel and rollback contract. Public/mobile
-acceptance remains pending;
+acceptance remains pending — the read-only Windows-PC-OFF iPhone Safari check
+has passed ([S1-05B.3](S1_05B3_IPHONE_SAFARI_ACCEPTANCE_RESULTS_v0.1.md)), while
+an iPhone *completion* remains a separate decision;
 [S1-05A.1 link results](S1_05A1_GPT_WEB_LINK_RESULTS_v0.1.md) record the opt-in
 GPT-to-Web object handoff and human-test trigger.
 [S1-05B.0 checker results](S1_05B0_HTTPS_RELEASE_CHECK_RESULTS_v0.1.md) record

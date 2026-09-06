@@ -2,8 +2,9 @@
 
 **Status:** Route 53/Caddy publication, Google identity mapping, database-copy
 recovery, capacity, controlled synthetic completion and fresh ChatGPT readback
-passed on 2026-09-06. Web returned to read mode; Windows-PC-OFF iPhone
-acceptance remains pending.
+passed on 2026-09-06. Web returned to read mode; the Windows-PC-OFF iPhone
+Safari direct-Web read subsequently passed — see
+[S1-05B.3](S1_05B3_IPHONE_SAFARI_ACCEPTANCE_RESULTS_v0.1.md).
 
 ## Continuity and benefits
 

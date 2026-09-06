@@ -16,7 +16,7 @@
 
 **CLOUD C1/C2/C3/C4/C5 = ACCEPTED — REAL DATABASE ON CLOUD; PC-OFF MOBILE TEST PASSED**
 
-**SECONDARY JOB SEARCH ENTRY S1-01 THROUGH S1-05B.2 = LOCALLY VERIFIED — 192 TESTS; ROUTE 53/CADDY EXTERNAL BINDING NEXT**
+**SECONDARY JOB SEARCH ENTRY S1-01 THROUGH S1-05B.2 = LOCALLY VERIFIED — 192 TESTS; S1-05B.3 WINDOWS-PC-OFF IPHONE SAFARI READ = PASSED**
 
 **RECOMMENDATION CONTINUITY S2-01 = LOCALLY VERIFIED — 208 TESTS; CANDIDATE STORAGE AND MANUAL DECISIONS**
 
@@ -170,7 +170,9 @@ domain decision by reusing `workspace.ai-radar-lab.com`. The local gate is now
 192 tests. AWS access, static IPv4/Route 53/443 binding, Caddy validation and the
 Google OAuth client remain external prerequisites; browser writes remain off.
 S1-05B public login, recovery/capacity, Safari/iPhone and cloud publication
-acceptance remain pending and require separate external authorization.
+acceptance passed on 2026-09-06, including the Windows-PC-OFF iPhone Safari
+direct-Web read ([S1-05B.3](docs/mvp/S1_05B3_IPHONE_SAFARI_ACCEPTANCE_RESULTS_v0.1.md)).
+An iPhone *completion* remains a separate, separately authorized decision.
 Existing cloud acceptance is complete and does not
 substitute for M4 Day 2 actual job-search use and user-observed effort/actionability.
 
