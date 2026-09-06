@@ -80,3 +80,12 @@ Ubuntu VM before publication can pass.
 
 No human product test is requested until read-only external checks, Google
 identity mapping, recovery evidence and synthetic readback have passed.
+
+## VM rollout finding
+
+The first read-mode VM run exposed a provider-selection defect before public
+HTTPS was started: the shared Web health script still assumed the Cloudflare
+environment filename. The corrected contract discovers exactly one readable
+provider environment from the Route 53 and Cloudflare alternatives and fails
+when neither or both exist. This keeps the providers mutually exclusive while
+allowing the selected Route 53 path to pass the same application health gate.

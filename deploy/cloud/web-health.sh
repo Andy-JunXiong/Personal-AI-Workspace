@@ -1,15 +1,18 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-config_file=/etc/paw/web-tunnel.env
 if [[ -z "${PAW_WEB_HOST:-}" ]]; then
-  if [[ ! -r "${config_file}" ]]; then
-    echo "Missing readable ${config_file}" >&2
+  readable_configs=()
+  for candidate in /etc/paw/web-ingress.env /etc/paw/web-tunnel.env; do
+    [[ -r "${candidate}" ]] && readable_configs+=("${candidate}")
+  done
+  if [[ "${#readable_configs[@]}" != 1 ]]; then
+    echo "Expected exactly one readable Web ingress environment file" >&2
     exit 1
   fi
   # systemd supplies this variable before dropping to its dynamic identity.
   # shellcheck source=/dev/null
-  source "${config_file}"
+  source "${readable_configs[0]}"
 fi
 if [[ ! "${PAW_WEB_HOST:-}" =~ ^[A-Za-z0-9]([A-Za-z0-9.-]{0,251}[A-Za-z0-9])?$ ]] \
   || [[ "${PAW_WEB_HOST}" == *..* ]]; then

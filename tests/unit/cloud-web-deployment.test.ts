@@ -61,6 +61,8 @@ describe("cloud Web deployment contract", () => {
     expect(rollback).toContain("active|activating|reloading|deactivating");
     expect(rollback).toContain("Refusing image rollback while ${ingress_service} is ${ingress_state}");
     expect(health).toContain('[[ "${status}" == 401 ]]');
+    expect(health).toContain("for candidate in /etc/paw/web-ingress.env /etc/paw/web-tunnel.env");
+    expect(health).toContain("Expected exactly one readable Web ingress environment file");
     expect(health).toContain("content-security-policy:");
     expect(health).toContain("x-content-type-options:");
   });
