@@ -96,3 +96,10 @@ only the container loopback address, which Docker's forwarding path cannot
 reach. The corrected runtime keeps local development on `127.0.0.1`, permits
 only the Docker overlay to bind the container interface, and preserves the host
 publication at `127.0.0.1:3001`.
+
+The first systemd start then failed closed before binding port 443 because the
+dynamic service identity was told to reopen the root-only ingress environment
+file during Caddy validation. systemd had already loaded that file through the
+unit's `EnvironmentFile` directive. Removing the redundant Caddy `--envfile`
+argument preserves the private file boundary while supplying the same validated
+variables to both pre-start validation and the running process.
