@@ -18,6 +18,8 @@
 
 **SECONDARY JOB SEARCH ENTRY S1-01 THROUGH S1-05B.2 = LOCALLY VERIFIED — 192 TESTS; ROUTE 53/CADDY EXTERNAL BINDING NEXT**
 
+**RECOMMENDATION CONTINUITY S2-01 = LOCALLY VERIFIED — 208 TESTS; CANDIDATE STORAGE AND MANUAL DECISIONS**
+
 The 2026-09-05 handoff led to the completed local
 [S1-04 Task completion package](docs/mvp/S1_04_TASK_COMPLETION_RESULTS_v0.1.md).
 The subsequent [S1-05A local operations contract](docs/mvp/S1_05A_LOCAL_OPERATIONS_RESULTS_v0.1.md)
@@ -33,6 +35,14 @@ release-mode configuration before publication.
 [S1-05B.2 AI Radar domain ingress](docs/mvp/S1_05B2_AI_RADAR_DOMAIN_INGRESS_RESULTS_v0.1.md)
 selects `workspace.ai-radar-lab.com` and adds the hardened Route 53/Caddy
 provider without changing the AI Radar application or existing hostnames.
+
+The subsequent
+[S2-01 candidate storage and decisions](docs/mvp/S2_01_CANDIDATE_RESULTS_v0.1.md)
+is the first recommendation-continuity increment. It adds durable candidate
+save/dismiss/restore decisions with actor-attributed audit, idempotent recording
+by posting identity or canonical URL, four new MCP tools (17 total), and bounded
+candidate reads. It raises the local gate to 208 tests. Candidate Web views,
+application linking, and digest recording remain S2-02/S2-03 work.
 
 Cloud acceptance on 2026-09-05 verified Sydney Lightsail persistence,
 backup/restore, controlled image rollback, restricted private tunnel access,

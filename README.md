@@ -185,6 +185,13 @@ readback have passed. The deployment is back in read mode; Windows-PC-OFF
 iPhone Web acceptance remains pending. The exact stop state and resume sequence
 are recorded in the [2026-09-06 S1 handoff](docs/mvp/S1_HANDOFF_2026-09-06.md).
 
+The first recommendation-continuity increment is
+[S2-01 candidate storage and decisions](docs/mvp/S2_01_CANDIDATE_RESULTS_v0.1.md).
+It adds durable candidate save/dismiss/restore decisions with actor-attributed
+audit, idempotent recording by provider posting identity or canonical source URL,
+four new MCP tools (17 total), and bounded candidate reads. Candidate Web views,
+application linking and digest recording remain pending.
+
 Start with an authenticated Job Search inventory, Today, and application detail
 including completed Tasks. Reuse application services and preserve authority,
 versioning, idempotency, and ownership checks. Browser login and HTTPS ingress
@@ -204,7 +211,8 @@ application/task detail, evidence/history and context-copy pages. S1-04 adds an
 independently gated individual Task completion route and audit migration.
 S1-05A adds independently selected deployment modes while retaining MCP-only as
 the default.
-Candidate storage and digest recording are not implemented yet.
+Candidate storage and manual save/dismiss/restore decisions are implemented in
+S2-01; digest recording and run coverage remain pending.
 For a synthetic local UI preview, run `npm.cmd exec tsx tests/manual/web-preview.ts`;
 this test-only fixture accepts no real database or account and is excluded from
 the production build.
