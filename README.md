@@ -189,8 +189,16 @@ The first recommendation-continuity increment is
 [S2-01 candidate storage and decisions](docs/mvp/S2_01_CANDIDATE_RESULTS_v0.1.md).
 It adds durable candidate save/dismiss/restore decisions with actor-attributed
 audit, idempotent recording by provider posting identity or canonical source URL,
-four new MCP tools (17 total), and bounded candidate reads. Candidate Web views,
-application linking and digest recording remain pending.
+four new MCP tools (17 total), and bounded candidate reads.
+[S2-02 candidate Web views and application linking](docs/mvp/S2_02_CANDIDATE_VIEWS_AND_LINKING_RESULTS_v0.1.md)
+adds the browser Jobs list and candidate detail with save/dismiss/restore
+controls, actor-attributed application linking, and the
+`workspace_link_job_candidate` MCP tool (18 total).
+[S2-03 digest run recording and coverage](docs/mvp/S2_03_DIGEST_RUN_RECORDING_RESULTS_v0.1.md)
+completes recommendation continuity with the run/item ledger, a narrowly scoped
+idempotent recording command, truthful coverage/delivery tracking, per-run fit
+snapshots, and three new MCP tools (21 total). The full P6 acceptance run
+(A01–A12) is the remaining S2 gate.
 
 Start with an authenticated Job Search inventory, Today, and application detail
 including completed Tasks. Reuse application services and preserve authority,
@@ -212,7 +220,9 @@ independently gated individual Task completion route and audit migration.
 S1-05A adds independently selected deployment modes while retaining MCP-only as
 the default.
 Candidate storage and manual save/dismiss/restore decisions are implemented in
-S2-01; digest recording and run coverage remain pending.
+S2-01; candidate Web views and application linking are implemented in S2-02.
+Digest run recording and coverage are implemented in S2-03, completing the S2
+recommendation-continuity data layer.
 For a synthetic local UI preview, run `npm.cmd exec tsx tests/manual/web-preview.ts`;
 this test-only fixture accepts no real database or account and is excluded from
 the production build.

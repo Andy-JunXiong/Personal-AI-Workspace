@@ -20,6 +20,10 @@
 
 **RECOMMENDATION CONTINUITY S2-01 = LOCALLY VERIFIED — 208 TESTS; CANDIDATE STORAGE AND MANUAL DECISIONS**
 
+**RECOMMENDATION CONTINUITY S2-02 = LOCALLY VERIFIED — 215 TESTS; CANDIDATE WEB VIEWS AND APPLICATION LINKING**
+
+**RECOMMENDATION CONTINUITY S2-03 = LOCALLY VERIFIED — 222 TESTS; DIGEST RUN RECORDING AND COVERAGE**
+
 The 2026-09-05 handoff led to the completed local
 [S1-04 Task completion package](docs/mvp/S1_04_TASK_COMPLETION_RESULTS_v0.1.md).
 The subsequent [S1-05A local operations contract](docs/mvp/S1_05A_LOCAL_OPERATIONS_RESULTS_v0.1.md)
@@ -41,8 +45,17 @@ The subsequent
 is the first recommendation-continuity increment. It adds durable candidate
 save/dismiss/restore decisions with actor-attributed audit, idempotent recording
 by posting identity or canonical URL, four new MCP tools (17 total), and bounded
-candidate reads. It raises the local gate to 208 tests. Candidate Web views,
-application linking, and digest recording remain S2-02/S2-03 work.
+candidate reads. It raises the local gate to 208 tests.
+[S2-02 candidate Web views and application linking](docs/mvp/S2_02_CANDIDATE_VIEWS_AND_LINKING_RESULTS_v0.1.md)
+then closes the P3 slice: a browser Jobs list and candidate detail with
+save/dismiss/restore controls, actor-attributed application linking, and the
+`workspace_link_job_candidate` MCP tool (18 total). It raises the local gate to
+215 tests.
+[S2-03 digest run recording and coverage](docs/mvp/S2_03_DIGEST_RUN_RECORDING_RESULTS_v0.1.md)
+completes recommendation continuity with the run/item ledger, a narrowly scoped
+idempotent recording command, truthful coverage/delivery tracking, per-run fit
+snapshots, and three new MCP tools (21 total). It raises the local gate to 222
+tests. The full P6 acceptance run (A01–A12) is the remaining S2 gate.
 
 Cloud acceptance on 2026-09-05 verified Sydney Lightsail persistence,
 backup/restore, controlled image rollback, restricted private tunnel access,
