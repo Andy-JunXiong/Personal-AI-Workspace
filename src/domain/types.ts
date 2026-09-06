@@ -114,3 +114,33 @@ export interface ExplicitUserDevAuthority {
   confirmed: true;
   reference: string;
 }
+
+export type CandidateDecision = "UNREVIEWED" | "SAVED" | "DISMISSED";
+
+export type CandidateDecisionAction = "SAVE" | "DISMISS" | "RESTORE";
+
+export type SourceAvailability = "AVAILABLE" | "UNAVAILABLE" | "UNKNOWN";
+
+export type FitUncertainty = "LOW" | "MEDIUM" | "HIGH" | "UNKNOWN";
+
+export interface JobCandidateRecord {
+  id: string;
+  workspaceId: string;
+  provider: string;
+  postingId: string | null;
+  sourceUrl: string | null;
+  title: string;
+  company: string;
+  role: string;
+  location: string | null;
+  fitReason: string | null;
+  fitUncertainty: FitUncertainty;
+  sourceAvailability: SourceAvailability;
+  decision: CandidateDecision;
+  recordVersion: number;
+  decisionAt: string | null;
+  linkedProjectId: string | null;
+  linkedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}

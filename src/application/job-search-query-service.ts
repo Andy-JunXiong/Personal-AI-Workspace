@@ -1,10 +1,11 @@
 import { z } from "zod";
 import type { WorkspaceDatabase } from "../persistence/database.js";
-import type { IdentityContext, ProjectRecord, ResourceRecord, TaskRecord, TransitionRecord } from "../domain/types.js";
+import type { IdentityContext, JobCandidateRecord, ProjectRecord, ResourceRecord, TaskRecord, TransitionRecord } from "../domain/types.js";
 import { NotFoundError, ValidationError } from "../domain/errors.js";
 import { isLifecycleState } from "../domain/job-application-lifecycle.js";
 import type { Clock } from "./task-service.js";
 import { readPage } from "./read-pagination.js";
+import { mapCandidateRow, type CandidateRow } from "./candidate-service.js";
 import type { JobApplicationSummary } from "./workspace-service.js";
 
 const pageFields = {
@@ -25,6 +26,12 @@ const historySchema = z.object({ ...pageFields,
   status: z.enum(["ADMITTED", "PROPOSED", "REJECTED", "ALL"]).default("ADMITTED"),
 }).strict();
 const resourceSchema = z.object(pageFields).strict();
+const candidateSchema = z.object({
+  ...pageFields,
+  decision: z.enum(["UNREVIEWED", "SAVED", "DISMISSED", "ALL"]).default("ALL"),
+  linked: z.enum(["ALL", "LINKED", "UNLINKED"]).default("ALL"),
+  q: z.string().trim().max(500).default(""),
+}).strict();
 const idSchema = z.string().uuid();
 
 function parse<S extends z.ZodType>(schema: S, input: unknown): z.output<S> {
@@ -203,6 +210,45 @@ export class JobSearchQueryService {
       }
       return readPage(resources, { kind: "resources", principalId: identity.principalId, workspaceId: identity.workspaceId, projectId, pageSize: options.pageSize },
         options.pageSize, options.cursor, this.clock().valueOf());
+    })();
+  }
+
+  listCandidates(input: unknown = {}) {
+    const options = parse(candidateSchema, input);
+    const q = searchText(options.q);
+    return this.database.transaction(() => {
+      const identity = this.resolveIdentity();
+      const rows = () => this.database.prepare(`SELECT * FROM job_candidates
+        WHERE workspace_id = @workspace
+          AND (@decision = 'ALL' OR decision = @decision)
+          AND (@linked = 'ALL'
+            OR (@linked = 'LINKED' AND linked_project_id IS NOT NULL)
+            OR (@linked = 'UNLINKED' AND linked_project_id IS NULL))
+        ORDER BY updated_at DESC, id ASC`
+      ).iterate({ workspace: identity.workspaceId, decision: options.decision, linked: options.linked }) as Iterable<CandidateRow>;
+      function* candidates(): Generator<JobCandidateRecord> {
+        for (const row of rows()) {
+          const candidate = mapCandidateRow(row);
+          if (q && !searchText(candidate.company).includes(q) &&
+            !searchText(candidate.role).includes(q) &&
+            !searchText(candidate.title).includes(q)) continue;
+          yield candidate;
+        }
+      }
+      return readPage(candidates, { kind: "candidates", principalId: identity.principalId, workspaceId: identity.workspaceId,
+        decision: options.decision, linked: options.linked, q, pageSize: options.pageSize },
+      options.pageSize, options.cursor, this.clock().valueOf());
+    })();
+  }
+
+  getCandidate(candidateId: string): JobCandidateRecord {
+    parse(idSchema, candidateId);
+    return this.database.transaction(() => {
+      const identity = this.resolveIdentity();
+      const row = this.database.prepare("SELECT * FROM job_candidates WHERE id = ? AND workspace_id = ?"
+      ).get(candidateId, identity.workspaceId) as CandidateRow | undefined;
+      if (!row) throw new NotFoundError("Candidate was not found");
+      return mapCandidateRow(row);
     })();
   }
 

@@ -5,6 +5,7 @@ import { TodayQueryService } from "./today-query-service.js";
 import { canonicalHash, canonicalJson } from "../domain/canonical-json.js";
 import { verifiedRequestContext, type RequestContext } from "./request-context.js";
 import { JobSearchQueryService } from "./job-search-query-service.js";
+import { CandidateService } from "./candidate-service.js";
 import {
   AuthorizationError,
   ConcurrencyConflictError,
@@ -235,6 +236,7 @@ export class WorkspaceService {
   readonly taskService: TaskService;
   readonly todayQueryService: TodayQueryService;
   readonly jobSearchQueryService: JobSearchQueryService;
+  readonly candidateService: CandidateService;
 
   constructor(
     private readonly database: WorkspaceDatabase,
@@ -263,6 +265,12 @@ export class WorkspaceService {
       resolveIdentity,
       options.timeZone,
       options.clock,
+    );
+    this.candidateService = new CandidateService(
+      database,
+      resolveTaskContext,
+      options.clock,
+      () => this.assertLegacyMutationAllowed(),
     );
   }
 
