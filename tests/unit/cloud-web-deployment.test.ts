@@ -53,9 +53,13 @@ describe("cloud Web deployment contract", () => {
     expect(service).toContain("--no-autoupdate");
     expect(service).not.toContain("--token");
     expect(service).toContain("NoNewPrivileges=yes");
-    expect(mode).toContain("Refusing to remove the Web listener while paw-web-tunnel.service is active");
+    expect(mode).toContain("for ingress_service in paw-web-tunnel.service paw-web-ingress.service");
+    expect(mode).toContain("active|activating|reloading|deactivating");
+    expect(mode).toContain("Refusing to remove the Web listener while ${ingress_service} is ${ingress_state}");
     expect(mode).toContain("owned by container UID 1000 with mode 0400");
-    expect(rollback).toContain("Refusing image rollback while paw-web-tunnel.service is active");
+    expect(rollback).toContain("for ingress_service in paw-web-tunnel.service paw-web-ingress.service");
+    expect(rollback).toContain("active|activating|reloading|deactivating");
+    expect(rollback).toContain("Refusing image rollback while ${ingress_service} is ${ingress_state}");
     expect(health).toContain('[[ "${status}" == 401 ]]');
     expect(health).toContain("content-security-policy:");
     expect(health).toContain("x-content-type-options:");
@@ -75,5 +79,45 @@ describe("cloud Web deployment contract", () => {
     expect(preflight).toContain('cloudflared tunnel --config "${tunnel_config}" ingress validate');
     expect(preflight).not.toContain("cat \"${google_secret}\"");
     expect(preflight).not.toContain("cat \"${tunnel_credential}\"");
+  });
+
+  it("provides an isolated HTTPS-only Route 53 ingress for the AI Radar subdomain", () => {
+    const config = read("deploy/cloud/caddy/Caddyfile");
+    const service = read("deploy/cloud/systemd/paw-web-ingress.service");
+    expect(config).toContain("admin off");
+    expect(config).toContain("auto_https disable_redirects");
+    expect(config).toContain("{$PAW_WEB_HOST}");
+    expect(config).toContain("bind 0.0.0.0");
+    expect(config).toContain("disable_http_challenge");
+    expect(config).toContain("reverse_proxy 127.0.0.1:3001");
+    expect(config).not.toContain("127.0.0.1:3000");
+    expect(config).not.toMatch(/(^|\n)\s*log\s*\{/u);
+    expect(service).toContain("DynamicUser=yes");
+    expect(service).toContain("CapabilityBoundingSet=CAP_NET_BIND_SERVICE");
+    expect(service).toContain("NoNewPrivileges=yes");
+    expect(service).toContain("ProtectSystem=strict");
+    expect(service).not.toContain("ExecReload=");
+  });
+
+  it("fails closed on Route 53 drift and verifies the live HTTPS boundary", () => {
+    const environment = read("deploy/cloud/web-ingress.env.example");
+    const preflight = read("deploy/cloud/web-route53-preflight.sh");
+    const health = read("deploy/cloud/web-ingress-health.sh");
+    expect(environment).toContain("PAW_WEB_ZONE=ai-radar-lab.com");
+    expect(environment).toContain("PAW_WEB_HOST=workspace.ai-radar-lab.com");
+    expect(environment).toContain("PAW_WEB_EXPECTED_IPV4=203.0.113.10");
+    expect(preflight).toContain('[[ "${web_zone}" == ai-radar-lab.com ]]');
+    expect(preflight).toContain('[[ "${web_host}" == "workspace.${web_zone}" ]]');
+    expect(preflight).toContain('[[ "${web_origin}" == "https://${web_host}" ]]');
+    expect(preflight).toContain('[[ "${web_writes_enabled}" == false ]]');
+    expect(preflight).toContain('[[ "${web_bootstrap_enabled}" == false ]]');
+    expect(preflight).toContain("installed Caddyfile differs from the reviewed repository copy");
+    expect(preflight).toContain("Route 53 must resolve only PAW_WEB_HOST");
+    expect(preflight).toContain("active|activating|reloading|deactivating");
+    expect(preflight).toContain('XDG_DATA_HOME="${validation_root}/data"');
+    expect(health).toContain('--resolve "${PAW_WEB_HOST}:443:127.0.0.1"');
+    expect(health).toContain("active|activating|reloading|deactivating");
+    expect(health).toContain("Unexpected port 80 listener");
+    expect(health).toContain("/mcp /healthz /admin");
   });
 });

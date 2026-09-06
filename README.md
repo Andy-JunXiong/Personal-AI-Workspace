@@ -174,6 +174,10 @@ adds the VM-side fail-closed check for exact host/origin/ingress agreement,
 disabled writes/bootstrap, restricted secret files and valid Tunnel ingress.
 Real VM execution remains pending on external account access and approved
 binding values.
+[S1-05B.2 AI Radar domain ingress](docs/mvp/S1_05B2_AI_RADAR_DOMAIN_INGRESS_RESULTS_v0.1.md)
+selects `workspace.ai-radar-lab.com` and adds a mutually exclusive Route 53/Caddy
+path. It exposes only Caddy on IPv4 TCP 443, keeps MCP/Web application ports on
+loopback, and does not modify the existing AI Radar application or DNS records.
 
 Start with an authenticated Job Search inventory, Today, and application detail
 including completed Tasks. Reuse application services and preserve authority,

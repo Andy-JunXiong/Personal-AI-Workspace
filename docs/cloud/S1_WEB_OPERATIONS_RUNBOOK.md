@@ -1,25 +1,27 @@
 # S1 Job Search Web Operations Runbook v0.1
 
-**Status:** S1-05A local operations contract; external setup and acceptance are
-not authorized or completed.
+**Status:** S1-05B.2 local operations contract; Route 53/Caddy is the selected
+AI Radar domain path, but external setup and acceptance are not completed.
 
 ## Continuity and benefits
 
 ### Upstream requirement
 
 The [S1 P0 technical plan](../mvp/JOB_SEARCH_SECONDARY_INTERFACE_P0_v0.1.md)
-requires a loopback-only Web listener, separately managed Cloudflare Tunnel,
-staged browser-write enablement, and recovery evidence. The
-[S1-04 result](../mvp/S1_04_TASK_COMPLETION_RESULTS_v0.1.md) proves the local
-completion contract but deliberately leaves the browser surface unpublished.
+requires a loopback-only Web listener, separately managed HTTPS ingress, staged
+browser-write enablement, and recovery evidence. The original provider was
+Cloudflare Tunnel. The user subsequently chose to reuse the existing
+Route 53-managed `ai-radar-lab.com` domain instead of purchasing another domain.
 
 ### Current package
 
-This package adds a deployable three-mode contract (`off`, `read`, `write`),
-read-only Google secret injection, local Web health checks, an isolated
-Cloudflare Tunnel service template, and fail-closed rollback instructions. It
-does not create a tunnel, DNS record, OAuth client, public hostname, subscription,
-cloud resource, identity link, or real-data write.
+This package supplies a deployable three-mode contract (`off`, `read`, `write`),
+read-only Google secret injection, local Web health checks, mutually exclusive
+Cloudflare Tunnel and Route 53/Caddy ingress templates, and fail-closed rollback
+instructions. The selected path serves only `workspace.ai-radar-lab.com` on
+public TCP 443; ports 80, 3000 and 3001 remain closed publicly. It does not change
+Route 53, allocate a static IP, change a firewall, create an OAuth client, link an
+identity or write Workspace data.
 
 ### Downstream enablement
 
@@ -34,8 +36,10 @@ remains pending.
 - Read and write exposure can be selected without editing the application image.
 - Local probes verify signed-out isolation and security headers without adding a
   public `/healthz` route.
-- Tunnel-active checks prevent an operator from starting Web or image rollback
-  in the wrong order.
+- Ingress-active checks prevent an operator from stopping Web or rolling back an
+  image in the wrong order.
+- Reusing the AI Radar zone removes a second domain registration while keeping
+  the applications on separate hostnames.
 
 ### Long-term benefits
 
@@ -48,32 +52,36 @@ remains pending.
 
 ## Runtime contract
 
-| Mode | Compose files | Browser listener | Completion | Tunnel |
+| Mode | Compose files | Browser listener | Completion | Public ingress |
 | --- | --- | --- | --- | --- |
-| `off` | `compose.yaml` | Disabled | Disabled | Must be stopped |
-| `read` | base + `compose.web.yaml` | `127.0.0.1:3001` | Disabled | May be started after local health |
-| `write` | base + Web + `compose.web-writes.yaml` | `127.0.0.1:3001` | Enabled | May remain active after acceptance |
+| `off` | `compose.yaml` | Disabled | Disabled | Both providers must be stopped |
+| `read` | base + `compose.web.yaml` | `127.0.0.1:3001` | Disabled | Exactly one provider after preflight |
+| `write` | base + Web + `compose.web-writes.yaml` | `127.0.0.1:3001` | Enabled | Same accepted provider only |
 
-All modes keep MCP at `127.0.0.1:3000`. Do not add public VM firewall rules for
-80, 443, 3000 or 3001. Cloudflare is allowed to reach only the Web listener;
-its final ingress rule must remain `http_status:404`.
+All modes keep MCP at `127.0.0.1:3000`. Cloudflare mode adds no public VM
+firewall rules. The selected Route 53/Caddy mode permits only public IPv4 TCP
+443; it keeps port 80 closed and never publishes 3000 or 3001. Do not run both
+ingress services. Cloudflare's final ingress rule must remain `http_status:404`.
 
 ## 1. Bind external decisions
 
 Before installing anything externally, record and approve:
 
-- an owned Cloudflare-managed hostname and account-specific recurring cost;
+- exactly one approved ingress provider and hostname, including its cost and
+  security-boundary change;
+- for Route 53/Caddy, `workspace.ai-radar-lab.com`, one attached Lightsail static
+  IPv4 and a 443-only firewall rule;
 - a dedicated Google Web OAuth client whose callback is
   `https://<host>/auth/google/callback`;
 - the one Google identity that may be linked to the existing Workspace;
-- a reviewed, supported `cloudflared` package version;
+- a reviewed, supported `caddy` or `cloudflared` package version;
 - the accepted application image and a database-copy rehearsal target.
 
 Do not paste OAuth or tunnel secrets into chat, Git, command arguments or logs.
 Creating accounts, DNS, tunnels or billable resources requires separate user
 authorization.
 
-## 2. Install private configuration
+## 2A. Install Cloudflare configuration (alternative path)
 
 Update `/etc/paw/paw.env` from `paw.env.example`. The example `PAW_WEB_ORIGIN`
 and client ID must be replaced. Keep bootstrap false except during the bounded
@@ -134,6 +142,41 @@ sudo ./deploy/cloud/web-binding-preflight.sh
 Save its non-secret output with the private release evidence. A failure blocks
 publication; do not bypass it by starting the service manually.
 
+## 2B. Install Route 53/Caddy configuration (selected path)
+
+This path reuses the AI Radar zone without changing the AI Radar application or
+its `app` and `api` records. The DNS record, static IP attachment and firewall
+change are AWS writes. Perform them only through the separately authorized AWS
+operator path; this repository package does not make those changes.
+
+1. Allocate one static IPv4 in `ap-southeast-2` and attach it to `paw-mvp`.
+2. Add a Route 53 `A` record for `workspace.ai-radar-lab.com` pointing only to
+   that address. Do not use the apex, `app` or `api` records.
+3. Add one Lightsail IPv4 firewall rule for TCP 443. Keep 80, 3000, 3001 and
+   8080 closed and do not add an AAAA record.
+4. Install a reviewed Caddy package version. Its package may auto-start the
+   generic `caddy.service`; stop and disable that service before continuing.
+
+Install the reviewed provider files without adding secrets to the Caddy
+environment:
+
+```bash
+sudo systemctl disable --now caddy.service
+sudo install -o root -g root -m 0644 deploy/cloud/caddy/Caddyfile /etc/paw/Caddyfile
+sudo install -o root -g root -m 0640 deploy/cloud/web-ingress.env.example /etc/paw/web-ingress.env
+sudo install -o root -g root -m 0644 deploy/cloud/systemd/paw-web-ingress.service \
+  /etc/systemd/system/paw-web-ingress.service
+sudoedit /etc/paw/web-ingress.env
+sudo systemctl daemon-reload
+```
+
+Replace the documentation IPv4 and ACME email. Update `/etc/paw/paw.env` so
+`PAW_WEB_ORIGIN=https://workspace.ai-radar-lab.com`; install the dedicated
+Google secret as described above. Keep base Web, writes and bootstrap flags
+false. The Caddy service has a dynamic identity, a private certificate state
+directory, no admin API and no request access log. It uses TLS-ALPN-01 on 443;
+HTTP-01 and automatic port-80 redirects are disabled.
+
 ## 3. Start read mode first
 
 Build and verify the accepted commit locally, deploy its MCP-only base, then
@@ -152,12 +195,21 @@ Expected host listeners are loopback-only on 3000 and 3001. `web-health.sh`
 sends the canonical Host header and requires the signed-out Today page to return
 401 with `no-store`, CSP and `nosniff`. It does not make an external request.
 
-Validate tunnel configuration before publication:
+For the alternative Cloudflare path, validate and start only the tunnel:
 
 ```bash
 cloudflared tunnel --config /etc/paw/web-tunnel.yml ingress validate
 sudo systemctl enable --now paw-web-tunnel.service
 sudo ./deploy/cloud/web-tunnel-health.sh
+```
+
+For the selected Route 53/Caddy path, wait until DNS resolves only to the
+attached static IPv4, then validate and start only the HTTPS ingress:
+
+```bash
+sudo ./deploy/cloud/web-route53-preflight.sh
+sudo systemctl enable --now paw-web-ingress.service
+sudo ./deploy/cloud/web-ingress-health.sh
 ```
 
 From a separate network, verify HTTPS only for the selected hostname. Requests
@@ -203,7 +255,7 @@ Create and integrity-check a backup before changing mode:
 ```bash
 ./deploy/cloud/backup.sh
 sudo ./deploy/cloud/web-mode.sh write
-sudo ./deploy/cloud/web-tunnel-health.sh
+sudo ./deploy/cloud/web-ingress-health.sh  # selected Route 53/Caddy path
 npm run web:check -- --origin https://<reviewed-hostname> --writes on
 ```
 
@@ -219,12 +271,14 @@ Contain the browser surface without interrupting MCP:
 
 ```bash
 sudo systemctl disable --now paw-web-tunnel.service
+# Or, for the selected Route 53/Caddy path:
+sudo systemctl disable --now paw-web-ingress.service
 sudo ./deploy/cloud/web-mode.sh off
 ./deploy/cloud/health.sh
 ```
 
-`web-mode.sh off` refuses to proceed while the Web tunnel is active. Image
-rollback also refuses while that service is active and always starts the base
+`web-mode.sh off` refuses to proceed while either Web ingress is active. Image
+rollback also refuses while either service is active and always starts the base
 MCP-only Compose contract:
 
 ```bash
@@ -238,8 +292,11 @@ incident decision and must reconcile all intervening business writes.
 
 ## S1-05B evidence checklist
 
-- [ ] Current cost, hostname, OAuth client, identity and `cloudflared` version approved
-- [ ] `web-binding-preflight.sh` passes before the first read-mode publication
+- [ ] Current cost, hostname, OAuth client, identity and selected ingress version approved
+- [ ] Static IPv4 is attached; Route 53 changes only `workspace`; public firewall permits only 443
+- [ ] Direct-origin exposure risk is accepted; `/auth` throttling, monitoring and ingress-stop rehearsal are recorded
+- [ ] `web-route53-preflight.sh` passes before the first read-mode publication
+- [ ] Exactly one of `paw-web-ingress.service` and `paw-web-tunnel.service` is active
 - [ ] Isolated synthetic HTTPS login reaches the original synthetic Workspace
 - [ ] Public hostname exposes no MCP, health, admin or fallback origin
 - [ ] `web:check --writes off` passes before identity linking
@@ -253,7 +310,7 @@ incident decision and must reconcile all intervening business writes.
 
 ## When to request human testing
 
-Do not ask the user to test while hostname, OAuth, tunnel, identity mapping,
+Do not ask the user to test while hostname, OAuth, ingress, identity mapping,
 security rejection, backup or synthetic readback is incomplete. Once every
 machine-verifiable item above through the writes-off real deployment has passed,
 stop development and explicitly notify the user that human testing is required.

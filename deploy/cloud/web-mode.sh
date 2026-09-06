@@ -39,11 +39,15 @@ if [[ "${mode}" == write ]]; then
   compose+=(--file "${writes_compose}")
 fi
 
-if [[ "${mode}" == off ]] \
-  && systemctl is-active --quiet paw-web-tunnel.service 2>/dev/null; then
-  echo "Refusing to remove the Web listener while paw-web-tunnel.service is active" >&2
-  echo "Stop the Web tunnel first, then run this command again" >&2
-  exit 1
+if [[ "${mode}" == off ]]; then
+  for ingress_service in paw-web-tunnel.service paw-web-ingress.service; do
+    ingress_state="$(systemctl is-active "${ingress_service}" 2>/dev/null || true)"
+    if [[ "${ingress_state}" =~ ^(active|activating|reloading|deactivating)$ ]]; then
+      echo "Refusing to remove the Web listener while ${ingress_service} is ${ingress_state}" >&2
+      echo "Stop the active Web ingress first, then run this command again" >&2
+      exit 1
+    fi
+  done
 fi
 
 PAW_IMAGE_TAG="${image_tag}" "${compose[@]}" config --quiet

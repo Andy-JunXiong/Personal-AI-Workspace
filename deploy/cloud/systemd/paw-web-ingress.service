@@ -1,0 +1,46 @@
+[Unit]
+Description=Personal AI Workspace HTTPS ingress
+Documentation=https://caddyserver.com/docs/automatic-https
+Wants=network-online.target
+After=network-online.target docker.service
+Requires=docker.service
+
+[Service]
+Type=notify
+DynamicUser=yes
+EnvironmentFile=/etc/paw/web-ingress.env
+Environment=XDG_DATA_HOME=/var/lib/paw-web-ingress
+Environment=XDG_CONFIG_HOME=/var/lib/paw-web-ingress/config
+ExecStartPre=/opt/paw/deploy/cloud/web-health.sh
+ExecStartPre=/usr/bin/caddy validate --config /etc/paw/Caddyfile --adapter caddyfile --envfile /etc/paw/web-ingress.env
+ExecStart=/usr/bin/caddy run --config /etc/paw/Caddyfile --adapter caddyfile
+Restart=on-failure
+RestartSec=2s
+TimeoutStopSec=30s
+KillMode=mixed
+StateDirectory=paw-web-ingress
+StateDirectoryMode=0700
+UMask=0077
+
+AmbientCapabilities=CAP_NET_BIND_SERVICE
+CapabilityBoundingSet=CAP_NET_BIND_SERVICE
+LockPersonality=yes
+NoNewPrivileges=yes
+PrivateDevices=yes
+PrivateTmp=yes
+ProtectClock=yes
+ProtectControlGroups=yes
+ProtectHome=yes
+ProtectHostname=yes
+ProtectKernelLogs=yes
+ProtectKernelModules=yes
+ProtectKernelTunables=yes
+ProtectSystem=strict
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+RestrictNamespaces=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+SystemCallArchitectures=native
+
+[Install]
+WantedBy=multi-user.target

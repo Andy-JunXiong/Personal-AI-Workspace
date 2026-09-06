@@ -16,7 +16,7 @@
 
 **CLOUD C1/C2/C3/C4/C5 = ACCEPTED — REAL DATABASE ON CLOUD; PC-OFF MOBILE TEST PASSED**
 
-**SECONDARY JOB SEARCH ENTRY S1-01 THROUGH S1-05B.1 = LOCALLY VERIFIED — 190 TESTS; S1-05B EXTERNAL BINDING NEXT**
+**SECONDARY JOB SEARCH ENTRY S1-01 THROUGH S1-05B.2 = LOCALLY VERIFIED — 192 TESTS; ROUTE 53/CADDY EXTERNAL BINDING NEXT**
 
 The 2026-09-05 handoff led to the completed local
 [S1-04 Task completion package](docs/mvp/S1_04_TASK_COMPLETION_RESULTS_v0.1.md).
@@ -30,6 +30,9 @@ automates the public signed-out security gate without contacting a real endpoint
 [S1-05B.1 external binding preflight](docs/mvp/S1_05B1_EXTERNAL_BINDING_PREFLIGHT_RESULTS_v0.1.md)
 now fails closed on inconsistent VM-side hostname, OAuth, Tunnel, secret or
 release-mode configuration before publication.
+[S1-05B.2 AI Radar domain ingress](docs/mvp/S1_05B2_AI_RADAR_DOMAIN_INGRESS_RESULTS_v0.1.md)
+selects `workspace.ai-radar-lab.com` and adds the hardened Route 53/Caddy
+provider without changing the AI Radar application or existing hostnames.
 
 Cloud acceptance on 2026-09-05 verified Sydney Lightsail persistence,
 backup/restore, controlled image rollback, restricted private tunnel access,
@@ -137,8 +140,12 @@ the gate to 190 tests and adds the VM-side pre-publication check. Real execution
 is next and requires restored AWS access plus approved Cloudflare and Google
 values; browser writes remain disabled.
 Commit `8f21071` is published on `origin/main`. The connected Cloudflare account
-currently has no Zone or Tunnel, so an owned-domain/onboarding decision and
-Google OAuth client remain external prerequisites.
+has no Zone or Tunnel; that discovery triggered the subsequent domain-reuse
+decision. A Google OAuth client remains an external prerequisite.
+[S1-05B.2](docs/mvp/S1_05B2_AI_RADAR_DOMAIN_INGRESS_RESULTS_v0.1.md) resolves the
+domain decision by reusing `workspace.ai-radar-lab.com`. The local gate is now
+192 tests. AWS access, static IPv4/Route 53/443 binding, Caddy validation and the
+Google OAuth client remain external prerequisites; browser writes remain off.
 S1-05B public login, recovery/capacity, Safari/iPhone and cloud publication
 acceptance remain pending and require separate external authorization.
 Existing cloud acceptance is complete and does not

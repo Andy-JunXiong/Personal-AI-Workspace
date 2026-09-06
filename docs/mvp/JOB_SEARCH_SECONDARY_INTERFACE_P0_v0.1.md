@@ -19,6 +19,9 @@ exact GPT-to-Web URLs without changing tool discovery or write authority.
 no-secret HTTPS publication checker; no external hostname has been tested.
 [S1-05B.1](S1_05B1_EXTERNAL_BINDING_PREFLIGHT_RESULTS_v0.1.md) locally verifies
 the VM-side binding preflight; real account binding and execution remain pending.
+[S1-05B.2](S1_05B2_AI_RADAR_DOMAIN_INGRESS_RESULTS_v0.1.md) replaces Cloudflare
+as the default ingress with Route 53/Caddy for the approved
+`workspace.ai-radar-lab.com` path; external AWS and Google binding is pending.
 
 **Authority:** The user requested P0 technical planning after reviewing the
 two-stage delivery recommendation. This authorizes this design and its linked
@@ -61,9 +64,9 @@ not a dependency already installed.
 
 ```mermaid
 flowchart TB
-    phone["iPhone Safari: saved HTTPS object link"] --> edge["Cloudflare HTTPS hostname"]
-    edge --> tunnel["cloudflared on existing VM"]
-    tunnel --> web["Web listener: host loopback 3001"]
+    phone["iPhone Safari: saved HTTPS object link"] --> edge["workspace.ai-radar-lab.com:443"]
+    edge --> ingress["Hardened Caddy on existing VM"]
+    ingress --> web["Web listener: host loopback 3001"]
     phone --> google["Google sign-in"]
     google --> callback["Web OIDC callback"]
     callback --> web
@@ -75,26 +78,25 @@ flowchart TB
     services --> db[("Existing Workspace SQLite database")]
 ```
 
-Recommend a named Cloudflare Tunnel for the browser hostname, and Google OIDC
-authorization-code login handled by the application. Cloudflare publishes the
-HTTPS route; it does not grant application identity. Cloudflare Access is not a
-second required login system. A named tunnel requires a Cloudflare account and a
-domain on Cloudflare; its outbound connectivity requires port 7844. These are
-deployment prerequisites, not verified properties of the user's accounts.
-[Cloudflare setup](https://developers.cloudflare.com/tunnel/setup/).
+The original baseline recommended a named Cloudflare Tunnel. S1-05B.2 replaces
+that provider after discovery found no Cloudflare Zone and the user approved
+reuse of the existing Route 53-managed AI Radar domain. The selected ingress is
+a hardened Caddy service on the same Lightsail VM, with only public IPv4 TCP 443
+and TLS-ALPN-01. Cloudflare remains an unselected alternative; do not migrate AI
+Radar DNS or run both providers. Google OIDC authorization-code login remains
+application-managed and independent of the ingress provider.
 
-Proposed origin: `https://workspace.<user-controlled-domain>`. This is a
-placeholder, not a registered or working address. Use a dedicated hostname and
-an exact route to the web listener, plus a catch-all rejection rule. Keep host
-ports 3000, 3001 and tunnel health private; no new public VM inbound port is
-needed. The web app must have no MCP route or generic proxy to the MCP listener.
-Do not attach the existing MCP Express app beneath a public web router.
+Selected origin: `https://workspace.ai-radar-lab.com`. The DNS and endpoint are
+not yet configured or working. Use only this dedicated hostname and an exact
+route to the web listener. Keep ports 80, 3000, 3001 and health endpoints private;
+only Caddy may bind public IPv4 TCP 443. The web app must have no MCP route or
+generic proxy to the MCP listener. Do not attach the existing MCP Express app
+beneath a public web router.
 
-Cloudflare becomes a processor on the browser HTTP path; the design assumes TLS
-termination at its edge. Treat browser payloads as traversing that service, not
-as an end-to-end encrypted channel visible only to the VM. Google handles login;
-job descriptions, task content and object return paths are not sent as login
-parameters. The existing private MCP path remains independently configured.
+The selected design terminates browser TLS in Caddy on the VM; Cloudflare is not
+on the request path. Google handles login; job descriptions, task content and
+object return paths are not sent as login parameters. The existing private MCP
+path remains independently configured.
 
 Only same-origin static assets are used. Apply a restrictive CSP, frame
 protection and `Referrer-Policy: no-referrer`; set authenticated HTML/API responses
@@ -291,8 +293,8 @@ Missing web identity/origin configuration fails the web surface closed.
 | --- | --- |
 | Existing VM + disk | Historical accepted baseline USD 7.80/month, before snapshots/tax/overages; not a refreshed quote. |
 | Incremental runtime | Reuse the existing VM; no second VM, managed database or frontend hosting subscription in this design. Capacity still needs measurement. |
-| Domain | Reuse an owned suitable domain if available. Ownership and renewal price are unknown; no purchase is authorized. |
-| Tunnel / login services | Aim for no added subscription. Account eligibility and actual plan charges are unverified; do not present this as a zero-cost deployment. |
+| Domain | Reuse the existing `ai-radar-lab.com` registration with a separate `workspace` hostname; no second domain purchase. Existing renewal cost remains outside this incremental package. |
+| Ingress / login services | Attached Lightsail static IPv4 and Caddy/ACME add no expected subscription; confirm current AWS billing and capacity before release. Google account/project eligibility remains pending. |
 | Budget gate | Reconcile current recurring charges, snapshots and annualized domain cost against the existing USD 10/month baseline before provisioning; record any exception separately. |
 
 The public [Cloudflare pricing page](https://www.cloudflare.com/plans/zero-trust-services/)
@@ -307,7 +309,7 @@ rehearsal on an external database copy → reviewed real deployment with writes 
 → verify existing identity/inventory and backup → enable completion → S1 mobile
 and cross-entry acceptance. No real-data mutation is authorized by this plan.
 
-First rollback action is to disable browser writes/access and stop its tunnel;
+First rollback action is to disable browser writes/access and stop its ingress;
 keep MCP available and preserve all committed work. Retain the new tables and
 restore the previous accepted image only after old-image/new-schema compatibility
 and old idempotency replay have passed on an isolated copy. Do not apply down
@@ -320,7 +322,7 @@ business writes reconciled, never an automatic application rollback step.
 ## 7. Bounded implementation packages
 
 This is the original package responsibility map, not a delegation record.
-S1-01 through S1-05B.1 local implementation evidence is linked above; external S1-05B is next.
+S1-01 through S1-05B.2 local implementation evidence is linked above; external S1-05B is next.
 
 | Package | Intended ownership / work | Exit evidence |
 | --- | --- | --- |
@@ -328,7 +330,7 @@ S1-01 through S1-05B.1 local implementation evidence is linked above; external S
 | S1-02 reads | New application query module, terminal-task read, `src/mcp/create-server.ts` additive tool, bounded queries/indexes | Closed/terminal retrieval, >100 applications, >10 history records, cursor invalidation and ownership cases. |
 | S1-03 web preview | New `src/web/` adapter/templates/assets, config/startup and image asset packaging | S1a mobile/direct-link/freshness/accessibility checks; public web route cannot reach MCP. |
 | S1-04 completion | Internal trusted task authority seam, task audit migration, completion adapter and UI | Atomic state/audit/idempotency, unchanged legacy replay, stale-version rejection and uncertain-response recovery. |
-| S1-05 operations | [S1-05A](S1_05A_LOCAL_OPERATIONS_RESULTS_v0.1.md) adds web-tunnel service/config, Compose loopback modes and rollout/rollback runbook | S1-05B synthetic external auth acceptance, capacity, restart/backup, then reviewed real S1 end-to-end acceptance. |
+| S1-05 operations | [S1-05A](S1_05A_LOCAL_OPERATIONS_RESULTS_v0.1.md) adds provider-isolated ingress config, Compose loopback modes and rollout/rollback runbook; [S1-05B.2](S1_05B2_AI_RADAR_DOMAIN_INGRESS_RESULTS_v0.1.md) selects Route 53/Caddy | S1-05B synthetic external auth acceptance, capacity, restart/backup, then reviewed real S1 end-to-end acceptance. |
 
 Do not edit existing accepted migration files to implement new storage. Assign
 new migration numbers when implementation starts. The new exact-task MCP tool
@@ -337,10 +339,10 @@ preserving historical 12-tool acceptance records and existing command behavior.
 
 ## 8. S1 acceptance and relationship to original scenarios
 
-These full release gates have **not passed**. Local S1-01 through S1-05B.1 results
+These full release gates have **not passed**. Local S1-01 through S1-05B.2 results
 above provide synthetic evidence for identity, transport, reads, Today,
 completion, handoff/accessibility and deployment configuration; real
-Google/Cloudflare/Safari/iPhone completion remains pending. Existing C4/C5
+Google/Route 53/Caddy/Safari/iPhone completion remains pending. Existing C4/C5
 evidence is groundwork, not a pass for the new web
 interface. Use synthetic data in Git-tracked fixtures.
 
@@ -370,9 +372,10 @@ packages. It remains a proposed design under
 [ADR-007](../adr/ADR-007-identity-auth-boundary.md), not evidence of authentication
 approval or a deployed endpoint.
 
-Before external setup, bind the actual domain/hostname, Cloudflare account/plan,
-Google OAuth project/client and chosen login identity through private operational
-configuration. Confirm current costs and accept the new browser-path processor.
+Before external setup, bind the approved Route 53 record, attached static IPv4,
+443-only firewall rule, Caddy version, Google OAuth project/client and chosen
+login identity through private operational configuration. Confirm current costs
+and accept the new public-443 boundary.
 No secrets are needed in chat or Git. The subsequent local S1 scope revision
 permits implementation and synthetic testing now. The deployed M4 freeze and
 external setup/publication review remain in force; local authorization is not

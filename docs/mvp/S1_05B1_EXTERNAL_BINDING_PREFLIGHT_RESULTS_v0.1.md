@@ -24,10 +24,12 @@ secrets, publish the application or mutate Workspace data.
 
 ### Downstream enablement
 
-This enables the real S1-05B read-only binding once an owned Cloudflare hostname,
-Google OAuth client, supported `cloudflared` version and AWS operator access are
-available. External HTTPS checks, identity linking, synthetic completion and
-iPhone acceptance remain pending.
+This originally enabled a Cloudflare read-only binding once an owned hostname,
+Google OAuth client, supported `cloudflared` version and AWS operator access
+were available. [S1-05B.2](S1_05B2_AI_RADAR_DOMAIN_INGRESS_RESULTS_v0.1.md)
+subsequently replaces that default with Route 53/Caddy on the existing AI Radar
+domain. External HTTPS checks, identity linking, synthetic completion and iPhone
+acceptance remain pending.
 
 ### Short-term benefits
 
@@ -63,10 +65,9 @@ iPhone acceptance remain pending.
 - No Google Web OAuth client is recorded in the repository or local
   environment.
 
-The next external action is to identify an already-owned Cloudflare-managed
-domain or separately approve a domain acquisition/onboarding decision. AWS
-operator access and a dedicated Google Web OAuth client are also required before
-the real VM preflight can run.
+The subsequent decision reuses `workspace.ai-radar-lab.com`; no domain purchase
+is planned. AWS operator access and a dedicated Google Web OAuth client are still
+required before the real VM preflight can run.
 
 Do not send OAuth secrets, Tunnel credentials or cloud keys through chat. Human
 acceptance is not requested until real read-only publication and every machine
