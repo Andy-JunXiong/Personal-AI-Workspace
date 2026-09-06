@@ -1,8 +1,9 @@
 # S1-05B.2 AI Radar Domain Ingress Results v0.1
 
-**Status:** Route 53/Caddy read-only publication, Google identity mapping and
-database-copy recovery rehearsal passed on 2026-09-06. Capacity, synthetic
-completion, cross-entry readback and iPhone acceptance remain pending.
+**Status:** Route 53/Caddy publication, Google identity mapping, database-copy
+recovery, capacity, controlled synthetic completion and fresh ChatGPT readback
+passed on 2026-09-06. Web returned to read mode; Windows-PC-OFF iPhone
+acceptance remains pending.
 
 ## Continuity and benefits
 
@@ -25,10 +26,10 @@ TLS state, identity links or Workspace data.
 
 ### Downstream enablement
 
-This enables the capacity and controlled synthetic-completion gate on the
-accepted read-only deployment. Browser writes remain disabled until a named
-synthetic Task, backup, concurrent-load measurement and exact MCP readback are
-authorized and prepared. iPhone acceptance remains downstream of those checks.
+The capacity and controlled synthetic-completion gates have now passed on the
+accepted deployment. Browser writes and identity bootstrap were returned to
+disabled immediately after the bounded mutation. This enables the final
+Windows-PC-OFF iPhone acceptance without expanding the browser write surface.
 
 ### Short-term benefits
 
@@ -68,6 +69,12 @@ paw-web-ingress.service` as the containment action.
 - `deploy/cloud/web-ingress-health.sh`: valid local TLS path, signed-out 401 and
   security headers, `/mcp`/`/healthz`/`/admin` rejection, no port 80 and no
   public application ports.
+- `deploy/cloud/sample-web-capacity.sh`: bounded HTTPS/MCP/backup concurrency,
+  latency, host memory, container memory, restart and OOM sampling.
+- `deploy/cloud/rehearse-database-copy.sh`: isolated current/rollback image
+  recovery against a private database copy with logical fingerprint checks.
+- `deploy/cloud/verify-synthetic-completion.sh`: exact fixture, audit,
+  idempotency and zero-change replay verification after returning to read mode.
 - Mode and image rollback refuse to run while either ingress provider is active.
 
 ## Verification boundary
@@ -78,8 +85,10 @@ Linux shell or Caddy binary, so `bash -n`, `caddy validate`, systemd hardening,
 certificate issuance, DNS, firewall and HTTPS checks must run on the accepted
 Ubuntu VM before publication can pass.
 
-No human product test is requested until read-only external checks, Google
-identity mapping, recovery evidence and synthetic readback have passed.
+No human product test was requested until read-only external checks, Google
+identity mapping, recovery evidence and synthetic readback passed. Those
+prerequisites are now complete, so the final Windows-PC-OFF iPhone test may
+begin while the deployment remains in read mode.
 
 ## VM rollout finding
 
@@ -140,3 +149,48 @@ ports. Both retained the same 13-table/183-row logical fingerprint before and
 after startup and passed integrity verification; sampled container memory was
 34.81 MiB and 34.9 MiB respectively. The live database and container were not
 modified, and the HTTPS ingress health check passed immediately afterward.
+
+## Controlled synthetic completion and capacity
+
+The user explicitly authorized creation and one-time browser completion of a
+permanently retained S1-05B synthetic fixture, plus temporary browser writes.
+The fixture contains no real application data:
+
+- Project: `8568a3c3-768a-46b6-acf2-ac85e5108710`
+- Task: `976b64d1-a758-486a-a8aa-c0322e684ede`
+- Title: `SYNTHETIC TEST - Complete once through Web`
+
+With identity bootstrap disabled, write mode passed the five-check external
+release gate. The browser completed the Task once and a reload retained the
+terminal state. During that bounded window, 30 host samples and 60 concurrent
+MCP calls completed with zero HTTPS or MCP health failures, zero container
+restarts and no OOM event. Maximum sampled HTTPS latency was 0.063903 seconds;
+peak application container memory was 58.99 MiB of 909.5 MiB (6.49%), minimum
+host available memory was 455 MiB, and the concurrent backup passed.
+
+After the browser was returned to read mode, the isolated verifier confirmed
+`DONE`, record version 2, a present completion timestamp, one completion audit
+row and one idempotency row. Replaying the original completion intent produced
+zero database changes. Identity bootstrap and browser writes remained disabled,
+port 80 remained closed, application ports remained loopback-only and the HTTPS
+ingress health check passed.
+
+The verifier package passed 23 test files and 197 tests together with full
+typechecking and build verification. The deployed application image remained
+`9303de5`; the source-only operational verifier was pinned at commit `4cb9015`.
+
+## Fresh ChatGPT readback
+
+The first independent ChatGPT conversation correctly refused to infer the
+Task because its published custom-app snapshot exposed 12 actions and omitted
+`workspace_get_task`, although the deployed server registered 13. Refreshing
+the app's action control exposed the missing read-only action; no server,
+database or browser-mode change was required.
+
+A subsequent fresh conversation called `workspace_get_task` for the exact Task
+ID and returned `DONE`, record version 2, completion time
+`2026-09-06T10:10:28.617Z`, the expected Project ID and the exact HTTPS Task
+URL. Following that URL through Google login returned to the same terminal Task
+page, whose Australia/Sydney display time was 2026-09-06 20:10. This passes the
+cross-entry exact-read and authenticated deep-link gates without relying on
+conversation history.
