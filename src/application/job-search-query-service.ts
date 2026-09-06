@@ -1,6 +1,6 @@
 import { z } from "zod";
 import type { WorkspaceDatabase } from "../persistence/database.js";
-import type { IdentityContext, JobCandidateRecord, ProjectRecord, ResourceRecord, TaskRecord, TransitionRecord } from "../domain/types.js";
+import type { CoverageStatus, DeliveryStatus, FitUncertainty, IdentityContext, JobCandidateRecord, ProjectRecord, RecommendationRunDetails, RecommendationRunItem, RecommendationRunRecord, ResourceRecord, SourceAvailability, TaskRecord, TransitionRecord } from "../domain/types.js";
 import { NotFoundError, ValidationError } from "../domain/errors.js";
 import { isLifecycleState } from "../domain/job-application-lifecycle.js";
 import type { Clock } from "./task-service.js";
@@ -32,6 +32,7 @@ const candidateSchema = z.object({
   linked: z.enum(["ALL", "LINKED", "UNLINKED"]).default("ALL"),
   q: z.string().trim().max(500).default(""),
 }).strict();
+const recommendationRunSchema = z.object(pageFields).strict();
 const idSchema = z.string().uuid();
 
 function parse<S extends z.ZodType>(schema: S, input: unknown): z.output<S> {
@@ -57,6 +58,44 @@ export interface ApplicationListItem extends JobApplicationSummary {
 type ApplicationRow = Omit<ApplicationListItem, "nextDueTask"> & {
   nextDueTaskId: string | null; nextDueTaskTitle: string | null; nextDueAt: string | null;
 };
+
+interface RecommendationRunRow {
+  id: string;
+  workspace_id: string;
+  provider: string;
+  run_reference: string | null;
+  run_at: string;
+  coverage_status: CoverageStatus;
+  delivery_status: DeliveryStatus;
+  coverage_note: string | null;
+  item_count: number;
+  retention_until: string | null;
+  recorded_at: string;
+}
+
+interface RecommendationRunItemRow {
+  candidate_id: string;
+  position: number;
+  fit_reason: string | null;
+  fit_uncertainty: FitUncertainty | null;
+  source_availability: SourceAvailability | null;
+}
+
+function mapRecommendationRun(row: RecommendationRunRow): RecommendationRunRecord {
+  return {
+    id: row.id,
+    workspaceId: row.workspace_id,
+    provider: row.provider,
+    runReference: row.run_reference,
+    runAt: row.run_at,
+    coverageStatus: row.coverage_status,
+    deliveryStatus: row.delivery_status,
+    coverageNote: row.coverage_note,
+    itemCount: row.item_count,
+    retentionUntil: row.retention_until,
+    recordedAt: row.recorded_at,
+  };
+}
 
 const searchText = (value: string): string => value.normalize("NFKC").trim().replace(/\s+/gu, " ").toLowerCase();
 
@@ -249,6 +288,45 @@ export class JobSearchQueryService {
       ).get(candidateId, identity.workspaceId) as CandidateRow | undefined;
       if (!row) throw new NotFoundError("Candidate was not found");
       return mapCandidateRow(row);
+    })();
+  }
+
+  listRecommendationRuns(input: unknown = {}) {
+    const options = parse(recommendationRunSchema, input);
+    return this.database.transaction(() => {
+      const identity = this.resolveIdentity();
+      const rows = () => this.database.prepare(`SELECT * FROM recommendation_runs
+        WHERE workspace_id = @workspace ORDER BY run_at DESC, id ASC`
+      ).iterate({ workspace: identity.workspaceId }) as Iterable<RecommendationRunRow>;
+      function* runs(): Generator<RecommendationRunRecord> {
+        for (const row of rows()) yield mapRecommendationRun(row);
+      }
+      return readPage(runs, { kind: "recommendationRuns", principalId: identity.principalId,
+        workspaceId: identity.workspaceId, pageSize: options.pageSize },
+      options.pageSize, options.cursor, this.clock().valueOf());
+    })();
+  }
+
+  getRecommendationRun(runId: string): RecommendationRunDetails {
+    parse(idSchema, runId);
+    return this.database.transaction(() => {
+      const identity = this.resolveIdentity();
+      const row = this.database.prepare(
+        "SELECT * FROM recommendation_runs WHERE id = ? AND workspace_id = ?",
+      ).get(runId, identity.workspaceId) as RecommendationRunRow | undefined;
+      if (!row) throw new NotFoundError("Recommendation run was not found");
+      const itemRows = this.database.prepare(
+        `SELECT candidate_id, position, fit_reason, fit_uncertainty, source_availability
+         FROM recommendation_run_items WHERE run_id = ? ORDER BY position ASC, candidate_id ASC`,
+      ).all(runId) as unknown as RecommendationRunItemRow[];
+      const items: RecommendationRunItem[] = itemRows.map((item) => ({
+        candidateId: item.candidate_id,
+        position: item.position,
+        fitReason: item.fit_reason,
+        fitUncertainty: item.fit_uncertainty ?? "UNKNOWN",
+        sourceAvailability: item.source_availability ?? "UNKNOWN",
+      }));
+      return { ...mapRecommendationRun(row), items };
     })();
   }
 

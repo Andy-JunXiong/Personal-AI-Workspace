@@ -3,7 +3,7 @@ import { fileURLToPath } from "node:url";
 import type { WorkspaceService } from "../application/workspace-service.js";
 import { AuthorizationError, NotFoundError, ValidationError } from "../domain/errors.js";
 import { CursorError } from "../application/read-pagination.js";
-import { applicationListView, applicationView, errorView, loginView, rootPath, taskView, todayView } from "./views.js";
+import { applicationListView, applicationView, candidateListView, candidateView, errorView, loginView, rootPath, taskView, todayView } from "./views.js";
 
 export function createWebAssetsRouter() {
   const router = Router();
@@ -35,7 +35,7 @@ export function createJobSearchPageRouter(serviceFor: (request: Request) => Work
     router.get(`${rootPath}${path}`, (request, response) => {
       let authenticated = false;
       // Keep login return paths object-only. Filters are intentionally discarded.
-      const returnTo = /^\/workspace\/job-search\/(?:today|applications(?:\/[a-f0-9-]{36})?|tasks\/[a-f0-9-]{36})$/u.test(request.path)
+      const returnTo = /^\/workspace\/job-search\/(?:today|applications(?:\/[a-f0-9-]{36})?|tasks\/[a-f0-9-]{36}|jobs(?:\/[a-f0-9-]{36})?)$/u.test(request.path)
         ? request.path : `${rootPath}/applications`;
       try {
         const service = serviceFor(request);
@@ -68,6 +68,10 @@ export function createJobSearchPageRouter(serviceFor: (request: Request) => Work
     return applicationView(service, request.params.id as string, input, timeZone);
   });
   page("/tasks/:id", (service, request) => { query(request, []); return taskView(service,
+    request.params.id as string, timeZone, new Date(now()).toISOString(), completionEnabled); });
+  page("/jobs", (service, request) => candidateListView(service,
+    query(request, ["q", "decision", "linked", "cursor", "pageSize"]), timeZone));
+  page("/jobs/:id", (service, request) => { query(request, []); return candidateView(service,
     request.params.id as string, timeZone, new Date(now()).toISOString(), completionEnabled); });
   return router;
 }

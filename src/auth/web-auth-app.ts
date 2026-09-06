@@ -24,7 +24,7 @@ import { loginFailureView } from "../web/views.js";
 const SESSION_COOKIE = "__Host-paw_session";
 const LOGIN_COOKIE = "__Host-paw_login";
 const cookieOptions = { secure: true, httpOnly: true, sameSite: "lax" as const, path: "/" };
-const objectRoute = /^\/workspace\/job-search\/(?:today|applications(?:\/[a-f0-9-]{36})?|tasks\/[a-f0-9-]{36})$/u;
+const objectRoute = /^\/workspace\/job-search\/(?:today|applications(?:\/[a-f0-9-]{36})?|tasks\/[a-f0-9-]{36}|jobs(?:\/[a-f0-9-]{36})?)$/u;
 
 export function safeReturnTo(value: unknown): string {
   if (value === undefined) return "/workspace/job-search/today";

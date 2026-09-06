@@ -47,5 +47,10 @@ export function createJobSearchReadRouter(serviceFor: (request: Request) => Work
     noQuery(request);
     return { task: service.jobSearchQueryService.getTask(request.params.id as string), asOf: new Date(now()).toISOString() };
   });
+  read("/candidates", (service, request) => service.jobSearchQueryService.listCandidates(query(request)));
+  read("/candidates/:id", (service, request) => {
+    noQuery(request);
+    return service.jobSearchQueryService.getCandidate(request.params.id as string);
+  });
   return router;
 }

@@ -268,3 +268,125 @@ describe("Candidate reads", () => {
     expect(() => w.service.jobSearchQueryService.getCandidate(randomUUID())).toThrow(NotFoundError);
   });
 });
+
+function createApplication(w: ReturnType<typeof setup>) {
+  const result = w.service.createJobApplication({
+    company: "Acme",
+    role: "Senior Software Engineer",
+    authority: devAuthority,
+    idempotencyKey: randomUUID(),
+  });
+  if (result.creationStatus !== "CREATED") throw new Error("Expected creation");
+  return result.project;
+}
+
+describe("Candidate application linking", () => {
+  it("links a candidate to an owned application and preserves the decision", () => {
+    const w = setup();
+    const { candidate } = w.service.candidateService.recordCandidate(recordInput());
+    w.service.candidateService.decideCandidate({
+      candidateId: candidate.id, action: "SAVE", expectedRecordVersion: 1,
+      authority: devAuthority, idempotencyKey: "save-1",
+    });
+    const project = createApplication(w);
+
+    const linked = w.service.candidateService.linkCandidateToApplication({
+      candidateId: candidate.id, projectId: project.id,
+      authority: devAuthority, idempotencyKey: "link-1",
+    });
+    expect(linked.changed).toBe(true);
+    expect(linked.replayed).toBe(false);
+    expect(linked.candidate.linkedProjectId).toBe(project.id);
+    expect(linked.candidate.linkedAt).not.toBeNull();
+    expect(linked.candidate.recordVersion).toBe(3);
+    expect(linked.candidate.decision).toBe("SAVED");
+    expect(w.database.prepare(
+      "SELECT channel, authority_type, project_id FROM candidate_links",
+    ).all()).toEqual([{ channel: "MCP", authority_type: "EXPLICIT_USER_DEV", project_id: project.id }]);
+  });
+
+  it("replays the same link and treats the same target as a no-op", () => {
+    const w = setup();
+    const { candidate } = w.service.candidateService.recordCandidate(recordInput());
+    const project = createApplication(w);
+
+    const first = w.service.candidateService.linkCandidateToApplication({
+      candidateId: candidate.id, projectId: project.id,
+      authority: devAuthority, idempotencyKey: "link-1",
+    });
+    const replay = w.service.candidateService.linkCandidateToApplication({
+      candidateId: candidate.id, projectId: project.id,
+      authority: devAuthority, idempotencyKey: "link-1",
+    });
+    expect(replay.replayed).toBe(true);
+    expect(replay.candidate.id).toBe(first.candidate.id);
+
+    const noop = w.service.candidateService.linkCandidateToApplication({
+      candidateId: candidate.id, projectId: project.id,
+      authority: devAuthority, idempotencyKey: "link-2",
+    });
+    expect(noop.changed).toBe(false);
+    expect(noop.candidate.linkedProjectId).toBe(project.id);
+    expect(w.database.prepare("SELECT COUNT(*) AS n FROM candidate_links").get()).toEqual({ n: 1 });
+  });
+
+  it("rejects linking to a different application, a missing target, or a forged web authority", () => {
+    const w = setup();
+    const { candidate } = w.service.candidateService.recordCandidate(recordInput());
+    const projectA = createApplication(w);
+    w.service.candidateService.linkCandidateToApplication({
+      candidateId: candidate.id, projectId: projectA.id,
+      authority: devAuthority, idempotencyKey: "link-a",
+    });
+
+    const other = w.service.createJobApplication({
+      company: "Other", role: "Other Role", authority: devAuthority, idempotencyKey: randomUUID(),
+    });
+    if (other.creationStatus !== "CREATED") throw new Error("Expected creation");
+    expect(() => w.service.candidateService.linkCandidateToApplication({
+      candidateId: candidate.id, projectId: other.project.id,
+      authority: devAuthority, idempotencyKey: "link-b",
+    })).toThrow(/already linked/u);
+    expect(() => w.service.candidateService.linkCandidateToApplication({
+      candidateId: candidate.id, projectId: randomUUID(),
+      authority: devAuthority, idempotencyKey: "link-missing",
+    })).toThrow(NotFoundError);
+
+    const context = verifiedRequestContext(w.database, w.identity, "WEB", randomUUID());
+    const web = new WorkspaceService(w.database, context);
+    const second = w.service.candidateService.recordCandidate(recordInput({
+      idempotencyKey: "c2", postingId: "seek-2", sourceUrl: "https://www.seek.com.au/job/2",
+    }));
+    expect(() => web.candidateService.linkCandidateToApplication({
+      candidateId: second.candidate.id, projectId: projectA.id,
+      authority: devAuthority, idempotencyKey: "forged-dev",
+    })).toThrow(AuthorizationError);
+  });
+
+  it("links over the web channel with web authority and rejects a non-application target", () => {
+    const w = setup();
+    const { candidate } = w.service.candidateService.recordCandidate(recordInput());
+    const project = createApplication(w);
+    const context = verifiedRequestContext(w.database, w.identity, "WEB", randomUUID());
+    const web = new WorkspaceService(w.database, context);
+
+    const linked = web.candidateService.linkCandidateFromWeb({
+      candidateId: candidate.id, projectId: project.id, intentKey: randomUUID(),
+    });
+    expect(linked.candidate.linkedProjectId).toBe(project.id);
+    expect(w.database.prepare(
+      "SELECT channel, authority_type FROM candidate_links",
+    ).all()).toEqual([{ channel: "WEB", authority_type: "EXPLICIT_USER_WEB" }]);
+
+    const nonApplicationId = randomUUID();
+    w.database.prepare(
+      `INSERT INTO projects(id, workspace_id, project_type, title, status,
+        lifecycle_state, lifecycle_version, record_version, metadata_json, created_at, updated_at)
+       VALUES (?, ?, 'other', 'Not an application', 'ACTIVE', 'APPLIED', 1, 1, '{}', ?, ?)`,
+    ).run(nonApplicationId, w.identity.workspaceId, new Date().toISOString(), new Date().toISOString());
+    expect(() => w.service.candidateService.linkCandidateToApplication({
+      candidateId: candidate.id, projectId: nonApplicationId,
+      authority: devAuthority, idempotencyKey: "link-nonapp",
+    })).toThrow(NotFoundError);
+  });
+});

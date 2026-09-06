@@ -10,10 +10,13 @@ import {
 import type {
   CandidateDecision,
   CandidateDecisionAction,
+  CoverageStatus,
+  DeliveryStatus,
   ExplicitUserDevAuthority,
   FitUncertainty,
   IdentityContext,
   JobCandidateRecord,
+  RecommendationRunDetails,
   SourceAvailability,
 } from "../domain/types.js";
 import type { WorkspaceDatabase } from "../persistence/database.js";
@@ -85,9 +88,73 @@ export interface DecideCandidateInput {
   idempotencyKey: string;
 }
 
+export interface LinkCandidateApplicationInput {
+  candidateId: string;
+  projectId: string;
+  authority: CandidateMutationAuthority;
+  idempotencyKey: string;
+}
+
+export interface DecideCandidateFromWebInput {
+  candidateId: string;
+  action: CandidateDecisionAction;
+  expectedRecordVersion: number;
+  intentKey: string;
+}
+
+export interface LinkCandidateFromWebInput {
+  candidateId: string;
+  projectId: string;
+  intentKey: string;
+}
+
+export interface RecommendationRunItemInput {
+  position?: number;
+  provider: string;
+  postingId?: string | null;
+  sourceUrl?: string | null;
+  title: string;
+  company: string;
+  role: string;
+  location?: string | null;
+  fitReason?: string | null;
+  fitUncertainty?: FitUncertainty;
+  sourceAvailability?: SourceAvailability;
+}
+
+export interface RecordRecommendationRunInput {
+  provider: string;
+  runAt?: string;
+  runReference?: string | null;
+  coverageStatus: CoverageStatus;
+  deliveryStatus: DeliveryStatus;
+  coverageNote?: string | null;
+  retentionUntil?: string | null;
+  items: RecommendationRunItemInput[];
+  authority: ExplicitUserDevAuthority;
+  idempotencyKey: string;
+}
+
+interface NormalizedCandidateFields {
+  provider: string;
+  postingId: string | null;
+  sourceUrl: string | null;
+  title: string;
+  company: string;
+  role: string;
+  location: string | null;
+  fitReason: string | null;
+  fitUncertainty: FitUncertainty;
+  sourceAvailability: SourceAvailability;
+}
+
 const FIT_UNCERTAINTIES: readonly FitUncertainty[] = ["LOW", "MEDIUM", "HIGH", "UNKNOWN"];
 const SOURCE_AVAILABILITIES: readonly SourceAvailability[] = ["AVAILABLE", "UNAVAILABLE", "UNKNOWN"];
 const DECISION_ACTIONS: readonly CandidateDecisionAction[] = ["SAVE", "DISMISS", "RESTORE"];
+const COVERAGE_STATUSES: readonly CoverageStatus[] = ["COMPLETE", "PARTIAL", "FAILED", "UNKNOWN"];
+const DELIVERY_STATUSES: readonly DeliveryStatus[] = ["DELIVERED", "ATTEMPTED", "UNKNOWN"];
+const MAX_RUN_ITEMS = 100;
+const RECOMMENDATION_RUN_RETENTION_DAYS = 90;
 
 const ACTION_TARGET: Record<CandidateDecisionAction, CandidateDecision> = {
   SAVE: "SAVED",
@@ -112,6 +179,171 @@ export class CandidateService {
     this.assertMutationAllowed();
     const context = this.resolveContext();
     const authorityReference = validateAuthority(input.authority, context.channel);
+    const fields = this.normalizeCandidateFields(input);
+
+    const payload = {
+      ...fields,
+      authority: authorityPayload(input.authority, authorityReference),
+    };
+
+    return this.runIdempotent(
+      context.workspaceId,
+      "workspace_record_candidate",
+      input.idempotencyKey,
+      payload,
+      () => ({ ...this.upsertCandidateRecord(context.workspaceId, fields), replayed: false }),
+    );
+  }
+
+  recordRecommendationRun(input: RecordRecommendationRunInput): {
+    run: RecommendationRunDetails;
+    replayed: boolean;
+  } {
+    this.assertMutationAllowed();
+    const context = this.resolveContext();
+    const authorityReference = validateAuthority(input.authority, context.channel);
+    const provider = input.provider.trim();
+    if (!provider) throw new ValidationError("Recommendation provider is required");
+    if (provider.length > 100) {
+      throw new ValidationError("Recommendation provider must be at most 100 characters");
+    }
+    if (!COVERAGE_STATUSES.includes(input.coverageStatus)) {
+      throw new ValidationError(`Unsupported coverageStatus: ${input.coverageStatus}`);
+    }
+    if (!DELIVERY_STATUSES.includes(input.deliveryStatus)) {
+      throw new ValidationError(`Unsupported deliveryStatus: ${input.deliveryStatus}`);
+    }
+    if (input.items.length > MAX_RUN_ITEMS) {
+      throw new ValidationError(`Recommendation run supports at most ${MAX_RUN_ITEMS} items`);
+    }
+    const runAt = normalizeRunAt(input.runAt ?? this.clock().toISOString());
+    const runReference = normalizeNullableText(input.runReference, 500);
+    const coverageNote = normalizeNullableText(input.coverageNote, 2_000);
+    const retentionUntil = normalizeRetentionUntil(input.retentionUntil, runAt);
+    const items = input.items.map((item, index) => ({
+      position: item.position ?? index,
+      fields: this.normalizeCandidateFields(item),
+    }));
+
+    const payload = {
+      provider,
+      runAt,
+      runReference,
+      coverageStatus: input.coverageStatus,
+      deliveryStatus: input.deliveryStatus,
+      coverageNote,
+      retentionUntil,
+      items: items.map((item) => ({ position: item.position, ...item.fields })),
+      authority: authorityPayload(input.authority, authorityReference),
+    };
+
+    return this.runIdempotent(
+      context.workspaceId,
+      "workspace_record_recommendation_run",
+      input.idempotencyKey,
+      payload,
+      () => {
+        const runId = randomUUID();
+        const recordedAt = this.clock().toISOString();
+        // Upsert candidates first, deduplicating to a stable run-item set. The
+        // candidate upsert never changes a decision or an application link.
+        const runItems: Array<{
+          candidateId: string;
+          position: number;
+          fitReason: string | null;
+          fitUncertainty: FitUncertainty;
+          sourceAvailability: SourceAvailability;
+        }> = [];
+        const seenCandidateIds = new Set<string>();
+        for (const item of items) {
+          const { candidate } = this.upsertCandidateRecord(context.workspaceId, item.fields);
+          if (seenCandidateIds.has(candidate.id)) continue;
+          seenCandidateIds.add(candidate.id);
+          runItems.push({
+            candidateId: candidate.id,
+            position: item.position,
+            fitReason: candidate.fitReason,
+            fitUncertainty: candidate.fitUncertainty,
+            sourceAvailability: candidate.sourceAvailability,
+          });
+        }
+
+        this.database
+          .prepare(
+            `INSERT INTO recommendation_runs(
+               id, workspace_id, provider, run_reference, run_at, coverage_status,
+               delivery_status, coverage_note, item_count, retention_until, recorded_at
+             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          )
+          .run(
+            runId,
+            context.workspaceId,
+            provider,
+            runReference,
+            runAt,
+            input.coverageStatus,
+            input.deliveryStatus,
+            coverageNote,
+            runItems.length,
+            retentionUntil,
+            recordedAt,
+          );
+
+        const insertItem = this.database.prepare(
+          `INSERT INTO recommendation_run_items(
+             run_id, candidate_id, position, fit_reason, fit_uncertainty, source_availability
+           ) VALUES (?, ?, ?, ?, ?, ?)`,
+        );
+        for (const item of runItems) {
+          insertItem.run(
+            runId,
+            item.candidateId,
+            item.position,
+            item.fitReason,
+            item.fitUncertainty,
+            item.sourceAvailability,
+          );
+        }
+
+        return {
+          run: {
+            id: runId,
+            workspaceId: context.workspaceId,
+            provider,
+            runReference,
+            runAt,
+            coverageStatus: input.coverageStatus,
+            deliveryStatus: input.deliveryStatus,
+            coverageNote,
+            itemCount: runItems.length,
+            retentionUntil,
+            recordedAt,
+            items: runItems.map((item) => ({
+              candidateId: item.candidateId,
+              position: item.position,
+              fitReason: item.fitReason,
+              fitUncertainty: item.fitUncertainty,
+              sourceAvailability: item.sourceAvailability,
+            })),
+          },
+          replayed: false,
+        };
+      },
+    );
+  }
+
+  private normalizeCandidateFields(input: {
+    provider: string;
+    postingId?: string | null;
+    sourceUrl?: string | null;
+    title: string;
+    company: string;
+    role: string;
+    location?: string | null;
+    fitReason?: string | null;
+    fitUncertainty?: FitUncertainty;
+    sourceAvailability?: SourceAvailability;
+  }): NormalizedCandidateFields {
     const provider = input.provider.trim();
     if (!provider) throw new ValidationError("Candidate provider is required");
     if (provider.length > 100) {
@@ -150,8 +382,7 @@ export class CandidateService {
     if (!SOURCE_AVAILABILITIES.includes(sourceAvailability)) {
       throw new ValidationError(`Unsupported sourceAvailability: ${sourceAvailability}`);
     }
-
-    const payload = {
+    return {
       provider,
       postingId,
       sourceUrl,
@@ -162,98 +393,88 @@ export class CandidateService {
       fitReason,
       fitUncertainty,
       sourceAvailability,
-      authority: authorityPayload(input.authority, authorityReference),
     };
+  }
 
-    return this.runIdempotent(
-      context.workspaceId,
-      "workspace_record_candidate",
-      input.idempotencyKey,
-      payload,
-      () => {
-        const existing = this.findMatchingCandidate(
-          context.workspaceId,
-          provider,
-          postingId,
-          sourceUrl,
+  private upsertCandidateRecord(
+    workspaceId: string,
+    fields: NormalizedCandidateFields,
+  ): { candidate: JobCandidateRecord; created: boolean; changed: boolean } {
+    const { provider, postingId, sourceUrl, title, company, role, location, fitReason, fitUncertainty, sourceAvailability } = fields;
+    const existing = this.findMatchingCandidate(workspaceId, provider, postingId, sourceUrl);
+    if (existing) {
+      const changed =
+        existing.company !== company ||
+        existing.role !== role ||
+        existing.title !== title ||
+        existing.location !== location ||
+        existing.fitReason !== fitReason ||
+        existing.fitUncertainty !== fitUncertainty ||
+        existing.sourceAvailability !== sourceAvailability;
+      if (!changed) {
+        return { candidate: existing, created: false, changed: false };
+      }
+      const now = this.clock().toISOString();
+      this.database
+        .prepare(
+          `UPDATE job_candidates
+           SET title = ?, company = ?, role = ?, location = ?, fit_reason = ?,
+               fit_uncertainty = ?, source_availability = ?,
+               record_version = record_version + 1, updated_at = ?
+           WHERE id = ? AND workspace_id = ?`,
+        )
+        .run(
+          title,
+          company,
+          role,
+          location,
+          fitReason,
+          fitUncertainty,
+          sourceAvailability,
+          now,
+          existing.id,
+          workspaceId,
         );
-        if (existing) {
-          const changed =
-            existing.company !== company ||
-            existing.role !== role ||
-            existing.title !== title ||
-            existing.location !== location ||
-            existing.fitReason !== fitReason ||
-            existing.fitUncertainty !== fitUncertainty ||
-            existing.sourceAvailability !== sourceAvailability;
-          if (!changed) {
-            return { candidate: existing, created: false, changed: false, replayed: false };
-          }
-          const now = this.clock().toISOString();
-          this.database
-            .prepare(
-              `UPDATE job_candidates
-               SET title = ?, company = ?, role = ?, location = ?, fit_reason = ?,
-                   fit_uncertainty = ?, source_availability = ?,
-                   record_version = record_version + 1, updated_at = ?
-               WHERE id = ? AND workspace_id = ?`,
-            )
-            .run(
-              title,
-              company,
-              role,
-              location,
-              fitReason,
-              fitUncertainty,
-              sourceAvailability,
-              now,
-              existing.id,
-              context.workspaceId,
-            );
-          return {
-            candidate: this.getCandidate(existing.id, context.workspaceId),
-            created: false,
-            changed: true,
-            replayed: false,
-          };
-        }
+      return {
+        candidate: this.getCandidate(existing.id, workspaceId),
+        created: false,
+        changed: true,
+      };
+    }
 
-        const id = randomUUID();
-        const now = this.clock().toISOString();
-        this.database
-          .prepare(
-            `INSERT INTO job_candidates(
-               id, workspace_id, provider, posting_id, source_url, title, company,
-               role, location, fit_reason, fit_uncertainty, source_availability,
-               decision, record_version, decision_at, linked_project_id, linked_at,
-               created_at, updated_at
-             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'UNREVIEWED', 1,
-                       NULL, NULL, NULL, ?, ?)`,
-          )
-          .run(
-            id,
-            context.workspaceId,
-            provider,
-            postingId,
-            sourceUrl,
-            title,
-            company,
-            role,
-            location,
-            fitReason,
-            fitUncertainty,
-            sourceAvailability,
-            now,
-            now,
-          );
-        return {
-          candidate: this.getCandidate(id, context.workspaceId),
-          created: true,
-          changed: true,
-          replayed: false,
-        };
-      },
-    );
+    const id = randomUUID();
+    const now = this.clock().toISOString();
+    this.database
+      .prepare(
+        `INSERT INTO job_candidates(
+           id, workspace_id, provider, posting_id, source_url, title, company,
+           role, location, fit_reason, fit_uncertainty, source_availability,
+           decision, record_version, decision_at, linked_project_id, linked_at,
+           created_at, updated_at
+         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'UNREVIEWED', 1,
+                   NULL, NULL, NULL, ?, ?)`,
+      )
+      .run(
+        id,
+        workspaceId,
+        provider,
+        postingId,
+        sourceUrl,
+        title,
+        company,
+        role,
+        location,
+        fitReason,
+        fitUncertainty,
+        sourceAvailability,
+        now,
+        now,
+      );
+    return {
+      candidate: this.getCandidate(id, workspaceId),
+      created: true,
+      changed: true,
+    };
   }
 
   decideCandidate(input: DecideCandidateInput): {
@@ -353,6 +574,148 @@ export class CandidateService {
         return result;
       },
     );
+  }
+
+  linkCandidateToApplication(input: LinkCandidateApplicationInput): {
+    candidate: JobCandidateRecord;
+    changed: boolean;
+    replayed: boolean;
+  } {
+    const context = this.resolveContext();
+    const authorityReference = validateAuthority(input.authority, context.channel);
+    if (input.authority.type === "EXPLICIT_USER_DEV") this.assertMutationAllowed();
+
+    const payload = {
+      candidateId: input.candidateId,
+      projectId: input.projectId,
+      authority: authorityPayload(input.authority, authorityReference),
+    };
+
+    // Ownership of both objects is checked before idempotency lookup so a
+    // replay never bypasses the current request identity.
+    this.getCandidate(input.candidateId, context.workspaceId);
+    this.assertLinkableProject(input.projectId, context.workspaceId);
+
+    return this.runIdempotent(
+      context.workspaceId,
+      "workspace_link_job_candidate",
+      input.idempotencyKey,
+      payload,
+      () => {
+        const current = this.getCandidate(input.candidateId, context.workspaceId);
+        if (current.linkedProjectId === input.projectId) {
+          return { candidate: current, changed: false, replayed: false };
+        }
+        if (current.linkedProjectId !== null) {
+          throw new ValidationError(
+            "Candidate is already linked to a different application",
+          );
+        }
+
+        const now = this.clock().toISOString();
+        const update = this.database
+          .prepare(
+            `UPDATE job_candidates
+             SET linked_project_id = ?, linked_at = ?,
+                 record_version = record_version + 1, updated_at = ?
+             WHERE id = ? AND workspace_id = ? AND linked_project_id IS NULL`,
+          )
+          .run(input.projectId, now, now, input.candidateId, context.workspaceId);
+        if (update.changes !== 1) {
+          throw new ConcurrencyConflictError(
+            "Concurrent candidate update prevented this link",
+          );
+        }
+
+        const linked = this.getCandidate(input.candidateId, context.workspaceId);
+        this.writeLinkAudit({
+          context,
+          candidateId: input.candidateId,
+          projectId: input.projectId,
+          authority: input.authority,
+          authorityReference,
+        });
+        return { candidate: linked, changed: true, replayed: false };
+      },
+    );
+  }
+
+  decideCandidateFromWeb(input: DecideCandidateFromWebInput): {
+    candidate: JobCandidateRecord;
+    changed: boolean;
+    replayed: boolean;
+  } {
+    const context = this.resolveContext();
+    if (context.channel !== "WEB") {
+      throw new AuthorizationError("Web candidate decision requires a verified web request");
+    }
+    return this.decideCandidate({
+      candidateId: input.candidateId,
+      action: input.action,
+      expectedRecordVersion: input.expectedRecordVersion,
+      authority: {
+        type: "EXPLICIT_USER_WEB",
+        reference: `candidate-decision:${context.principalId}:${input.intentKey}`,
+      },
+      idempotencyKey: input.intentKey,
+    });
+  }
+
+  linkCandidateFromWeb(input: LinkCandidateFromWebInput): {
+    candidate: JobCandidateRecord;
+    changed: boolean;
+    replayed: boolean;
+  } {
+    const context = this.resolveContext();
+    if (context.channel !== "WEB") {
+      throw new AuthorizationError("Web candidate linking requires a verified web request");
+    }
+    return this.linkCandidateToApplication({
+      candidateId: input.candidateId,
+      projectId: input.projectId,
+      authority: {
+        type: "EXPLICIT_USER_WEB",
+        reference: `candidate-link:${context.principalId}:${input.intentKey}`,
+      },
+      idempotencyKey: input.intentKey,
+    });
+  }
+
+  private assertLinkableProject(projectId: string, workspaceId: string): void {
+    const row = this.database
+      .prepare(
+        `SELECT id FROM projects
+         WHERE id = ? AND workspace_id = ? AND project_type = 'job_application'`,
+      )
+      .get(projectId, workspaceId) as { id: string } | undefined;
+    if (!row) throw new NotFoundError(`Application ${projectId} was not found`);
+  }
+
+  private writeLinkAudit(input: {
+    context: CandidateCommandContext;
+    candidateId: string;
+    projectId: string;
+    authority: CandidateMutationAuthority;
+    authorityReference: string;
+  }): void {
+    this.database
+      .prepare(
+        `INSERT INTO candidate_links(
+           id, workspace_id, candidate_id, project_id, channel, principal_id,
+           authority_type, authority_reference, created_at
+         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      )
+      .run(
+        randomUUID(),
+        input.context.workspaceId,
+        input.candidateId,
+        input.projectId,
+        input.context.channel,
+        input.context.principalId,
+        input.authority.type,
+        input.authorityReference,
+        this.clock().toISOString(),
+      );
   }
 
   private writeDecisionAudit(input: {
@@ -539,4 +902,30 @@ function isHttpUrl(value: string): boolean {
   } catch {
     return false;
   }
+}
+
+function normalizeRunAt(value: string): string {
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.valueOf())) {
+    throw new ValidationError("runAt must be a valid ISO datetime");
+  }
+  return parsed.toISOString();
+}
+
+function normalizeRetentionUntil(
+  value: string | null | undefined,
+  runAt: string,
+): string | null {
+  if (value === undefined) {
+    const until = new Date(new Date(runAt).valueOf() + RECOMMENDATION_RUN_RETENTION_DAYS * 86_400_000);
+    return until.toISOString();
+  }
+  if (value === null) return null;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  const parsed = new Date(trimmed);
+  if (Number.isNaN(parsed.valueOf())) {
+    throw new ValidationError("retentionUntil must be a valid ISO datetime");
+  }
+  return parsed.toISOString();
 }

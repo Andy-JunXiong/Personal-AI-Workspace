@@ -517,4 +517,104 @@ describe("Signed OIDC authentication over the isolated web transport", () => {
     w.database.exec("DROP TRIGGER fail_web_task_audit");
     expect((await w.request(`/api/v1/job-search/tasks/${task.id}/complete`, options)).status).toBe(200);
   });
+
+  it("serves candidate reads and renders the Jobs pages with zero read writes", async () => {
+    const w = await setup(); w.link();
+    const authority = { type: "EXPLICIT_USER_DEV" as const, confirmed: true as const, reference: "Synthetic candidate read" };
+    const { candidate } = w.service.candidateService.recordCandidate({
+      provider: "seek", postingId: "seek-1", sourceUrl: "https://www.seek.com.au/job/1",
+      title: "Senior Engineer", company: "Acme", role: "Senior Engineer", location: "Sydney",
+      fitReason: "Matches distributed systems background", fitUncertainty: "MEDIUM",
+      sourceAvailability: "AVAILABLE", authority, idempotencyKey: randomUUID(),
+    });
+    const headers = { cookie: w.sessionCookie(await w.finish(await w.start())) };
+    const before = w.database.prepare("SELECT total_changes() AS n").get();
+
+    const list = await (await w.request("/api/v1/job-search/candidates", { headers })).json();
+    expect(list).toMatchObject({ totalCount: 1, items: [{ id: candidate.id, decision: "UNREVIEWED" }] });
+    const detail = await (await w.request(`/api/v1/job-search/candidates/${candidate.id}`, { headers })).json();
+    expect(detail).toMatchObject({ id: candidate.id, company: "Acme", linkedProjectId: null });
+
+    const jobsHtml = await (await w.request("/workspace/job-search/jobs", { headers })).text();
+    expect(jobsHtml).toContain("候选职位"); expect(jobsHtml).toContain("Acme"); expect(jobsHtml).toContain("Senior Engineer");
+    const jobHtml = await (await w.request(`/workspace/job-search/jobs/${candidate.id}`, { headers })).text();
+    expect(jobHtml).toContain("Matches distributed systems background");
+    expect(jobHtml).toContain(`Candidate ${candidate.id}`);
+    expect(jobHtml).not.toContain("data-decide-candidate"); // writes are off by default
+    expect((await w.request(`/api/v1/job-search/candidates/${randomUUID()}`, { headers })).status).toBe(404);
+    expect(w.database.prepare("SELECT total_changes() AS n").get()).toEqual(before);
+  });
+
+  it("saves a candidate through the web and replays the same intent once", async () => {
+    const w = await setup(true, "Australia/Sydney", true); w.link();
+    const authority = { type: "EXPLICIT_USER_DEV" as const, confirmed: true as const, reference: "Synthetic candidate setup" };
+    const { candidate } = w.service.candidateService.recordCandidate({
+      provider: "seek", postingId: "seek-1", sourceUrl: "https://www.seek.com.au/job/1",
+      title: "Senior Engineer", company: "Acme", role: "Senior Engineer",
+      authority, idempotencyKey: randomUUID(),
+    });
+    const cookie = w.sessionCookie(await w.finish(await w.start()));
+    const session = await (await w.request("/api/v1/session", { headers: { cookie } })).json() as { csrfToken: string };
+    const intentKey = randomUUID();
+    const path = `/api/v1/job-search/candidates/${candidate.id}/decide`;
+    const options = { method: "POST", headers: { cookie, origin: webOrigin, "content-type": "application/json",
+      "x-csrf-token": session.csrfToken }, body: JSON.stringify({ action: "SAVE", expectedRecordVersion: 1, intentKey }) };
+
+    const beforePage = await (await w.request(`/workspace/job-search/jobs/${candidate.id}`, { headers: { cookie } })).text();
+    expect(beforePage).toContain("data-decide-candidate");
+
+    const saved = await w.request(path, options);
+    expect(saved.status).toBe(200);
+    expect(await saved.json()).toMatchObject({ changed: true, replayed: false,
+      candidate: { id: candidate.id, decision: "SAVED", recordVersion: 2 } });
+    const replay = await w.request(path, options);
+    expect(await replay.json()).toMatchObject({ changed: true, replayed: true,
+      candidate: { id: candidate.id, decision: "SAVED", recordVersion: 2 } });
+
+    expect(w.database.prepare(
+      "SELECT channel, authority_type, authority_reference, action FROM candidate_decisions WHERE candidate_id = ?",
+    ).all(candidate.id)).toEqual([{ channel: "WEB", authority_type: "EXPLICIT_USER_WEB",
+      authority_reference: `candidate-decision:${w.identity.principalId}:${intentKey}`, action: "SAVE" }]);
+    const afterPage = await (await w.request(`/workspace/job-search/jobs/${candidate.id}`, { headers: { cookie } })).text();
+    expect(afterPage).toContain("已收藏");
+    expect(afterPage).not.toContain('data-action="SAVE"');
+  });
+
+  it("links a candidate to an existing application through the web with CSRF and replay protection", async () => {
+    const w = await setup(true, "Australia/Sydney", true); w.link();
+    const authority = { type: "EXPLICIT_USER_DEV" as const, confirmed: true as const, reference: "Synthetic candidate link setup" };
+    const { candidate } = w.service.candidateService.recordCandidate({
+      provider: "seek", postingId: "seek-1", sourceUrl: "https://www.seek.com.au/job/1",
+      title: "Senior Engineer", company: "Acme", role: "Senior Engineer",
+      authority, idempotencyKey: randomUUID(),
+    });
+    const cookie = w.sessionCookie(await w.finish(await w.start()));
+    const session = await (await w.request("/api/v1/session", { headers: { cookie } })).json() as { csrfToken: string };
+    const intentKey = randomUUID();
+    const path = `/api/v1/job-search/candidates/${candidate.id}/link`;
+    const body = JSON.stringify({ projectId: w.projectId, intentKey });
+
+    const beforePage = await (await w.request(`/workspace/job-search/jobs/${candidate.id}`, { headers: { cookie } })).text();
+    expect(beforePage).toContain("data-link-candidate"); // the seeded application is selectable
+    expect((await w.request(path, { method: "POST", headers: { cookie, "content-type": "application/json",
+      "x-csrf-token": session.csrfToken }, body })).status).toBe(403);
+
+    const options = { method: "POST", headers: { cookie, origin: webOrigin, "content-type": "application/json",
+      "x-csrf-token": session.csrfToken }, body };
+    const linked = await w.request(path, options);
+    expect(linked.status).toBe(200);
+    expect(await linked.json()).toMatchObject({ changed: true, replayed: false,
+      candidate: { id: candidate.id, linkedProjectId: w.projectId } });
+    const replay = await w.request(path, options);
+    expect(await replay.json()).toMatchObject({ changed: true, replayed: true,
+      candidate: { id: candidate.id, linkedProjectId: w.projectId } });
+
+    expect(w.database.prepare(
+      "SELECT channel, authority_type, authority_reference, project_id FROM candidate_links WHERE candidate_id = ?",
+    ).all(candidate.id)).toEqual([{ channel: "WEB", authority_type: "EXPLICIT_USER_WEB",
+      authority_reference: `candidate-link:${w.identity.principalId}:${intentKey}`, project_id: w.projectId }]);
+    const afterPage = await (await w.request(`/workspace/job-search/jobs/${candidate.id}`, { headers: { cookie } })).text();
+    expect(afterPage).toContain("查看已关联申请");
+    expect(afterPage).not.toContain("data-link-candidate");
+  });
 });

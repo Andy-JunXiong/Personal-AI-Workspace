@@ -1,7 +1,7 @@
 import type { WorkspaceService } from "../application/workspace-service.js";
 import type { ReadPage } from "../application/read-pagination.js";
 import type { ApplicationListItem } from "../application/job-search-query-service.js";
-import type { ResourceRecord, TaskRecord, TransitionRecord } from "../domain/types.js";
+import type { JobCandidateRecord, ResourceRecord, TaskRecord, TransitionRecord } from "../domain/types.js";
 
 export const rootPath = "/workspace/job-search";
 export const escapeHtml = (value: unknown): string => String(value ?? "").replace(/[&<>"']/gu,
@@ -14,11 +14,15 @@ const labels: Record<string, string> = {
   LOW: "低优先级", MEDIUM: "中优先级", HIGH: "高优先级", CRITICAL: "最高优先级",
   OVERDUE: "已逾期", DUE_TODAY: "今天到期", HIGH_PRIORITY: "高优先级", OPEN: "待处理",
   ACTIVE: "进行中", PAUSED: "已暂停", CLOSED: "已关闭", ALL: "全部",
+  UNREVIEWED: "待考虑", SAVED: "已收藏", DISMISSED: "已忽略",
 };
 const label = (value: string): string => labels[value] ?? value;
 const chip = (value: string, text = label(value)): string => `<span class="chip ${["DONE", "ACCEPTED"].includes(value) ? "good" : ["OVERDUE", "BLOCKED"].includes(value) ? "warn" : ""}">${e(text)}</span>`;
 const appLink = (id: string): string => `${rootPath}/applications/${encodeURIComponent(id)}`;
 const taskLink = (id: string): string => `${rootPath}/tasks/${encodeURIComponent(id)}`;
+const candidateLink = (id: string): string => `${rootPath}/jobs/${encodeURIComponent(id)}`;
+const fitUncertaintyLabel = (value: string): string => ({ LOW: "低不确定性", MEDIUM: "中等不确定性", HIGH: "高不确定性", UNKNOWN: "不确定性未知" })[value] ?? value;
+const sourceAvailabilityLabel = (value: string): string => ({ AVAILABLE: "来源可用", UNAVAILABLE: "来源已失效", UNKNOWN: "来源状态未知" })[value] ?? value;
 function date(value: string | null, zone: string): string {
   if (!value) return "未设截止时间";
   const parsed = new Date(value);
@@ -34,9 +38,10 @@ function heading(kicker: string, title: string, description: string): string {
 function freshness(asOf: string, zone: string): string {
   return `<p class="freshness">上次读取 <time datetime="${e(asOf)}">${e(date(asOf, zone))}</time><span>${e(zone)}</span></p>`;
 }
-function contextCopy(kind: "Application" | "Task", id: string): string {
+function contextCopy(kind: "Application" | "Task" | "Candidate", id: string): string {
   const text = kind === "Task" ? `请从 Personal AI Workspace 读取 Task ${id} 的最新状态、完成时间和版本，再帮我继续处理。`
-    : `请从 Personal AI Workspace 读取 Application / Project ${id} 的最新状态与任务，再帮我判断下一步。`;
+    : kind === "Candidate" ? `请从 Personal AI Workspace 读取 Candidate ${id} 的最新决策、来源与关联申请，再帮我继续处理。`
+      : `请从 Personal AI Workspace 读取 Application / Project ${id} 的最新状态与任务，再帮我判断下一步。`;
   return `<section class="context-box"><div><h2>带回 ChatGPT 继续</h2><p>复制这段引用到新对话，读取最新工作状态。</p></div><button type="button" class="button secondary" data-copy>复制引用</button><label class="sr-only" for="context-reference">可手动选取的上下文引用</label><textarea id="context-reference" readonly rows="3">${e(text)}</textarea></section>`;
 }
 function pageUrl(path: string, query: Record<string, unknown>): string {
@@ -50,7 +55,7 @@ function pagination<T>(page: ReadPage<T>, path: string, query: Record<string, un
 }
 
 export function document(title: string, content: string, authenticated: boolean, active = "today"): string {
-  return `<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>${e(title)} · Workspace</title><link rel="stylesheet" href="/assets/workspace.css"><script type="module" src="/assets/workspace.js"></script></head><body data-authenticated="${authenticated}"><a class="skip" href="#main">跳到主要内容</a><aside class="sidebar"><a class="brand" href="${rootPath}/today"><span class="brand-mark" aria-hidden="true">w.</span><span>Workspace<small>你的持续工作空间</small></span></a><p class="nav-label">JOB SEARCH / 求职</p><nav aria-label="主要导航"><a href="${rootPath}/today"${active === "today" ? ' aria-current="page"' : ""}><span aria-hidden="true">◷</span> 今天 <small>Today</small></a><a href="${rootPath}/applications"${active === "applications" ? ' aria-current="page"' : ""}><span aria-hidden="true">▤</span> 我的申请</a></nav><div class="sidebar-foot"><span class="connection-dot" aria-hidden="true"></span>同一份工作状态<p>查看进展，然后继续下一步。</p>${authenticated ? '<button type="button" class="text-button" data-logout>退出登录</button>' : ""}</div></aside><div class="workspace"><div class="topbar"><span>个人工作空间 <span class="slash">/</span> 求职</span><span class="view-label">查看模式</span></div><div id="notice" class="notice" role="status" aria-live="polite" hidden></div><main id="main" tabindex="-1">${content}</main><footer>对话帮助你思考，Workspace 保存工作进度。</footer></div></body></html>`;
+  return `<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>${e(title)} · Workspace</title><link rel="stylesheet" href="/assets/workspace.css"><script type="module" src="/assets/workspace.js"></script></head><body data-authenticated="${authenticated}"><a class="skip" href="#main">跳到主要内容</a><aside class="sidebar"><a class="brand" href="${rootPath}/today"><span class="brand-mark" aria-hidden="true">w.</span><span>Workspace<small>你的持续工作空间</small></span></a><p class="nav-label">JOB SEARCH / 求职</p><nav aria-label="主要导航"><a href="${rootPath}/today"${active === "today" ? ' aria-current="page"' : ""}><span aria-hidden="true">◷</span> 今天 <small>Today</small></a><a href="${rootPath}/jobs"${active === "jobs" ? ' aria-current="page"' : ""}><span aria-hidden="true">◇</span> 职位 <small>Jobs</small></a><a href="${rootPath}/applications"${active === "applications" ? ' aria-current="page"' : ""}><span aria-hidden="true">▤</span> 我的申请</a></nav><div class="sidebar-foot"><span class="connection-dot" aria-hidden="true"></span>同一份工作状态<p>查看进展，然后继续下一步。</p>${authenticated ? '<button type="button" class="text-button" data-logout>退出登录</button>' : ""}</div></aside><div class="workspace"><div class="topbar"><span>个人工作空间 <span class="slash">/</span> 求职</span><span class="view-label">查看模式</span></div><div id="notice" class="notice" role="status" aria-live="polite" hidden></div><main id="main" tabindex="-1">${content}</main><footer>对话帮助你思考，Workspace 保存工作进度。</footer></div></body></html>`;
 }
 
 export function loginView(returnTo: string): string {
@@ -141,4 +146,44 @@ export function taskView(service: WorkspaceService, id: string, zone: string, as
   const terminal = task.status === "DONE" || task.status === "CANCELLED";
   const action = terminal || !completionEnabled ? "" : `<div class="task-actions"><button type="button" class="button primary" data-complete-task data-task-id="${e(task.id)}" data-record-version="${task.recordVersion}">标记为已完成</button></div>`;
   return document("任务详情", `<a class="back-link" href="${appLink(task.projectId)}">← ${e(project.metadata.company)} · ${e(project.metadata.role)}</a>${heading("TASK / 任务", task.title, "任务状态来自 Workspace 的最新记录。")}${freshness(asOf, zone)}<section class="panel task-detail"><div class="chips">${chip(task.status)}${chip(task.priority)}</div><dl class="facts"><div><dt>截止时间</dt><dd>${e(date(task.dueAt, zone))}</dd></div><div><dt>完成时间</dt><dd>${task.completedAt ? e(date(task.completedAt, zone)) : "尚无完成记录"}</dd></div><div><dt>最近更新</dt><dd>${e(date(task.updatedAt, zone))}</dd></div></dl><p class="section-intro">${terminal ? "这项任务已结束。如需继续同类工作，请在 ChatGPT 中创建新任务。" : "完成后，这项任务会保留在申请记录中。"}</p>${action}</section>${contextCopy("Task", id)}`, true, "applications");
+}
+
+export function candidateListView(service: WorkspaceService, query: Record<string, string | number>, zone: string): string {
+  const page = service.jobSearchQueryService.listCandidates(query);
+  const decision = String(query.decision ?? "ALL"), linked = String(query.linked ?? "ALL");
+  const rows = page.items.map((candidate: JobCandidateRecord) => {
+    const source = safeExternalUrl(candidate.sourceUrl);
+    return `<article class="candidate-row"><div class="grow"><p class="overline">${e(candidate.company)}${candidate.location ? ` · ${e(candidate.location)}` : ""}</p><h2><a href="${candidateLink(candidate.id)}">${e(candidate.role)}</a></h2><p class="muted">${e(candidate.title)}</p>${candidate.fitReason ? `<p class="advisory">${e(candidate.fitReason)}</p>` : ""}</div><div class="row-status">${chip(candidate.decision)}${candidate.linkedProjectId ? `<a class="text-link" href="${appLink(candidate.linkedProjectId)}">已关联申请 ↗</a>` : `<span class="muted">未关联</span>`}${source ? `<a class="text-link" href="${e(source)}" target="_blank" rel="noopener noreferrer">职位来源 ↗</a>` : ""}</div></article>`;
+  }).join("");
+  return document("职位", `${heading("JOBS / 职位", "候选职位，逐条决定", "收藏、忽略或关联到实际申请；决策会跨对话保留。")}${freshness(page.asOf, zone)}<form class="filters" method="get" data-filter-form><label class="search-label">搜索公司、职位或标题<input type="search" name="q" value="${e(query.q ?? "")}" placeholder="公司、职位、标题关键词" maxlength="500"></label><label>决策<select name="decision">${["UNREVIEWED", "SAVED", "DISMISSED", "ALL"].map((x) => option(x, x === "ALL" ? "全部决策" : label(x), decision)).join("")}</select></label><label>关联<select name="linked">${option("ALL", "全部", linked)}${option("UNLINKED", "未关联", linked)}${option("LINKED", "已关联", linked)}</select></label><button class="button primary" type="submit">应用筛选</button></form><section class="panel"><header class="section-heading"><h2>候选职位 <span class="count">${page.totalCount}</span></h2></header><div data-page-items>${rows || empty("当前范围没有候选职位", "调整筛选，或在 ChatGPT 中记录新的候选职位。")}</div>${pagination(page, `${rootPath}/jobs`, query)}</section>`, true, "jobs");
+}
+
+export function candidateView(service: WorkspaceService, id: string, zone: string, asOf: string,
+  writesEnabled = false): string {
+  const candidate = service.jobSearchQueryService.getCandidate(id);
+  const source = safeExternalUrl(candidate.sourceUrl);
+  const decisionActions: Array<{ action: "SAVE" | "DISMISS" | "RESTORE"; label: string }> = [];
+  if (candidate.decision !== "SAVED") decisionActions.push({ action: "SAVE", label: "收藏" });
+  if (candidate.decision !== "DISMISSED") decisionActions.push({ action: "DISMISS", label: "忽略" });
+  if (candidate.decision !== "UNREVIEWED") decisionActions.push({ action: "RESTORE", label: "恢复待考虑" });
+
+  const actions = writesEnabled && decisionActions.length
+    ? `<div class="candidate-actions">${decisionActions.map((a) =>
+        `<button type="button" class="button secondary" data-decide-candidate data-candidate-id="${e(candidate.id)}" data-action="${a.action}" data-record-version="${candidate.recordVersion}">${e(a.label)}</button>`).join("")}</div>`
+    : "";
+
+  let linkControl = "";
+  if (writesEnabled && !candidate.linkedProjectId) {
+    const { applications } = service.listJobApplications(false);
+    const options = applications.map((a) => `<option value="${e(a.projectId)}">${e(a.company)} · ${e(a.role)}</option>`).join("");
+    linkControl = `<div class="candidate-link"><p class="section-intro">已实际投递后，选择对应的申请并关联。关联不会新建申请，也不会改变收藏/忽略决策。</p>${applications.length
+      ? `<label>选择已记录的申请<select name="projectId" data-link-target>${options}</select></label><button type="button" class="button primary" data-link-candidate data-candidate-id="${e(candidate.id)}">记录已投递并关联</button>`
+      : '<p class="muted">尚未记录任何进行中的申请。请先在 ChatGPT 中记录投递，再回到这里关联。</p>'}</div>`;
+  }
+
+  const linked = candidate.linkedProjectId
+    ? `<a class="text-link" href="${appLink(candidate.linkedProjectId)}">查看已关联申请 ↗</a>`
+    : "";
+
+  return document("职位详情", `<a class="back-link" href="${rootPath}/jobs">← 职位列表</a>${heading(candidate.company, candidate.role, candidate.title)}${freshness(asOf, zone)}<div class="detail-summary"><div>${chip(candidate.decision)}<p class="muted">当前决策</p></div><div><strong>${e(sourceAvailabilityLabel(candidate.sourceAvailability))}</strong><p>来源状态</p></div><div><strong>${candidate.linkedProjectId ? "已关联" : "未关联"}</strong><p>关联申请</p></div></div><section class="panel"><dl class="facts"><div><dt>公司</dt><dd>${e(candidate.company)}</dd></div><div><dt>职位</dt><dd>${e(candidate.role)}</dd></div><div><dt>地点</dt><dd>${candidate.location ? e(candidate.location) : "未提供"}</dd></div><div><dt>来源</dt><dd>${source ? `<a class="text-link" href="${e(source)}" target="_blank" rel="noopener noreferrer">打开职位来源 ↗</a>` : e(candidate.provider)}</dd></div><div><dt>匹配建议</dt><dd>${candidate.fitReason ? e(candidate.fitReason) : "未提供建议"}</dd></div><div><dt>建议不确定性</dt><dd>${e(fitUncertaintyLabel(candidate.fitUncertainty))}</dd></div><div><dt>最近更新</dt><dd>${e(date(candidate.updatedAt, zone))}</dd></div></dl>${linked ? `<p class="section-intro">${linked}</p>` : ""}${actions}${linkControl}</section>${contextCopy("Candidate", id)}`, true, "jobs");
 }

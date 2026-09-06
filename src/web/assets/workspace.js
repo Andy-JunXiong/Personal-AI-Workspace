@@ -4,7 +4,11 @@ const notice = /** @type {HTMLElement} */ (document.querySelector('#notice'));
 let dirty = false;
 let loggingOut = false;
 let completing = false;
+let deciding = false;
+let linking = false;
 const completionIntents = new Map();
+const decisionIntents = new Map();
+const linkIntents = new Map();
 /** @type {AbortController | undefined} */
 let pending;
 
@@ -81,6 +85,104 @@ async function completeTask(control) {
     }
   }
 }
+/** @param {HTMLButtonElement} control */
+async function decideCandidate(control) {
+  if (deciding || !navigator.onLine) {
+    if (!navigator.onLine) announce('网络已断开，联网后再修改决策。');
+    return;
+  }
+  const candidateId = control.dataset.candidateId;
+  const action = control.dataset.action;
+  const expectedRecordVersion = Number(control.dataset.recordVersion);
+  if (!candidateId || !action || !Number.isInteger(expectedRecordVersion)) return;
+  const intentSlot = `${candidateId}:${action}:${expectedRecordVersion}`;
+  const intentKey = decisionIntents.get(intentSlot) ?? crypto.randomUUID();
+  decisionIntents.set(intentSlot, intentKey);
+  deciding = true;
+  control.disabled = true;
+  control.setAttribute('aria-busy', 'true');
+  announce('正在保存决策…');
+  try {
+    const session = await fetch('/api/v1/session', { cache: 'no-store', signal: AbortSignal.timeout(15000) });
+    if (session.status === 401) { main.replaceChildren(); location.replace(location.pathname); return; }
+    if (!session.ok) throw new Error('session unavailable');
+    const { csrfToken } = await session.json();
+    const response = await fetch(`/api/v1/job-search/candidates/${encodeURIComponent(candidateId)}/decide`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'x-csrf-token': csrfToken },
+      body: JSON.stringify({ action, expectedRecordVersion, intentKey }),
+      signal: AbortSignal.timeout(15000),
+    });
+    if (response.status === 401) { main.replaceChildren(); location.replace(location.pathname); return; }
+    if (response.status === 409 || response.status === 422) {
+      decisionIntents.delete(intentSlot);
+      announce('决策已在别处更新，正在读取最新状态。');
+      await readPage(firstPageUrl());
+      return;
+    }
+    if (!response.ok) throw new Error('decision unavailable');
+    decisionIntents.delete(intentSlot);
+    await readPage(firstPageUrl());
+    announce('决策已保存。');
+  } catch {
+    announce('尚未确认保存结果。请重试同一操作，或刷新查看最新状态。');
+  } finally {
+    deciding = false;
+    if (control.isConnected) {
+      control.disabled = !navigator.onLine;
+      control.removeAttribute('aria-busy');
+    }
+  }
+}
+/** @param {HTMLButtonElement} control */
+async function linkCandidate(control) {
+  if (linking || !navigator.onLine) {
+    if (!navigator.onLine) announce('网络已断开，联网后再关联申请。');
+    return;
+  }
+  const candidateId = control.dataset.candidateId;
+  const select = /** @type {HTMLSelectElement | null} */ (main.querySelector('[data-link-target]'));
+  const projectId = select?.value;
+  if (!candidateId || !projectId) return;
+  const intentSlot = `${candidateId}:${projectId}`;
+  const intentKey = linkIntents.get(intentSlot) ?? crypto.randomUUID();
+  linkIntents.set(intentSlot, intentKey);
+  linking = true;
+  control.disabled = true;
+  control.setAttribute('aria-busy', 'true');
+  announce('正在关联申请…');
+  try {
+    const session = await fetch('/api/v1/session', { cache: 'no-store', signal: AbortSignal.timeout(15000) });
+    if (session.status === 401) { main.replaceChildren(); location.replace(location.pathname); return; }
+    if (!session.ok) throw new Error('session unavailable');
+    const { csrfToken } = await session.json();
+    const response = await fetch(`/api/v1/job-search/candidates/${encodeURIComponent(candidateId)}/link`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'x-csrf-token': csrfToken },
+      body: JSON.stringify({ projectId, intentKey }),
+      signal: AbortSignal.timeout(15000),
+    });
+    if (response.status === 401) { main.replaceChildren(); location.replace(location.pathname); return; }
+    if (response.status === 409 || response.status === 422) {
+      linkIntents.delete(intentSlot);
+      announce('关联未能完成，正在读取最新状态。');
+      await readPage(firstPageUrl());
+      return;
+    }
+    if (!response.ok) throw new Error('link unavailable');
+    linkIntents.delete(intentSlot);
+    await readPage(firstPageUrl());
+    announce('已关联申请。');
+  } catch {
+    announce('尚未确认关联结果。请重试同一操作，或刷新查看最新状态。');
+  } finally {
+    linking = false;
+    if (control.isConnected) {
+      control.disabled = !navigator.onLine;
+      control.removeAttribute('aria-busy');
+    }
+  }
+}
 /** @param {URL} url @param {boolean} [append] */
 async function readPage(url, append = false) {
   if (loggingOut || document.body.dataset.authenticated !== 'true') return;
@@ -151,6 +253,10 @@ document.addEventListener('click', async (event) => {
   if (!control) return;
   if (control instanceof HTMLButtonElement && control.matches('[data-complete-task]')) {
     await completeTask(control);
+  } else if (control instanceof HTMLButtonElement && control.matches('[data-decide-candidate]')) {
+    await decideCandidate(control);
+  } else if (control instanceof HTMLButtonElement && control.matches('[data-link-candidate]')) {
+    await linkCandidate(control);
   } else if (control.matches('[data-refresh]')) {
     if (dirty) { announce('请先应用筛选条件，再刷新状态。'); return; }
     void readPage(firstPageUrl());
@@ -194,13 +300,13 @@ document.addEventListener('visibilitychange', () => {
   }
 });
 window.addEventListener('offline', () => {
-  for (const control of document.querySelectorAll('[data-complete-task]')) {
+  for (const control of document.querySelectorAll('[data-complete-task], [data-decide-candidate], [data-link-candidate]')) {
     if (control instanceof HTMLButtonElement) control.disabled = true;
   }
   announce('网络已断开，当前内容可能已过时。联网后可刷新。');
 });
 window.addEventListener('online', () => {
-  for (const control of document.querySelectorAll('[data-complete-task]')) {
+  for (const control of document.querySelectorAll('[data-complete-task], [data-decide-candidate], [data-link-candidate]')) {
     if (control instanceof HTMLButtonElement) control.disabled = false;
   }
   void resume();

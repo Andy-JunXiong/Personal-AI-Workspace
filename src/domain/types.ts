@@ -144,3 +144,33 @@ export interface JobCandidateRecord {
   createdAt: string;
   updatedAt: string;
 }
+
+export type CoverageStatus = "COMPLETE" | "PARTIAL" | "FAILED" | "UNKNOWN";
+
+export type DeliveryStatus = "DELIVERED" | "ATTEMPTED" | "UNKNOWN";
+
+export interface RecommendationRunRecord {
+  id: string;
+  workspaceId: string;
+  provider: string;
+  runReference: string | null;
+  runAt: string;
+  coverageStatus: CoverageStatus;
+  deliveryStatus: DeliveryStatus;
+  coverageNote: string | null;
+  itemCount: number;
+  retentionUntil: string | null;
+  recordedAt: string;
+}
+
+export interface RecommendationRunItem {
+  candidateId: string;
+  position: number;
+  fitReason: string | null;
+  fitUncertainty: FitUncertainty;
+  sourceAvailability: SourceAvailability;
+}
+
+export interface RecommendationRunDetails extends RecommendationRunRecord {
+  items: RecommendationRunItem[];
+}

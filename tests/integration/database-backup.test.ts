@@ -81,6 +81,8 @@ describe("SQLite-consistent cloud backup", () => {
         "004_web_identity_links.sql",
         "005_task_command_audit.sql",
         "006_job_candidates.sql",
+        "007_candidate_links.sql",
+        "008_recommendation_runs.sql",
       ],
     });
   });
