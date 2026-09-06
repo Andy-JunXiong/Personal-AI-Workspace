@@ -1,7 +1,8 @@
 # S1-05B.2 AI Radar Domain Ingress Results v0.1
 
-**Status:** Route 53/Caddy release package implemented and locally verified;
-AWS, DNS, TLS and public acceptance are pending.
+**Status:** Route 53/Caddy read-only publication, Google identity mapping and
+database-copy recovery rehearsal passed on 2026-09-06. Capacity, synthetic
+completion, cross-entry readback and iPhone acceptance remain pending.
 
 ## Continuity and benefits
 
@@ -24,11 +25,10 @@ TLS state, identity links or Workspace data.
 
 ### Downstream enablement
 
-This enables AWS operator binding: attach a static IPv4, add only the
-`workspace` Route 53 record, permit only TCP 443, install the accepted package,
-start read mode and run external HTTPS checks. Google client creation, identity
-linking, recovery/capacity rehearsal, synthetic completion and iPhone acceptance
-remain pending.
+This enables the capacity and controlled synthetic-completion gate on the
+accepted read-only deployment. Browser writes remain disabled until a named
+synthetic Task, backup, concurrent-load measurement and exact MCP readback are
+authorized and prepared. iPhone acceptance remains downstream of those checks.
 
 ### Short-term benefits
 
@@ -109,3 +109,34 @@ the deliberately non-traversable `/etc/paw` application configuration
 directory. Rather than weaken that directory, the reviewed Caddyfile now uses
 the package-standard `/etc/caddy/paw.Caddyfile` location. Application settings
 and credentials remain under the restricted `/etc/paw` boundary.
+
+## External read-only acceptance
+
+The accepted external binding uses a Lightsail static IPv4, an authoritative
+Route 53 `A` record for only the `workspace` hostname and a public firewall rule
+for only IPv4 TCP 443. Caddy `v2.11.4` is package-held; its generic service is
+disabled and the dedicated ingress service is active. Port 80 is closed and the
+MCP/Web application ports remain published only on host loopback.
+
+The privacy-bounded external release checker passed all five writes-off checks
+before and after identity linking: signed-out policy, public route isolation,
+write-mode isolation, OAuth start/PKCE/session contract and unsafe-return
+rejection. Direct external probes also returned 404 for MCP, health and guessed
+administration routes. Application restart and a complete VM reboot preserved
+MCP, Web and ingress health.
+
+The reviewed Google test identity first reached the expected unlinked 403. A
+short-lived Pending ID was inspected only on the VM, the verified email and
+existing MCP Workspace target were separately confirmed, and the association
+was written with its audit event. Bootstrap was disabled immediately afterward.
+A fresh browser login then rendered the original Workspace in read mode. No
+identity value or Workspace content is retained in this evidence.
+
+The post-link backup `workspace-20260906T094539Z.db` passed SQLite integrity and
+contained migrations 001 through 005. Commit `e54e083` added a fail-closed
+database-copy rehearsal. On the VM, active image `9303de5` and preceding image
+`520b14b` each became healthy against a private copy with no network or host
+ports. Both retained the same 13-table/183-row logical fingerprint before and
+after startup and passed integrity verification; sampled container memory was
+34.81 MiB and 34.9 MiB respectively. The live database and container were not
+modified, and the HTTPS ingress health check passed immediately afterward.
