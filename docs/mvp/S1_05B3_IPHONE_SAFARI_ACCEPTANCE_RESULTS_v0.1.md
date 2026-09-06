@@ -90,7 +90,8 @@ retained it.
   MCP apps as unavailable on mobile, so the direct-Web read and the ChatGPT Web
   MCP readback are kept as separate evidence. If strict G08 still requires a
   completion made on iPhone, a new synthetic fixture and explicit authorization
-  to temporarily enable writes are required first.
+  to temporarily enable writes are required first; that procedure is recorded in
+  the [S1-05B.4 iPhone completion plan](S1_05B4_IPHONE_COMPLETION_PLAN_v0.1.md).
 
 ## Verification
 

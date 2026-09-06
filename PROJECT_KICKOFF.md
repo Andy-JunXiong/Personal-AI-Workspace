@@ -172,7 +172,8 @@ Google OAuth client remain external prerequisites; browser writes remain off.
 S1-05B public login, recovery/capacity, Safari/iPhone and cloud publication
 acceptance passed on 2026-09-06, including the Windows-PC-OFF iPhone Safari
 direct-Web read ([S1-05B.3](docs/mvp/S1_05B3_IPHONE_SAFARI_ACCEPTANCE_RESULTS_v0.1.md)).
-An iPhone *completion* remains a separate, separately authorized decision.
+An iPhone *completion* remains a separate, separately authorized step, recorded
+in the [S1-05B.4 plan](docs/mvp/S1_05B4_IPHONE_COMPLETION_PLAN_v0.1.md).
 Existing cloud acceptance is complete and does not
 substitute for M4 Day 2 actual job-search use and user-observed effort/actionability.
 

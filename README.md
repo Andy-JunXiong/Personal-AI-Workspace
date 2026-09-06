@@ -184,7 +184,9 @@ one authorized synthetic browser completion and fresh ChatGPT exact-Task
 readback have passed. The deployment is back in read mode; the
 Windows-PC-OFF iPhone Safari direct-Web read has since passed over cellular
 (see [S1-05B.3](docs/mvp/S1_05B3_IPHONE_SAFARI_ACCEPTANCE_RESULTS_v0.1.md)).
-The exact stop state and resume sequence are recorded in the
+An iPhone *completion* (strict G08) is the remaining S1 item, recorded in the
+[S1-05B.4 plan](docs/mvp/S1_05B4_IPHONE_COMPLETION_PLAN_v0.1.md). The exact stop
+state and resume sequence are recorded in the
 [2026-09-06 S1 handoff](docs/mvp/S1_HANDOFF_2026-09-06.md).
 
 The first recommendation-continuity increment is
