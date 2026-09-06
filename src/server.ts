@@ -52,7 +52,7 @@ if (webConfig) {
         bootstrapEnabled: selected.bootstrapEnabled, writesEnabled: selected.writesEnabled,
         timeZone: config.timeZone });
       // Local S1 only: no Docker/public ingress change accompanies this listener.
-      webServer = web.listen(selected.port, "127.0.0.1");
+      webServer = web.listen(selected.port, selected.bindHost);
       webServer.on("error", () => {
         console.error(JSON.stringify({ level: "error", event: "web_listener_failed" }));
       });

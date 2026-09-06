@@ -4,6 +4,7 @@ import { isAbsolute } from "node:path";
 export interface WebConfig {
   origin: string;
   port: number;
+  bindHost: "127.0.0.1" | "0.0.0.0";
   clientId: string;
   clientSecret: string;
   bootstrapEnabled: boolean;
@@ -30,6 +31,10 @@ export function loadWebConfig(environment: NodeJS.ProcessEnv = process.env): Web
   if (!/^\d+$/u.test(portValue) || port < 1 || port > 65_535) {
     throw new Error("Invalid PAW_WEB_PORT");
   }
+  const bindHost = environment.PAW_WEB_BIND_HOST ?? "127.0.0.1";
+  if (bindHost !== "127.0.0.1" && bindHost !== "0.0.0.0") {
+    throw new Error("PAW_WEB_BIND_HOST must be 127.0.0.1 or 0.0.0.0");
+  }
   const clientId = environment.PAW_GOOGLE_CLIENT_ID?.trim();
   if (!clientId) throw new Error("PAW_GOOGLE_CLIENT_ID is required");
   const secretFile = environment.PAW_GOOGLE_CLIENT_SECRET_FILE;
@@ -42,6 +47,6 @@ export function loadWebConfig(environment: NodeJS.ProcessEnv = process.env): Web
   if (!clientSecret || clientSecret.length > 16_384 || /\s/u.test(clientSecret)) {
     throw new Error("Invalid Google client secret file contents");
   }
-  return { origin, port, clientId, clientSecret, writesEnabled,
+  return { origin, port, bindHost, clientId, clientSecret, writesEnabled,
     bootstrapEnabled: flag(environment.PAW_WEB_BOOTSTRAP_ENABLED, "PAW_WEB_BOOTSTRAP_ENABLED") };
 }

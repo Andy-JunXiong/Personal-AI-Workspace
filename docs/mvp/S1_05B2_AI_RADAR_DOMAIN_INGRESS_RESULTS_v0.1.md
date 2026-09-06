@@ -89,3 +89,10 @@ environment filename. The corrected contract discovers exactly one readable
 provider environment from the Route 53 and Cloudflare alternatives and fails
 when neither or both exist. This keeps the providers mutually exclusive while
 allowing the selected Route 53 path to pass the same application health gate.
+
+The next VM check confirmed the Web process answered inside the container while
+the host-side loopback publication reset connections. The application had bound
+only the container loopback address, which Docker's forwarding path cannot
+reach. The corrected runtime keeps local development on `127.0.0.1`, permits
+only the Docker overlay to bind the container interface, and preserves the host
+publication at `127.0.0.1:3001`.

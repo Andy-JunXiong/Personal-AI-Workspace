@@ -18,6 +18,7 @@ describe("cloud Web deployment contract", () => {
     const compose = read("deploy/cloud/compose.web.yaml");
     expect(compose).toContain('PAW_WEB_ENABLED: "true"');
     expect(compose).toContain('PAW_WEB_WRITES_ENABLED: "false"');
+    expect(compose).toContain('PAW_WEB_BIND_HOST: "0.0.0.0"');
     expect(compose).toContain('"127.0.0.1:3001:3001"');
     expect(compose).not.toContain("0.0.0.0:");
     expect(compose).toContain("source: /etc/paw/secrets/google-client-secret");

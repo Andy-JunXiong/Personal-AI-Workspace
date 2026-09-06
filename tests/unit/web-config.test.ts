@@ -19,12 +19,15 @@ it("loads a private secret file without accepting URL credentials, paths or loos
   const secret = join(directory, "client-secret"); writeFileSync(secret, "synthetic-secret\n");
   const environment = { PAW_WEB_ENABLED: "true", PAW_WEB_ORIGIN: "https://workspace.example.test",
     PAW_GOOGLE_CLIENT_ID: "synthetic-client", PAW_GOOGLE_CLIENT_SECRET_FILE: secret };
-  expect(loadWebConfig(environment)).toMatchObject({ port: 3001, bootstrapEnabled: false,
+  expect(loadWebConfig(environment)).toMatchObject({ port: 3001, bindHost: "127.0.0.1", bootstrapEnabled: false,
     writesEnabled: false, clientSecret: "synthetic-secret" });
+  expect(loadWebConfig({ ...environment, PAW_WEB_BIND_HOST: "0.0.0.0" }))
+    .toMatchObject({ bindHost: "0.0.0.0" });
   expect(loadWebConfig({ ...environment, PAW_WEB_WRITES_ENABLED: "true" })).toMatchObject({ writesEnabled: true });
   for (const origin of ["https://workspace.example.test/", "https://user:pass@workspace.example.test", "https://workspace.example.test/path"]) {
     expect(() => loadWebConfig({ ...environment, PAW_WEB_ORIGIN: origin })).toThrow(/exact HTTPS/u);
   }
   expect(() => loadWebConfig({ ...environment, PAW_WEB_PORT: "3001suffix" })).toThrow(/PORT/u);
+  expect(() => loadWebConfig({ ...environment, PAW_WEB_BIND_HOST: "192.0.2.1" })).toThrow(/BIND_HOST/u);
   expect(() => loadWebConfig({ ...environment, PAW_GOOGLE_CLIENT_SECRET_FILE: "relative-secret" })).toThrow(/absolute/u);
 });

@@ -194,6 +194,9 @@ sudo ./deploy/cloud/web-health.sh
 Expected host listeners are loopback-only on 3000 and 3001. `web-health.sh`
 sends the canonical Host header and requires the signed-out Today page to return
 401 with `no-store`, CSP and `nosniff`. It does not make an external request.
+The Web process binds `0.0.0.0` only inside its isolated container so Docker can
+forward traffic to it; the Compose host publication remains
+`127.0.0.1:3001:3001`. Never publish the host side on all interfaces.
 
 For the alternative Cloudflare path, validate and start only the tunnel:
 
