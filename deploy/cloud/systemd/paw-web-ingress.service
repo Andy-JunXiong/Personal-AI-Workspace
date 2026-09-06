@@ -12,8 +12,8 @@ EnvironmentFile=/etc/paw/web-ingress.env
 Environment=XDG_DATA_HOME=/var/lib/paw-web-ingress
 Environment=XDG_CONFIG_HOME=/var/lib/paw-web-ingress/config
 ExecStartPre=/opt/paw/deploy/cloud/web-health.sh
-ExecStartPre=/usr/bin/caddy validate --config /etc/paw/Caddyfile --adapter caddyfile
-ExecStart=/usr/bin/caddy run --config /etc/paw/Caddyfile --adapter caddyfile
+ExecStartPre=/usr/bin/caddy validate --config /etc/caddy/paw.Caddyfile --adapter caddyfile
+ExecStart=/usr/bin/caddy run --config /etc/caddy/paw.Caddyfile --adapter caddyfile
 Restart=on-failure
 RestartSec=2s
 TimeoutStopSec=30s

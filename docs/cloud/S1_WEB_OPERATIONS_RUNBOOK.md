@@ -162,7 +162,7 @@ environment:
 
 ```bash
 sudo systemctl disable --now caddy.service
-sudo install -o root -g root -m 0644 deploy/cloud/caddy/Caddyfile /etc/paw/Caddyfile
+sudo install -o root -g root -m 0644 deploy/cloud/caddy/Caddyfile /etc/caddy/paw.Caddyfile
 sudo install -o root -g root -m 0640 deploy/cloud/web-ingress.env.example /etc/paw/web-ingress.env
 sudo install -o root -g root -m 0644 deploy/cloud/systemd/paw-web-ingress.service \
   /etc/systemd/system/paw-web-ingress.service

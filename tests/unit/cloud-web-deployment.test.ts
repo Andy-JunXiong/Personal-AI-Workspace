@@ -97,7 +97,7 @@ describe("cloud Web deployment contract", () => {
     expect(config).not.toMatch(/(^|\n)\s*log\s*\{/u);
     expect(service).toContain("DynamicUser=yes");
     expect(service).toContain("EnvironmentFile=/etc/paw/web-ingress.env");
-    expect(service).toContain("caddy validate --config /etc/paw/Caddyfile --adapter caddyfile");
+    expect(service).toContain("caddy validate --config /etc/caddy/paw.Caddyfile --adapter caddyfile");
     expect(service).not.toContain("--envfile");
     expect(service).toContain("CapabilityBoundingSet=CAP_NET_BIND_SERVICE");
     expect(service).toContain("NoNewPrivileges=yes");

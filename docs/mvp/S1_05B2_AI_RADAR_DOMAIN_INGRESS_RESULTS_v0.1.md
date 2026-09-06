@@ -103,3 +103,9 @@ file during Caddy validation. systemd had already loaded that file through the
 unit's `EnvironmentFile` directive. Removing the redundant Caddy `--envfile`
 argument preserves the private file boundary while supplying the same validated
 variables to both pre-start validation and the running process.
+
+The following start failed closed because the non-secret Caddyfile was beneath
+the deliberately non-traversable `/etc/paw` application configuration
+directory. Rather than weaken that directory, the reviewed Caddyfile now uses
+the package-standard `/etc/caddy/paw.Caddyfile` location. Application settings
+and credentials remain under the restricted `/etc/paw` boundary.

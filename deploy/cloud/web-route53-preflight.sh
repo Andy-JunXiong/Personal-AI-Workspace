@@ -4,7 +4,7 @@ set -Eeuo pipefail
 script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 paw_env=/etc/paw/paw.env
 ingress_env=/etc/paw/web-ingress.env
-caddy_config=/etc/paw/Caddyfile
+caddy_config=/etc/caddy/paw.Caddyfile
 installed_unit=/etc/systemd/system/paw-web-ingress.service
 google_secret=/etc/paw/secrets/google-client-secret
 
