@@ -1,0 +1,4 @@
+services:
+  paw:
+    environment:
+      PAW_WEB_WRITES_ENABLED: "true"

@@ -28,7 +28,7 @@ function query(request: Request, allowed: string[]): Record<string, string | num
 }
 
 export function createJobSearchPageRouter(serviceFor: (request: Request) => WorkspaceService,
-  timeZone = "Australia/Sydney", now: () => number = Date.now) {
+  timeZone = "Australia/Sydney", now: () => number = Date.now, completionEnabled = false) {
   const router = Router();
   router.get(["/", rootPath], (_request, response) => response.redirect(303, `${rootPath}/today`));
   const page = (path: string, render: (service: WorkspaceService, request: Request) => string) => {
@@ -68,6 +68,6 @@ export function createJobSearchPageRouter(serviceFor: (request: Request) => Work
     return applicationView(service, request.params.id as string, input, timeZone);
   });
   page("/tasks/:id", (service, request) => { query(request, []); return taskView(service,
-    request.params.id as string, timeZone, new Date(now()).toISOString()); });
+    request.params.id as string, timeZone, new Date(now()).toISOString(), completionEnabled); });
   return router;
 }

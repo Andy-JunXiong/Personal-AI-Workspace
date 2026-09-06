@@ -3,9 +3,12 @@ import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/
 import type { Request, Response } from "express";
 import type { WorkspaceService } from "../application/workspace-service.js";
 import { createWorkspaceMcpServer } from "./create-server.js";
+import { createWorkspaceWebLinks } from "./web-links.js";
 
-export function createWorkspaceHttpApp(workspaceService: WorkspaceService) {
+export function createWorkspaceHttpApp(workspaceService: WorkspaceService,
+  options: { webOrigin?: string } = {}) {
   const app = createMcpExpressApp();
+  const webLinks = createWorkspaceWebLinks(options.webOrigin);
 
   app.get("/healthz", (_request: Request, response: Response) => {
     try {
@@ -17,7 +20,7 @@ export function createWorkspaceHttpApp(workspaceService: WorkspaceService) {
   });
 
   app.post("/mcp", async (request: Request, response: Response) => {
-    const server = createWorkspaceMcpServer(workspaceService);
+    const server = createWorkspaceMcpServer(workspaceService, webLinks);
     const transport = new StreamableHTTPServerTransport({
       sessionIdGenerator: undefined,
     });

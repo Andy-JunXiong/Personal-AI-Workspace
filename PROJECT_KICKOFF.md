@@ -16,12 +16,20 @@
 
 **CLOUD C1/C2/C3/C4/C5 = ACCEPTED — REAL DATABASE ON CLOUD; PC-OFF MOBILE TEST PASSED**
 
-**SECONDARY JOB SEARCH ENTRY S1-01/S1-02/S1-03 = LOCALLY VERIFIED — 171 TESTS; S1-04 NEXT**
+**SECONDARY JOB SEARCH ENTRY S1-01 THROUGH S1-05B.1 = LOCALLY VERIFIED — 190 TESTS; S1-05B EXTERNAL BINDING NEXT**
 
-The 2026-09-05 work session stopped at this checkpoint. See the
-[end-of-day handoff](docs/mvp/S1_HANDOFF_2026-09-05.md) for completed work,
-verification, reproduction and the next package. Source publication to GitHub
-`main` is authorized; the new web surface has not been deployed.
+The 2026-09-05 handoff led to the completed local
+[S1-04 Task completion package](docs/mvp/S1_04_TASK_COMPLETION_RESULTS_v0.1.md).
+The subsequent [S1-05A local operations contract](docs/mvp/S1_05A_LOCAL_OPERATIONS_RESULTS_v0.1.md)
+adds staged deployment and rollback controls. The new web surface has not been
+deployed or enabled against real data.
+[S1-05A.1 GPT-to-Web handoff](docs/mvp/S1_05A1_GPT_WEB_LINK_RESULTS_v0.1.md)
+now adds opt-in exact links without changing the 13-tool discovery surface.
+[S1-05B.0 HTTPS checker](docs/mvp/S1_05B0_HTTPS_RELEASE_CHECK_RESULTS_v0.1.md)
+automates the public signed-out security gate without contacting a real endpoint.
+[S1-05B.1 external binding preflight](docs/mvp/S1_05B1_EXTERNAL_BINDING_PREFLIGHT_RESULTS_v0.1.md)
+now fails closed on inconsistent VM-side hostname, OAuth, Tunnel, secret or
+release-mode configuration before publication.
 
 Cloud acceptance on 2026-09-05 verified Sydney Lightsail persistence,
 backup/restore, controlled image rollback, restricted private tunnel access,
@@ -90,6 +98,12 @@ The Workspace will not initially rebuild Gmail/Drive/Calendar connectors. The fi
 
 ## Immediate Next Step
 
+Development communication and result documents must follow the repository's
+[Development Continuity and Benefits Standard](docs/DEVELOPMENT_CONTINUITY_STANDARD.md).
+Each package must state what requirement it inherits, why the capability belongs
+in the current increment, what exact next step it enables, and its short- and
+long-term benefits. This is part of the package definition of done.
+
 The latest design deliverable is the
 [Job Search P0 technical plan](docs/mvp/JOB_SEARCH_SECONDARY_INTERFACE_P0_v0.1.md),
 which refines the
@@ -105,9 +119,26 @@ subsequently passed 18 files / 166 tests, typecheck and build, with 13 local MCP
 tools and unchanged original contracts.
 [S1-03 responsive read-only pages](docs/mvp/S1_03_WEB_RESULTS_v0.1.md) now pass
 171 tests, typecheck/build and desktop/390px/320px synthetic browser checks.
-The next local package is S1-04 task completion with authority, audit,
-idempotency and conflict/recovery verification. Public login acceptance and
-cloud publication remain pending. Cloud acceptance is complete and does not
+[S1-04 browser Task completion](docs/mvp/S1_04_TASK_COMPLETION_RESULTS_v0.1.md)
+passes 177 tests, typecheck/build and 390px/320px synthetic browser checks,
+including authority, audit, idempotency, conflict and recovery verification.
+[S1-05A operations](docs/mvp/S1_05A_LOCAL_OPERATIONS_RESULTS_v0.1.md) passes the
+182-test repository gate plus shell syntax and deployment-contract checks. It
+adds MCP-only/read/write modes, loopback port and secret boundaries, a separate
+Web tunnel service, local health checks and rollback guards.
+[S1-05A.1](docs/mvp/S1_05A1_GPT_WEB_LINK_RESULTS_v0.1.md) subsequently raises
+the repository gate to 20 files / 185 tests and defines the exact point at which
+the user must be asked to perform the bounded iPhone human test.
+[S1-05B.0](docs/mvp/S1_05B0_HTTPS_RELEASE_CHECK_RESULTS_v0.1.md) raises the
+local gate to 21 files / 189 tests and supplies the external HTTPS preflight
+command that must pass before that notification.
+[S1-05B.1](docs/mvp/S1_05B1_EXTERNAL_BINDING_PREFLIGHT_RESULTS_v0.1.md) raises
+the gate to 190 tests and adds the VM-side pre-publication check. Real execution
+is next and requires restored AWS access plus approved Cloudflare and Google
+values; browser writes remain disabled.
+S1-05B public login, recovery/capacity, Safari/iPhone and cloud publication
+acceptance remain pending and require separate external authorization.
+Existing cloud acceptance is complete and does not
 substitute for M4 Day 2 actual job-search use and user-observed effort/actionability.
 
 **Spike 1B and Real Job Search MVP Slices M1/M2/M3 remain frozen at their

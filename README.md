@@ -10,6 +10,15 @@
 
 > **Conversation is an interface, not the system of record.**
 
+## Development standard
+
+All development packages follow the required
+[Development Continuity and Benefits Standard](docs/DEVELOPMENT_CONTINUITY_STANDARD.md).
+Before work begins and again in the result or handoff, state the upstream
+requirement, current bounded capability, downstream enablement, short-term
+benefits and long-term benefits. Keep unverified future value distinct from
+verified outcomes and preserve deployment, data and authority boundaries.
+
 ## Architecture
 
 - **ChatGPT = primary interaction + reasoning host**
@@ -138,13 +147,33 @@ implemented locally and passed 153 tests, typechecking and build. Real Google
 login, public authentication acceptance and cloud release remain pending.
 [S1-02 bounded reads and terminal-task readback](docs/mvp/S1_02_QUERY_RESULTS_v0.1.md)
 are also implemented locally (166-test milestone). The subsequent
-[S1-03 responsive pages](docs/mvp/S1_03_WEB_RESULTS_v0.1.md) pass 171 tests,
+[S1-03 responsive pages](docs/mvp/S1_03_WEB_RESULTS_v0.1.md) passed 171 tests,
 server/browser typechecking, build and synthetic Chrome checks at desktop,
 390px and 320px viewports. Local MCP discovery has 13 tools, with the original
-twelve contracts preserved. Task completion/audit is the next local package.
-The [2026-09-05 handoff](docs/mvp/S1_HANDOFF_2026-09-05.md) records today's stopping
-point and the concrete S1-04 resume steps. Publishing this source checkpoint to
-GitHub does not deploy the new web interface.
+twelve contracts preserved. [S1-04 browser Task completion](docs/mvp/S1_04_TASK_COMPLETION_RESULTS_v0.1.md)
+now passes 177 tests, full typechecking/build and 390px/320px synthetic Chrome
+completion checks. It adds opt-in completion, actor-attributed Task command
+audit and atomic state/audit/idempotency recovery. Publishing this source
+checkpoint to GitHub does not deploy or enable the web interface.
+[S1-05A local operations](docs/mvp/S1_05A_LOCAL_OPERATIONS_RESULTS_v0.1.md)
+adds the Web-off/read/write deployment contract, loopback-only port 3001,
+read-only secret injection, hardened Cloudflare service templates, health probes
+and rollback guards. Its [operations runbook](docs/cloud/S1_WEB_OPERATIONS_RUNBOOK.md)
+is preparation for S1-05B; no public endpoint, external account or real-data Web
+access has been created.
+[S1-05A.1 GPT-to-Web handoff](docs/mvp/S1_05A1_GPT_WEB_LINK_RESULTS_v0.1.md)
+now conditionally adds exact Today, inventory, application and Task URLs to the
+existing MCP read results. Web-off deployments advertise no links and tool
+discovery remains at 13.
+[S1-05B.0 HTTPS release checking](docs/mvp/S1_05B0_HTTPS_RELEASE_CHECK_RESULTS_v0.1.md)
+adds a no-secret `web:check` command for the public signed-out boundary. It is
+locally verified against synthetic responses and the real Web route trees, but
+has not contacted an external hostname.
+[S1-05B.1 external binding preflight](docs/mvp/S1_05B1_EXTERNAL_BINDING_PREFLIGHT_RESULTS_v0.1.md)
+adds the VM-side fail-closed check for exact host/origin/ingress agreement,
+disabled writes/bootstrap, restricted secret files and valid Tunnel ingress.
+Real VM execution remains pending on external account access and approved
+binding values.
 
 Start with an authenticated Job Search inventory, Today, and application detail
 including completed Tasks. Reuse application services and preserve authority,
@@ -159,10 +188,13 @@ advisory fit reasons, without requiring full resume or skill analysis.
 
 Local S1-01 adds an optional loopback authentication listener, immutable request
 identity, identity-link migration and an operator command. It defaults off and
-exposes no business-write or MCP route. S1-02 adds authenticated web read APIs and
+exposes no MCP route. S1-02 adds authenticated web read APIs and
 the private `workspace_get_task` MCP read. S1-03 adds read-only Today, inventory,
-application/task detail, evidence/history and context-copy pages. Browser
-completion, candidate storage and digest recording are not implemented yet.
+application/task detail, evidence/history and context-copy pages. S1-04 adds an
+independently gated individual Task completion route and audit migration.
+S1-05A adds independently selected deployment modes while retaining MCP-only as
+the default.
+Candidate storage and digest recording are not implemented yet.
 For a synthetic local UI preview, run `npm.cmd exec tsx tests/manual/web-preview.ts`;
 this test-only fixture accepts no real database or account and is excluded from
 the production build.
@@ -223,6 +255,8 @@ The C1 runtime and operations procedure is in
 [`docs/cloud/C1_RUNTIME_RUNBOOK.md`](docs/cloud/C1_RUNTIME_RUNBOOK.md).
 The C2 private ChatGPT transport procedure is in
 [`docs/cloud/C2_SECURE_MCP_TUNNEL.md`](docs/cloud/C2_SECURE_MCP_TUNNEL.md).
+The separate, not-yet-deployed Job Search Web procedure is in
+[`docs/cloud/S1_WEB_OPERATIONS_RUNBOOK.md`](docs/cloud/S1_WEB_OPERATIONS_RUNBOOK.md).
 C1/C2 were deployed and accepted on Sydney Lightsail on 2026-09-05 using a
 fresh non-production database. Backup/restore, image rollback, private connector
 readback, authentication rejection, and whole-instance reboot recovery passed;

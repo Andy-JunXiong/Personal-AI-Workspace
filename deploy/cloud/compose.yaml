@@ -15,6 +15,9 @@ services:
       PORT: "3000"
       PAW_DB_PATH: /app/data/workspace.db
       PAW_BACKUP_DIR: /app/backups
+      # Web exposure is selected only through the reviewed overlay files.
+      PAW_WEB_ENABLED: "false"
+      PAW_WEB_WRITES_ENABLED: "false"
     ports:
       - "127.0.0.1:3000:3000"
     volumes:

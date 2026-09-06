@@ -34,7 +34,7 @@ RUN mkdir -p /app/data /app/backups \
     && chown -R node:node /app/data /app/backups
 
 VOLUME ["/app/data"]
-EXPOSE 3000
+EXPOSE 3000 3001
 
 USER node
 

@@ -7,6 +7,7 @@ export interface WebConfig {
   clientId: string;
   clientSecret: string;
   bootstrapEnabled: boolean;
+  writesEnabled: boolean;
 }
 
 function flag(value: string | undefined, name: string): boolean {
@@ -17,9 +18,7 @@ function flag(value: string | undefined, name: string): boolean {
 
 export function loadWebConfig(environment: NodeJS.ProcessEnv = process.env): WebConfig | undefined {
   if (!flag(environment.PAW_WEB_ENABLED, "PAW_WEB_ENABLED")) return undefined;
-  if (flag(environment.PAW_WEB_WRITES_ENABLED, "PAW_WEB_WRITES_ENABLED")) {
-    throw new Error("Browser business writes are not implemented in S1-01");
-  }
+  const writesEnabled = flag(environment.PAW_WEB_WRITES_ENABLED, "PAW_WEB_WRITES_ENABLED");
   const origin = environment.PAW_WEB_ORIGIN ?? "";
   let url: URL;
   try { url = new URL(origin); } catch { throw new Error("PAW_WEB_ORIGIN must be an HTTPS origin"); }
@@ -43,6 +42,6 @@ export function loadWebConfig(environment: NodeJS.ProcessEnv = process.env): Web
   if (!clientSecret || clientSecret.length > 16_384 || /\s/u.test(clientSecret)) {
     throw new Error("Invalid Google client secret file contents");
   }
-  return { origin, port, clientId, clientSecret,
+  return { origin, port, clientId, clientSecret, writesEnabled,
     bootstrapEnabled: flag(environment.PAW_WEB_BOOTSTRAP_ENABLED, "PAW_WEB_BOOTSTRAP_ENABLED") };
 }

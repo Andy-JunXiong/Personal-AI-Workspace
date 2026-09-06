@@ -49,6 +49,17 @@ interface ReplayableResult {
   replayed: boolean;
 }
 
+interface TaskCommandContext extends IdentityContext {
+  channel: "WEB" | "MCP";
+}
+
+interface ExplicitUserWebAuthority {
+  type: "EXPLICIT_USER_WEB";
+  reference: string;
+}
+
+type TaskMutationAuthority = ExplicitUserDevAuthority | ExplicitUserWebAuthority;
+
 export interface CreateTaskInput {
   projectId: string;
   title: string;
@@ -65,8 +76,14 @@ export interface UpdateTaskInput {
   status?: TaskStatus;
   priority?: TaskPriority;
   dueAt?: string | null;
-  authority: ExplicitUserDevAuthority;
+  authority: TaskMutationAuthority;
   idempotencyKey: string;
+}
+
+export interface CompleteWebTaskInput {
+  taskId: string;
+  expectedRecordVersion: number;
+  intentKey: string;
 }
 
 const TASK_KINDS: readonly TaskKind[] = [
@@ -93,7 +110,7 @@ const TERMINAL_TASK_STATUSES: readonly TaskStatus[] = ["DONE", "CANCELLED"];
 export class TaskService {
   constructor(
     private readonly database: WorkspaceDatabase,
-    private readonly resolveIdentity: () => IdentityContext,
+    private readonly resolveContext: () => TaskCommandContext,
     private readonly assertProjectVisible: ProjectVisibilityResolver,
     private readonly clock: Clock = () => new Date(),
     private readonly assertMutationAllowed: () => void = () => {},
@@ -101,8 +118,8 @@ export class TaskService {
 
   createTask(input: CreateTaskInput): { task: TaskRecord; replayed: boolean } {
     this.assertMutationAllowed();
-    const identity = this.resolveIdentity();
-    const authorityReference = validateAuthority(input.authority);
+    const context = this.resolveContext();
+    const authorityReference = validateAuthority(input.authority, context.channel);
     const title = input.title.trim();
     if (!title) throw new ValidationError("Task title is required");
     if (title.length > 500) {
@@ -124,13 +141,13 @@ export class TaskService {
       authority: authorityPayload(input.authority, authorityReference),
     };
 
+    this.assertProjectVisible(input.projectId, context.workspaceId);
     return this.runIdempotent(
-      identity.workspaceId,
+      context.workspaceId,
       "workspace_create_task",
       input.idempotencyKey,
       payload,
       () => {
-        this.assertProjectVisible(input.projectId, identity.workspaceId);
         const sourceOwnedTask = this.database
           .prepare(
             `SELECT id FROM tasks
@@ -168,9 +185,43 @@ export class TaskService {
             now,
           );
 
-        return { task: this.getTask(taskId, identity.workspaceId), replayed: false };
+        const result = { task: this.getTask(taskId, context.workspaceId), replayed: false };
+        this.writeAudit({
+          context,
+          taskId,
+          operation: "workspace_create_task",
+          intentKey: input.idempotencyKey,
+          authority: input.authority,
+          authorityReference,
+          beforeRecordVersion: 0,
+          afterRecordVersion: result.task.recordVersion,
+          changedFields: ["projectId", "title", "taskKind", "status", "priority", "dueAt"],
+        });
+        return result;
       },
     );
+  }
+
+  completeTaskFromWeb(input: CompleteWebTaskInput): {
+    task: TaskRecord;
+    changed: boolean;
+    replayed: boolean;
+  } {
+    const context = this.resolveContext();
+    if (context.channel !== "WEB") {
+      throw new AuthorizationError("Web Task completion requires a verified web request");
+    }
+    const intentKey = input.intentKey.trim();
+    return this.updateTask({
+      taskId: input.taskId,
+      expectedRecordVersion: input.expectedRecordVersion,
+      status: "DONE",
+      authority: {
+        type: "EXPLICIT_USER_WEB",
+        reference: `task-complete:${context.principalId}:${intentKey}`,
+      },
+      idempotencyKey: intentKey,
+    });
   }
 
   updateTask(input: UpdateTaskInput): {
@@ -178,9 +229,9 @@ export class TaskService {
     changed: boolean;
     replayed: boolean;
   } {
-    this.assertMutationAllowed();
-    const identity = this.resolveIdentity();
-    const authorityReference = validateAuthority(input.authority);
+    const context = this.resolveContext();
+    const authorityReference = validateAuthority(input.authority, context.channel);
+    if (input.authority.type === "EXPLICIT_USER_DEV") this.assertMutationAllowed();
     if (
       !Number.isInteger(input.expectedRecordVersion) ||
       input.expectedRecordVersion < 1
@@ -212,13 +263,16 @@ export class TaskService {
       authority: authorityPayload(input.authority, authorityReference),
     };
 
+    // Ownership is checked before idempotency lookup so a replay never bypasses
+    // current request identity and parent visibility.
+    this.getTask(input.taskId, context.workspaceId);
     return this.runIdempotent(
-      identity.workspaceId,
+      context.workspaceId,
       "workspace_update_task",
       input.idempotencyKey,
       payload,
       () => {
-        const current = this.getTask(input.taskId, identity.workspaceId);
+        const current = this.getTask(input.taskId, context.workspaceId);
         if (current.recordVersion !== input.expectedRecordVersion) {
           throw new ConcurrencyConflictError(
             `Expected Task record version ${input.expectedRecordVersion}, current version is ${current.recordVersion}`,
@@ -237,7 +291,21 @@ export class TaskService {
           nextStatus !== current.status ||
           nextPriority !== current.priority ||
           nextDueAt !== current.dueAt;
-        if (!changed) return { task: current, changed: false, replayed: false };
+        if (!changed) {
+          const result = { task: current, changed: false, replayed: false };
+          this.writeAudit({
+            context,
+            taskId: current.id,
+            operation: "workspace_update_task",
+            intentKey: input.idempotencyKey,
+            authority: input.authority,
+            authorityReference,
+            beforeRecordVersion: current.recordVersion,
+            afterRecordVersion: current.recordVersion,
+            changedFields: [],
+          });
+          return result;
+        }
 
         const now = this.clock().toISOString();
         const completedAt = nextStatus === "DONE" ? now : null;
@@ -265,12 +333,55 @@ export class TaskService {
           );
         }
 
-        return {
-          task: this.getTask(input.taskId, identity.workspaceId),
+        const result = {
+          task: this.getTask(input.taskId, context.workspaceId),
           changed: true,
           replayed: false,
         };
+        this.writeAudit({
+          context,
+          taskId: input.taskId,
+          operation: "workspace_update_task",
+          intentKey: input.idempotencyKey,
+          authority: input.authority,
+          authorityReference,
+          beforeRecordVersion: current.recordVersion,
+          afterRecordVersion: result.task.recordVersion,
+          changedFields: [
+            ...(nextStatus !== current.status ? ["status"] : []),
+            ...(nextPriority !== current.priority ? ["priority"] : []),
+            ...(nextDueAt !== current.dueAt ? ["dueAt"] : []),
+          ],
+        });
+        return result;
       },
+    );
+  }
+
+  private writeAudit(input: {
+    context: TaskCommandContext;
+    taskId: string;
+    operation: "workspace_create_task" | "workspace_update_task";
+    intentKey: string;
+    authority: TaskMutationAuthority;
+    authorityReference: string;
+    beforeRecordVersion: number;
+    afterRecordVersion: number;
+    changedFields: string[];
+  }): void {
+    this.database.prepare(
+      `INSERT INTO task_command_audit(
+         id, workspace_id, principal_id, task_id, operation, channel,
+         intent_key, authority_type, authority_reference,
+         before_record_version, after_record_version, changed_fields_json,
+         outcome, created_at
+       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'SUCCESS', ?)`,
+    ).run(
+      randomUUID(), input.context.workspaceId, input.context.principalId,
+      input.taskId, input.operation, input.context.channel,
+      input.intentKey.trim(), input.authority.type, input.authorityReference,
+      input.beforeRecordVersion, input.afterRecordVersion,
+      canonicalJson(input.changedFields), this.clock().toISOString(),
     );
   }
 
@@ -339,23 +450,21 @@ export class TaskService {
   }
 }
 
-function validateAuthority(authority: ExplicitUserDevAuthority): string {
+function validateAuthority(authority: TaskMutationAuthority, channel: "WEB" | "MCP"): string {
   const reference = authority.reference.trim();
-  if (
-    authority.type !== "EXPLICIT_USER_DEV" ||
-    !authority.confirmed ||
-    !reference
-  ) {
+  const validDevelopment = authority.type === "EXPLICIT_USER_DEV" &&
+    authority.confirmed && channel === "MCP";
+  const validWeb = authority.type === "EXPLICIT_USER_WEB" && channel === "WEB";
+  if ((!validDevelopment && !validWeb) || !reference) {
     throw new AuthorizationError("Task mutation requires explicit user authority");
   }
   return reference;
 }
 
-function authorityPayload(
-  authority: ExplicitUserDevAuthority,
-  reference: string,
-) {
-  return { type: authority.type, confirmed: authority.confirmed, reference };
+function authorityPayload(authority: TaskMutationAuthority, reference: string) {
+  return authority.type === "EXPLICIT_USER_DEV"
+    ? { type: authority.type, confirmed: authority.confirmed, reference }
+    : { type: authority.type, reference };
 }
 
 function normalizeDueAt(value: string | null): string | null {

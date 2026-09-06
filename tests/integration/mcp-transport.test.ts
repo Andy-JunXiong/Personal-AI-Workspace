@@ -570,4 +570,49 @@ describe("Streamable HTTP MCP transport", () => {
     }
     expect(workspace.database.prepare("SELECT total_changes() AS n").get()).toEqual(before);
   });
+
+  it("advertises optional exact Web links through existing read tools", async () => {
+    const workspace = createTestWorkspace(); cleanups.push(workspace.cleanup);
+    const authority = { type: "EXPLICIT_USER_DEV" as const, confirmed: true as const,
+      reference: "Synthetic Web link bridge" };
+    const task = workspace.service.taskService.createTask({ projectId: workspace.projectId,
+      title: "Open this Task in Web", taskKind: "OTHER", priority: "HIGH", authority,
+      idempotencyKey: randomUUID() }).task;
+    const origin = "https://workspace.example.test";
+    const before = workspace.database.prepare("SELECT total_changes() AS n").get();
+    httpServer = createWorkspaceHttpApp(workspace.service, { webOrigin: origin }).listen(0, "127.0.0.1");
+    await new Promise<void>((resolve) => httpServer?.once("listening", resolve));
+    const address = httpServer.address();
+    if (!address || typeof address === "string") throw new Error("Missing listener");
+    const client = new Client({ name: "web-link-readback", version: "1.0.0" });
+    try {
+      await client.connect(new StreamableHTTPClientTransport(new URL(`http://127.0.0.1:${address.port}/mcp`)));
+      const ping = await client.callTool({ name: "workspace_ping", arguments: {} });
+      expect(ping.structuredContent).toMatchObject({ result: {
+        webUrl: `${origin}/workspace/job-search/today`,
+      } });
+      const exactTask = await client.callTool({ name: "workspace_get_task", arguments: { taskId: task.id } });
+      expect(exactTask.structuredContent).toMatchObject({ result: {
+        task: { id: task.id }, webUrl: `${origin}/workspace/job-search/tasks/${task.id}`,
+      } });
+      const applications = await client.callTool({ name: "workspace_list_job_applications", arguments: {} });
+      expect(applications.structuredContent).toMatchObject({ result: {
+        webUrl: `${origin}/workspace/job-search/applications`,
+        applications: [{ projectId: workspace.projectId,
+          webUrl: `${origin}/workspace/job-search/applications/${workspace.projectId}` }],
+      } });
+      const lookup = await client.callTool({ name: "workspace_find_job_application",
+        arguments: { company: "Example Co", role: "Software Engineer" } });
+      expect(lookup.structuredContent).toMatchObject({ result: { matches: [{
+        projectId: workspace.projectId,
+        webUrl: `${origin}/workspace/job-search/applications/${workspace.projectId}`,
+      }] } });
+      const today = await client.callTool({ name: "workspace_get_today", arguments: {} });
+      expect(today.structuredContent).toMatchObject({ result: {
+        webUrl: `${origin}/workspace/job-search/today`,
+        attention: [{ taskId: task.id, webUrl: `${origin}/workspace/job-search/tasks/${task.id}` }],
+      } });
+    } finally { await client.close(); }
+    expect(workspace.database.prepare("SELECT total_changes() AS n").get()).toEqual(before);
+  });
 });

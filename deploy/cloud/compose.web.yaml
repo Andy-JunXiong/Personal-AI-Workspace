@@ -1,0 +1,14 @@
+services:
+  paw:
+    environment:
+      PAW_WEB_ENABLED: "true"
+      PAW_WEB_WRITES_ENABLED: "false"
+      PAW_WEB_PORT: "3001"
+      PAW_GOOGLE_CLIENT_SECRET_FILE: /run/secrets/google-client-secret
+    ports:
+      - "127.0.0.1:3001:3001"
+    volumes:
+      - type: bind
+        source: /etc/paw/secrets/google-client-secret
+        target: /run/secrets/google-client-secret
+        read_only: true

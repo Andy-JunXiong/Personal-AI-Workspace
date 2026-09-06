@@ -17,6 +17,11 @@ if ! docker image inspect "paw:${image_tag}" >/dev/null 2>&1; then
   echo "Local image does not exist: paw:${image_tag}" >&2
   exit 1
 fi
+if systemctl is-active --quiet paw-web-tunnel.service 2>/dev/null; then
+  echo "Refusing image rollback while paw-web-tunnel.service is active" >&2
+  echo "Stop the Web tunnel and select Web mode off before retrying" >&2
+  exit 1
+fi
 
 PAW_IMAGE_TAG="${image_tag}" docker compose \
   --file "${compose_file}" up --detach --no-build --wait paw

@@ -7,8 +7,18 @@
 implementation; [S1-01](S1_01_IDENTITY_RESULTS_v0.1.md) has passed synthetic
 verification, followed by [S1-02 query/readback verification](S1_02_QUERY_RESULTS_v0.1.md).
 The subsequent [S1-03 page verification](S1_03_WEB_RESULTS_v0.1.md) includes local
-responsive views and synthetic browser checks.
-Public authentication acceptance and deployment remain pending.
+responsive views and synthetic browser checks. The subsequent
+[S1-04 completion verification](S1_04_TASK_COMPLETION_RESULTS_v0.1.md) covers
+local authority, audit, atomic retry/recovery and responsive interaction.
+[S1-05A local operations verification](S1_05A_LOCAL_OPERATIONS_RESULTS_v0.1.md)
+covers the staged deployment contract and runbook. Public authentication,
+provider/runtime binding, device acceptance and deployment remain pending.
+[S1-05A.1](S1_05A1_GPT_WEB_LINK_RESULTS_v0.1.md) locally verifies conditional
+exact GPT-to-Web URLs without changing tool discovery or write authority.
+[S1-05B.0](S1_05B0_HTTPS_RELEASE_CHECK_RESULTS_v0.1.md) locally verifies the
+no-secret HTTPS publication checker; no external hostname has been tested.
+[S1-05B.1](S1_05B1_EXTERNAL_BINDING_PREFLIGHT_RESULTS_v0.1.md) locally verifies
+the VM-side binding preflight; real account binding and execution remain pending.
 
 **Authority:** The user requested P0 technical planning after reviewing the
 two-stage delivery recommendation. This authorizes this design and its linked
@@ -175,7 +185,7 @@ existing private MCP development identity and its published command inputs.
 
 The following are the design contracts. S1-01 implemented the session surface;
 S1-02 implemented the read routes and exact-task MCP tool. Their linked results
-define current local behavior. The completion route remains unimplemented.
+define the local read behavior. S1-04 implements the completion route locally.
 
 | Surface | Result / behavior |
 | --- | --- |
@@ -188,7 +198,7 @@ define current local behavior. The completion route remains unimplemented.
 | `GET /api/v1/job-search/applications/{id}/resources` | Paged minimized evidence references/observations; provider access remains separate. |
 | `GET /api/v1/job-search/tasks/{id}` | Exact authorized task, including terminal state, completion time and version. |
 | `POST /api/v1/job-search/tasks/{id}/complete` | Expected record version plus intent key; server-authorized invocation of shared update logic with status DONE. |
-| Proposed MCP `workspace_get_task({taskId})` | Same exact read projection, read-only, including terminal tasks. Existing 12 tools keep their input/output behavior. |
+| MCP `workspace_get_task({taskId})` | Same exact read projection, read-only, including terminal tasks. Existing 12 tools keep their input/output behavior. |
 
 Use 25-row defaults and a 100-row maximum for paged web collections. Every page
 returns items, matching total, next cursor, as-of time and coverage. Bind cursors
@@ -310,7 +320,7 @@ business writes reconciled, never an automatic application rollback step.
 ## 7. Bounded implementation packages
 
 This is the original package responsibility map, not a delegation record.
-S1-01 through S1-03 implementation evidence is linked above; S1-04 remains next.
+S1-01 through S1-05B.1 local implementation evidence is linked above; external S1-05B is next.
 
 | Package | Intended ownership / work | Exit evidence |
 | --- | --- | --- |
@@ -318,7 +328,7 @@ S1-01 through S1-03 implementation evidence is linked above; S1-04 remains next.
 | S1-02 reads | New application query module, terminal-task read, `src/mcp/create-server.ts` additive tool, bounded queries/indexes | Closed/terminal retrieval, >100 applications, >10 history records, cursor invalidation and ownership cases. |
 | S1-03 web preview | New `src/web/` adapter/templates/assets, config/startup and image asset packaging | S1a mobile/direct-link/freshness/accessibility checks; public web route cannot reach MCP. |
 | S1-04 completion | Internal trusted task authority seam, task audit migration, completion adapter and UI | Atomic state/audit/idempotency, unchanged legacy replay, stale-version rejection and uncertain-response recovery. |
-| S1-05 operations | New web-tunnel service/config, compose loopback mapping, rollout/rollback runbook | Synthetic external auth acceptance, capacity, restart/backup, then reviewed real S1 end-to-end acceptance. |
+| S1-05 operations | [S1-05A](S1_05A_LOCAL_OPERATIONS_RESULTS_v0.1.md) adds web-tunnel service/config, Compose loopback modes and rollout/rollback runbook | S1-05B synthetic external auth acceptance, capacity, restart/backup, then reviewed real S1 end-to-end acceptance. |
 
 Do not edit existing accepted migration files to implement new storage. Assign
 new migration numbers when implementation starts. The new exact-task MCP tool
@@ -327,10 +337,11 @@ preserving historical 12-tool acceptance records and existing command behavior.
 
 ## 8. S1 acceptance and relationship to original scenarios
 
-These full release gates have **not passed**. Local S1-01 through S1-03 results
-above provide partial synthetic evidence for identity, transport, reads, Today
-and handoff/accessibility; real Google/Safari/iPhone and completion gates remain
-pending. Existing C4/C5 evidence is groundwork, not a pass for the new web
+These full release gates have **not passed**. Local S1-01 through S1-05B.1 results
+above provide synthetic evidence for identity, transport, reads, Today,
+completion, handoff/accessibility and deployment configuration; real
+Google/Cloudflare/Safari/iPhone completion remains pending. Existing C4/C5
+evidence is groundwork, not a pass for the new web
 interface. Use synthetic data in Git-tracked fixtures.
 
 | Gate | Required demonstration | Original coverage |

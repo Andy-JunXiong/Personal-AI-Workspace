@@ -16,7 +16,8 @@
     "start": "node dist/src/server.js",
     "test": "vitest run",
     "typecheck": "tsc --noEmit && tsc -p tsconfig.browser.json",
-    "verify": "npm run typecheck && npm test && npm run build"
+    "verify": "npm run typecheck && npm test && npm run build",
+    "web:check": "node dist/scripts/check-web-release.js"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.30.0",

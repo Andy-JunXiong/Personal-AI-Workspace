@@ -1,0 +1,9 @@
+# Install as /etc/paw/web-tunnel.yml after replacing the example hostname.
+# The tunnel ID and isolated credential are supplied by systemd, not this file.
+ingress:
+  - hostname: workspace.example.com
+    service: http://127.0.0.1:3001
+    originRequest:
+      connectTimeout: 10s
+      httpHostHeader: workspace.example.com
+  - service: http_status:404

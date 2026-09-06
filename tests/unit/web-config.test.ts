@@ -7,11 +7,11 @@ import { loadWebConfig } from "../../src/auth/web-config.js";
 const directories: string[] = [];
 afterEach(() => { for (const directory of directories.splice(0)) rmSync(directory, { recursive: true, force: true }); });
 
-it("defaults web off and refuses malformed enabled configuration and browser writes", () => {
+it("defaults web off and refuses malformed enabled configuration", () => {
   expect(loadWebConfig({})).toBeUndefined();
   expect(() => loadWebConfig({ PAW_WEB_ENABLED: "yes" })).toThrow(/true or false/u);
   expect(() => loadWebConfig({ PAW_WEB_ENABLED: "true", PAW_WEB_ORIGIN: "http://public.example.test" })).toThrow(/HTTPS/u);
-  expect(() => loadWebConfig({ PAW_WEB_ENABLED: "true", PAW_WEB_WRITES_ENABLED: "true" })).toThrow(/not implemented/u);
+  expect(() => loadWebConfig({ PAW_WEB_ENABLED: "true", PAW_WEB_WRITES_ENABLED: "yes" })).toThrow(/true or false/u);
 });
 
 it("loads a private secret file without accepting URL credentials, paths or loose port parsing", () => {
@@ -19,7 +19,9 @@ it("loads a private secret file without accepting URL credentials, paths or loos
   const secret = join(directory, "client-secret"); writeFileSync(secret, "synthetic-secret\n");
   const environment = { PAW_WEB_ENABLED: "true", PAW_WEB_ORIGIN: "https://workspace.example.test",
     PAW_GOOGLE_CLIENT_ID: "synthetic-client", PAW_GOOGLE_CLIENT_SECRET_FILE: secret };
-  expect(loadWebConfig(environment)).toMatchObject({ port: 3001, bootstrapEnabled: false, clientSecret: "synthetic-secret" });
+  expect(loadWebConfig(environment)).toMatchObject({ port: 3001, bootstrapEnabled: false,
+    writesEnabled: false, clientSecret: "synthetic-secret" });
+  expect(loadWebConfig({ ...environment, PAW_WEB_WRITES_ENABLED: "true" })).toMatchObject({ writesEnabled: true });
   for (const origin of ["https://workspace.example.test/", "https://user:pass@workspace.example.test", "https://workspace.example.test/path"]) {
     expect(() => loadWebConfig({ ...environment, PAW_WEB_ORIGIN: origin })).toThrow(/exact HTTPS/u);
   }

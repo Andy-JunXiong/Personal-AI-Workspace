@@ -1,6 +1,6 @@
 # Job Search Secondary Interface — Product Requirements v0.1
 
-**Status:** Refined requirements; local S1-01 through S1-03 verified;
+**Status:** Refined requirements; local S1-01 through S1-05B.0 verified;
 public/device and full-product acceptance remain pending.
 
 **Date:** 2026-09-05.
@@ -15,7 +15,15 @@ package; public setup and cloud release remain separately reviewed.
 [S1-02 query results](S1_02_QUERY_RESULTS_v0.1.md) record authenticated bounded
 reads and the local terminal-task MCP tool.
 [S1-03 page results](S1_03_WEB_RESULTS_v0.1.md) record responsive read-only views
-and local synthetic browser checks. Public/mobile acceptance remains pending;
+and local synthetic browser checks. [S1-04 completion results](S1_04_TASK_COMPLETION_RESULTS_v0.1.md)
+record atomic browser Task completion, audit and recovery checks.
+[S1-05A operations results](S1_05A_LOCAL_OPERATIONS_RESULTS_v0.1.md) record the
+local staged deployment, secret, tunnel and rollback contract. Public/mobile
+acceptance remains pending;
+[S1-05A.1 link results](S1_05A1_GPT_WEB_LINK_RESULTS_v0.1.md) record the opt-in
+GPT-to-Web object handoff and human-test trigger.
+[S1-05B.0 checker results](S1_05B0_HTTPS_RELEASE_CHECK_RESULTS_v0.1.md) record
+the automated signed-out HTTPS acceptance contract.
 these results do not complete the first product increment.
 
 **Basis:** The user's Multi-Domain Secondary Interface Requirements and the

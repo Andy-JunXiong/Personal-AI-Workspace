@@ -26,6 +26,12 @@ export class AuthorizationError extends WorkspaceError {
   }
 }
 
+export class ActionDeniedError extends WorkspaceError {
+  constructor(message: string) {
+    super("ACTION_DENIED", message);
+  }
+}
+
 export class IdempotencyConflictError extends WorkspaceError {
   constructor(message: string) {
     super("IDEMPOTENCY_CONFLICT", message);

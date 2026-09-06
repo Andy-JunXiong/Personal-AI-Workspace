@@ -1,14 +1,23 @@
 import express, { type Request } from "express";
 import { randomUUID } from "node:crypto";
+import { z } from "zod";
 import type { WorkspaceDatabase } from "../persistence/database.js";
 import { IdentityLinks } from "./identity-links.js";
 import { SessionStore, equalToken } from "./session-store.js";
 import type { LoginProvider } from "./oidc.js";
-import { AuthorizationError, NotFoundError, ValidationError } from "../domain/errors.js";
+import {
+  ActionDeniedError,
+  AuthorizationError,
+  ConcurrencyConflictError,
+  IdempotencyConflictError,
+  NotFoundError,
+  ValidationError,
+} from "../domain/errors.js";
 import { verifiedRequestContext } from "../application/request-context.js";
 import { WorkspaceService } from "../application/workspace-service.js";
 import { CursorError } from "../application/read-pagination.js";
 import { createJobSearchReadRouter } from "./job-search-read-router.js";
+import { createJobSearchWriteRouter } from "./job-search-write-router.js";
 import { createJobSearchPageRouter, createWebAssetsRouter } from "../web/page-router.js";
 import { loginFailureView } from "../web/views.js";
 
@@ -38,6 +47,7 @@ export function createWebAuthApp(options: {
   provider: LoginProvider;
   origin: string;
   bootstrapEnabled?: boolean;
+  writesEnabled?: boolean;
   now?: () => number;
   timeZone?: string;
 }) {
@@ -158,10 +168,25 @@ export function createWebAuthApp(options: {
     });
   };
   app.use("/api/v1/job-search", createJobSearchReadRouter(serviceFor, now));
+  if (options.writesEnabled) {
+    const writeServiceFor = (request: Request) => {
+      const session = sessions.getSession(cookie(request, SESSION_COOKIE));
+      const csrf = request.headers["x-csrf-token"];
+      if (request.headers.origin !== origin.origin || typeof csrf !== "string" ||
+        !equalToken(csrf, session.csrfToken)) {
+        throw new ActionDeniedError("Browser action authority was not verified");
+      }
+      const context = verifiedRequestContext(options.database, session, "WEB", randomUUID());
+      return new WorkspaceService(options.database, context, {
+        timeZone: options.timeZone, clock: () => new Date(now()),
+      });
+    };
+    app.use("/api/v1/job-search", createJobSearchWriteRouter(writeServiceFor, now));
+  }
   app.use(createWebAssetsRouter());
-  app.use(createJobSearchPageRouter(serviceFor, options.timeZone, now));
+  app.use(createJobSearchPageRouter(serviceFor, options.timeZone, now, options.writesEnabled));
 
-  // No MCP adapter, admin/linking endpoint or browser business write is mounted.
+  // No MCP adapter or administration endpoint is mounted on the web listener.
   app.use((_request, response) => { response.status(404).json({ error: "NOT_FOUND" }); });
   app.use((error: unknown, request: Request, response: express.Response, _next: express.NextFunction) => {
     if (request.path.startsWith("/auth/") && request.get("accept")?.includes("text/html")) {
@@ -169,10 +194,17 @@ export function createWebAuthApp(options: {
       response.status(status).type("html").send(loginFailureView(status));
       return;
     }
+    const write = request.method === "POST" && request.path.startsWith("/api/v1/job-search/");
     if (error instanceof AuthorizationError) response.status(401).json({ error: "AUTHENTICATION_REQUIRED" });
+    else if (error instanceof ActionDeniedError) response.status(403).json({ error: "ACTION_DENIED" });
     else if (error instanceof NotFoundError) response.status(404).json({ error: "NOT_FOUND" });
+    else if (error instanceof ConcurrencyConflictError || error instanceof IdempotencyConflictError) {
+      response.status(409).json({ error: error.code, reloadRequired: error instanceof ConcurrencyConflictError });
+    }
     else if (error instanceof CursorError) response.status(409).json({ error: error.code, reloadRequired: true });
-    else if (error instanceof ValidationError || error instanceof SyntaxError) response.status(400).json({ error: "INVALID_REQUEST" });
+    else if (error instanceof ValidationError || error instanceof SyntaxError || error instanceof z.ZodError) {
+      response.status(write ? 422 : 400).json({ error: "INVALID_REQUEST" });
+    }
     else response.status(503).json({ error: "TEMPORARILY_UNAVAILABLE" });
   });
   return app;

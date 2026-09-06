@@ -25,7 +25,7 @@ const workspaceService = new WorkspaceService(
 const identity = webConfig || webConfigurationInvalid
   ? workspaceService.resolveDevelopmentIdentity()
   : workspaceService.ensureDevelopmentIdentity();
-const app = createWorkspaceHttpApp(workspaceService);
+const app = createWorkspaceHttpApp(workspaceService, { webOrigin: webConfig?.origin });
 
 const httpServer = app.listen(config.port, () => {
   const address = httpServer.address();
@@ -49,7 +49,8 @@ if (webConfig) {
     .then((provider) => {
       if (shuttingDown) return;
       const web = createWebAuthApp({ database, provider, origin: selected.origin,
-        bootstrapEnabled: selected.bootstrapEnabled, timeZone: config.timeZone });
+        bootstrapEnabled: selected.bootstrapEnabled, writesEnabled: selected.writesEnabled,
+        timeZone: config.timeZone });
       // Local S1 only: no Docker/public ingress change accompanies this listener.
       webServer = web.listen(selected.port, "127.0.0.1");
       webServer.on("error", () => {

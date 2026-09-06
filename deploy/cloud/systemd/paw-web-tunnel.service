@@ -1,0 +1,42 @@
+[Unit]
+Description=Personal AI Workspace Cloudflare Web Tunnel
+Documentation=https://developers.cloudflare.com/tunnel/advanced/local-management/as-a-service/linux/
+Wants=network-online.target
+After=network-online.target docker.service
+Requires=docker.service
+
+[Service]
+Type=simple
+DynamicUser=yes
+EnvironmentFile=/etc/paw/web-tunnel.env
+LoadCredential=web-tunnel-credentials:/etc/paw/secrets/cloudflare-web-tunnel.json
+ExecStartPre=/opt/paw/deploy/cloud/web-health.sh
+ExecStartPre=/usr/bin/cloudflared tunnel --config /etc/paw/web-tunnel.yml ingress validate
+ExecStart=/usr/bin/cloudflared tunnel --config /etc/paw/web-tunnel.yml --credentials-file %d/web-tunnel-credentials --no-autoupdate run ${PAW_WEB_TUNNEL_ID}
+Restart=always
+RestartSec=2s
+TimeoutStopSec=30s
+UMask=0077
+
+NoNewPrivileges=yes
+PrivateDevices=yes
+PrivateTmp=yes
+ProtectClock=yes
+ProtectControlGroups=yes
+ProtectHome=yes
+ProtectHostname=yes
+ProtectKernelLogs=yes
+ProtectKernelModules=yes
+ProtectKernelTunables=yes
+ProtectSystem=strict
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+RestrictNamespaces=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+CapabilityBoundingSet=
+AmbientCapabilities=
+SystemCallArchitectures=native
+
+[Install]
+WantedBy=multi-user.target

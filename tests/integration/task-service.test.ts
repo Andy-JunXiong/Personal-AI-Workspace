@@ -254,6 +254,52 @@ describe("TaskService creation", () => {
 });
 
 describe("TaskService updates", () => {
+  it("audits new MCP commands once with actor, versions, and changed fields", () => {
+    const testWorkspace = workspace();
+    const created = createTask(testWorkspace, "audit");
+    const command = {
+      taskId: created.task.id,
+      expectedRecordVersion: 1,
+      status: "BLOCKED" as const,
+      priority: "HIGH" as const,
+      authority,
+      idempotencyKey: "update-audit",
+    };
+    testWorkspace.service.taskService.updateTask(command);
+    testWorkspace.service.taskService.updateTask(command);
+
+    const rows = testWorkspace.database.prepare(
+      `SELECT principal_id, task_id, operation, channel, intent_key,
+              authority_type, authority_reference, before_record_version,
+              after_record_version, changed_fields_json, outcome
+       FROM task_command_audit ORDER BY before_record_version`,
+    ).all();
+    expect(rows).toEqual([
+      expect.objectContaining({ principal_id: testWorkspace.identity.principalId,
+        task_id: created.task.id, operation: "workspace_create_task", channel: "MCP",
+        intent_key: "create-audit", authority_type: "EXPLICIT_USER_DEV",
+        before_record_version: 0, after_record_version: 1, outcome: "SUCCESS" }),
+      { principal_id: testWorkspace.identity.principalId, task_id: created.task.id,
+        operation: "workspace_update_task", channel: "MCP", intent_key: "update-audit",
+        authority_type: "EXPLICIT_USER_DEV", authority_reference: authority.reference,
+        before_record_version: 1, after_record_version: 2,
+        changed_fields_json: '["status","priority"]', outcome: "SUCCESS" },
+    ]);
+  });
+
+  it("does not fabricate audit when replaying a legacy idempotency record", () => {
+    const testWorkspace = workspace();
+    const created = createTask(testWorkspace, "legacy-replay");
+    testWorkspace.database.prepare(
+      "DELETE FROM task_command_audit WHERE operation = 'workspace_create_task' AND intent_key = ?",
+    ).run("create-legacy-replay");
+    const replay = createTask(testWorkspace, "legacy-replay");
+    expect(replay).toMatchObject({ replayed: true, task: { id: created.task.id } });
+    expect(testWorkspace.database.prepare(
+      "SELECT COUNT(*) AS count FROM task_command_audit WHERE intent_key = ?",
+    ).get("create-legacy-replay")).toEqual({ count: 0 });
+  });
+
   it.each([
     ["TODO", "IN_PROGRESS"],
     ["TODO", "BLOCKED"],

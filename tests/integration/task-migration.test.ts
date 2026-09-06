@@ -74,6 +74,16 @@ describe("003 Task attention migration", () => {
           )
           .get(),
       ).toEqual({ count: 1 });
+      expect(
+        migratedDatabase
+          .prepare(
+            "SELECT COUNT(*) AS count FROM schema_migrations WHERE version = '005_task_command_audit.sql'",
+          )
+          .get(),
+      ).toEqual({ count: 1 });
+      expect(
+        migratedDatabase.prepare("SELECT COUNT(*) AS count FROM task_command_audit").get(),
+      ).toEqual({ count: 0 });
     } finally {
       migratedDatabase.close();
     }

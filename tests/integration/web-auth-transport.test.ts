@@ -6,18 +6,19 @@ import { createTestWorkspace } from "../helpers/test-workspace.js";
 import { syntheticOidc, syntheticIssuer, webOrigin } from "../helpers/synthetic-oidc.js";
 import { randomUUID } from "node:crypto";
 import { WorkspaceService } from "../../src/application/workspace-service.js";
+import { checkWebRelease } from "../../src/operations/web-release-check.js";
 
 const cleanups: Array<() => void | Promise<void>> = [];
 afterEach(async () => { for (const cleanup of cleanups.splice(0).reverse()) await cleanup(); });
 
-async function setup(bootstrapEnabled = true, timeZone = "Australia/Sydney") {
+async function setup(bootstrapEnabled = true, timeZone = "Australia/Sydney", writesEnabled = false) {
   const workspace = createTestWorkspace();
   cleanups.push(workspace.cleanup);
   const harness = syntheticOidc();
   let time = Date.now();
   const links = new IdentityLinks(workspace.database, () => time);
   const app = createWebAuthApp({ database: workspace.database, provider: harness.provider,
-    origin: webOrigin, bootstrapEnabled, now: () => time, timeZone });
+    origin: webOrigin, bootstrapEnabled, writesEnabled, now: () => time, timeZone });
   const server: Server = app.listen(0, "127.0.0.1");
   await new Promise<void>((done) => server.once("listening", done));
   cleanups.push(() => new Promise<void>((done) => server.close(() => done())));
@@ -66,6 +67,23 @@ async function setup(bootstrapEnabled = true, timeZone = "Australia/Sydney") {
 }
 
 describe("Signed OIDC authentication over the isolated web transport", () => {
+  it("passes the release checker against the real read and write route trees", async () => {
+    for (const writesEnabled of [false, true]) {
+      const w = await setup(true, "Australia/Sydney", writesEnabled);
+      const before = w.database.prepare("SELECT total_changes() AS n").get();
+      const fetcher = (input: string | URL, init: RequestInit = {}) => {
+        const target = new URL(input.toString());
+        return w.request(`${target.pathname}${target.search}`, init);
+      };
+      const report = await checkWebRelease({ origin: webOrigin,
+        expectedWrites: writesEnabled ? "on" : "off", expectedAuthorizationOrigin: syntheticIssuer,
+        fetcher });
+      expect(report.passed).toBe(true);
+      expect(report.checks.every((check) => check.passed)).toBe(true);
+      expect(w.database.prepare("SELECT total_changes() AS n").get()).toEqual(before);
+    }
+  });
+
   it("renders a safe login then the original object page, and removes private content after revocation", async () => {
     const w = await setup(); w.link();
     const path = `/workspace/job-search/applications/${w.projectId}`;
@@ -113,6 +131,7 @@ describe("Signed OIDC authentication over the isolated web transport", () => {
     const detail = await (await w.request(`/workspace/job-search/tasks/${task.id}`, { headers })).text();
     expect(detail).toContain("完成时间"); expect(detail).not.toContain("尚无完成记录");
     expect(detail).toContain(`Task ${task.id}`);
+    expect(detail).not.toContain("data-complete-task");
     const open = await (await w.request(base, { headers })).text();
     expect(open).not.toContain("Completed synthetic task");
     const resources = await (await w.request(`${base}?section=resources`, { headers })).text();
@@ -383,5 +402,119 @@ describe("Signed OIDC authentication over the isolated web transport", () => {
       expect(response.status).toBe(404);
       expect(await response.json()).toEqual({ error: "NOT_FOUND" });
     }
+  });
+
+  it("completes one owned Task atomically and replays the same browser intent once", async () => {
+    const w = await setup(true, "Australia/Sydney", true); w.link();
+    const authority = { type: "EXPLICIT_USER_DEV" as const, confirmed: true as const, reference: "Synthetic completion setup" };
+    const task = w.service.taskService.createTask({ projectId: w.projectId, title: "Complete in browser",
+      taskKind: "OTHER", priority: "HIGH", authority, idempotencyKey: randomUUID() }).task;
+    const cookie = w.sessionCookie(await w.finish(await w.start()));
+    const session = await (await w.request("/api/v1/session", { headers: { cookie } })).json() as { csrfToken: string };
+    const intentKey = randomUUID();
+    const path = `/api/v1/job-search/tasks/${task.id}/complete`;
+    const options = { method: "POST", headers: { cookie, origin: webOrigin, "content-type": "application/json",
+      "x-csrf-token": session.csrfToken }, body: JSON.stringify({ expectedRecordVersion: 1, intentKey }) };
+    const beforePage = await (await w.request(`/workspace/job-search/tasks/${task.id}`, { headers: { cookie } })).text();
+    expect(beforePage).toContain("data-complete-task");
+
+    const completed = await w.request(path, options);
+    expect(completed.status).toBe(200);
+    expect(await completed.json()).toMatchObject({ changed: true, replayed: false,
+      task: { id: task.id, status: "DONE", recordVersion: 2, completedAt: expect.any(String) } });
+    const replay = await w.request(path, options);
+    expect(replay.status).toBe(200);
+    expect(await replay.json()).toMatchObject({ changed: true, replayed: true,
+      task: { id: task.id, status: "DONE", recordVersion: 2 } });
+
+    const audits = w.database.prepare(
+      "SELECT channel, authority_type, authority_reference, before_record_version, after_record_version, changed_fields_json FROM task_command_audit WHERE operation = 'workspace_update_task' AND intent_key = ?",
+    ).all(intentKey) as Array<Record<string, unknown>>;
+    expect(audits).toEqual([{ channel: "WEB", authority_type: "EXPLICIT_USER_WEB",
+      authority_reference: `task-complete:${w.identity.principalId}:${intentKey}`,
+      before_record_version: 1, after_record_version: 2, changed_fields_json: '["status"]' }]);
+    expect(w.service.jobSearchQueryService.getTask(task.id)).toMatchObject({ status: "DONE", recordVersion: 2 });
+    const afterPage = await (await w.request(`/workspace/job-search/tasks/${task.id}`, { headers: { cookie } })).text();
+    expect(afterPage).toContain("完成时间");
+    expect(afterPage).not.toContain("data-complete-task");
+  });
+
+  it("requires an authenticated same-origin CSRF-bound write and hides other owners", async () => {
+    const w = await setup(true, "Australia/Sydney", true); w.link();
+    const authority = { type: "EXPLICIT_USER_DEV" as const, confirmed: true as const, reference: "Synthetic write guard" };
+    const task = w.service.taskService.createTask({ projectId: w.projectId, title: "Guarded browser task",
+      taskKind: "OTHER", priority: "LOW", authority, idempotencyKey: randomUUID() }).task;
+    const path = `/api/v1/job-search/tasks/${task.id}/complete`;
+    const body = JSON.stringify({ expectedRecordVersion: 1, intentKey: randomUUID() });
+    expect((await w.request(path, { method: "POST", headers: { "content-type": "application/json" }, body })).status).toBe(401);
+    const cookie = w.sessionCookie(await w.finish(await w.start()));
+    const session = await (await w.request("/api/v1/session", { headers: { cookie } })).json() as { csrfToken: string };
+    expect((await w.request(path, { method: "POST", headers: { cookie, "content-type": "application/json",
+      "x-csrf-token": session.csrfToken }, body })).status).toBe(403);
+    expect((await w.request(path, { method: "POST", headers: { cookie, origin: "https://evil.example.test",
+      "content-type": "application/json", "x-csrf-token": session.csrfToken }, body })).status).toBe(403);
+    const headers = { cookie, origin: webOrigin, "content-type": "application/json", "x-csrf-token": session.csrfToken };
+    expect((await w.request(path, { method: "POST", headers,
+      body: JSON.stringify({ expectedRecordVersion: 1, intentKey: randomUUID(), confirmed: true }) })).status).toBe(422);
+
+    const other = new WorkspaceService(w.database, { issuer: "write-other", subject: "write-other", workspaceName: "Other" });
+    other.ensureDevelopmentIdentity();
+    const creation = other.createJobApplication({ company: "Private", role: "Role", authority, idempotencyKey: randomUUID() });
+    if (creation.creationStatus !== "CREATED") throw new Error("Expected creation");
+    const privateTask = other.taskService.createTask({ projectId: creation.project.id, title: "Private task",
+      taskKind: "OTHER", priority: "LOW", authority, idempotencyKey: randomUUID() }).task;
+    for (const id of [privateTask.id, randomUUID()]) {
+      const response = await w.request(`/api/v1/job-search/tasks/${id}/complete`, { method: "POST", headers,
+        body: JSON.stringify({ expectedRecordVersion: 1, intentKey: randomUUID() }) });
+      expect(response.status).toBe(404);
+      expect(await response.json()).toEqual({ error: "NOT_FOUND" });
+    }
+    expect(w.service.jobSearchQueryService.getTask(task.id).status).toBe("TODO");
+  });
+
+  it("rejects stale and changed completion intents without reopening terminal Tasks", async () => {
+    const w = await setup(true, "Australia/Sydney", true); w.link();
+    const authority = { type: "EXPLICIT_USER_DEV" as const, confirmed: true as const, reference: "Synthetic conflict setup" };
+    const task = w.service.taskService.createTask({ projectId: w.projectId, title: "Conflict browser task",
+      taskKind: "OTHER", priority: "LOW", authority, idempotencyKey: randomUUID() }).task;
+    w.service.taskService.updateTask({ taskId: task.id, expectedRecordVersion: 1, status: "IN_PROGRESS",
+      authority, idempotencyKey: randomUUID() });
+    const cookie = w.sessionCookie(await w.finish(await w.start()));
+    const session = await (await w.request("/api/v1/session", { headers: { cookie } })).json() as { csrfToken: string };
+    const headers = { cookie, origin: webOrigin, "content-type": "application/json", "x-csrf-token": session.csrfToken };
+    const path = `/api/v1/job-search/tasks/${task.id}/complete`;
+    const stale = await w.request(path, { method: "POST", headers,
+      body: JSON.stringify({ expectedRecordVersion: 1, intentKey: randomUUID() }) });
+    expect(stale.status).toBe(409);
+    expect(await stale.json()).toEqual({ error: "CONCURRENCY_CONFLICT", reloadRequired: true });
+
+    const intentKey = randomUUID();
+    expect((await w.request(path, { method: "POST", headers,
+      body: JSON.stringify({ expectedRecordVersion: 2, intentKey }) })).status).toBe(200);
+    const changedIntent = await w.request(path, { method: "POST", headers,
+      body: JSON.stringify({ expectedRecordVersion: 3, intentKey }) });
+    expect(changedIntent.status).toBe(409);
+    expect(await changedIntent.json()).toEqual({ error: "IDEMPOTENCY_CONFLICT", reloadRequired: false });
+    expect((await w.request(path, { method: "POST", headers,
+      body: JSON.stringify({ expectedRecordVersion: 3, intentKey: randomUUID() }) })).status).toBe(422);
+  });
+
+  it("rolls back Task state and idempotency when browser audit storage fails", async () => {
+    const w = await setup(true, "Australia/Sydney", true); w.link();
+    const authority = { type: "EXPLICIT_USER_DEV" as const, confirmed: true as const, reference: "Synthetic rollback setup" };
+    const task = w.service.taskService.createTask({ projectId: w.projectId, title: "Atomic browser task",
+      taskKind: "OTHER", priority: "LOW", authority, idempotencyKey: randomUUID() }).task;
+    const cookie = w.sessionCookie(await w.finish(await w.start()));
+    const session = await (await w.request("/api/v1/session", { headers: { cookie } })).json() as { csrfToken: string };
+    const intentKey = randomUUID();
+    const options = { method: "POST", headers: { cookie, origin: webOrigin, "content-type": "application/json",
+      "x-csrf-token": session.csrfToken }, body: JSON.stringify({ expectedRecordVersion: 1, intentKey }) };
+    w.database.exec("CREATE TRIGGER fail_web_task_audit BEFORE INSERT ON task_command_audit WHEN NEW.channel = 'WEB' BEGIN SELECT RAISE(ABORT, 'forced audit failure'); END");
+    expect((await w.request(`/api/v1/job-search/tasks/${task.id}/complete`, options)).status).toBe(503);
+    expect(w.service.jobSearchQueryService.getTask(task.id)).toMatchObject({ status: "TODO", recordVersion: 1 });
+    expect(w.database.prepare("SELECT COUNT(*) AS n FROM idempotency_records WHERE operation = 'workspace_update_task' AND idempotency_key = ?").get(intentKey)).toEqual({ n: 0 });
+    expect(w.database.prepare("SELECT COUNT(*) AS n FROM task_command_audit WHERE intent_key = ?").get(intentKey)).toEqual({ n: 0 });
+    w.database.exec("DROP TRIGGER fail_web_task_audit");
+    expect((await w.request(`/api/v1/job-search/tasks/${task.id}/complete`, options)).status).toBe(200);
   });
 });

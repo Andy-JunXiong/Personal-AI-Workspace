@@ -3,6 +3,8 @@ const main = /** @type {HTMLElement} */ (document.querySelector('#main'));
 const notice = /** @type {HTMLElement} */ (document.querySelector('#notice'));
 let dirty = false;
 let loggingOut = false;
+let completing = false;
+const completionIntents = new Map();
 /** @type {AbortController | undefined} */
 let pending;
 
@@ -24,6 +26,60 @@ function signedOut(page) {
   document.querySelector('[data-logout]')?.remove();
   dirty = false;
   announce('登录已失效，请重新登录后继续。');
+}
+/** @param {HTMLButtonElement} control */
+async function completeTask(control) {
+  if (completing || !navigator.onLine) {
+    if (!navigator.onLine) announce('网络已断开，联网后再完成任务。');
+    return;
+  }
+  const taskId = control.dataset.taskId;
+  const expectedRecordVersion = Number(control.dataset.recordVersion);
+  if (!taskId || !Number.isInteger(expectedRecordVersion)) return;
+  const intentSlot = `${taskId}:${expectedRecordVersion}`;
+  const intentKey = completionIntents.get(intentSlot) ?? crypto.randomUUID();
+  completionIntents.set(intentSlot, intentKey);
+  completing = true;
+  control.disabled = true;
+  control.setAttribute('aria-busy', 'true');
+  announce('正在完成任务…');
+  try {
+    const session = await fetch('/api/v1/session', { cache: 'no-store', signal: AbortSignal.timeout(15000) });
+    if (session.status === 401) { main.replaceChildren(); location.replace(location.pathname); return; }
+    if (!session.ok) throw new Error('session unavailable');
+    const { csrfToken } = await session.json();
+    const response = await fetch(`/api/v1/job-search/tasks/${encodeURIComponent(taskId)}/complete`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'x-csrf-token': csrfToken },
+      body: JSON.stringify({ expectedRecordVersion, intentKey }),
+      signal: AbortSignal.timeout(15000),
+    });
+    if (response.status === 401) { main.replaceChildren(); location.replace(location.pathname); return; }
+    if (response.status === 409) {
+      completionIntents.delete(intentSlot);
+      announce('任务已在别处更新，正在读取最新状态。');
+      await readPage(firstPageUrl());
+      return;
+    }
+    if (response.status === 422) {
+      completionIntents.delete(intentSlot);
+      announce('当前状态不允许完成，正在读取最新状态。');
+      await readPage(firstPageUrl());
+      return;
+    }
+    if (!response.ok) throw new Error('completion unavailable');
+    completionIntents.delete(intentSlot);
+    await readPage(firstPageUrl());
+    announce('任务已完成。');
+  } catch {
+    announce('尚未确认完成结果。请重试同一操作，或刷新查看最新状态。');
+  } finally {
+    completing = false;
+    if (control.isConnected) {
+      control.disabled = !navigator.onLine;
+      control.removeAttribute('aria-busy');
+    }
+  }
 }
 /** @param {URL} url @param {boolean} [append] */
 async function readPage(url, append = false) {
@@ -93,7 +149,9 @@ document.addEventListener('click', async (event) => {
   if (!(event.target instanceof Element)) return;
   const control = event.target.closest('button, a');
   if (!control) return;
-  if (control.matches('[data-refresh]')) {
+  if (control instanceof HTMLButtonElement && control.matches('[data-complete-task]')) {
+    await completeTask(control);
+  } else if (control.matches('[data-refresh]')) {
     if (dirty) { announce('请先应用筛选条件，再刷新状态。'); return; }
     void readPage(firstPageUrl());
   } else if (control instanceof HTMLAnchorElement && control.matches('[data-more]')) {
@@ -135,8 +193,18 @@ document.addEventListener('visibilitychange', () => {
     void resume();
   }
 });
-window.addEventListener('offline', () => announce('网络已断开，当前内容可能已过时。联网后可刷新。'));
-window.addEventListener('online', () => { void resume(); });
+window.addEventListener('offline', () => {
+  for (const control of document.querySelectorAll('[data-complete-task]')) {
+    if (control instanceof HTMLButtonElement) control.disabled = true;
+  }
+  announce('网络已断开，当前内容可能已过时。联网后可刷新。');
+});
+window.addEventListener('online', () => {
+  for (const control of document.querySelectorAll('[data-complete-task]')) {
+    if (control instanceof HTMLButtonElement) control.disabled = false;
+  }
+  void resume();
+});
 window.addEventListener('pageshow', (event) => {
   if (event.persisted) { main.replaceChildren(); location.reload(); }
 });

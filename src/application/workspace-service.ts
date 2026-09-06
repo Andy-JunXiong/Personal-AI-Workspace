@@ -243,13 +243,17 @@ export class WorkspaceService {
   ) {
     this.identitySource = Object.freeze({ ...identitySource });
     const resolveIdentity = () => this.resolveIdentity();
+    const resolveTaskContext = () => ({
+      ...resolveIdentity(),
+      channel: "channel" in this.identitySource ? this.identitySource.channel : "MCP" as const,
+    });
     this.jobSearchQueryService = new JobSearchQueryService(database, resolveIdentity, options.clock);
     const assertProjectVisible = (projectId: string, workspaceId: string) => {
       this.getAuthorizedProject(projectId, workspaceId);
     };
     this.taskService = new TaskService(
       database,
-      resolveIdentity,
+      resolveTaskContext,
       assertProjectVisible,
       options.clock,
       () => this.assertLegacyMutationAllowed(),
