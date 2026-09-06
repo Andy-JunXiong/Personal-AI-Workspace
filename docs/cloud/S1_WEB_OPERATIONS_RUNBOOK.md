@@ -268,6 +268,20 @@ duplicate retry and unchanged unrelated rows. Measure concurrent MCP reads, Web
 reads/login/completion and backup on the 1 GB VM; record latency, peak memory,
 OOM events and restart count.
 
+After the synthetic Task detail is open but before completing it, start the
+bounded host sampler in SSH and perform the authorized completion plus fresh MCP
+readback during its window:
+
+```bash
+sudo ./deploy/cloud/sample-web-capacity.sh 90
+```
+
+The sampler creates one concurrent consistent backup, repeatedly checks the
+signed-out HTTPS boundary and MCP health, samples container/host memory, and
+fails on request errors, restart drift or a new OOM event. It never invokes the
+completion endpoint and receives no MCP or OAuth credential. The operator must
+still record the authenticated browser result and exact fresh MCP Task readback.
+
 ## 6. Recovery and rollback
 
 Before enabling browser writes, rehearse current-image and previous-image startup

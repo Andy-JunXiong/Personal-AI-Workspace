@@ -145,4 +145,19 @@ describe("cloud Web deployment contract", () => {
     expect(fingerprint).toContain('database.pragma("query_only = ON")');
     expect(fingerprint).toContain("name NOT LIKE 'sqlite_%'");
   });
+
+  it("samples Web capacity without inheriting credentials or invoking writes", () => {
+    const capacity = read("deploy/cloud/sample-web-capacity.sh");
+
+    expect(capacity).toContain("Capacity window active");
+    expect(capacity).toContain('"${script_dir}/backup.sh"');
+    expect(capacity).toContain("docker stats --no-stream");
+    expect(capacity).toContain("http://127.0.0.1:3000/healthz");
+    expect(capacity).toContain("/workspace/job-search/today");
+    expect(capacity).toContain('[[ "${status}" == 401 ]]');
+    expect(capacity).toContain("RestartCount");
+    expect(capacity).toContain("OOMKilled");
+    expect(capacity).not.toContain("PAW_MCP_BEARER_TOKEN");
+    expect(capacity).not.toContain("/complete");
+  });
 });
