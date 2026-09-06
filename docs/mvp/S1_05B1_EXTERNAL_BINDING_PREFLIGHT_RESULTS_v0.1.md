@@ -52,15 +52,21 @@ iPhone acceptance remain pending.
 - Real VM execution is intentionally pending until account access and approved
   external values exist.
 
-## External blockers recorded on 2026-09-06
+## External readiness recorded on 2026-09-06
 
 - Local AWS CLI has no configured credentials or region.
-- GitHub CLI authentication for the configured account is invalid.
-- No owned Cloudflare hostname or Google Web OAuth client is recorded in the
-  repository or local environment.
-- Cloudflare account tooling was installed with user approval, but its account
-  connection and Zone visibility still require verification in a fresh tool
-  session.
+- GitHub CLI authentication was restored and verified commit `8f21071` was
+  pushed to `origin/main`.
+- The user-approved Cloudflare connection succeeded, but the connected account
+  currently contains zero Zones and zero Tunnels. There is therefore no owned
+  hostname or existing Tunnel available to bind.
+- No Google Web OAuth client is recorded in the repository or local
+  environment.
+
+The next external action is to identify an already-owned Cloudflare-managed
+domain or separately approve a domain acquisition/onboarding decision. AWS
+operator access and a dedicated Google Web OAuth client are also required before
+the real VM preflight can run.
 
 Do not send OAuth secrets, Tunnel credentials or cloud keys through chat. Human
 acceptance is not requested until real read-only publication and every machine

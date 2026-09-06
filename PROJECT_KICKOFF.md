@@ -136,6 +136,9 @@ command that must pass before that notification.
 the gate to 190 tests and adds the VM-side pre-publication check. Real execution
 is next and requires restored AWS access plus approved Cloudflare and Google
 values; browser writes remain disabled.
+Commit `8f21071` is published on `origin/main`. The connected Cloudflare account
+currently has no Zone or Tunnel, so an owned-domain/onboarding decision and
+Google OAuth client remain external prerequisites.
 S1-05B public login, recovery/capacity, Safari/iPhone and cloud publication
 acceptance remain pending and require separate external authorization.
 Existing cloud acceptance is complete and does not
