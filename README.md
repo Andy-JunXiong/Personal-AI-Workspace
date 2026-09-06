@@ -143,8 +143,9 @@ gap, audit and retry boundaries, rollback, and stage-specific acceptance.
 The user subsequently approved a
 [local S1 scope exception](docs/mvp/S1_LOCAL_SCOPE_DECISION_2026-09-05.md).
 [S1-01 identity linking and login](docs/mvp/S1_01_IDENTITY_RESULTS_v0.1.md) are
-implemented locally and passed 153 tests, typechecking and build. Real Google
-login, public authentication acceptance and cloud release remain pending.
+implemented locally and passed 153 tests, typechecking and build. The subsequent
+S1-05B.2 deployment passed real Google login, identity mapping and public
+authentication acceptance without exposing identity values in repository evidence.
 [S1-02 bounded reads and terminal-task readback](docs/mvp/S1_02_QUERY_RESULTS_v0.1.md)
 are also implemented locally (166-test milestone). The subsequent
 [S1-03 responsive pages](docs/mvp/S1_03_WEB_RESULTS_v0.1.md) passed 171 tests,
@@ -159,25 +160,30 @@ checkpoint to GitHub does not deploy or enable the web interface.
 adds the Web-off/read/write deployment contract, loopback-only port 3001,
 read-only secret injection, hardened Cloudflare service templates, health probes
 and rollback guards. Its [operations runbook](docs/cloud/S1_WEB_OPERATIONS_RUNBOOK.md)
-is preparation for S1-05B; no public endpoint, external account or real-data Web
-access has been created.
+now governs the deployed Route 53/Caddy S1-05B path; browser writes and identity
+bootstrap are disabled after the bounded synthetic completion.
 [S1-05A.1 GPT-to-Web handoff](docs/mvp/S1_05A1_GPT_WEB_LINK_RESULTS_v0.1.md)
 now conditionally adds exact Today, inventory, application and Task URLs to the
 existing MCP read results. Web-off deployments advertise no links and tool
 discovery remains at 13.
 [S1-05B.0 HTTPS release checking](docs/mvp/S1_05B0_HTTPS_RELEASE_CHECK_RESULTS_v0.1.md)
 adds a no-secret `web:check` command for the public signed-out boundary. It is
-locally verified against synthetic responses and the real Web route trees, but
-has not contacted an external hostname.
+locally verified against synthetic responses and passed against the external
+hostname in both writes-off and the authorized writes-on mode.
 [S1-05B.1 external binding preflight](docs/mvp/S1_05B1_EXTERNAL_BINDING_PREFLIGHT_RESULTS_v0.1.md)
 adds the VM-side fail-closed check for exact host/origin/ingress agreement,
 disabled writes/bootstrap, restricted secret files and valid Tunnel ingress.
-Real VM execution remains pending on external account access and approved
-binding values.
+Its provider-neutral contract was extended for the approved Route 53/Caddy
+binding and passed on the real VM.
 [S1-05B.2 AI Radar domain ingress](docs/mvp/S1_05B2_AI_RADAR_DOMAIN_INGRESS_RESULTS_v0.1.md)
 selects `workspace.ai-radar-lab.com` and adds a mutually exclusive Route 53/Caddy
 path. It exposes only Caddy on IPv4 TCP 443, keeps MCP/Web application ports on
 loopback, and does not modify the existing AI Radar application or DNS records.
+External identity, restart/reboot, database-copy recovery, concurrent capacity,
+one authorized synthetic browser completion and fresh ChatGPT exact-Task
+readback have passed. The deployment is back in read mode; Windows-PC-OFF
+iPhone Web acceptance remains pending. The exact stop state and resume sequence
+are recorded in the [2026-09-06 S1 handoff](docs/mvp/S1_HANDOFF_2026-09-06.md).
 
 Start with an authenticated Job Search inventory, Today, and application detail
 including completed Tasks. Reuse application services and preserve authority,
@@ -252,14 +258,14 @@ runtime will create and migrate a fresh DB. Startup never deletes existing data.
 
 ### Cloud always-on deployment
 
-Cloud deployment is being developed separately from the frozen M4 product
-evaluation. The C0 architecture and readiness decision is recorded in
+Cloud deployment is operated separately from the frozen M4 product evaluation.
+The C0 architecture and readiness decision is recorded in
 [`docs/cloud/C0_READINESS_REVIEW.md`](docs/cloud/C0_READINESS_REVIEW.md).
 The C1 runtime and operations procedure is in
 [`docs/cloud/C1_RUNTIME_RUNBOOK.md`](docs/cloud/C1_RUNTIME_RUNBOOK.md).
 The C2 private ChatGPT transport procedure is in
 [`docs/cloud/C2_SECURE_MCP_TUNNEL.md`](docs/cloud/C2_SECURE_MCP_TUNNEL.md).
-The separate, not-yet-deployed Job Search Web procedure is in
+The deployed Job Search Web procedure is in
 [`docs/cloud/S1_WEB_OPERATIONS_RUNBOOK.md`](docs/cloud/S1_WEB_OPERATIONS_RUNBOOK.md).
 C1/C2 were deployed and accepted on Sydney Lightsail on 2026-09-05 using a
 fresh non-production database. Backup/restore, image rollback, private connector

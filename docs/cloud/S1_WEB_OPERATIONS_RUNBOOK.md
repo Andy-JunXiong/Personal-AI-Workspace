@@ -342,38 +342,47 @@ incident decision and must reconcile all intervening business writes.
 
 ## S1-05B evidence checklist
 
-- [ ] Current cost, hostname, OAuth client, identity and selected ingress version approved
-- [ ] Static IPv4 is attached; Route 53 changes only `workspace`; public firewall permits only 443
+- [x] Current cost, hostname, OAuth client, identity and selected ingress version approved
+- [x] Static IPv4 is attached; Route 53 changes only `workspace`; public firewall permits only 443
 - [ ] Direct-origin exposure risk is accepted; `/auth` throttling, monitoring and ingress-stop rehearsal are recorded
-- [ ] `web-route53-preflight.sh` passes before the first read-mode publication
-- [ ] Exactly one of `paw-web-ingress.service` and `paw-web-tunnel.service` is active
-- [ ] Isolated synthetic HTTPS login reaches the original synthetic Workspace
-- [ ] Public hostname exposes no MCP, health, admin or fallback origin
-- [ ] `web:check --writes off` passes before identity linking
-- [ ] Read mode survives application and VM restart
-- [ ] Backup, restore-copy and image compatibility rehearsal pass
-- [ ] Capacity sample passes alongside MCP and backup
-- [ ] Reviewed real deployment starts with writes off
-- [ ] Synthetic completion and fresh ChatGPT readback pass before real writes
-- [ ] `web:check --writes on` passes before the human completion test
+- [x] `web-route53-preflight.sh` passes before the first read-mode publication
+- [x] Exactly one of `paw-web-ingress.service` and `paw-web-tunnel.service` is active
+- [x] Google HTTPS login reaches the linked original Workspace and named synthetic fixture
+- [x] Public hostname exposes no MCP, health, admin or fallback origin
+- [x] `web:check --writes off` passes before identity linking
+- [x] Read mode survives application and VM restart
+- [x] Backup, restore-copy and image compatibility rehearsal pass
+- [x] Capacity sample passes alongside MCP and backup
+- [x] Reviewed real deployment starts with writes off
+- [x] Synthetic completion and fresh ChatGPT readback pass before real writes
+- [x] `web:check --writes on` passes before the authorized completion test
 - [ ] iPhone Safari direct-link/completion and Windows-off evidence pass
 
 ## When to request human testing
 
 Do not ask the user to test while hostname, OAuth, ingress, identity mapping,
-security rejection, backup or synthetic readback is incomplete. Once every
-machine-verifiable item above through the writes-off real deployment has passed,
-stop development and explicitly notify the user that human testing is required.
+security rejection, backup or synthetic readback is incomplete. Those machine
+prerequisites passed on 2026-09-06 and the deployment was returned to read mode;
+the remaining Windows-PC-OFF iPhone check explicitly requires human testing.
 
-The first human test is limited to:
+OpenAI's current [MCP app documentation](https://help.openai.com/en/articles/12584461-developer-mode-and-full-mcp-connectors-in-chatgpt)
+states that custom MCP apps are not available on mobile. Do not assume that the
+iPhone ChatGPT app can perform the MCP half of this gate. Use iPhone Safari for
+the direct Web/device-independence evidence and retain the already-passed fresh
+ChatGPT Web `workspace_get_task` readback as separate cross-entry evidence.
 
-1. In ChatGPT on iPhone, ask for today's Workspace work and open the returned
-   `webUrl`.
-2. In Safari, complete Google login, inspect the expected synthetic application,
-   and complete one clearly labeled synthetic Task.
-3. With the Windows PC off, open a fresh ChatGPT conversation and verify the same
-   Task ID is `DONE` with the expected completion time and parent application.
+The next human test is limited to:
+
+1. Confirm Web writes and identity bootstrap remain disabled, then shut down the
+   Windows PC completely and disable Wi-Fi on the iPhone.
+2. In iPhone Safari over cellular data, open the retained exact synthetic Task
+   `webUrl`, complete Google login and verify the expected `DONE` state.
+3. Reload and reopen the saved link, then navigate back to the linked application
+   and dashboard without relying on the Windows PC.
+4. If the strict G08 requirement still calls for a new completion performed on
+   iPhone, prepare a new clearly labeled synthetic Task and obtain separate
+   explicit authorization before enabling another bounded write window.
 
 Record elapsed time, confusing steps, login repetitions and whether the browser
-was faster than completing the same intent in conversation. Do not use or mutate
-a real Task until this bounded human gate passes and separate authority is given.
+was faster than reading the same state in conversation. Do not use or mutate a
+real Task, and do not reuse the completed fixture for another mutation.
