@@ -160,4 +160,20 @@ describe("cloud Web deployment contract", () => {
     expect(capacity).not.toContain("PAW_MCP_BEARER_TOKEN");
     expect(capacity).not.toContain("/complete");
   });
+
+  it("verifies one synthetic Web completion and its no-write replay", () => {
+    const wrapper = read("deploy/cloud/verify-synthetic-completion.sh");
+    const verification = read("deploy/cloud/verify-synthetic-completion.mjs");
+
+    expect(wrapper).toContain("PAW_WEB_WRITES_ENABLED");
+    expect(wrapper).toContain("PAW_WEB_BOOTSTRAP_ENABLED");
+    expect(wrapper).toContain("--network none");
+    expect(wrapper).toContain("--read-only");
+    expect(wrapper).not.toContain("--publish");
+    expect(verification).toContain("PAW Synthetic Acceptance");
+    expect(verification).toContain("Expected exactly one completion audit row");
+    expect(verification).toContain("Expected exactly one completion idempotency row");
+    expect(verification).toContain("completeTaskFromWeb");
+    expect(verification).toContain("changesAfterReplay !== changesBeforeReplay");
+  });
 });

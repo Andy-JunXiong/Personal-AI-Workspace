@@ -282,6 +282,20 @@ fails on request errors, restart drift or a new OOM event. It never invokes the
 completion endpoint and receives no MCP or OAuth credential. The operator must
 still record the authenticated browser result and exact fresh MCP Task readback.
 
+After returning Web to read mode, verify the exact approved synthetic fixture,
+terminal state, single Web audit and single idempotency record. The verifier
+replays the original intent through the application service and requires the
+stored response with zero database changes and no duplicate audit:
+
+```bash
+sudo ./deploy/cloud/verify-synthetic-completion.sh <synthetic-task-id>
+```
+
+The verifier refuses to run while writes or bootstrap are enabled, has no
+network or published ports, and rejects any Task that is not the named S1-05B
+synthetic fixture. This administrative replay does not replace the subsequent
+fresh ChatGPT `workspace_get_task` readback.
+
 ## 6. Recovery and rollback
 
 Before enabling browser writes, rehearse current-image and previous-image startup
