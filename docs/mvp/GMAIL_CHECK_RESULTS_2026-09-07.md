@@ -42,4 +42,12 @@ no message exists under an unknown sender or different wording.
 - Synthetic local browser: 1440/390/320px, visible Gmail section, reachable full
   handoff instruction, no horizontal overflow. No synthetic production data added.
 
-Deployment verification pending.
+## Deployment
+
+Deployed `paw:433ab3c` in browser read mode. Backup
+`workspace-20260907T051525Z.db` passed integrity. New and previous `55b09fd`
+images passed unchanged-data recovery rehearsal: 18 tables / 188 rows.
+All five public release checks passed. Read-only deployed renderer verifies the
+real Wake in Cloud receipt, check timestamp, APPLIED state, zero open tasks and
+23 total applications. This does not prove a website-triggered agent run.
+Temporary SSH access and credentials were removed; original firewall restored.
