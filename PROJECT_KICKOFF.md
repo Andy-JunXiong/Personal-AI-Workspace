@@ -24,7 +24,7 @@
 
 **RECOMMENDATION CONTINUITY S2-03 = LOCALLY VERIFIED — 222 TESTS; DIGEST RUN RECORDING AND COVERAGE**
 
-**S2 CLOUD RELEASE = DEPLOYED da0a879 — MIGRATION/ROLLBACK AND AUTOMATED SMOKE PASS; P6 AUTHENTICATED BROWSER SMOKE PENDING; 235 LOCAL TESTS**
+**S2 CLOUD RELEASE = DEPLOYED 0a9dd15 — COMPLETE APPLICATION OVERVIEW + LARGER TEXT; 236 LOCAL TESTS; P6 ACCEPTANCE PENDING**
 
 The 2026-09-05 handoff led to the completed local
 [S1-04 Task completion package](docs/mvp/S1_04_TASK_COMPLETION_RESULTS_v0.1.md).
@@ -127,6 +127,13 @@ The Workspace will not initially rebuild Gmail/Drive/Calendar connectors. The fi
 - [ ] M4 Day-28 utility gate
 
 ## Immediate Next Step
+
+**Latest UI checkpoint — 2026-09-07:** user feedback requested rejected
+applications in the default overview and larger fonts. The
+[overview/readability correction](docs/mvp/WEB_OVERVIEW_READABILITY_2026-09-07.md)
+is deployed as `0a9dd15`; live checks show all 24 records, including 12 closed,
+and updated CSS. Browser writes/bootstrap remain false. Continue P6 after
+the outstanding user visual/Jobs checks; no P6 cloud fixtures exist yet.
 
 **Latest runtime checkpoint — 2026-09-07:** S2 `da0a879` is deployed in read
 mode after passing migration, repeat startup and previous-image rehearsal.

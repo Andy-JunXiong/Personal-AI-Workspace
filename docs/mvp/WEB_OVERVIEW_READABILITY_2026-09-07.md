@@ -32,6 +32,16 @@ the retained test fixture remains present. P6 fixture creation remains pending.
 
 ## Deployment
 
-Pending exact-image deployment and live verification. Keep browser writes and
-bootstrap disabled. Use an unchanged-database backup-copy rehearsal because
-this release adds no migration; preserve the previous S2 image for rollback.
+Deployed `paw:0a9dd15` (image
+`sha256:5ad05bf65516ffab41ab11900c9357c7cd7711edcda5fbe05992a7b1672ca135`).
+Backup `workspace-20260907T035022Z.db` passed integrity. New and previous
+`da0a879` images each passed isolated unchanged-database startup with 18
+tables / 194 rows. All five public HTTPS checks passed after deployment.
+
+Read-only verification of the deployed renderer confirms default ALL, total
+24, open 12, closed 12, and every closed application present in the default
+HTML. The public CSS contains the new font sizes. This renderer check does
+not substitute for the user's logged-in visual assessment.
+
+Browser writes and bootstrap remain false. The old image and active-tag
+receipt are retained. No P6 fixture was created by this update.

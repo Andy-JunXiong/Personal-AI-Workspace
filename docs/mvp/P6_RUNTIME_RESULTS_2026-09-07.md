@@ -4,6 +4,12 @@
 smoke awaits the user's result. A01–A12 have not started and no P6 fixtures
 have been written to the cloud database.
 
+**Subsequent user feedback:** pages open normally; the default count and text
+size were confusing. The [UI correction](WEB_OVERVIEW_READABILITY_2026-09-07.md)
+is now deployed as `0a9dd15` with ALL as the Web default and larger fonts.
+The initial `da0a879` release evidence below is retained as history. P6
+scenarios and fixtures remain pending.
+
 ## Continuity and benefits
 
 The [P6 plan](P6_ACCEPTANCE_PLAN_v0.1.md) and

@@ -207,7 +207,9 @@ snapshots, and three new MCP tools (21 total). The full P6 acceptance run
 The [2026-09-07 preparation review](docs/mvp/P6_PREPARATION_RESULTS_2026-09-07.md)
 was followed by the [S2 cloud release](docs/mvp/P6_RUNTIME_RESULTS_2026-09-07.md):
 `da0a879` is deployed after migration/rollback rehearsal and automated smoke.
-The local gate is 235 tests. Authenticated browser smoke and A01–A12 remain
+The [overview/readability update](docs/mvp/WEB_OVERVIEW_READABILITY_2026-09-07.md)
+subsequently deployed `0a9dd15`: Applications defaults to all states and text
+is larger. The local gate is 236 tests. Browser acceptance and A01–A12 remain
 pending; no P6 cloud fixture has been created.
 
 Start with an authenticated Job Search inventory, Today, and application detail
