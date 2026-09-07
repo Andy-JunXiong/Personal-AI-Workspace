@@ -2,6 +2,10 @@
 
 ## Status
 
+Production test fixtures were [archived and removed at the user's request](docs/mvp/SYNTHETIC_CLEANUP_2026-09-07.md).
+There are 23 real applications and 3 tasks. Prior P6 fixture IDs are retired;
+remaining synthetic acceptance must use an isolated environment.
+
 Latest UI update: [results-focused detail pages](docs/mvp/WEB_RESULTS_FOCUS_2026-09-07.md).
 
 **CHATGPT-NATIVE SPIKE 1A = COMPLETE**

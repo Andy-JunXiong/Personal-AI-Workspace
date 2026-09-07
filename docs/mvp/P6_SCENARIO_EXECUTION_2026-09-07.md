@@ -1,5 +1,10 @@
 # P6 scenario execution — 2026-09-07
 
+**Later checkpoint:** All production S1/P6 fixtures were
+[archived and removed at the user's request](SYNTHETIC_CLEANUP_2026-09-07.md).
+The counts and fixture URLs below are historical evidence, not current data.
+Pending synthetic scenarios require an isolated environment; do not re-seed production.
+
 ## Continuity and benefits
 
 The [P6 plan](P6_ACCEPTANCE_PLAN_v0.1.md) follows the

@@ -1,5 +1,10 @@
 # P6 Acceptance Plan — Complete A01–A12 Journey v0.1
 
+**Production fixtures retired:** The user's subsequent cleanup request
+supersedes live fixture-retention instructions below. See
+[cleanup evidence](SYNTHETIC_CLEANUP_2026-09-07.md). Remaining synthetic acceptance
+must use an isolated environment, not re-seed this production workspace.
+
 **Date:** 2026-09-07 (Australia/Sydney).
 
 **Latest scenario checkpoint:** fixtures created; A07/A08/A11 PASS,

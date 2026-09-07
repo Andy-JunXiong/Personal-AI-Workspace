@@ -2,6 +2,8 @@
 
 > Working name.
 
+Latest data operation: [production test fixtures archived and removed](docs/mvp/SYNTHETIC_CLEANUP_2026-09-07.md); 23 real applications remain.
+
 Latest UI update: [results-focused detail pages](docs/mvp/WEB_RESULTS_FOCUS_2026-09-07.md).
 
 ## Thesis
