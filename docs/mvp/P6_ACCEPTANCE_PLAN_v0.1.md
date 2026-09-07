@@ -2,6 +2,12 @@
 
 **Date:** 2026-09-07 (Australia/Sydney).
 
+**Execution update:** S2 `da0a879` is deployed after successful migration and
+rollback rehearsal. Automated Phase 0B passes; authenticated browser smoke
+awaits the user. No P6 cloud fixture or A01–A12 scenario has run. See the
+[runtime evidence](P6_RUNTIME_RESULTS_2026-09-07.md). Historical preparation
+and authorization notes below are superseded by this execution update.
+
 **Status:** PLAN — not yet executed. This records the separately authorized
 procedure for the full P6 acceptance run (A01–A12) over the complete
 recommendation-to-application journey. It is the remaining S1/S2 release gate;

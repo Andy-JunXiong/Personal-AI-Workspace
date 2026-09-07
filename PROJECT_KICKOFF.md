@@ -24,7 +24,7 @@
 
 **RECOMMENDATION CONTINUITY S2-03 = LOCALLY VERIFIED — 222 TESTS; DIGEST RUN RECORDING AND COVERAGE**
 
-**P6 ACCEPTANCE PREP = LOCALLY VERIFIED — 233 TESTS; MIGRATION-AWARE REHEARSAL IMPLEMENTED; CLOUD EXECUTION AUTHORIZED AND PENDING**
+**S2 CLOUD RELEASE = DEPLOYED da0a879 — MIGRATION/ROLLBACK AND AUTOMATED SMOKE PASS; P6 AUTHENTICATED BROWSER SMOKE PENDING; 235 LOCAL TESTS**
 
 The 2026-09-05 handoff led to the completed local
 [S1-04 Task completion package](docs/mvp/S1_04_TASK_COMPLETION_RESULTS_v0.1.md).
@@ -127,6 +127,13 @@ The Workspace will not initially rebuild Gmail/Drive/Calendar connectors. The fi
 - [ ] M4 Day-28 utility gate
 
 ## Immediate Next Step
+
+**Latest runtime checkpoint — 2026-09-07:** S2 `da0a879` is deployed in read
+mode after passing migration, repeat startup and previous-image rehearsal.
+Old data/contracts are unchanged; MCP discovery is 21. Obtain the user's
+authenticated Today/Applications/Jobs smoke result, then proceed with the
+already-authorized P6 fixtures and A01–A12. No P6 cloud fixture has been created.
+See [P6 runtime evidence](docs/mvp/P6_RUNTIME_RESULTS_2026-09-07.md).
 
 **Execution checkpoint — 2026-09-07:** user authorized migration rehearsal,
 release commit, cloud deployment and P6 acceptance. The

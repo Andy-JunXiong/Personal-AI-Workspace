@@ -205,8 +205,10 @@ snapshots, and three new MCP tools (21 total). The full P6 acceptance run
 (A01–A12) is the remaining S2 gate; its execution procedure is recorded in
 [P6 Acceptance Plan](docs/mvp/P6_ACCEPTANCE_PLAN_v0.1.md).
 The [2026-09-07 preparation review](docs/mvp/P6_PREPARATION_RESULTS_2026-09-07.md)
-passes 227 tests and identifies a migration-aware isolated-copy rehearsal as
-the next prerequisite before S2 deployment; cloud/device acceptance is pending.
+was followed by the [S2 cloud release](docs/mvp/P6_RUNTIME_RESULTS_2026-09-07.md):
+`da0a879` is deployed after migration/rollback rehearsal and automated smoke.
+The local gate is 235 tests. Authenticated browser smoke and A01–A12 remain
+pending; no P6 cloud fixture has been created.
 
 Start with an authenticated Job Search inventory, Today, and application detail
 including completed Tasks. Reuse application services and preserve authority,
