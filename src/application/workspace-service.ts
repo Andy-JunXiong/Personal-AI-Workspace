@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { gmailCheckSchema } from "../domain/gmail-check.js";
 import type { WorkspaceDatabase } from "../persistence/database.js";
 import { TaskService, type Clock, mapTask } from "./task-service.js";
 import { TodayQueryService } from "./today-query-service.js";
@@ -1740,6 +1741,14 @@ function normalizeRecordObservationInput(
   input: RecordObservationInput,
 ): RecordObservationInput {
   const provider = input.provider.trim();
+  if (provider.toLowerCase() === "workspace-gmail-check") {
+    const parsed = gmailCheckSchema.safeParse(input.observedFacts);
+    if (input.resourceType !== "NOTE" || !input.externalId?.trim() || !parsed.success
+      || emailAddressPattern.test(JSON.stringify(input.observedFacts))) {
+      throw new ValidationError("Gmail check requires NOTE, unique check ID and minimized gmail-application-check-v0.1 facts");
+    }
+    return { ...input, provider: "workspace-gmail-check", observedFacts: parsed.data };
+  }
   if (provider.toLowerCase() !== "gmail") {
     return input;
   }

@@ -2,6 +2,9 @@
 
 ## Status
 
+Latest: [Gmail search and result writeback](docs/mvp/GMAIL_CHECK_RESULTS_2026-09-07.md).
+Real Wake in Cloud check saved; website-triggered GPT still requires a published agent.
+
 Production test fixtures were [archived and removed at the user's request](docs/mvp/SYNTHETIC_CLEANUP_2026-09-07.md).
 There are 23 real applications and 3 tasks. Prior P6 fixture IDs are retired;
 remaining synthetic acceptance must use an isolated environment.

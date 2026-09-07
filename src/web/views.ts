@@ -1,4 +1,5 @@
 import type { WorkspaceService } from "../application/workspace-service.js";
+import { gmailCheckPrompt, gmailCheckSchema } from "../domain/gmail-check.js";
 import type { ReadPage } from "../application/read-pagination.js";
 import type { ApplicationListItem } from "../application/job-search-query-service.js";
 import type { JobCandidateRecord, ResourceRecord, TaskRecord, TransitionRecord } from "../domain/types.js";
@@ -119,6 +120,12 @@ function resourceRow(resource: ResourceRecord, zone: string): string {
 export function applicationView(service: WorkspaceService, id: string, query: Record<string, string | number>, zone: string): string {
   const detail = service.jobSearchQueryService.getApplication(id);
   const p = detail.project;
+  const check = detail.latestGmailCheck;
+  const parsed = gmailCheckSchema.safeParse(check?.facts);
+  const checkLabels = { NO_UPDATE: "已检查，暂无新进展", UPDATED: "已检查，结果已更新", PARTIAL: "检查尚未完成", FAILED: "邮件检查失败" };
+  const emailCheck = `<section class="panel email-check"><h2>Gmail 最新进展</h2>${check && parsed.success
+    ? `<p><strong>${checkLabels[parsed.data.status]}</strong> · <time datetime="${e(check.checkedAt)}">${e(date(check.checkedAt, zone))}</time></p><p>${e(parsed.data.summary)}</p><p class="muted">检查范围：${e(parsed.data.searchScope)}</p>`
+    : `<p>尚无有效的邮件检查记录。没有待办不代表邮箱没有新进展。</p>`}<details class="context-handoff"><summary>去 ChatGPT 检查 Gmail</summary><section class="context-box"><div><p>复制检查指令，粘贴到已连接 Gmail 和 Personal AI Workspace 的 ChatGPT 对话并发送。结果保存后，切回此页读取。</p></div><button type="button" class="button secondary" data-copy>复制检查指令</button><a class="button secondary" href="https://chatgpt.com/" target="_blank" rel="noopener noreferrer">打开 ChatGPT ↗</a><label class="sr-only" for="context-reference">Gmail 检查与回填指令</label><textarea id="context-reference" readonly rows="5">${e(gmailCheckPrompt(id))}</textarea></section></details></section>`;
   const section = String(query.section ?? "tasks");
   const paging = { ...(query.cursor ? { cursor: query.cursor } : {}), ...(query.pageSize ? { pageSize: query.pageSize } : {}) };
   let page: ReadPage<unknown>, rows: string, filters = "";
@@ -137,7 +144,7 @@ export function applicationView(service: WorkspaceService, id: string, query: Re
   }
   const tabs = [["tasks", "任务"], ["resources", "证据"], ["history", "进展记录"]].map(([key, text]) => `<a href="${appLink(id)}?section=${key}"${section === key ? ' aria-current="page"' : ""}>${text}</a>`).join("");
   const posting = safeExternalUrl(typeof p.metadata.postingReference === "string" ? p.metadata.postingReference : null);
-  return document("申请详情", `<a class="back-link" href="${rootPath}/applications">← 我的申请</a>${heading(String(p.metadata.company ?? "申请详情"), String(p.metadata.role ?? p.title), typeof p.metadata.location === "string" ? p.metadata.location : "当前已确认的申请状态")}${freshness(detail.asOf, zone)}<div class="detail-summary"><div>${chip(p.lifecycleState)} ${chip(p.status)}<p class="muted">当前申请进展</p></div><div><strong>${detail.totalCounts.openTasks}</strong><p>开放任务</p></div><div><strong>${detail.totalCounts.completedTasks}</strong><p>已完成任务</p></div>${posting ? `<a class="button secondary" target="_blank" rel="noopener noreferrer" href="${e(posting)}">查看职位来源 ↗</a>` : ""}</div><section class="panel"><nav class="tabs" aria-label="申请详情分区">${tabs}</nav>${filters ? `<form method="get" class="collection-filters" data-filter-form><input type="hidden" name="section" value="${e(section)}">${filters}<button type="submit" class="button secondary">查看</button></form>` : ""}${section === "history" ? '<p class="section-intro">只呈现实际记录的变更与建议；不补全跳过的阶段，也不代表全部编辑历史。</p>' : ""}<div data-page-items>${rows || empty("这个范围暂无记录", "可以切换范围，查看其他已保存的工作记录。")}</div>${pagination(page, appLink(id), { ...query, section, ...(section !== "resources" ? { status } : {}) })}</section>${contextCopy("Application", id)}`, true, "applications");
+  return document("申请详情", `<a class="back-link" href="${rootPath}/applications">← 我的申请</a>${heading(String(p.metadata.company ?? "申请详情"), String(p.metadata.role ?? p.title), typeof p.metadata.location === "string" ? p.metadata.location : "当前已确认的申请状态")}${freshness(detail.asOf, zone)}<div class="detail-summary"><div>${chip(p.lifecycleState)} ${chip(p.status)}<p class="muted">当前申请进展</p></div><div><strong>${detail.totalCounts.openTasks}</strong><p>开放任务</p></div><div><strong>${detail.totalCounts.completedTasks}</strong><p>已完成任务</p></div>${posting ? `<a class="button secondary" target="_blank" rel="noopener noreferrer" href="${e(posting)}">查看职位来源 ↗</a>` : ""}</div>${emailCheck}<section class="panel"><nav class="tabs" aria-label="申请详情分区">${tabs}</nav>${filters ? `<form method="get" class="collection-filters" data-filter-form><input type="hidden" name="section" value="${e(section)}">${filters}<button type="submit" class="button secondary">查看</button></form>` : ""}${section === "history" ? '<p class="section-intro">只呈现实际记录的变更与建议；不补全跳过的阶段，也不代表全部编辑历史。</p>' : ""}<div data-page-items>${rows || empty("这个范围暂无记录", "可以切换范围，查看其他已保存的工作记录。")}</div>${pagination(page, appLink(id), { ...query, section, ...(section !== "resources" ? { status } : {}) })}</section>`, true, "applications");
 }
 
 export function taskView(service: WorkspaceService, id: string, zone: string, asOf: string,

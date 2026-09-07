@@ -172,7 +172,14 @@ export class JobSearchQueryService {
         (SELECT COUNT(*) FROM tasks WHERE project_id = @id AND status = 'DONE') AS completedTasks,
         (SELECT COUNT(*) FROM tasks WHERE project_id = @id AND status = 'CANCELLED') AS cancelledTasks`
       ).get({ id: projectId }) as { resources: number; history: number; openTasks: number; completedTasks: number; cancelledTasks: number };
-      return { project, totalCounts: counts, asOf: this.clock().toISOString() };
+      const latestGmailCheck = this.database.prepare(`SELECT observed_at AS checkedAt,
+        observed_facts_json AS facts FROM resources WHERE project_id = ?
+        AND provider = 'workspace-gmail-check' AND resource_type = 'NOTE'
+        ORDER BY observed_at DESC, created_at DESC, id DESC LIMIT 1`).get(projectId) as
+        { checkedAt: string; facts: string } | undefined;
+      return { project, totalCounts: counts, latestGmailCheck: latestGmailCheck
+        ? { checkedAt: latestGmailCheck.checkedAt, facts: JSON.parse(latestGmailCheck.facts) as unknown } : null,
+        asOf: this.clock().toISOString() };
     })();
   }
 

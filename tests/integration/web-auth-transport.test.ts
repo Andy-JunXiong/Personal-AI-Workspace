@@ -9,6 +9,35 @@ import { WorkspaceService } from "../../src/application/workspace-service.js";
 import { checkWebRelease } from "../../src/operations/web-release-check.js";
 
 const cleanups: Array<() => void | Promise<void>> = [];
+it("shows Gmail check receipts independently of task counts and rejects malformed success", async () => {
+  const w = await setup();
+  w.link();
+  const headers = { cookie: w.sessionCookie(await w.finish(await w.start())) };
+  const path = `/workspace/job-search/applications/${w.projectId}`;
+  expect(await (await w.request(path, { headers })).text()).toContain("尚无有效的邮件检查记录");
+  const input = { projectId: w.projectId, resourceType: "NOTE" as const, provider: "workspace-gmail-check",
+    externalId: "check-1", externalUri: null, title: "Gmail check", observedAt: "2026-09-07T05:00:00Z", idempotencyKey: "check-1",
+    observedFacts: { contractVersion: "gmail-application-check-v0.1", status: "NO_UPDATE",
+      summary: "Only the existing confirmation was found.", searchScope: "Company and job, all result pages", matchedMessageCount: 1 } };
+  const before = w.service.getProject(w.projectId);
+  const first = w.service.recordObservation(input);
+  expect(w.service.recordObservation(input).replayed).toBe(true);
+  const html = await (await w.request(path, { headers })).text();
+  expect(html).toContain("已检查，暂无新进展");
+  expect(html).toContain("Only the existing confirmation was found.");
+  expect(html).toContain("搜索 Gmail");
+  expect(html).toContain("2026-09-07T05:00:00Z");
+  expect(w.service.getProject(w.projectId).project).toEqual(before.project);
+  expect(w.service.getProject(w.projectId).openTasks).toEqual(before.openTasks);
+  expect(() => w.service.recordObservation({ ...input, externalId: "bad", idempotencyKey: "bad",
+    observedFacts: { ...input.observedFacts, status: "SUCCESS" } })).toThrow();
+  w.service.recordObservation({ ...input, externalId: "failed", idempotencyKey: "failed", observedAt: "2026-09-07T06:00:00Z",
+    observedFacts: { ...input.observedFacts, status: "FAILED", summary: "Gmail unavailable" } });
+  const failed = await (await w.request(path, { headers })).text();
+  expect(failed).toContain("邮件检查失败");
+  expect(failed).not.toContain("已检查，暂无新进展");
+  expect(first.projectStateChanged).toBe(false);
+});
 afterEach(async () => { for (const cleanup of cleanups.splice(0).reverse()) await cleanup(); });
 
 async function setup(bootstrapEnabled = true, timeZone = "Australia/Sydney", writesEnabled = false) {
