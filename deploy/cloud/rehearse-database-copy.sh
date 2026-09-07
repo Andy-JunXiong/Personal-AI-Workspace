@@ -9,6 +9,11 @@ fi
 backup_name="${1:-}"
 current_tag="${2:-}"
 previous_tag="${3:-}"
+mode="${4:-unchanged}"
+if [[ "${mode}" != unchanged && "${mode}" != --s2-upgrade ]]; then
+  echo "Optional fourth argument must be --s2-upgrade" >&2
+  exit 1
+fi
 if [[ ! "${backup_name}" =~ ^workspace-[0-9]{8}T[0-9]{6}Z\.db$ ]]; then
   echo "Usage: $0 workspace-YYYYMMDDTHHMMSSZ.db <current-tag> <previous-tag>" >&2
   exit 1
@@ -98,15 +103,18 @@ verify_copy() {
 }
 
 run_image() {
-  local image_tag="$1" sequence="$2"
+  local image_tag="$1" sequence="$2" check="${3:-unchanged}"
   local data_dir="${run_dir}/image-${sequence}"
-  install -d -o 1000 -g 1000 -m 0700 "${data_dir}"
-  install -o 1000 -g 1000 -m 0600 "${backup_path}" "${data_dir}/workspace.db"
+  if [[ ! -d "${data_dir}" ]]; then
+    install -d -o 1000 -g 1000 -m 0700 "${data_dir}"
+    install -o 1000 -g 1000 -m 0600 "${backup_path}" "${data_dir}/workspace.db"
+  fi
 
   verify_copy "${image_tag}" "${data_dir}"
   local before_hash before_tables before_rows
-  IFS=$'\t' read -r before_hash before_tables before_rows \
-    < <(fingerprint "${image_tag}" "${data_dir}")
+  local before_fingerprint
+  before_fingerprint="$(fingerprint "${image_tag}" "${data_dir}")"
+  IFS=$'\t' read -r before_hash before_tables before_rows <<<"${before_fingerprint}"
 
   container_name="paw-recovery-${sequence}-$$"
   docker run --detach --rm \
@@ -144,18 +152,34 @@ run_image() {
   container_name=""
 
   local after_hash after_tables after_rows
-  IFS=$'\t' read -r after_hash after_tables after_rows \
-    < <(fingerprint "${image_tag}" "${data_dir}")
-  if [[ "${before_hash}" != "${after_hash}" ||
+  local after_fingerprint
+  after_fingerprint="$(fingerprint "${image_tag}" "${data_dir}")"
+  IFS=$'\t' read -r after_hash after_tables after_rows <<<"${after_fingerprint}"
+  if [[ "${check}" == upgrade ]]; then
+    docker run --rm --network none --read-only --cap-drop ALL \
+      --security-opt no-new-privileges:true \
+      --mount "type=bind,source=${backup_path},target=/app/before.db,readonly" \
+      --mount "type=bind,source=${data_dir},target=/app/data,readonly" \
+      --entrypoint node "paw:${image_tag}" \
+      dist/scripts/verify-s2-migration.js /app/before.db /app/data/workspace.db
+  elif [[ "${before_hash}" != "${after_hash}" ||
         "${before_tables}" != "${after_tables}" ||
         "${before_rows}" != "${after_rows}" ]]; then
     echo "Logical database content changed during isolated startup for paw:${image_tag}" >&2
     exit 1
   fi
   verify_copy "${image_tag}" "${data_dir}"
-  echo "paw:${image_tag} copy passed: healthy, integrity ok, ${before_tables} tables/${before_rows} rows unchanged, memory ${memory_sample}"
+  echo "paw:${image_tag} copy passed: check=${check}, healthy, integrity ok, ${after_tables} tables/${after_rows} rows, memory ${memory_sample}"
 }
 
-run_image "${current_tag}" current
-run_image "${previous_tag}" previous
+if [[ "${mode}" == --s2-upgrade ]]; then
+  # current_tag is the candidate; previous_tag is the deployed S1 image.
+  # All three starts share the upgraded COPY, never the live database.
+  run_image "${current_tag}" upgrade upgrade
+  run_image "${current_tag}" upgrade
+  run_image "${previous_tag}" upgrade
+else
+  run_image "${current_tag}" current
+  run_image "${previous_tag}" previous
+fi
 echo "Database-copy recovery rehearsal passed; the live container and database were not modified."

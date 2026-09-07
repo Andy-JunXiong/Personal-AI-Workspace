@@ -202,7 +202,11 @@ controls, actor-attributed application linking, and the
 completes recommendation continuity with the run/item ledger, a narrowly scoped
 idempotent recording command, truthful coverage/delivery tracking, per-run fit
 snapshots, and three new MCP tools (21 total). The full P6 acceptance run
-(A01–A12) is the remaining S2 gate.
+(A01–A12) is the remaining S2 gate; its execution procedure is recorded in
+[P6 Acceptance Plan](docs/mvp/P6_ACCEPTANCE_PLAN_v0.1.md).
+The [2026-09-07 preparation review](docs/mvp/P6_PREPARATION_RESULTS_2026-09-07.md)
+passes 227 tests and identifies a migration-aware isolated-copy rehearsal as
+the next prerequisite before S2 deployment; cloud/device acceptance is pending.
 
 Start with an authenticated Job Search inventory, Today, and application detail
 including completed Tasks. Reuse application services and preserve authority,

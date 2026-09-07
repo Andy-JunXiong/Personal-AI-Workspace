@@ -24,6 +24,8 @@
 
 **RECOMMENDATION CONTINUITY S2-03 = LOCALLY VERIFIED — 222 TESTS; DIGEST RUN RECORDING AND COVERAGE**
 
+**P6 ACCEPTANCE PREP = LOCALLY VERIFIED — 233 TESTS; MIGRATION-AWARE REHEARSAL IMPLEMENTED; CLOUD EXECUTION AUTHORIZED AND PENDING**
+
 The 2026-09-05 handoff led to the completed local
 [S1-04 Task completion package](docs/mvp/S1_04_TASK_COMPLETION_RESULTS_v0.1.md).
 The subsequent [S1-05A local operations contract](docs/mvp/S1_05A_LOCAL_OPERATIONS_RESULTS_v0.1.md)
@@ -55,7 +57,9 @@ save/dismiss/restore controls, actor-attributed application linking, and the
 completes recommendation continuity with the run/item ledger, a narrowly scoped
 idempotent recording command, truthful coverage/delivery tracking, per-run fit
 snapshots, and three new MCP tools (21 total). It raises the local gate to 222
-tests. The full P6 acceptance run (A01–A12) is the remaining S2 gate.
+tests. The full P6 acceptance run (A01–A12) is the remaining S2 gate; its
+execution procedure is recorded in
+[P6 Acceptance Plan](docs/mvp/P6_ACCEPTANCE_PLAN_v0.1.md).
 
 Cloud acceptance on 2026-09-05 verified Sydney Lightsail persistence,
 backup/restore, controlled image rollback, restricted private tunnel access,
@@ -123,6 +127,22 @@ The Workspace will not initially rebuild Gmail/Drive/Calendar connectors. The fi
 - [ ] M4 Day-28 utility gate
 
 ## Immediate Next Step
+
+**Execution checkpoint — 2026-09-07:** user authorized migration rehearsal,
+release commit, cloud deployment and P6 acceptance. The
+[S2 migration rehearsal](docs/cloud/S2_MIGRATION_REHEARSAL_2026-09-07.md)
+is implemented, with 233 tests passing. Execute the isolated cloud-image
+rehearsal, deploy the exact rehearsed image, then Phase 0B and A01–A12.
+
+**Latest checkpoint — 2026-09-07:** the
+[P6 preparation review](docs/mvp/P6_PREPARATION_RESULTS_2026-09-07.md)
+verified the bounded A04 seed, strict argument validation, default 106-row
+replay, and unmapped-principal rejection. All 227 tests pass. Next implement
+the migration-aware isolated-copy rehearsal identified in Phase 0A of the
+[P6 plan](docs/mvp/P6_ACCEPTANCE_PLAN_v0.1.md), then perform separately
+authorized S2 deployment and regression smoke before A01–A12. Cloud/device
+acceptance has not started. Earlier chronological next-step notes below are
+preserved as history.
 
 Development communication and result documents must follow the repository's
 [Development Continuity and Benefits Standard](docs/DEVELOPMENT_CONTINUITY_STANDARD.md).
