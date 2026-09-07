@@ -77,6 +77,19 @@ All rows remain PENDING until Phase 0B authenticated browser smoke passes.
 
 ## Resume
 
+### User browser feedback and count reconciliation
+
+The user reported that pages open normally, questioned the displayed count of
+12, and supplied screenshots of the Applications list and its retained S1-05B
+fixture. Read-only live MCP reconciliation returned 12 open and 24 total,
+neither truncated. The 24 comprise 23 real applications (10 APPLIED,
+1 INTERVIEWING, 12 CLOSED/REJECTED) and the one retained ACTIVE/APPLIED
+synthetic S1-05B application. Thus the default OPEN count is 11 real + 1 test.
+The Web list defaults to OPEN; its existing "查看全部" link selects `status=ALL`.
+This is not evidence of lost rows. The screenshots show Applications, not the
+separate Jobs candidate list, so Jobs' signed-in empty state is not independently
+established by the screenshots. No P6 fixture was written during reconciliation.
+
 1. Obtain the pending user's authenticated-page result. This is test evidence,
    not a renewed permission request. Existing steps 1–4 authority persists.
 2. Recheck health/read mode and the deployed image; refresh the app's tools.

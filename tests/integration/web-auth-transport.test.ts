@@ -150,6 +150,28 @@ describe("Signed OIDC authentication over the isolated web transport", () => {
     expect(w.database.prepare("SELECT total_changes() AS n").get()).toEqual(before);
   });
 
+  it("shows rejected applications by default and preserves explicit open filtering and pagination", async () => {
+    const w = await setup(); w.link();
+    const authority = { type: "EXPLICIT_USER_DEV" as const, confirmed: true as const, reference: "Synthetic overview" };
+    const created = w.service.createJobApplication({ company: "Rejected company", role: "Role", authority, idempotencyKey: randomUUID() });
+    if (created.creationStatus !== "CREATED") throw new Error("Expected synthetic application");
+    const proposal = w.service.proposeTransition({ projectId: created.project.id, expectedLifecycleVersion: 1,
+      toState: "REJECTED", triggerType: "USER_ASSERTION", evidenceResourceIds: [], rationale: "Synthetic closure", idempotencyKey: randomUUID() });
+    w.service.admitTransition({ transitionId: proposal.transition.id, expectedLifecycleVersion: 1, authority, idempotencyKey: randomUUID() });
+    const headers = { cookie: w.sessionCookie(await w.finish(await w.start())) };
+    const base = "/workspace/job-search/applications";
+    const all = await (await w.request(base, { headers })).text();
+    expect(all).toContain("Rejected company");
+    expect(all).toContain('value="ALL" selected');
+    expect(all).toContain("共 2 项");
+    expect(await (await w.request(`${base}?status=OPEN`, { headers })).text()).not.toContain("Rejected company");
+    expect(await (await w.request(`${base}?lifecycle=REJECTED`, { headers })).text()).toContain("Rejected company");
+    const first = await (await w.request(`${base}?pageSize=1`, { headers })).text();
+    const nextPath = /data-more href="([^"]+)"/u.exec(first)![1]!.replaceAll("&amp;", "&");
+    expect(nextPath).toContain("status=ALL");
+    expect((await w.request(nextPath, { headers })).status).toBe(200);
+  });
+
   it("supports ordinary GET filters and pagination, rejects invalid queries and offers a clean stale-cursor reload", async () => {
     const w = await setup(); w.link();
     const authority = { type: "EXPLICIT_USER_DEV" as const, confirmed: true as const, reference: "Synthetic page read" };
