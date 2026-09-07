@@ -83,6 +83,8 @@ describe("SQLite-consistent cloud backup", () => {
         "006_job_candidates.sql",
         "007_candidate_links.sql",
         "008_recommendation_runs.sql",
+        "009_mail_scan_runs.sql",
+        "010_mail_scan_batches.sql",
       ],
     });
   });

@@ -17,7 +17,7 @@ const applicationSchema = z.object({
   status: z.enum(["OPEN", "CLOSED", "ALL"]).default("OPEN"),
   lifecycle: z.enum(["APPLIED", "RECRUITER_CONTACT", "INTERVIEWING", "OFFER", "ACCEPTED", "REJECTED", "WITHDRAWN"]).optional(),
   q: z.string().trim().max(500).default(""),
-  sort: z.enum(["UPDATED_DESC", "COMPANY_ASC", "NEXT_DUE_ASC"]).default("UPDATED_DESC"),
+  sort: z.enum(["APPLIED_DESC", "UPDATED_DESC", "COMPANY_ASC", "NEXT_DUE_ASC"]).default("APPLIED_DESC"),
 }).strict();
 const taskSchema = z.object({ ...pageFields,
   status: z.enum(["OPEN", "ALL", "TODO", "IN_PROGRESS", "BLOCKED", "DONE", "CANCELLED"]).default("OPEN"),
@@ -104,12 +104,70 @@ export class JobSearchQueryService {
     private readonly resolveIdentity: () => IdentityContext,
     private readonly clock: Clock = () => new Date()) {}
 
+  applicationCheckTargets(): { projectId: string; company: string; role: string }[] {
+    const identity = this.resolveIdentity();
+    return this.database.prepare(`SELECT id AS projectId,
+      json_extract(metadata_json, '$.company') AS company,
+      json_extract(metadata_json, '$.role') AS role
+      FROM projects WHERE workspace_id = ? AND project_type = 'job_application'
+      ORDER BY updated_at DESC, id ASC`).all(identity.workspaceId) as { projectId: string; company: string; role: string }[];
+  }
+
+  applicationProfile(projectId: string) {
+    parse(idSchema, projectId);
+    const identity = this.resolveIdentity();
+    this.authorizedApplication(projectId, identity.workspaceId);
+    const saved = this.database.prepare(`SELECT observed_facts_json AS facts, observed_at AS savedAt,
+      provider, id FROM resources WHERE project_id = ? AND resource_type = 'NOTE'
+      AND json_extract(observed_facts_json, '$.contractVersion') = 'job-application-profile-v0.1'
+      ORDER BY created_at DESC, rowid DESC LIMIT 1`).get(projectId) as
+      { facts: string; savedAt: string; provider: string; id: string } | undefined;
+    const candidates = this.database.prepare(`SELECT id, fit_reason AS fitReason, fit_uncertainty AS fitUncertainty,
+      updated_at AS updatedAt FROM job_candidates WHERE workspace_id = ? AND linked_project_id = ?
+      AND fit_reason IS NOT NULL ORDER BY updated_at DESC, id ASC`).all(identity.workspaceId, projectId) as
+      { id: string; fitReason: string; fitUncertainty: string; updatedAt: string }[];
+    return { saved: saved ? { ...saved, facts: JSON.parse(saved.facts) as unknown } : null, candidates };
+  }
+
+  listTimeline(projectId: string, input: unknown = {}) {
+    parse(idSchema, projectId);
+    const options = parse(resourceSchema, input);
+    const identity = this.resolveIdentity();
+    const project = this.authorizedApplication(projectId, identity.workspaceId);
+    const events: { id: string; at: string; kind: string; title: string; summary: string }[] = [];
+    if (typeof project.metadata.appliedDate === "string") events.push({ id: `applied:${projectId}`,
+      at: project.metadata.appliedDate, kind: "APPLICATION", title: "提交申请", summary: "已保存的申请日期" });
+    const transitions = this.database.prepare(`SELECT id, to_state AS state, admitted_at AS at, proposal_rationale AS summary
+      FROM state_transitions WHERE project_id = ? AND status = 'ADMITTED'`).all(projectId) as
+      { id: string; state: string; at: string; summary: string }[];
+    for (const t of transitions) events.push({ id: `transition:${t.id}`, at: t.at, kind: "STATE", title: t.state, summary: t.summary });
+    const resources = this.database.prepare(`SELECT id, resource_type AS type, title, observed_at AS at, observed_facts_json AS facts
+      FROM resources WHERE project_id = ? AND (resource_type = 'EMAIL' OR provider = 'workspace-gmail-check')`).all(projectId) as
+      { id: string; type: string; title: string | null; at: string; facts: string }[];
+    for (const r of resources) {
+      const facts = JSON.parse(r.facts);
+      events.push({ id: `resource:${r.id}`, at: typeof facts.sourceFacts?.receivedAt === "string" ? facts.sourceFacts.receivedAt : r.at,
+        kind: r.type === "EMAIL" ? "EMAIL" : "CHECK", title: r.title ?? "邮件记录",
+        summary: typeof facts.interpretation?.summary === "string" ? facts.interpretation.summary : typeof facts.summary === "string" ? facts.summary : "" });
+    }
+    const tasks = this.database.prepare(`SELECT id, title, created_at AS createdAt, completed_at AS completedAt
+      FROM tasks WHERE project_id = ?`).all(projectId) as { id: string; title: string; createdAt: string; completedAt: string | null }[];
+    for (const t of tasks) {
+      events.push({ id: `task-created:${t.id}`, at: t.createdAt, kind: "TASK", title: "创建待办", summary: t.title });
+      if (t.completedAt) events.push({ id: `task-done:${t.id}`, at: t.completedAt, kind: "TASK", title: "完成待办", summary: t.title });
+    }
+    events.sort((a,b) => Date.parse(b.at) - Date.parse(a.at) || a.id.localeCompare(b.id));
+    return readPage(() => events, { kind: "application-timeline", principalId: identity.principalId,
+      workspaceId: identity.workspaceId, projectId, pageSize: options.pageSize }, options.pageSize, options.cursor, this.clock().valueOf());
+  }
+
   listApplications(input: unknown = {}) {
     const options = parse(applicationSchema, input);
     const q = searchText(options.q);
     return this.database.transaction(() => {
       const identity = this.resolveIdentity();
       const order = {
+        APPLIED_DESC: "appliedDate IS NULL ASC, appliedDate DESC, p.created_at DESC, p.id ASC",
         UPDATED_DESC: "p.updated_at DESC, p.id ASC",
         COMPANY_ASC: "company COLLATE NOCASE ASC, role COLLATE NOCASE ASC, p.id ASC",
         NEXT_DUE_ASC: "n.due_at IS NULL ASC, n.due_at ASC, p.id ASC",

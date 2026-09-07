@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { gmailCheckSchema } from "../domain/gmail-check.js";
+import { applicationProfileSchema } from "../domain/application-profile.js";
 import type { WorkspaceDatabase } from "../persistence/database.js";
 import { TaskService, type Clock, mapTask } from "./task-service.js";
 import { TodayQueryService } from "./today-query-service.js";
@@ -7,6 +8,8 @@ import { canonicalHash, canonicalJson } from "../domain/canonical-json.js";
 import { verifiedRequestContext, type RequestContext } from "./request-context.js";
 import { JobSearchQueryService } from "./job-search-query-service.js";
 import { CandidateService } from "./candidate-service.js";
+import { MailScanService } from "./mail-scan-service.js";
+import { MailBatchService } from "./mail-batch-service.js";
 import {
   AuthorizationError,
   ConcurrencyConflictError,
@@ -238,6 +241,8 @@ export class WorkspaceService {
   readonly todayQueryService: TodayQueryService;
   readonly jobSearchQueryService: JobSearchQueryService;
   readonly candidateService: CandidateService;
+  readonly mailScanService: MailScanService;
+  readonly mailBatchService: MailBatchService;
 
   constructor(
     private readonly database: WorkspaceDatabase,
@@ -251,6 +256,8 @@ export class WorkspaceService {
       channel: "channel" in this.identitySource ? this.identitySource.channel : "MCP" as const,
     });
     this.jobSearchQueryService = new JobSearchQueryService(database, resolveIdentity, options.clock);
+    this.mailScanService = new MailScanService(database, resolveTaskContext, options.clock);
+    this.mailBatchService = new MailBatchService(database, resolveTaskContext, options.clock);
     const assertProjectVisible = (projectId: string, workspaceId: string) => {
       this.getAuthorizedProject(projectId, workspaceId);
     };
@@ -842,6 +849,21 @@ export class WorkspaceService {
     deduplicated: boolean;
     replayed: boolean;
   } {
+    return this.recordObservationInternal(input, "workspace_record_observation");
+  }
+
+  recordGmailObservationFromWeb(input: RecordObservationInput) {
+    if (!("channel" in this.identitySource) || this.identitySource.channel !== "WEB"
+      || !((input.provider === "gmail" && input.resourceType === "EMAIL")
+        || (input.provider === "workspace-gmail-check" && input.resourceType === "NOTE"))) {
+      throw new AuthorizationError("Only Gmail observations are allowed by this browser operation");
+    }
+    return this.recordObservationInternal(input, "workspace_record_gmail_observation");
+  }
+
+  private recordObservationInternal(input: RecordObservationInput, operation: string): {
+    resource: ResourceRecord; projectStateChanged: false; deduplicated: boolean; replayed: boolean;
+  } {
     const normalizedInput = normalizeRecordObservationInput(input);
     const identity = this.resolveIdentity();
     const payload = {
@@ -857,7 +879,7 @@ export class WorkspaceService {
 
     return this.runIdempotent(
       identity.workspaceId,
-      "workspace_record_observation",
+      operation,
       normalizedInput.idempotencyKey,
       payload,
       () => {
@@ -1258,7 +1280,7 @@ export class WorkspaceService {
     payload: unknown,
     work: () => T,
   ): T {
-    this.assertLegacyMutationAllowed();
+    if (operation !== "workspace_record_gmail_observation") this.assertLegacyMutationAllowed();
     const normalizedKey = idempotencyKey.trim();
     if (!normalizedKey) {
       throw new ValidationError("idempotencyKey is required");
@@ -1299,7 +1321,7 @@ export class WorkspaceService {
     idempotencyKey: string,
     payload: unknown,
   ): T | null {
-    this.assertLegacyMutationAllowed();
+    if (operation !== "workspace_record_gmail_observation") this.assertLegacyMutationAllowed();
     const normalizedKey = idempotencyKey.trim();
     if (!normalizedKey) {
       throw new ValidationError("idempotencyKey is required");
@@ -1741,6 +1763,11 @@ function normalizeRecordObservationInput(
   input: RecordObservationInput,
 ): RecordObservationInput {
   const provider = input.provider.trim();
+  if (input.observedFacts.contractVersion === "job-application-profile-v0.1") {
+    const parsed = applicationProfileSchema.safeParse(input.observedFacts);
+    if (input.resourceType !== "NOTE" || !parsed.success) throw new ValidationError("Invalid saved application profile");
+    input = { ...input, observedFacts: parsed.data };
+  }
   if (provider.toLowerCase() === "workspace-gmail-check") {
     const parsed = gmailCheckSchema.safeParse(input.observedFacts);
     if (input.resourceType !== "NOTE" || !input.externalId?.trim() || !parsed.success

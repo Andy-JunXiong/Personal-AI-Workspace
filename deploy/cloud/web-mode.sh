@@ -7,6 +7,11 @@ web_compose="${script_dir}/compose.web.yaml"
 writes_compose="${script_dir}/compose.web-writes.yaml"
 active_tag_file=/srv/paw/deployments/active-image-tag
 mode="${1:-}"
+gmail_mode="${2:-off}"
+if [[ ! "${gmail_mode}" =~ ^(off|gmail)$ ]] || [[ "${mode}" == off && "${gmail_mode}" == gmail ]]; then
+  echo "Usage: $0 <off|read|write> [off|gmail]" >&2
+  exit 1
+fi
 
 if [[ ! "${mode}" =~ ^(off|read|write)$ ]]; then
   echo "Usage: $0 <off|read|write>" >&2
@@ -37,6 +42,18 @@ if [[ "${mode}" != off ]]; then
 fi
 if [[ "${mode}" == write ]]; then
   compose+=(--file "${writes_compose}")
+fi
+if [[ "${gmail_mode}" == gmail ]]; then
+  for gmail_secret in /etc/paw/secrets/gmail-model-api-key /etc/paw/secrets/gmail-encryption-key; do
+    [[ -f "${gmail_secret}" && ! -L "${gmail_secret}" ]] \
+      || { echo "Missing regular Gmail secret file" >&2; exit 1; }
+    [[ "$(stat --format='%u:%a' "${gmail_secret}")" == 1000:400 ]] \
+      || { echo "Gmail secrets require UID 1000 and mode 0400" >&2; exit 1; }
+  done
+  [[ -d /srv/paw/gmail-connections && ! -L /srv/paw/gmail-connections \
+    && "$(stat --format='%u:%a' /srv/paw/gmail-connections)" == 1000:700 ]] \
+    || { echo "Gmail connection directory requires UID 1000 and mode 0700" >&2; exit 1; }
+  compose+=(--file "${script_dir}/compose.gmail.yaml")
 fi
 
 if [[ "${mode}" == off ]]; then

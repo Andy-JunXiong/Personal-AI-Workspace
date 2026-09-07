@@ -219,6 +219,7 @@ async function readPage(url, append = false) {
       history.replaceState(null, '', url);
       document.title = page.title;
       dirty = false;
+      void gmailBatch();
     }
     announce(append ? '已加载更多记录。' : '已读取最新状态。');
   } catch (error) {
@@ -228,6 +229,113 @@ async function readPage(url, append = false) {
     clearTimeout(timeout);
     if (pending === controller) { main.removeAttribute('aria-busy'); pending = undefined; }
   }
+}
+
+let gmailBusy = false;
+let batchPolling = false;
+let batchStarting = false;
+/** @param {boolean} [start] */
+async function gmailBatch(start = false) {
+  if (loggingOut || !main.querySelector('[data-gmail-batch]')) return;
+  if (start && batchStarting) return;
+  if (!start && batchPolling) return;
+  const endpoint = '/api/v1/gmail/check-all';
+  const status = (/** @type {string} */ text) => {
+    const node = main.querySelector('[data-gmail-batch-status]');
+    if (node) node.textContent = text;
+  };
+  try {
+    if (start) {
+      batchStarting = true;
+      const session = await fetch('/api/v1/session', { cache: 'no-store', signal: AbortSignal.timeout(15000) });
+      if (session.status === 401) { location.reload(); return; }
+      if (!session.ok) throw new Error();
+      const { csrfToken } = await session.json();
+      const response = await fetch(endpoint, { method: 'POST', headers: { 'content-type': 'application/json', 'x-csrf-token': csrfToken },
+        body: '{}', signal: AbortSignal.timeout(15000) });
+      if (!response.ok) throw new Error();
+      status('已开始检查全部岗位。');
+    }
+    if (batchPolling) return;
+    batchPolling = true;
+    do {
+      if (loggingOut || !main.querySelector('[data-gmail-batch]')) return;
+      const response = await fetch(endpoint, { cache: 'no-store', signal: AbortSignal.timeout(15000) });
+      if (response.status === 401) { location.reload(); return; }
+      if (!response.ok) throw new Error();
+      const { batch } = await response.json();
+      if (!batch) { status('尚未发起批量检查。'); return; }
+      const results = /** @type {{projectId:string,company:string,role:string,outcome:string}[]} */ (batch.results);
+      const updated = results.filter(r => r.outcome === 'UPDATED').length;
+      const unresolved = results.filter(r => r.outcome === 'FAILED' || r.outcome === 'PARTIAL').length;
+      status(`${batch.state === 'RUNNING' ? '正在检查' : batch.state === 'DONE' ? '本批检查结束' : '批量检查中断'}：${results.length}/${batch.total} · 有新增邮件 ${updated} · 未完成或失败 ${unresolved} · 发起于 ${new Date(batch.startedAt).toLocaleString()}`);
+      const list = main.querySelector('[data-gmail-batch-results]');
+      if (list) {
+        const labels = /** @type {Record<string,string>} */ ({ UPDATED: '发现新增邮件', NO_UPDATE: '无新增邮件', PARTIAL: '检查不完整', FAILED: '检查失败' });
+        list.replaceChildren(...results.map(r => {
+          const row = document.createElement('p'), link = document.createElement('a');
+          link.href = `/workspace/job-search/applications/${encodeURIComponent(r.projectId)}`;
+          link.textContent = `${r.company} · ${r.role}：${labels[r.outcome] ?? '检查未完成'}`;
+          row.append(link); return row;
+        }));
+      }
+      const button = main.querySelector('[data-gmail-check-all]');
+      if (button instanceof HTMLButtonElement) button.disabled = batch.state === 'RUNNING';
+      if (batch.state !== 'RUNNING') return;
+      await new Promise(resolve => setTimeout(resolve, 3000));
+    } while (true);
+  } catch { status('暂时无法读取批量进度，后台可能仍在检查。刷新页面后可继续查看，不代表没有更新。'); }
+  finally { batchStarting = false; batchPolling = false; }
+}
+void gmailBatch();
+/** @param {HTMLButtonElement} control */
+async function gmailAction(control) {
+  if (gmailBusy) return;
+  const panel = control.closest('[data-gmail-panel]');
+  const projectId = panel?.getAttribute('data-project-id');
+  if (!projectId) return;
+  gmailBusy = true;
+  const action = control.getAttribute('data-gmail-action');
+  const message = (/** @type {string} */ text) => {
+    announce(text);
+    const status = document.querySelector('[data-gmail-status]');
+    if (status) status.textContent = text;
+  };
+  control.disabled = true;
+  try {
+    const session = await fetch('/api/v1/session', { cache: 'no-store', signal: AbortSignal.timeout(15000) });
+    if (session.status === 401) { location.reload(); return; }
+    if (!session.ok) throw new Error('session unavailable');
+    const { csrfToken } = await session.json();
+    const endpoint = `/api/v1/gmail/applications/${encodeURIComponent(projectId)}/check`;
+    const response = await fetch(action === 'check' ? endpoint : `/api/v1/gmail/${action}`, {
+      method: 'POST', headers: { 'content-type': 'application/json', 'x-csrf-token': csrfToken },
+      body: JSON.stringify(action === 'check' ? {} : { slot: Number(control.getAttribute('data-slot')),
+        ...(action === 'connect' ? { projectId } : {}) }), signal: AbortSignal.timeout(15000),
+    });
+    if (!response.ok) throw new Error('Gmail operation failed');
+    if (action === 'connect') { const { url } = await response.json(); location.assign(url); return; }
+    if (action === 'disconnect') { await readPage(firstPageUrl()); return; }
+    const started = await response.json();
+    message('正在检查两个邮箱，完成后会自动显示结果。');
+    for (let attempt = 0; attempt < 100; attempt++) {
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      if (loggingOut) return;
+      const result = await fetch(endpoint, { cache: 'no-store', signal: AbortSignal.timeout(15000) });
+      if (result.status === 401) { location.reload(); return; }
+      if (!result.ok) throw new Error('Cannot read check status');
+      const { run } = await result.json();
+      if (!run || run.id !== started.id || run.state === 'FAILED') throw new Error('Check result unavailable');
+      if (run.state === 'DONE') {
+        await readPage(firstPageUrl());
+        message('本次检查结果已保存，请查看下方结果和检查时间。');
+        return;
+      }
+    }
+    throw new Error('Check timeout');
+  } catch {
+    message('暂时无法确认检查结果。请刷新查看最新检查时间，或稍后重试；这不代表没有新邮件。');
+  } finally { gmailBusy = false; control.disabled = false; }
 }
 
 document.addEventListener('input', (event) => {
@@ -247,11 +355,16 @@ document.addEventListener('submit', (event) => {
   for (const [key, value] of new FormData(form)) if (typeof value === 'string' && value) url.searchParams.set(key, value);
   void readPage(url);
 });
+
 document.addEventListener('click', async (event) => {
   if (!(event.target instanceof Element)) return;
   const control = event.target.closest('button, a');
   if (!control) return;
-  if (control instanceof HTMLButtonElement && control.matches('[data-complete-task]')) {
+  if (control instanceof HTMLButtonElement && control.matches('[data-gmail-check-all]')) {
+    await gmailBatch(true);
+  } else if (control instanceof HTMLButtonElement && control.matches('[data-gmail-action]')) {
+    await gmailAction(control);
+  } else if (control instanceof HTMLButtonElement && control.matches('[data-complete-task]')) {
     await completeTask(control);
   } else if (control instanceof HTMLButtonElement && control.matches('[data-decide-candidate]')) {
     await decideCandidate(control);
@@ -286,6 +399,7 @@ document.addEventListener('click', async (event) => {
   }
 });
 async function resume() {
+  void gmailBatch();
   if (!dirty) { void readPage(firstPageUrl()); return; }
   announce('筛选条件尚未应用，已保留你的输入。应用筛选后会读取最新状态。');
   // Validate identity even when preserving an unfinished filter draft.

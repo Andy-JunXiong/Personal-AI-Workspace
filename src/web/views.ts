@@ -1,5 +1,6 @@
 import type { WorkspaceService } from "../application/workspace-service.js";
 import { gmailCheckPrompt, gmailCheckSchema } from "../domain/gmail-check.js";
+import { applicationProfileSchema } from "../domain/application-profile.js";
 import type { ReadPage } from "../application/read-pagination.js";
 import type { ApplicationListItem } from "../application/job-search-query-service.js";
 import type { JobCandidateRecord, ResourceRecord, TaskRecord, TransitionRecord } from "../domain/types.js";
@@ -22,6 +23,10 @@ const chip = (value: string, text = label(value)): string => `<span class="chip 
 const appLink = (id: string): string => `${rootPath}/applications/${encodeURIComponent(id)}`;
 const taskLink = (id: string): string => `${rootPath}/tasks/${encodeURIComponent(id)}`;
 const candidateLink = (id: string): string => `${rootPath}/jobs/${encodeURIComponent(id)}`;
+const applicationDate = (value: unknown): string => typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/u.test(value)
+  ? value : "尚未记录";
+const timelineDate = (value: string, zone: string): string => /^\d{4}-\d{2}-\d{2}$/u.test(value) ? value
+  : new Intl.DateTimeFormat("zh-CN", { timeZone: zone, year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false }).format(new Date(value));
 const fitUncertaintyLabel = (value: string): string => ({ LOW: "低不确定性", MEDIUM: "中等不确定性", HIGH: "高不确定性", UNKNOWN: "不确定性未知" })[value] ?? value;
 const sourceAvailabilityLabel = (value: string): string => ({ AVAILABLE: "来源可用", UNAVAILABLE: "来源已失效", UNKNOWN: "来源状态未知" })[value] ?? value;
 function date(value: string | null, zone: string): string {
@@ -83,15 +88,38 @@ export function todayView(service: WorkspaceService, asOf: string): string {
   function item(task: { taskId: string; title: string; company: string; role: string; dueAt: string | null; reasons?: string[] }): string {
     return `<article class="task-row"><div class="task-symbol" aria-hidden="true">↗</div><div class="grow"><p class="overline">${e(task.company)} · ${e(task.role)}</p><h3><a href="${taskLink(task.taskId)}">${e(task.title)}</a></h3><div class="chips">${(task.reasons ?? []).map((reason) => chip(reason)).join("")}</div></div><span class="due">${e(date(task.dueAt, zone))}</span></article>`;
   }
-  return document("今天", `${heading("TODAY / 今天", "把注意力放在下一步", "先处理需要关注的事项，再安排接下来的工作。")}${freshness(asOf, zone)}<div class="stat-grid"><div class="stat"><span>需要关注</span><strong>${today.attention.length.toString().padStart(2, "0")}</strong><small>任务按既定规则呈现</small></div><div class="stat"><span>即将到来</span><strong>${today.upcoming.length.toString().padStart(2, "0")}</strong><small>未来 7 个本地日历日</small></div><div class="stat"><span>可检查下一步</span><strong>${today.applicationsWithoutOpenTask.length.toString().padStart(2, "0")}</strong><small>进行中的申请，尚无开放任务</small></div></div><div class="two-column"><div><section class="panel"><header class="section-heading"><h2>需要关注</h2><span class="count">${today.attention.length}</span></header>${today.attention.map(item).join("") || empty("暂无需要关注的任务", "有新的到期、受阻或高优先级任务时，会在这里出现。")}</section><section class="panel"><header class="section-heading"><h2>即将到来</h2><span class="muted">未来 7 天</span></header>${today.upcoming.map(item).join("") || empty("近期没有已排期任务", "未设截止时间的任务不会被自动排入日程。")}</section></div><aside class="panel quiet"><header class="section-heading"><h2>检查下一步</h2></header><p class="section-intro">这些申请尚无开放任务。可以检查进展；这不代表已逾期。</p>${today.applicationsWithoutOpenTask.map((app) => `<a class="gap-row" href="${appLink(app.projectId)}"><span><strong>${e(app.company)}</strong><small>${e(app.role)}</small></span><span aria-hidden="true">↗</span></a>`).join("") || empty("每个申请都有下一步", "当前没有需要检查的任务空缺。")}</aside></div>${today.recentLifecycleChanges.length ? `<section class="panel"><header class="section-heading"><h2>最近确认的进展</h2><span class="muted">最多 5 条</span></header>${today.recentLifecycleChanges.map((event) => `<div class="history-row"><div class="grow"><a href="${appLink(event.projectId)}">${e(event.company)} · ${e(event.role)}</a><p>${e(label(event.fromState))} → ${e(label(event.toState))}</p></div><time>${e(date(event.admittedAt, zone))}</time></div>`).join("")}</section>` : ""}`, true);
+  return document("今天", `${heading("TODAY / 今天", "把注意力放在下一步", "先处理需要关注的事项，再安排接下来的工作。")}${freshness(asOf, zone)}${mailScanPanel(service, zone)}<div class="stat-grid"><div class="stat"><span>需要关注</span><strong>${today.attention.length.toString().padStart(2, "0")}</strong><small>任务按既定规则呈现</small></div><div class="stat"><span>即将到来</span><strong>${today.upcoming.length.toString().padStart(2, "0")}</strong><small>未来 7 个本地日历日</small></div><div class="stat"><span>可检查下一步</span><strong>${today.applicationsWithoutOpenTask.length.toString().padStart(2, "0")}</strong><small>进行中的申请，尚无开放任务</small></div></div><div class="two-column"><div><section class="panel"><header class="section-heading"><h2>需要关注</h2><span class="count">${today.attention.length}</span></header>${today.attention.map(item).join("") || empty("暂无需要关注的任务", "有新的到期、受阻或高优先级任务时，会在这里出现。")}</section><section class="panel"><header class="section-heading"><h2>即将到来</h2><span class="muted">未来 7 天</span></header>${today.upcoming.map(item).join("") || empty("近期没有已排期任务", "未设截止时间的任务不会被自动排入日程。")}</section></div><aside class="panel quiet"><header class="section-heading"><h2>检查下一步</h2></header><p class="section-intro">这些申请尚无开放任务。可以检查进展；这不代表已逾期。</p>${today.applicationsWithoutOpenTask.map((app) => `<a class="gap-row" href="${appLink(app.projectId)}"><span><strong>${e(app.company)}</strong><small>${e(app.role)}</small></span><span aria-hidden="true">↗</span></a>`).join("") || empty("每个申请都有下一步", "当前没有需要检查的任务空缺。")}</aside></div>${today.recentLifecycleChanges.length ? `<section class="panel"><header class="section-heading"><h2>最近确认的进展</h2><span class="muted">最多 5 条</span></header>${today.recentLifecycleChanges.map((event) => `<div class="history-row"><div class="grow"><a href="${appLink(event.projectId)}">${e(event.company)} · ${e(event.role)}</a><p>${e(label(event.fromState))} → ${e(label(event.toState))}</p></div><time>${e(date(event.admittedAt, zone))}</time></div>`).join("")}</section>` : ""}`, true);
 }
 
-export function applicationListView(service: WorkspaceService, query: Record<string, string | number>, zone: string): string {
+export function mailScanPanel(service: WorkspaceService, zone: string): string {
+  const data = service.mailScanService.overview();
+  const processing = service.mailBatchService.progress();
+  const names: Record<string,string> = { RUNNING: "未收到完成回执", COMPLETE: "两邮箱检查完成", PARTIAL: "检查不完整", FAILED: "检查失败" };
+  const mailboxNames: Record<string,string> = { COMPLETE: "检查及写入完成", PARTIAL: "部分完成", FAILED: "未完成" };
+  const origins: Record<string,string> = { SCHEDULED: "定时执行（GPT 回报）", MANUAL: "手动执行", UNKNOWN: "执行来源待确认" };
+  const latest = data.runs[0];
+  return `<section class="panel"><header class="section-heading"><h2>每日邮件扫描</h2><span class="muted">GPT 执行 · Workspace 回执</span></header>${latest
+    ? `<p><strong>${e(names[latest.status])}</strong> · ${e(origins[latest.triggerType])} · 开始于 ${e(date(latest.startedAt, zone))}${latest.finishedAt ? ` · 完成于 ${e(date(latest.finishedAt, zone))}` : ""}</p>${latest.executionReference ? `<p class="muted">执行来源：${e(latest.executionReference)}</p>` : ""}`
+    : `<p>尚无每日扫描回执，不能据此判断邮箱没有更新。</p>`}
+    ${data.unfinishedCount ? `<p class="advisory">${data.unfinishedCount} 次扫描尚未提交完成回执，可能仍在运行或已中断。</p>` : ""}
+    <div class="two-column">${["mailbox-1", "mailbox-2"].map((key, i) => {
+      const checkpoint = data.checkpoints.find(c => c.mailbox === key);
+      const result = latest?.mailboxes.find(m => m.mailbox === key);
+      return `<div><h3>邮箱 ${i+1}</h3><p>最近成功覆盖至：${checkpoint ? e(date(checkpoint.coveredThrough, zone)) : "尚未记录"}</p>${result ? `<p>${e(mailboxNames[result.status])}</p>${result.searchedFrom ? `<p class="muted">本次搜索起点：${e(date(result.searchedFrom, zone))}</p>` : ""}${result.failureReason ? `<p>${e(result.failureReason)}</p>` : ""}` : ""}</div>`;
+    }).join("")}</div>
+    ${processing.streams.length ? `<details open><summary>可恢复的邮件处理进度</summary><p class="muted">近期检查与一周内补查独立推进。以下待处理数量仅包含已列出的当前批次，不代表邮箱全部剩余邮件。</p>${processing.streams.map(s => `<p>邮箱 ${s.mailbox === "mailbox-1" ? "1" : "2"} · ${s.lane === "RECENT" ? "近期检查" : "一周内补查"}：${s.coveredThrough === s.startedFrom ? "尚无完整批次" : `已处理至 ${e(date(s.coveredThrough, zone))}`} · 本批待处理 ${s.pendingMessages} 封${s.blockedMessages ? ` · 读取受阻 ${s.blockedMessages} 封` : ""}${s.backfillComplete ? " · 一周内补查完成" : ""}${s.excludedBefore ? ` · ${e(date(s.excludedBefore, zone))} 之前未完成部分已超出一周范围` : ""}</p>`).join("")}</details>` : ""}
+    ${latest?.counts ? `<p>本次已核对写入：${latest.counts.applications} 条新申请 · ${latest.counts.evidence} 条邮件证据 · ${latest.counts.transitions} 次状态变化 · ${latest.counts.tasks} 项待办</p>` : ""}
+    ${data.runs.length ? `<details><summary>最近 ${data.runs.length} 次回执</summary>${data.runs.map(r => `<article class="evidence-row"><p>${e(date(r.startedAt, zone))} · ${e(names[r.status])} · ${e(origins[r.triggerType])}</p>${r.counts ? `<p>申请 ${r.counts.applications} · 证据 ${r.counts.evidence} · 状态变化 ${r.counts.transitions} · 待办 ${r.counts.tasks}</p>` : ""}${r.mailboxes.filter(m => m.failureReason).map(m => `<p>邮箱 ${m.mailbox === "mailbox-1" ? "1" : "2"}：${e(m.failureReason)}</p>`).join("")}</article>`).join("")}</details>` : ""}
+    <p class="muted">失败邮箱保留上次成功进度。覆盖时间反映已提交的搜索范围，不代表已扫描全部历史邮件。</p></section>`;
+}
+
+export function applicationListView(service: WorkspaceService, query: Record<string, string | number>, zone: string, gmailEnabled = false): string {
+  const bulk = gmailEnabled ? `<section class="panel" data-gmail-batch><button type="button" class="button primary" data-gmail-check-all>检查全部岗位</button><p>检查所有申请（含已拒绝），不受当前筛选影响。结果分别保存到各岗位。</p><p data-gmail-batch-status role="status"></p><div data-gmail-batch-results></div></section>` : "";
   query = { ...query, status: query.status ?? "ALL" };
   const page = service.jobSearchQueryService.listApplications(query);
-  const status = String(query.status), sort = String(query.sort ?? "UPDATED_DESC");
-  const rows = page.items.map((app: ApplicationListItem) => `<article class="application-row"><div class="grow"><p class="overline">${e(app.company)}${app.location ? ` · ${e(app.location)}` : ""}</p><h2><a href="${appLink(app.projectId)}">${e(app.role)}</a></h2><p class="next-action">${app.nextDueTask ? `下一项：<a href="${taskLink(app.nextDueTask.id)}">${e(app.nextDueTask.title)}</a>` : app.openTaskCount ? "有开放任务，尚未设截止时间" : "尚无开放任务"}</p></div><div class="row-status">${chip(app.lifecycleState)}<span class="muted">${app.openTaskCount} 项开放任务</span>${app.nextDueTask ? `<time>${e(date(app.nextDueTask.dueAt, zone))}</time>` : ""}</div></article>`).join("");
-  return document("我的申请", `${heading("APPLICATIONS / 我的申请", "每份申请，都有后续", "查看已确认的进展、待办和保留下来的工作记录。")}${freshness(page.asOf, zone)}<form class="filters" method="get" data-filter-form><label class="search-label">搜索公司或职位<input type="search" name="q" value="${e(query.q ?? "")}" placeholder="公司、职位关键词" maxlength="500"></label><label>申请范围<select name="status">${["OPEN", "CLOSED", "ALL"].map((x) => option(x, x === "OPEN" ? "进行中与暂停" : label(x), status)).join("")}</select></label><label>进展<select name="lifecycle">${option("", "全部进展", String(query.lifecycle ?? ""))}${["APPLIED", "RECRUITER_CONTACT", "INTERVIEWING", "OFFER", "ACCEPTED", "REJECTED", "WITHDRAWN"].map((x) => option(x, label(x), String(query.lifecycle ?? ""))).join("")}</select></label><label>排序<select name="sort">${option("UPDATED_DESC", "最近更新", sort)}${option("COMPANY_ASC", "公司名称", sort)}${option("NEXT_DUE_ASC", "最近截止", sort)}</select></label><button class="button primary" type="submit">应用筛选</button></form><section class="panel"><header class="section-heading"><h2>申请记录 <span class="count">${page.totalCount}</span></h2><a class="text-link" href="${rootPath}/applications?status=ALL">查看全部</a></header><div data-page-items>${rows || empty(query.q || query.lifecycle ? "没有匹配的申请" : "当前范围没有申请", "尝试调整筛选，或在 ChatGPT 中记录实际投递。")}</div>${pagination(page, `${rootPath}/applications`, query)}</section>`, true, "applications");
+  const status = String(query.status), sort = String(query.sort ?? "APPLIED_DESC");
+  const rows = page.items.map((app: ApplicationListItem) => `<article class="application-row"><div class="grow"><p class="overline">${e(app.company)}${app.location ? ` · ${e(app.location)}` : ""}</p><h2><a href="${appLink(app.projectId)}">${e(app.role)}</a></h2><p class="muted">申请日期：${e(applicationDate(app.appliedDate))}</p><p class="next-action">${app.nextDueTask ? `下一项：<a href="${taskLink(app.nextDueTask.id)}">${e(app.nextDueTask.title)}</a>` : app.openTaskCount ? "有开放任务，尚未设截止时间" : "尚无开放任务"}</p></div><div class="row-status">${chip(app.lifecycleState)}<span class="muted">${app.openTaskCount} 项开放任务</span>${app.nextDueTask ? `<time>${e(date(app.nextDueTask.dueAt, zone))}</time>` : ""}</div></article>`).join("");
+  return document("我的申请", `${bulk}${heading("APPLICATIONS / 我的申请", "每份申请，都有后续", "查看已确认的进展、待办和保留下来的工作记录。")}${freshness(page.asOf, zone)}${mailScanPanel(service, zone)}<form class="filters" method="get" data-filter-form><label class="search-label">搜索公司或职位<input type="search" name="q" value="${e(query.q ?? "")}" placeholder="公司、职位关键词" maxlength="500"></label><label>申请范围<select name="status">${["OPEN", "CLOSED", "ALL"].map((x) => option(x, x === "OPEN" ? "进行中与暂停" : label(x), status)).join("")}</select></label><label>进展<select name="lifecycle">${option("", "全部进展", String(query.lifecycle ?? ""))}${["APPLIED", "RECRUITER_CONTACT", "INTERVIEWING", "OFFER", "ACCEPTED", "REJECTED", "WITHDRAWN"].map((x) => option(x, label(x), String(query.lifecycle ?? ""))).join("")}</select></label><label>排序<select name="sort">${option("APPLIED_DESC", "最近申请", sort)}${option("UPDATED_DESC", "最近更新", sort)}${option("COMPANY_ASC", "公司名称", sort)}${option("NEXT_DUE_ASC", "最近截止", sort)}</select></label><button class="button primary" type="submit">应用筛选</button></form><section class="panel"><header class="section-heading"><h2>申请记录 <span class="count">${page.totalCount}</span></h2><a class="text-link" href="${rootPath}/applications?status=ALL">查看全部</a></header><div data-page-items>${rows || empty(query.q || query.lifecycle ? "没有匹配的申请" : "当前范围没有申请", "尝试调整筛选，或在 ChatGPT 中记录实际投递。")}</div>${pagination(page, `${rootPath}/applications`, query)}</section>`, true, "applications");
 }
 
 function taskRow(task: TaskRecord, zone: string): string {
@@ -104,6 +132,15 @@ function safeExternalUrl(value: string | null): string | null {
   try { const url = new URL(value ?? ""); return ["https:", "http:"].includes(url.protocol) && !url.username && !url.password ? url.href : null; } catch { return null; }
 }
 function resourceRow(resource: ResourceRecord, zone: string): string {
+  const profile = applicationProfileSchema.safeParse(resource.observedFacts);
+  if (profile.success) {
+    const p = profile.data;
+    return `<article class="evidence-row"><h3>${e(resource.title ?? "岗位资料版本")}</h3><p class="muted">${e(resource.provider)} · ${e(date(resource.createdAt, zone))}</p><details><summary>查看此版本资料</summary>${[
+      ["职位描述 · JD", p.jobDescription], ["技能匹配报告", p.skillMatchText],
+      ["结构化匹配摘要", p.skillMatch?.summary], ["简历版本", p.resumeVersion],
+      ["简历内容", p.resumeText], ["资料来源", p.sourceReference],
+    ].filter(([, value]) => value).map(([title, value]) => `<h4>${e(title)}</h4><div class="saved-text">${e(value)}</div>`).join("")}</details></article>`;
+  }
   const facts = resource.observedFacts.sourceFacts;
   const summary = facts && typeof facts === "object" && !Array.isArray(facts) && typeof facts.summary === "string" ? facts.summary : null;
   const interpretation = resource.observedFacts.interpretation;
@@ -117,20 +154,38 @@ function resourceRow(resource: ResourceRecord, zone: string): string {
   return `<article class="evidence-row"><p class="overline">来源观察 · ${e(resource.provider)}</p><h3>${e(resource.title ?? "来源记录")}</h3>${provenance}${summary ? `<p>${e(summary)}</p>` : ""}${meaning ? `<p class="advisory">建议 / 推断：${e(meaning)}<br><small>解读摘要，不代表已确认的申请进展。</small></p>` : ""}<div class="evidence-foot"><span>观察于 ${e(date(resource.observedAt, zone))}</span>${url ? `<a class="text-link" href="${e(url)}" target="_blank" rel="noopener noreferrer">打开来源 ↗</a>` : "<span>来源链接不可用</span>"}</div></article>`;
 }
 
-export function applicationView(service: WorkspaceService, id: string, query: Record<string, string | number>, zone: string): string {
+export function applicationView(service: WorkspaceService, id: string, query: Record<string, string | number>, zone: string,
+  gmail?: { slot: number; email: string | null }[]): string {
   const detail = service.jobSearchQueryService.getApplication(id);
   const p = detail.project;
+  const profile = service.jobSearchQueryService.applicationProfile(id);
+  const report = applicationProfileSchema.safeParse(profile.saved?.facts);
+  const match = report.success ? report.data.skillMatch : null;
+  const data = report.success ? report.data : null;
+  const matchLabels = { MATCH: "匹配", PARTIAL: "部分匹配", GAP: "有差距", UNKNOWN: "待确认" };
+  const profilePanels = `<section class="panel application-profile"><h2>职位描述 · JD</h2>${report.success && report.data.jobDescription
+    ? `<div class="saved-text">${e(report.data.jobDescription)}</div>` : `<p>尚未保存 JD 正文。</p>${safeExternalUrl(typeof p.metadata.postingReference === "string" ? p.metadata.postingReference : null) ? `<a class="text-link" target="_blank" rel="noopener noreferrer" href="${e(p.metadata.postingReference)}">查看职位原文 ↗</a>` : ""}`}</section>
+    <section class="panel application-profile"><h2>我的技能匹配</h2>${data?.skillMatchText ? `<div class="saved-text">${e(data.skillMatchText)}</div>` : ""}${match ? `<p class="saved-text">${e(match.summary)}</p><div class="match-table"><table><thead><tr><th>岗位要求</th><th>我的经历 / 技能依据</th><th>匹配情况</th></tr></thead><tbody>${match.matches.map(m => `<tr><td>${e(m.requirement)}</td><td>${e(m.evidence)}</td><td>${e(matchLabels[m.assessment])}</td></tr>`).join("")}</tbody></table></div>${match.gaps.length ? `<h3>待补足</h3><ul>${match.gaps.map(g => `<li>${e(g)}</li>`).join("")}</ul>` : ""}`
+    : data?.skillMatchText ? "" : profile.candidates.length ? profile.candidates.map(c => `<p class="saved-text">${e(c.fitReason)}</p><p class="muted">已关联候选岗位的匹配建议 · ${e(fitUncertaintyLabel(c.fitUncertainty))} · <a href="${candidateLink(c.id)}">查看来源</a></p>`).join("")
+    : `<p>尚未保存此岗位的技能匹配报告。</p><p class="muted">若已在 GPT 中分析，请将原报告保存并关联到此申请，保存后这里即可展示。</p>`}${report.success && profile.saved ? `<p class="muted">报告来源：${e(profile.saved.provider)} · 保存记录时间 ${e(timelineDate(profile.saved.savedAt, zone))}</p>` : ""}</section>`;
+  const resumePanel = `<section class="panel application-profile"><h2>本次使用的简历</h2>${data?.resumeVersion ? `<p><strong>${e(data.resumeVersion)}</strong></p>` : "<p>尚未关联简历版本。</p>"}${data?.resumeText ? `<div class="saved-text">${e(data.resumeText)}</div>` : ""}${data?.sourceReference ? `<p class="saved-text muted">资料来源：${e(data.sourceReference)}</p>` : ""}
+    <p class="muted">资料由 GPT 保存到此申请后显示。更新或补充资料请在 GPT 中操作。</p></section>`;
   const check = detail.latestGmailCheck;
   const parsed = gmailCheckSchema.safeParse(check?.facts);
   const checkLabels = { NO_UPDATE: "已检查，暂无新进展", UPDATED: "已检查，结果已更新", PARTIAL: "检查尚未完成", FAILED: "邮件检查失败" };
-  const emailCheck = `<section class="panel email-check"><h2>Gmail 最新进展</h2>${check && parsed.success
+  const gmailControls = gmail ? `<div data-gmail-panel data-project-id="${e(id)}"><button type="button" class="button primary" data-gmail-action="check">检查两个邮箱的最新更新</button><p data-gmail-status role="status"></p><details><summary>邮箱连接（${gmail.filter(g => g.email).length}/2）</summary>${gmail.map(g => `<p>邮箱 ${g.slot}：${e(g.email ?? "尚未连接")} <button type="button" class="button secondary" data-gmail-action="connect" data-slot="${g.slot}">${g.email ? "重新授权" : "连接 Gmail"}</button>${g.email ? ` <button type="button" class="button secondary" data-gmail-action="disconnect" data-slot="${g.slot}">断开</button>` : ""}</p>`).join("")}</details></div>` : "";
+  const emailCheck = `<section class="panel email-check"><h2>Gmail 最新进展</h2>${gmailControls}${check && parsed.success
     ? `<p><strong>${checkLabels[parsed.data.status]}</strong> · <time datetime="${e(check.checkedAt)}">${e(date(check.checkedAt, zone))}</time></p><p>${e(parsed.data.summary)}</p><p class="muted">检查范围：${e(parsed.data.searchScope)}</p>`
     : `<p>尚无有效的邮件检查记录。没有待办不代表邮箱没有新进展。</p>`}<details class="context-handoff"><summary>去 ChatGPT 检查 Gmail</summary><section class="context-box"><div><p>复制检查指令，粘贴到已连接 Gmail 和 Personal AI Workspace 的 ChatGPT 对话并发送。结果保存后，切回此页读取。</p></div><button type="button" class="button secondary" data-copy>复制检查指令</button><a class="button secondary" href="https://chatgpt.com/" target="_blank" rel="noopener noreferrer">打开 ChatGPT ↗</a><label class="sr-only" for="context-reference">Gmail 检查与回填指令</label><textarea id="context-reference" readonly rows="5">${e(gmailCheckPrompt(id))}</textarea></section></details></section>`;
-  const section = String(query.section ?? "tasks");
+  const section = String(query.section ?? (query.status ? "tasks" : "timeline"));
   const paging = { ...(query.cursor ? { cursor: query.cursor } : {}), ...(query.pageSize ? { pageSize: query.pageSize } : {}) };
   let page: ReadPage<unknown>, rows: string, filters = "";
   const status = String(query.status ?? (section === "history" ? "ADMITTED" : "OPEN"));
-  if (section === "resources") {
+  if (section === "timeline") {
+    const result = service.jobSearchQueryService.listTimeline(id, paging); page = result;
+    const kinds: Record<string, string> = { APPLICATION: "申请日期", STATE: "状态登记", EMAIL: "邮件记录", CHECK: "邮箱检查", TASK: "待办记录" };
+    rows = result.items.map(r => `<article class="history-row"><div class="timeline-dot" aria-hidden="true"></div><div class="grow"><p class="overline">${e(kinds[r.kind])}</p><h3>${e(r.kind === "STATE" ? label(r.title) : r.title)}</h3><p class="saved-text">${e(r.summary)}</p></div><time datetime="${e(r.at)}">${e(timelineDate(r.at, zone))}</time></article>`).join("");
+  } else if (section === "resources") {
     const result = service.jobSearchQueryService.listResources(id, paging); page = result;
     rows = result.items.map((r) => resourceRow(r, zone)).join("");
   } else if (section === "history") {
@@ -142,9 +197,9 @@ export function applicationView(service: WorkspaceService, id: string, query: Re
     rows = result.items.map((r) => taskRow(r, zone)).join("");
     filters = `<label>任务范围<select name="status">${["OPEN", "DONE", "CANCELLED", "ALL"].map((x) => option(x, label(x), status)).join("")}</select></label>`;
   }
-  const tabs = [["tasks", "任务"], ["resources", "证据"], ["history", "进展记录"]].map(([key, text]) => `<a href="${appLink(id)}?section=${key}"${section === key ? ' aria-current="page"' : ""}>${text}</a>`).join("");
+  const tabs = [["timeline", "时间线"], ["tasks", "任务"], ["resources", "证据"], ["history", "进展记录"]].map(([key, text]) => `<a href="${appLink(id)}?section=${key}"${section === key ? ' aria-current="page"' : ""}>${text}</a>`).join("");
   const posting = safeExternalUrl(typeof p.metadata.postingReference === "string" ? p.metadata.postingReference : null);
-  return document("申请详情", `<a class="back-link" href="${rootPath}/applications">← 我的申请</a>${heading(String(p.metadata.company ?? "申请详情"), String(p.metadata.role ?? p.title), typeof p.metadata.location === "string" ? p.metadata.location : "当前已确认的申请状态")}${freshness(detail.asOf, zone)}<div class="detail-summary"><div>${chip(p.lifecycleState)} ${chip(p.status)}<p class="muted">当前申请进展</p></div><div><strong>${detail.totalCounts.openTasks}</strong><p>开放任务</p></div><div><strong>${detail.totalCounts.completedTasks}</strong><p>已完成任务</p></div>${posting ? `<a class="button secondary" target="_blank" rel="noopener noreferrer" href="${e(posting)}">查看职位来源 ↗</a>` : ""}</div>${emailCheck}<section class="panel"><nav class="tabs" aria-label="申请详情分区">${tabs}</nav>${filters ? `<form method="get" class="collection-filters" data-filter-form><input type="hidden" name="section" value="${e(section)}">${filters}<button type="submit" class="button secondary">查看</button></form>` : ""}${section === "history" ? '<p class="section-intro">只呈现实际记录的变更与建议；不补全跳过的阶段，也不代表全部编辑历史。</p>' : ""}<div data-page-items>${rows || empty("这个范围暂无记录", "可以切换范围，查看其他已保存的工作记录。")}</div>${pagination(page, appLink(id), { ...query, section, ...(section !== "resources" ? { status } : {}) })}</section>`, true, "applications");
+  return document("申请详情", `<a class="back-link" href="${rootPath}/applications">← 我的申请</a>${heading(String(p.metadata.company ?? "申请详情"), String(p.metadata.role ?? p.title), typeof p.metadata.location === "string" ? p.metadata.location : "当前已确认的申请状态")}<p class="application-date">申请日期：${e(applicationDate(p.metadata.appliedDate))}</p>${freshness(detail.asOf, zone)}<div class="detail-summary"><div>${chip(p.lifecycleState)} ${chip(p.status)}<p class="muted">当前申请进展</p></div><div><strong>${detail.totalCounts.openTasks}</strong><p>开放任务</p></div><div><strong>${detail.totalCounts.completedTasks}</strong><p>已完成任务</p></div>${posting ? `<a class="button secondary" target="_blank" rel="noopener noreferrer" href="${e(posting)}">查看职位来源 ↗</a>` : ""}</div><section class="panel"><nav class="tabs" aria-label="申请详情分区">${tabs}</nav>${filters ? `<form method="get" class="collection-filters" data-filter-form><input type="hidden" name="section" value="${e(section)}">${filters}<button type="submit" class="button secondary">查看</button></form>` : ""}${section === "history" ? '<p class="section-intro">只呈现实际记录的变更与建议；不补全跳过的阶段，也不代表全部编辑历史。</p>' : ""}<div data-page-items>${rows || empty("这个范围暂无记录", "可以切换范围，查看其他已保存的工作记录。")}</div>${pagination(page, appLink(id), { ...query, section, ...(!["resources", "timeline"].includes(section) ? { status } : {}) })}</section>${profilePanels}${resumePanel}${emailCheck}`, true, "applications");
 }
 
 export function taskView(service: WorkspaceService, id: string, zone: string, asOf: string,

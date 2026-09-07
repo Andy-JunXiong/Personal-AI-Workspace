@@ -1,18 +1,34 @@
-# Project Kickoff — Personal AI Workspace v0.1
+# Project Kickoff ? Personal AI Workspace v0.1
 
-## Status
+## Current status ? 2026-09-07
 
-Workspace Agent [configuration package](docs/mvp/GMAIL_WORKSPACE_AGENT_SETUP.md) is ready;
-account-side creation/publishing and API credentials remain pending. No agent has been published by this session.
+**Core workflow:** [GPT operates; Workspace persists; website reports](docs/architecture/CORE_JOB_WORKFLOW.md). The daily GPT task reads both Gmail accounts through Workspace MCP, classifies evidence and performs authorized updates. The website reads the same cloud database and primarily shows statistics, history and saved reports.
 
-Latest: [Gmail search and result writeback](docs/mvp/GMAIL_CHECK_RESULTS_2026-09-07.md).
-Real Wake in Cloud check saved; website-triggered GPT still requires a published agent.
+**Scan scope:** at most the last seven days; normal daily checks focus on yesterday/today. Resume pending work within that window. Do not restore the superseded 30-day bootstrap or label excluded older mail as successfully scanned.
 
-Production test fixtures were [archived and removed at the user's request](docs/mvp/SYNTHETIC_CLEANUP_2026-09-07.md).
-There are 23 real applications and 3 tasks. Prior P6 fixture IDs are retired;
-remaining synthetic acceptance must use an isolated environment.
+| Layer | Verified state | Remaining gate |
+| --- | --- | --- |
+| Production | `gmail-mcp-20260907204200`, migrations 001-009, 27 tools; both Gmail identities and bounded live list/read verified; 24 applications preserved at deployment | Deploy the bounded resumption package |
+| ChatGPT integration | User refreshed plugin discovery; both mailboxes AVAILABLE through Workspace; one-off scheduled `workspace_ping` succeeded | Refresh to 29 tools after deployment and verify the recurring task context |
+| Manual scan | User supplied PARTIAL receipt `d483b9a3-e355-4367-8436-15b3943fd8a6`, saved/read back, zero new business records, existing Synogize evidence deduplicated | Complete bounded source coverage; PARTIAL is not a no-update finding |
+| Local implementation | Seven-day resumable batches, migration 010, 29 tools, read-only progress display; 33 test files / 269 tests, typecheck and build passed | Not yet deployed or proven in a real scheduled scan |
 
-Latest UI update: [results-focused detail pages](docs/mvp/WEB_RESULTS_FOCUS_2026-09-07.md).
+Next: deploy [bounded daily resumption](docs/mvp/MAIL_SCAN_RESUME_2026-09-07.md), refresh plugin discovery, activate the updated policy, verify a manual run and then a real recurring scan/write/receipt run. Keep the existing daily schedule and Gmail consent. Publishing code to GitHub is not a cloud deployment or a task configuration change.
+
+The [complete recurring policy](docs/mvp/UPDATE_JOB_TRACKER_WORKSPACE_PROMPT.txt) and [self-contained manual acceptance prompt](docs/mvp/UPDATE_JOB_TRACKER_MANUAL_ACCEPTANCE.txt) require the new batch tools. Activate them only after deployment and plugin refresh. The latest seven-day revision has not been confirmed saved in ChatGPT.
+
+## Delivery records
+
+- [Gmail MCP reader](docs/mvp/GMAIL_MCP_READER_2026-09-07.md): currently deployed; reuses website OAuth and avoids the built-in Gmail/developer-MCP restriction.
+- [Scan receipts](docs/mvp/MAIL_SCAN_RECEIPTS_2026-09-07.md): deployed with migration 009; durable readback is user-verified for the PARTIAL manual run.
+- [Application timeline and dates](docs/mvp/APPLICATION_DETAIL_2026-09-07.md), [recent sorting and read-only dossiers](docs/mvp/APPLICATION_PROFILE_EDIT_2026-09-07.md): deployed; confirmed historical JD/skill-match content backfill remains pending.
+- [Website batch checks](docs/mvp/GMAIL_BATCH_2026-09-07.md) and [direct Gmail integration](docs/mvp/GMAIL_DIRECT_API_2026-09-07.md): deployed secondary conveniences; GPT remains the primary operations interface.
+- [Original task reconciliation](docs/mvp/UPDATE_JOB_TRACKER_HANDOFF_2026-09-07.md): retains historical Sheet-only instructions and the later Workspace authorization.
+- [Workspace Agent setup](docs/mvp/GMAIL_WORKSPACE_AGENT_SETUP.md): historical alternative, not a prerequisite for the selected workflow.
+
+Earlier milestone sections below are historical records, not overrides of this current status.
+
+## Historical milestones
 
 **CHATGPT-NATIVE SPIKE 1A = COMPLETE**
 
@@ -138,7 +154,7 @@ The Workspace will not initially rebuild Gmail/Drive/Calendar connectors. The fi
 - [ ] M4 Day-14 adoption gate
 - [ ] M4 Day-28 utility gate
 
-## Immediate Next Step
+## Historical next-step record (superseded by Current status)
 
 **Latest acceptance checkpoint — 2026-09-07:** P6 fixtures now exist; 140
 applications = 23 real + 117 synthetic. A07/A08/A11 passed; A02/A04/A05/A09

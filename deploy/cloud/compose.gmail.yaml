@@ -1,0 +1,20 @@
+# Use after compose.yaml and compose.web.yaml. Keep general browser writes off.
+services:
+  paw:
+    environment:
+      PAW_GMAIL_ENABLED: "true"
+      PAW_OPENAI_API_KEY_FILE: /run/secrets/gmail-model-api-key
+      PAW_GMAIL_ENCRYPTION_KEY_FILE: /run/secrets/gmail-encryption-key
+      PAW_GMAIL_CONNECTION_DIR: /app/gmail-connections
+    volumes:
+      - type: bind
+        source: /etc/paw/secrets/gmail-model-api-key
+        target: /run/secrets/gmail-model-api-key
+        read_only: true
+      - type: bind
+        source: /etc/paw/secrets/gmail-encryption-key
+        target: /run/secrets/gmail-encryption-key
+        read_only: true
+      - type: bind
+        source: /srv/paw/gmail-connections
+        target: /app/gmail-connections

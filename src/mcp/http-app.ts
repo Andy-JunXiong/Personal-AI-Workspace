@@ -4,9 +4,10 @@ import type { Request, Response } from "express";
 import type { WorkspaceService } from "../application/workspace-service.js";
 import { createWorkspaceMcpServer } from "./create-server.js";
 import { createWorkspaceWebLinks } from "./web-links.js";
+import type { GmailMcpReader } from "../gmail/mcp-reader.js";
 
 export function createWorkspaceHttpApp(workspaceService: WorkspaceService,
-  options: { webOrigin?: string } = {}) {
+  options: { webOrigin?: string; gmailReader?: () => GmailMcpReader | undefined } = {}) {
   const app = createMcpExpressApp();
   const webLinks = createWorkspaceWebLinks(options.webOrigin);
 
@@ -20,7 +21,7 @@ export function createWorkspaceHttpApp(workspaceService: WorkspaceService,
   });
 
   app.post("/mcp", async (request: Request, response: Response) => {
-    const server = createWorkspaceMcpServer(workspaceService, webLinks);
+    const server = createWorkspaceMcpServer(workspaceService, webLinks, options.gmailReader?.());
     const transport = new StreamableHTTPServerTransport({
       sessionIdGenerator: undefined,
     });

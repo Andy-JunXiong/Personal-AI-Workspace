@@ -52,7 +52,7 @@ describe("Bounded application queries", () => {
     const ids: string[] = [];
     let cursor: string | undefined;
     do {
-      const page = w.query.listApplications({ cursor });
+      const page = w.query.listApplications({ cursor, sort: "UPDATED_DESC" });
       expect(page.items.length).toBeLessThanOrEqual(25);
       expect(page.totalCount).toBe(107);
       ids.push(...page.items.map((item) => item.projectId));

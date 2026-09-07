@@ -15,3 +15,9 @@
 @media(max-width:700px){.sidebar nav{gap:4px}.sidebar nav a{flex:1;justify-content:center;gap:6px;padding:10px 6px}.sidebar nav small{display:none}.pagination{flex-wrap:wrap}.pagination p{max-width:100%}.filters label{min-width:0}}
 
 .email-check{padding:20px;margin:20px 0}.email-check h2{font-size:19px;margin:0 0 12px}.email-check p{line-height:1.6}.email-check .context-handoff{margin-top:8px}
+.saved-text { white-space: pre-wrap; overflow-wrap: anywhere; }
+.application-profile { padding: 24px; }
+.application-date { font-size: 1rem; }
+.match-table { overflow-x: auto; }
+.match-table table { width: 100%; border-collapse: collapse; text-align: left; }
+.match-table th, .match-table td { padding: 12px; border-bottom: 1px solid #dce2d8; vertical-align: top; min-width: 100px; }

@@ -33,6 +33,7 @@ export function createJobSearchReadRouter(serviceFor: (request: Request) => Work
     return { ...service.todayQueryService.getToday(), asOf: new Date(now()).toISOString() };
   });
   read("/applications", (service, request) => service.jobSearchQueryService.listApplications(query(request)));
+  read("/mail-scans", (service, request) => { noQuery(request); return service.mailScanService.overview(); });
   read("/applications/:id", (service, request) => {
     noQuery(request);
     return service.jobSearchQueryService.getApplication(request.params.id as string);

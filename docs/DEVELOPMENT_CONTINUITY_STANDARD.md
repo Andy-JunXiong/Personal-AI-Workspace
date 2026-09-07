@@ -11,6 +11,12 @@ near- and long-term value of the work.
 
 ## Required continuity statement
 
+For Job Search, first reconcile the [authoritative core workflow](architecture/CORE_JOB_WORKFLOW.md),
+latest user instructions, current status, original task instructions and actual
+runtime evidence. GPT is the primary operations entry; the website is the
+reporting frontend of the same Workspace database. Do not infer missing daily
+automation from one module, or equate manual tests with scheduled-run acceptance.
+
 Before implementation starts, communicate all five items below. Repeat or update
 them in the result or handoff document with links to the relevant evidence.
 

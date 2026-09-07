@@ -20,6 +20,8 @@ import { createJobSearchReadRouter } from "./job-search-read-router.js";
 import { createJobSearchWriteRouter } from "./job-search-write-router.js";
 import { createJobSearchPageRouter, createWebAssetsRouter } from "../web/page-router.js";
 import { loginFailureView } from "../web/views.js";
+import type { GmailRuntime } from "../gmail/checks.js";
+import { createGmailRouter } from "../gmail/router.js";
 
 const SESSION_COOKIE = "__Host-paw_session";
 const LOGIN_COOKIE = "__Host-paw_login";
@@ -50,6 +52,7 @@ export function createWebAuthApp(options: {
   writesEnabled?: boolean;
   now?: () => number;
   timeZone?: string;
+  gmail?: GmailRuntime;
 }) {
   const origin = new URL(options.origin);
   if (origin.protocol !== "https:" || origin.origin !== options.origin) {
@@ -168,6 +171,16 @@ export function createWebAuthApp(options: {
     });
   };
   app.use("/api/v1/job-search", createJobSearchReadRouter(serviceFor, now));
+  const gmailIdentityFor = (request: Request, write = false) => {
+    const session = sessions.getSession(cookie(request, SESSION_COOKIE));
+    verifiedRequestContext(options.database, session, "WEB", randomUUID());
+    const csrf = request.headers["x-csrf-token"];
+    if (write && (request.headers.origin !== origin.origin || typeof csrf !== "string" || !equalToken(csrf, session.csrfToken))) {
+      throw new ActionDeniedError("Browser action authority was not verified");
+    }
+    return session;
+  };
+  if (options.gmail) app.use(createGmailRouter(options.gmail, options.origin, gmailIdentityFor, serviceFor, now));
   if (options.writesEnabled) {
     const writeServiceFor = (request: Request) => {
       const session = sessions.getSession(cookie(request, SESSION_COOKIE));
@@ -184,7 +197,9 @@ export function createWebAuthApp(options: {
     app.use("/api/v1/job-search", createJobSearchWriteRouter(writeServiceFor, now));
   }
   app.use(createWebAssetsRouter());
-  app.use(createJobSearchPageRouter(serviceFor, options.timeZone, now, options.writesEnabled));
+  app.use(createJobSearchPageRouter(serviceFor, options.timeZone, now, options.writesEnabled,
+    options.gmail ? (request) => [1, 2].map(slot => ({ slot,
+      email: options.gmail!.connections.get(gmailIdentityFor(request), slot)?.email ?? null })) : undefined));
 
   // No MCP adapter or administration endpoint is mounted on the web listener.
   app.use((_request, response) => { response.status(404).json({ error: "NOT_FOUND" }); });

@@ -7,8 +7,127 @@ import { syntheticOidc, syntheticIssuer, webOrigin } from "../helpers/synthetic-
 import { randomUUID } from "node:crypto";
 import { WorkspaceService } from "../../src/application/workspace-service.js";
 import { checkWebRelease } from "../../src/operations/web-release-check.js";
+import { GmailConnections } from "../../src/gmail/connections.js";
+import type { GmailRuntime } from "../../src/gmail/checks.js";
+import { join } from "node:path";
 
 const cleanups: Array<() => void | Promise<void>> = [];
+function gmailFixture(workspace: ReturnType<typeof createTestWorkspace>): GmailRuntime {
+  return {
+    connections: new GmailConnections(join(workspace.directory, "mail"), Buffer.alloc(32, 9)),
+    authorization: {
+      async authorizationUrl(checks) { const url = new URL("https://accounts.google.com/auth"); url.searchParams.set("state", checks.state); return url; },
+      async authenticate(callback) { const id = callback.searchParams.get("code")!; return { subject: id, email: `${id}@example.test`, refreshToken: id }; },
+      async access(connection) { return connection.refreshToken; },
+    },
+    reader: { async search() { return { complete: true, scope: "synthetic", messages: [{ id: "abcd", threadId: "1234",
+      receivedAt: "2026-09-07T05:00:00Z", senderDomain: "example.test", subject: "Interview", text: "Interview invitation" }] }; } },
+    interpreter: { async interpret(_company, _role, messages) { return { items: messages.map(m => ({ messageId: m.id,
+      relevant: true, summary: "收到面试邀请", evidenceQuote: "Interview invitation", requiresAction: true })) }; } },
+  };
+}
+
+it("authorizes two distinct mailboxes with session-bound callbacks and checks them without enabling general browser writes", async () => {
+  const w = await setup(false, "Australia/Sydney", false, gmailFixture); w.link();
+  const cookie = w.sessionCookie(await w.finish(await w.start()));
+  const session = await (await w.request("/api/v1/session", { headers: { cookie } })).json();
+  const headers = { cookie, origin: webOrigin, "content-type": "application/json", "x-csrf-token": session.csrfToken };
+  const endpoint = `/api/v1/gmail/applications/${w.projectId}/check`;
+  expect((await w.request(endpoint, { method: "POST", headers: { cookie }, body: "{}" })).status).toBe(403);
+  expect((await w.request(`/api/v1/gmail/applications/${randomUUID()}/check`, { method: "POST", headers, body: "{}" })).status).toBe(404);
+  for (const slot of [1, 2]) {
+    const started = await w.request("/api/v1/gmail/connect", { method: "POST", headers, body: JSON.stringify({ slot, projectId: w.projectId }) });
+    const state = new URL((await started.json()).url).searchParams.get("state");
+    const callback = `/auth/gmail/callback?state=${state}&code=mail${slot}`;
+    expect((await w.request(callback)).status).toBe(401);
+    expect((await w.request(callback, { headers: { cookie } })).status).toBe(303);
+    expect((await w.request(callback, { headers: { cookie } })).status).toBe(403);
+  }
+  const before = w.service.getProject(w.projectId).project;
+  const started = await w.request(endpoint, { method: "POST", headers, body: "{}" });
+  const run = await started.json();
+  expect(started.status).toBe(202);
+  expect((await (await w.request(endpoint, { method: "POST", headers, body: "{}" })).json()).id).toBe(run.id);
+  const result = await (await w.request(endpoint, { headers: { cookie } })).json();
+  expect(result.run.state).toBe("DONE");
+  const detail = w.service.jobSearchQueryService.getApplication(w.projectId);
+  expect(detail.latestGmailCheck?.facts).toMatchObject({ status: "UPDATED", matchedMessageCount: 2 });
+  expect(w.database.prepare("SELECT count(*) AS n FROM resources WHERE provider = 'gmail'").get()).toEqual({ n: 2 });
+  expect(w.service.getProject(w.projectId).project).toEqual(before);
+  w.advance(61_000);
+  await w.request(endpoint, { method: "POST", headers, body: "{}" });
+  await w.request(endpoint, { headers: { cookie } });
+  expect(w.service.jobSearchQueryService.getApplication(w.projectId).latestGmailCheck?.facts).toMatchObject({ status: "NO_UPDATE" });
+  expect(w.database.prepare("SELECT count(*) AS n FROM resources WHERE provider = 'gmail'").get()).toEqual({ n: 2 });
+  const html = await (await w.request(`/workspace/job-search/applications/${w.projectId}`, { headers: { cookie } })).text();
+  expect(html).toContain("检查两个邮箱的最新更新");
+  expect(html).toContain("收到面试邀请");
+  await w.request("/api/v1/gmail/disconnect", { method: "POST", headers, body: '{"slot":2}' });
+  w.advance(61_000);
+  await w.request(endpoint, { method: "POST", headers, body: "{}" });
+  await w.request(endpoint, { headers: { cookie } });
+  expect(w.service.jobSearchQueryService.getApplication(w.projectId).latestGmailCheck?.facts).toMatchObject({ status: "PARTIAL" });
+});
+
+it("records both-mailbox failure as FAILED rather than no update", async () => {
+  const w = await setup(false, "Australia/Sydney", false, gmailFixture); w.link();
+  const cookie = w.sessionCookie(await w.finish(await w.start()));
+  const { csrfToken } = await (await w.request("/api/v1/session", { headers: { cookie } })).json();
+  await w.request(`/api/v1/gmail/applications/${w.projectId}/check`, { method: "POST",
+    headers: { cookie, origin: webOrigin, "x-csrf-token": csrfToken, "content-type": "application/json" }, body: "{}" });
+  expect(w.service.jobSearchQueryService.getApplication(w.projectId).latestGmailCheck?.facts).toMatchObject({ status: "FAILED" });
+});
+
+it("checks every application beyond one page including closed/rejected records, isolates owners and survives individual failures", async () => {
+  let release!: () => void;
+  const gate = new Promise<void>(resolve => { release = resolve; });
+  let reads = 0;
+  const w = await setup(false, "Australia/Sydney", false, workspace => {
+    const runtime = gmailFixture(workspace);
+    for (const slot of [1, 2]) runtime.connections.put(workspace.identity, slot,
+      { subject: `mail${slot}`, email: `mail${slot}@example.test`, refreshToken: `token${slot}` });
+    runtime.reader = { async search(_token, company) {
+      reads++; await gate;
+      if (company === "Failure company") throw new Error("Mailbox unavailable");
+      return { messages: [], complete: true, scope: "synthetic" };
+    } };
+    return runtime;
+  });
+  w.link();
+  for (let i = 0; i < 105; i++) w.service.seedJobApplication({ projectId: randomUUID(), initialTransitionId: randomUUID(),
+    title: `Job ${i}`, company: i === 0 ? "Failure company" : `Company ${i}`, role: "Engineer" });
+  w.database.prepare("UPDATE projects SET status = 'CLOSED', lifecycle_state = 'REJECTED' WHERE id = ?").run(w.projectId);
+  const other = new WorkspaceService(w.database, { issuer: "test-suite", subject: "other-batch-owner", workspaceName: "Other" });
+  other.ensureDevelopmentIdentity();
+  const privateId = randomUUID();
+  other.seedJobApplication({ projectId: privateId, initialTransitionId: randomUUID(), title: "Private job", company: "PRIVATE", role: "Role" });
+  const cookie = w.sessionCookie(await w.finish(await w.start()));
+  const { csrfToken } = await (await w.request("/api/v1/session", { headers: { cookie } })).json();
+  const headers = { cookie, origin: webOrigin, "x-csrf-token": csrfToken, "content-type": "application/json" };
+  expect((await w.request("/api/v1/gmail/check-all", { method: "POST", headers: { cookie }, body: "{}" })).status).toBe(403);
+  expect((await w.request("/api/v1/gmail/check-all")).status).toBe(401);
+  const first = await (await w.request("/api/v1/gmail/check-all", { method: "POST", headers, body: "{}" })).json();
+  expect(first.batch.total).toBe(106);
+  expect(first.batch.state).toBe("RUNNING");
+  const duplicate = await (await w.request("/api/v1/gmail/check-all", { method: "POST", headers, body: "{}" })).json();
+  expect(duplicate.batch.id).toBe(first.batch.id);
+  release();
+  let final = first;
+  for (let i = 0; i < 100; i++) {
+    final = await (await w.request("/api/v1/gmail/check-all", { headers: { cookie } })).json();
+    if (final.batch.state !== "RUNNING") break;
+  }
+  expect(final.batch.state).toBe("DONE");
+  expect(final.batch.results).toHaveLength(106);
+  expect(final.batch.results.filter((r: { outcome: string }) => r.outcome === "FAILED")).toHaveLength(1);
+  expect(final.batch.results.map((r: { projectId: string }) => r.projectId)).toContain(w.projectId);
+  expect(final.batch.results.map((r: { projectId: string }) => r.projectId)).not.toContain(privateId);
+  expect(reads).toBe(212);
+  expect(w.database.prepare("SELECT count(*) n FROM resources WHERE provider='workspace-gmail-check'").get()).toEqual({ n: 106 });
+  const html = await (await w.request('/workspace/job-search/applications?status=OPEN&pageSize=1', { headers: { cookie } })).text();
+  expect(html).toContain('data-gmail-check-all');
+});
+
 it("shows Gmail check receipts independently of task counts and rejects malformed success", async () => {
   const w = await setup();
   w.link();
@@ -38,16 +157,55 @@ it("shows Gmail check receipts independently of task counts and rejects malforme
   expect(failed).not.toContain("已检查，暂无新进展");
   expect(first.projectStateChanged).toBe(false);
 });
+
+it("shows the application date and chronological evidence, and renders a saved JD/skill report independently of resource pagination", async () => {
+  const w = await setup(); w.link();
+  w.database.prepare("UPDATE projects SET metadata_json = json_set(metadata_json, '$.appliedDate', '2026-07-01') WHERE id = ?").run(w.projectId);
+  const headers = { cookie: w.sessionCookie(await w.finish(await w.start())) };
+  const base = `/workspace/job-search/applications/${w.projectId}`;
+  const beforeReport = await (await w.request(base, { headers })).text();
+  expect(beforeReport).toContain("申请日期：2026-07-01");
+  expect(beforeReport).toContain('section=timeline" aria-current="page"');
+  expect(beforeReport).toContain("尚未保存 JD 正文");
+  expect(beforeReport).toContain("尚未保存此岗位的技能匹配报告");
+  const facts = { contractVersion: "job-application-profile-v0.1", jobDescription: "Build agents\nUse <script>unsafe()</script>",
+    skillMatch: { summary: "Existing GPT assessment", matches: [{ requirement: "Agent systems", evidence: "Project experience",
+      assessment: "PARTIAL" }], gaps: ["Production evaluation"] } };
+  const input = { projectId: w.projectId, resourceType: "NOTE", provider: "chatgpt", externalId: "profile-1", externalUri: null,
+    title: "Saved job report", observedAt: "2026-07-02T00:00:00Z", observedFacts: facts, idempotencyKey: randomUUID() };
+  w.service.recordObservation(input);
+  for (let i = 0; i < 12; i++) w.service.recordObservation({ ...input, externalId: `newer-${i}`, observedAt: "2026-09-01T00:00:00Z",
+    observedFacts: { summary: "Unrelated later note" }, idempotencyKey: randomUUID() });
+  expect(() => w.service.recordObservation({ ...input, observedFacts: { ...facts, skillMatch: "invented" }, idempotencyKey: randomUUID() })).toThrow();
+  expect(() => w.service.recordObservation({ ...input, provider: "gmail", idempotencyKey: randomUUID() })).toThrow();
+  const changes = w.database.prepare("SELECT total_changes() n").get();
+  const html = await (await w.request(`${base}?pageSize=1`, { headers })).text();
+  expect(html).toContain("Existing GPT assessment");
+  expect(html).toContain("Project experience");
+  expect(html).toContain("&lt;script&gt;unsafe()&lt;/script&gt;");
+  expect(html).not.toContain("<script>unsafe()");
+  expect(html.indexOf('aria-label="申请详情分区"')).toBeLessThan(html.indexOf('职位描述 · JD'));
+  expect(w.database.prepare("SELECT total_changes() n").get()).toEqual(changes);
+  const list = await (await w.request("/workspace/job-search/applications", { headers })).text();
+  expect(list).toContain("申请日期：2026-07-01");
+  const first = w.service.jobSearchQueryService.listTimeline(w.projectId, { pageSize: 1 });
+  expect(first.totalCount).toBe(2);
+  expect(first.nextCursor).not.toBeNull();
+  const next = w.service.jobSearchQueryService.listTimeline(w.projectId, { pageSize: 1, cursor: first.nextCursor });
+  expect(next.items[0]?.kind).toBe("APPLICATION");
+});
 afterEach(async () => { for (const cleanup of cleanups.splice(0).reverse()) await cleanup(); });
 
-async function setup(bootstrapEnabled = true, timeZone = "Australia/Sydney", writesEnabled = false) {
+async function setup(bootstrapEnabled = true, timeZone = "Australia/Sydney", writesEnabled = false,
+  gmailFactory?: (workspace: ReturnType<typeof createTestWorkspace>) => GmailRuntime) {
   const workspace = createTestWorkspace();
   cleanups.push(workspace.cleanup);
   const harness = syntheticOidc();
   let time = Date.now();
   const links = new IdentityLinks(workspace.database, () => time);
+  const gmail = gmailFactory?.(workspace);
   const app = createWebAuthApp({ database: workspace.database, provider: harness.provider,
-    origin: webOrigin, bootstrapEnabled, writesEnabled, now: () => time, timeZone });
+    origin: webOrigin, bootstrapEnabled, writesEnabled, now: () => time, timeZone, gmail });
   const server: Server = app.listen(0, "127.0.0.1");
   await new Promise<void>((done) => server.once("listening", done));
   cleanups.push(() => new Promise<void>((done) => server.close(() => done())));
@@ -91,7 +249,7 @@ async function setup(bootstrapEnabled = true, timeZone = "Australia/Sydney", wri
     subject: "synthetic-user", email: "synthetic-user@example.test" }), workspace.identity, workspace.identity.principalId);
   const sessionCookie = (response: Response) => response.headers.getSetCookie()
     .find((value) => value.startsWith("__Host-paw_session=") && !value.startsWith("__Host-paw_session=;"))!.split(";")[0]!;
-  return { ...workspace, harness, links, request, start, finish, link, sessionCookie,
+  return { ...workspace, harness, links, request, start, finish, link, sessionCookie, gmail,
     advance: (ms: number) => { time += ms; } };
 }
 
@@ -161,7 +319,7 @@ describe("Signed OIDC authentication over the isolated web transport", () => {
     expect(detail).toContain("完成时间"); expect(detail).not.toContain("尚无完成记录");
     expect(detail).toContain(`Task ${task.id}`);
     expect(detail).not.toContain("data-complete-task");
-    const open = await (await w.request(base, { headers })).text();
+    const open = await (await w.request(`${base}?section=tasks`, { headers })).text();
     expect(open).not.toContain("Completed synthetic task");
     const resources = await (await w.request(`${base}?section=resources`, { headers })).text();
     expect(resources).toContain("&lt;img src=x onerror=alert(1)&gt;");
@@ -668,4 +826,38 @@ describe("Signed OIDC authentication over the isolated web transport", () => {
     expect(afterPage).toContain("查看已关联申请");
     expect(afterPage).not.toContain("data-link-candidate");
   });
+});
+
+
+it("renders GPT-written dossiers without browser profile mutation, preserving version history", async () => {
+  const w = await setup(); w.link();
+  const cookie = w.sessionCookie(await w.finish(await w.start()));
+  const { csrfToken } = await (await w.request("/api/v1/session", { headers: { cookie } })).json();
+  const headers = { cookie, origin: webOrigin, "x-csrf-token": csrfToken, "content-type": "application/json" };
+  const facts = { contractVersion: "job-application-profile-v0.1", jobDescription: "Actual JD", skillMatch: null,
+    skillMatchText: "Original GPT report <script>bad()</script>", resumeVersion: "AI role v2",
+    resumeText: "Actual resume", sourceReference: "Original chat" };
+  for (const version of ["AI role v1", "AI role v2"]) w.service.recordObservation({ projectId: w.projectId, provider: "chatgpt", resourceType: "NOTE",
+    externalId: version, externalUri: null, title: "Saved dossier", observedAt: "2026-09-07T00:00:00Z",
+    idempotencyKey: randomUUID(), observedFacts: { ...facts, resumeVersion: version } });
+  const before = w.database.prepare("SELECT total_changes() n").get();
+  expect((await w.request(`/api/v1/application-profiles/${w.projectId}`, { method: "POST", headers, body: "{}" })).status).toBe(404);
+  const html = await (await w.request(`/workspace/job-search/applications/${w.projectId}`, { headers: { cookie } })).text();
+  expect(html).toContain("AI role v2"); expect(html).toContain("Original GPT report &lt;script&gt;");
+  expect(html).not.toContain("<script>bad()"); expect(html).not.toContain("data-profile-form");
+  expect(html).toContain("更新或补充资料请在 GPT 中操作");
+  const history = await (await w.request(`/workspace/job-search/applications/${w.projectId}?section=resources`, { headers: { cookie } })).text();
+  expect(history).toContain("AI role v1"); expect(history).toContain("AI role v2");
+  expect(w.database.prepare("SELECT total_changes() n").get()).toEqual(before);
+});
+
+it("defaults to newest application date with undated applications last, independently of later edits", async () => {
+  const w = await setup();
+  w.database.prepare("UPDATE projects SET metadata_json=json_set(metadata_json,'$.appliedDate','2026-01-01'),updated_at='2099-01-01T00:00:00Z' WHERE id=?").run(w.projectId);
+  const newest = randomUUID(), unknown = randomUUID();
+  for (const id of [newest, unknown]) w.service.seedJobApplication({ projectId: id, initialTransitionId: randomUUID(), title: id, company: id, role: "Role" });
+  w.database.prepare("UPDATE projects SET metadata_json=json_set(metadata_json,'$.appliedDate','2026-09-01') WHERE id=?").run(newest);
+  const page = w.service.jobSearchQueryService.listApplications({ status: "ALL" });
+  expect(page.items.map(a => a.projectId)).toEqual([newest, w.projectId, unknown]);
+  expect(w.service.jobSearchQueryService.listApplications({ sort: "UPDATED_DESC" }).items[0]?.projectId).toBe(w.projectId);
 });

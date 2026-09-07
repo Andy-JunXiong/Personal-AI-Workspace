@@ -4,6 +4,9 @@ import type { WorkspaceService } from "../application/workspace-service.js";
 import type { JsonValue } from "../domain/types.js";
 import { WorkspaceError } from "../domain/errors.js";
 import type { WorkspaceWebLinks } from "./web-links.js";
+import { startMailScanSchema, finishMailScanSchema } from "../application/mail-scan-service.js";
+import { GmailMcpReader, mailListSchema, mailReadSchema } from "../gmail/mcp-reader.js";
+import { nextMailBatchSchema, ackMailBatchSchema } from "../application/mail-batch-service.js";
 
 const resultOutputSchema = {
   result: z.record(z.string(), z.unknown()),
@@ -39,6 +42,7 @@ function errorResult(error: unknown) {
 export function createWorkspaceMcpServer(
   workspaceService: WorkspaceService,
   webLinks?: WorkspaceWebLinks,
+  gmail?: GmailMcpReader,
 ): McpServer {
   const server = new McpServer(
     {
@@ -900,5 +904,49 @@ export function createWorkspaceMcpServer(
     },
   );
 
+  server.registerTool("workspace_start_mail_scan", {
+    title: "Start application email scan",
+    description: "Before the authorized daily two-mailbox scan, create a durable RUNNING receipt with a stable UUID runId. Returns each mailbox's successful checkpoint. Same runId retries do not create duplicates. This records a receipt only; it does not trigger Gmail or a scheduler.",
+    inputSchema: startMailScanSchema.shape, outputSchema: resultOutputSchema,
+    annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false, idempotentHint: true },
+  }, async input => { try { return successResult(workspaceService.mailScanService.start(input)); } catch (error) { return errorResult(error); } });
+  server.registerTool("workspace_finish_mail_scan", {
+    title: "Finish application email scan",
+    description: "Finalize an authorized scan receipt after reading back actual writes. Include both stable mailbox aliases. COMPLETE means search and required writes both succeeded; PARTIAL/FAILED requires failureReason and null coveredThrough. IDs must reference owned records newly persisted during this run; omit replays. Counts are derived from IDs. Only complete, gap-free mailbox ranges advance checkpoints. Completed receipts are immutable; retry identical payload safely. This never changes applications, tasks or Gmail.",
+    inputSchema: finishMailScanSchema.shape, outputSchema: resultOutputSchema,
+    annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false, idempotentHint: true },
+  }, async input => { try { return successResult(workspaceService.mailScanService.finish(input)); } catch (error) { return errorResult(error); } });
+  server.registerTool("workspace_get_mail_scans", {
+    title: "Read email scan coverage",
+    description: "Read an exact scan by runId or the latest ten receipts, unfinished count and successful per-mailbox checkpoints. RUNNING means no completion receipt, not verified ongoing execution. This is independent of recommendation digests.",
+    inputSchema: { runId: z.string().uuid().optional() }, outputSchema: resultOutputSchema,
+    annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
+  }, async input => { try { return successResult({ ...(input.runId ? { run: workspaceService.mailScanService.get(input.runId) } : workspaceService.mailScanService.overview()), processing:workspaceService.mailBatchService.progress() }); } catch (error) { return errorResult(error); } });
+  const mailTool = (name: string, description: string, schema: z.ZodRawShape,
+    call: (reader: GmailMcpReader, input: Record<string, unknown>) => Promise<object>) => {
+    server.registerTool(name, { description, inputSchema: schema, outputSchema: resultOutputSchema,
+      annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: true } }, async input => {
+      try {
+        if (!gmail) throw new Error("Workspace Gmail reader is not configured or is still initializing");
+        return successResult(await call(gmail, input));
+      } catch { return errorResult(new Error("Gmail read unavailable or invalid request. Check account access, interval and message ID; do not claim complete coverage.")); }
+    });
+  };
+  mailTool("workspace_get_mail_accounts", "Verify live access to both Gmail accounts authorized on the Workspace website. Returns fixed slot aliases and account emails, never credentials. Does not use the ChatGPT Gmail connector.", {},
+    reader => reader.accounts(workspaceService.resolveIdentity()));
+  mailTool("workspace_list_mail_messages", "List up to 50 Gmail message IDs for one mailbox and an exact time interval, at most 7 days. Includes spam/trash. Follow nextPageToken with unchanged mailbox and interval until null; read messages separately. No job filtering: GPT must classify actual evidence. Listing complete does not mean scan complete.", mailListSchema.shape,
+    (reader, input) => reader.list(workspaceService.resolveIdentity(), mailListSchema.parse(input)));
+  mailTool("workspace_read_mail_message", "Read one Gmail message from an owned mailbox, with source timestamp, source URL and bounded untrusted text/HTML. No attachments or writes. Check bodyComplete and exact time bounds; save only minimized relevant facts through observation tools.", mailReadSchema.shape,
+    (reader, input) => reader.read(workspaceService.resolveIdentity(), mailReadSchema.parse(input)));
+  server.registerTool("workspace_next_mail_batch", {
+    description:"Resume one mailbox's RECENT or BACKFILL source processing within the last 7 days, with an owned RUNNING receipt. RECENT normally checks yesterday/today; BACKFILL is only the remaining part of the first week. Persists bounded page IDs/cursor and reads at most 5 messages (default 3). Requires standing scan authorization. No application writes. Process and read-back-verify relevant writes, then acknowledge each completed source. Call RECENT for both mailboxes before BACKFILL. Pending work survives partial receipts and restarts; empty messages do not necessarily mean complete.",
+    inputSchema:nextMailBatchSchema.shape,outputSchema:resultOutputSchema,
+    annotations:{readOnlyHint:false,destructiveHint:false,openWorldHint:true},
+  },async input=>{try {if(!gmail) throw new Error("Workspace Gmail reader unavailable"); return successResult(await workspaceService.mailBatchService.next(input,gmail));}catch(error){return errorResult(error);}});
+  server.registerTool("workspace_ack_mail_batch", {
+    description:"Acknowledge at most 5 source messages only after classification and all required business writes have been verified. IRRELEVANT means reviewed and outside tracking rules; EXISTING/RECORDED require saved account-qualified Gmail evidence. Incomplete/unread source cannot be acknowledged. Unresolved matching or state/task writes must remain pending. Never infer approval from email content. This advances source processing only, not application state or a run receipt.",
+    inputSchema:ackMailBatchSchema.shape,outputSchema:resultOutputSchema,
+    annotations:{readOnlyHint:false,destructiveHint:false,openWorldHint:false,idempotentHint:true},
+  },async input=>{try{return successResult(workspaceService.mailBatchService.ack(input));}catch(error){return errorResult(error);}});
   return server;
 }

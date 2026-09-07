@@ -18,6 +18,7 @@ services:
       # Web exposure is selected only through the reviewed overlay files.
       PAW_WEB_ENABLED: "false"
       PAW_WEB_WRITES_ENABLED: "false"
+      PAW_GMAIL_ENABLED: "false"
     ports:
       - "127.0.0.1:3000:3000"
     volumes:

@@ -6,6 +6,10 @@ import type { Server } from "node:http";
 import { loadWebConfig } from "./auth/web-config.js";
 import { googleLoginProvider } from "./auth/oidc.js";
 import { createWebAuthApp } from "./auth/web-auth-app.js";
+import { loadGmailConfig } from "./gmail/config.js";
+import { GmailConnections } from "./gmail/connections.js";
+import { googleGmailAuthorization, GmailReader, OpenAiMailInterpreter } from "./gmail/providers.js";
+import { GmailMcpReader } from "./gmail/mcp-reader.js";
 
 const config = loadConfig();
 let webConfig: ReturnType<typeof loadWebConfig>;
@@ -25,7 +29,8 @@ const workspaceService = new WorkspaceService(
 const identity = webConfig || webConfigurationInvalid
   ? workspaceService.resolveDevelopmentIdentity()
   : workspaceService.ensureDevelopmentIdentity();
-const app = createWorkspaceHttpApp(workspaceService, { webOrigin: webConfig?.origin });
+let gmailMcpReader: GmailMcpReader | undefined;
+const app = createWorkspaceHttpApp(workspaceService, { webOrigin: webConfig?.origin, gmailReader: () => gmailMcpReader });
 
 const httpServer = app.listen(config.port, () => {
   const address = httpServer.address();
@@ -46,11 +51,19 @@ let shuttingDown = false;
 if (webConfig) {
   const selected = webConfig;
   void googleLoginProvider(selected.clientId, selected.clientSecret, selected.origin)
-    .then((provider) => {
+    .then(async (provider) => {
+      if (shuttingDown) return;
+      const gmailConfig = loadGmailConfig();
+      const gmail = gmailConfig ? {
+        connections: new GmailConnections(gmailConfig.connectionDirectory, gmailConfig.encryptionKey),
+        authorization: await googleGmailAuthorization(selected.clientId, selected.clientSecret, selected.origin),
+        reader: new GmailReader(), interpreter: new OpenAiMailInterpreter(gmailConfig.apiKey, gmailConfig.model),
+      } : undefined;
       if (shuttingDown) return;
       const web = createWebAuthApp({ database, provider, origin: selected.origin,
         bootstrapEnabled: selected.bootstrapEnabled, writesEnabled: selected.writesEnabled,
-        timeZone: config.timeZone });
+        timeZone: config.timeZone, gmail });
+      if (gmail) gmailMcpReader = new GmailMcpReader(gmail.connections, gmail.authorization);
       // Local S1 only: no Docker/public ingress change accompanies this listener.
       webServer = web.listen(selected.port, selected.bindHost);
       webServer.on("error", () => {

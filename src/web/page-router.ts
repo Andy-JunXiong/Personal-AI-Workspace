@@ -28,7 +28,8 @@ function query(request: Request, allowed: string[]): Record<string, string | num
 }
 
 export function createJobSearchPageRouter(serviceFor: (request: Request) => WorkspaceService,
-  timeZone = "Australia/Sydney", now: () => number = Date.now, completionEnabled = false) {
+  timeZone = "Australia/Sydney", now: () => number = Date.now, completionEnabled = false,
+  gmailFor?: (request: Request) => { slot: number; email: string | null }[]) {
   const router = Router();
   router.get(["/", rootPath], (_request, response) => response.redirect(303, `${rootPath}/today`));
   const page = (path: string, render: (service: WorkspaceService, request: Request) => string) => {
@@ -58,14 +59,14 @@ export function createJobSearchPageRouter(serviceFor: (request: Request) => Work
   };
   page("/today", (service, request) => { query(request, []); return todayView(service, new Date(now()).toISOString()); });
   page("/applications", (service, request) => applicationListView(service,
-    query(request, ["q", "status", "lifecycle", "sort", "cursor", "pageSize"]), timeZone));
+    query(request, ["q", "status", "lifecycle", "sort", "cursor", "pageSize"]), timeZone, Boolean(gmailFor)));
   page("/applications/:id", (service, request) => {
     const input = query(request, ["section", "status", "cursor", "pageSize"]);
-    if (input.section !== undefined && !["tasks", "resources", "history"].includes(String(input.section))) {
+    if (input.section !== undefined && !["timeline", "tasks", "resources", "history"].includes(String(input.section))) {
       throw new ValidationError("Invalid section");
     }
-    if (input.section === "resources" && input.status !== undefined) throw new ValidationError("Invalid resource filter");
-    return applicationView(service, request.params.id as string, input, timeZone);
+    if (["resources", "timeline"].includes(String(input.section)) && input.status !== undefined) throw new ValidationError("Invalid section filter");
+    return applicationView(service, request.params.id as string, input, timeZone, gmailFor?.(request));
   });
   page("/tasks/:id", (service, request) => { query(request, []); return taskView(service,
     request.params.id as string, timeZone, new Date(now()).toISOString(), completionEnabled); });

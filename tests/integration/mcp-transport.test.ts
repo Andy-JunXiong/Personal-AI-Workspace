@@ -49,6 +49,14 @@ describe("Streamable HTTP MCP transport", () => {
         "workspace_get_job_candidate",
         "workspace_get_project",
         "workspace_get_recommendation_run",
+        "workspace_get_mail_scans",
+        "workspace_get_mail_accounts",
+        "workspace_next_mail_batch",
+        "workspace_ack_mail_batch",
+        "workspace_list_mail_messages",
+        "workspace_read_mail_message",
+        "workspace_start_mail_scan",
+        "workspace_finish_mail_scan",
         "workspace_get_task",
         "workspace_get_today",
         "workspace_link_job_candidate",
@@ -62,7 +70,16 @@ describe("Streamable HTTP MCP transport", () => {
         "workspace_record_recommendation_run",
         "workspace_update_job_application",
         "workspace_update_task",
-      ]);
+      ].sort());
+      const scanId = "b4c2b9cd-1030-4b50-bc19-f3ed1d8d7d94";
+      const scanAuthority = { userConfirmed: true, authorityReference: "Synthetic receipt transport verification" };
+      const started = await client.callTool({ name: "workspace_start_mail_scan", arguments: { ...scanAuthority, runId: scanId, triggerType: "MANUAL", executionReference: "Synthetic transport run" } });
+      expect(started.isError).not.toBe(true);
+      const scanInput = { ...scanAuthority, runId: scanId, newApplicationIds: [], evidenceIds: [], admittedTransitionIds: [], newTaskIds: [],
+        mailboxes: ["mailbox-1", "mailbox-2"].map(mailbox => ({ mailbox, status: "COMPLETE", searchedFrom: "2026-01-01T00:00:00Z", coveredThrough: "2026-01-02T00:00:00Z", failureReason: "" })) };
+      expect((await client.callTool({ name: "workspace_finish_mail_scan", arguments: scanInput })).isError).not.toBe(true);
+      const scanRead = await client.callTool({ name: "workspace_get_mail_scans", arguments: { runId: scanId } });
+      expect(scanRead.structuredContent).toMatchObject({ result: { run: { status: "COMPLETE", counts: { applications: 0 } } } });
       expect(
         tools.tools.find((tool) => tool.name === "workspace_get_task"),
       ).toMatchObject({ annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },

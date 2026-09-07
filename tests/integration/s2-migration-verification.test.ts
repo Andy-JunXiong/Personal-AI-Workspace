@@ -29,8 +29,10 @@ function fixture(windowsHistory = false) {
     idempotencyKey: "migration-test" });
   db.close();
   copyFileSync(before, after);
-  openDatabase(after).close();
-  return { before, after, oldMigrations };
+  const s2Migrations = join(root, "s2-migrations"); mkdirSync(s2Migrations);
+  for (const file of readdirSync(resolve("db/migrations")).filter(f => /^00[1-8]_/.test(f))) copyFileSync(resolve("db/migrations",file),join(s2Migrations,file));
+  openDatabase(after, s2Migrations).close();
+  return { before, after, oldMigrations, s2Migrations };
 }
 function mutate(path: string, sql: string) {
   const db = new Database(path);
@@ -39,38 +41,38 @@ function mutate(path: string, sql: string) {
 describe("S1 to S2 migration verification", () => {
   it("preserves historical Windows DDL when upgrading with Linux migration files", () => {
     const f = fixture(true);
-    expect(verifyS2Migration(f.before, f.after).status).toBe("PASS");
+    expect(verifyS2Migration(f.before, f.after, f.s2Migrations).status).toBe("PASS");
   });
   it("preserves existing data and accepts only expected schema additions, including repeat and old migration startup", () => {
     const f = fixture();
-    expect(verifyS2Migration(f.before, f.after)).toMatchObject({ status: "PASS" });
-    openDatabase(f.after).close();
+    expect(verifyS2Migration(f.before, f.after, f.s2Migrations)).toMatchObject({ status: "PASS" });
+    openDatabase(f.after, f.s2Migrations).close();
     openDatabase(f.after, f.oldMigrations).close();
-    expect(verifyS2Migration(f.before, f.after).status).toBe("PASS");
+    expect(verifyS2Migration(f.before, f.after, f.s2Migrations).status).toBe("PASS");
   });
   it("rejects modification to pre-existing application data", () => {
     const f = fixture();
     mutate(f.after, "UPDATE projects SET title = 'changed'");
-    expect(() => verifyS2Migration(f.before, f.after)).toThrow(/Pre-existing rows changed/u);
+    expect(() => verifyS2Migration(f.before, f.after, f.s2Migrations)).toThrow(/Pre-existing rows changed/u);
   });
   it("rejects unexpected indexes even if all rows are preserved", () => {
     const f = fixture();
     mutate(f.after, "CREATE INDEX unexpected_index ON projects(title)");
-    expect(() => verifyS2Migration(f.before, f.after)).toThrow(/schema change/u);
+    expect(() => verifyS2Migration(f.before, f.after, f.s2Migrations)).toThrow(/schema change/u);
   });
   it("rejects missing migration history and changed existing history", () => {
     const f = fixture();
     mutate(f.after, "UPDATE schema_migrations SET applied_at = 'changed' WHERE version LIKE '001%'");
-    expect(() => verifyS2Migration(f.before, f.after)).toThrow(/history changed/u);
+    expect(() => verifyS2Migration(f.before, f.after, f.s2Migrations)).toThrow(/history changed/u);
     mutate(f.after, "DELETE FROM schema_migrations WHERE version LIKE '008%'");
-    expect(() => verifyS2Migration(f.before, f.after)).toThrow(/versions/u);
+    expect(() => verifyS2Migration(f.before, f.after, f.s2Migrations)).toThrow(/versions/u);
   });
   it("rejects unplanned data in new tables", () => {
     const f = fixture();
     mutate(f.after, `INSERT INTO recommendation_runs
       (id,workspace_id,provider,run_at,coverage_status,delivery_status,item_count,recorded_at)
       SELECT 'test',id,'test','2026-09-07','COMPLETE','UNKNOWN',0,'2026-09-07' FROM workspaces`);
-    expect(() => verifyS2Migration(f.before, f.after)).toThrow(/not empty/u);
+    expect(() => verifyS2Migration(f.before, f.after, f.s2Migrations)).toThrow(/not empty/u);
   });
   it("rejects an already-upgraded baseline and the same path", () => {
     const f = fixture();
