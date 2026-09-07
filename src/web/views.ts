@@ -39,10 +39,10 @@ function freshness(asOf: string, zone: string): string {
   return `<p class="freshness">上次读取 <time datetime="${e(asOf)}">${e(date(asOf, zone))}</time><span>${e(zone)}</span></p>`;
 }
 function contextCopy(kind: "Application" | "Task" | "Candidate", id: string): string {
-  const text = kind === "Task" ? `请从 Personal AI Workspace 读取 Task ${id} 的最新状态、完成时间和版本，再帮我继续处理。`
-    : kind === "Candidate" ? `请从 Personal AI Workspace 读取 Candidate ${id} 的最新决策、来源与关联申请，再帮我继续处理。`
-      : `请从 Personal AI Workspace 读取 Application / Project ${id} 的最新状态与任务，再帮我判断下一步。`;
-  return `<section class="context-box"><div><h2>带回 ChatGPT 继续</h2><p>复制这段引用到新对话，读取最新工作状态。</p></div><button type="button" class="button secondary" data-copy>复制引用</button><label class="sr-only" for="context-reference">可手动选取的上下文引用</label><textarea id="context-reference" readonly rows="3">${e(text)}</textarea></section>`;
+  const text = kind === "Task" ? `请从 Personal AI Workspace 读取 Task ${id} 的最新状态、完成时间和版本。按我接下来的要求处理，确认并保存后只告诉我结果。`
+    : kind === "Candidate" ? `请从 Personal AI Workspace 读取 Candidate ${id} 的最新决策、来源与关联申请。按我接下来的要求处理，确认并保存后只告诉我结果。`
+      : `请从 Personal AI Workspace 读取 Application / Project ${id} 的最新申请状态和待办任务。按我接下来的要求处理，确认并保存后只告诉我结果。`;
+  return `<details class="context-handoff"><summary>在 ChatGPT 中处理</summary><section class="context-box"><div><h2>复制到 ChatGPT</h2><p>在对话中说明要更新的内容。保存后切回此页，会自动读取最新结果。</p></div><button type="button" class="button secondary" data-copy>复制引用</button><label class="sr-only" for="context-reference">可手动选取的上下文引用</label><textarea id="context-reference" readonly rows="3">${e(text)}</textarea></section></details>`;
 }
 function pageUrl(path: string, query: Record<string, unknown>): string {
   const params = new URLSearchParams();

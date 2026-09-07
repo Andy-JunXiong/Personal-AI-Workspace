@@ -2,6 +2,8 @@
 
 > Working name.
 
+Latest UI update: [results-focused detail pages](docs/mvp/WEB_RESULTS_FOCUS_2026-09-07.md).
+
 ## Thesis
 
 **Build a persistent work-state layer for ChatGPT that turns conversations and external events into long-running goals, projects, tasks, actions, and outcomes.**
