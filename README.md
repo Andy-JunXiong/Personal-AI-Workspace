@@ -2,6 +2,8 @@
 
 > Working name.
 
+Workspace Agent: [prepared configuration, publishing pending](docs/mvp/GMAIL_WORKSPACE_AGENT_SETUP.md).
+
 Latest: [Gmail check receipts and result display](docs/mvp/GMAIL_CHECK_RESULTS_2026-09-07.md); automatic agent triggering remains unconfigured.
 
 Latest data operation: [production test fixtures archived and removed](docs/mvp/SYNTHETIC_CLEANUP_2026-09-07.md); 23 real applications remain.

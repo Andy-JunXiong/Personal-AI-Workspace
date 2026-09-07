@@ -2,6 +2,9 @@
 
 ## Status
 
+Workspace Agent [configuration package](docs/mvp/GMAIL_WORKSPACE_AGENT_SETUP.md) is ready;
+account-side creation/publishing and API credentials remain pending. No agent has been published by this session.
+
 Latest: [Gmail search and result writeback](docs/mvp/GMAIL_CHECK_RESULTS_2026-09-07.md).
 Real Wake in Cloud check saved; website-triggered GPT still requires a published agent.
 
