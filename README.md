@@ -210,7 +210,9 @@ was followed by the [S2 cloud release](docs/mvp/P6_RUNTIME_RESULTS_2026-09-07.md
 The [overview/readability update](docs/mvp/WEB_OVERVIEW_READABILITY_2026-09-07.md)
 subsequently deployed `0a9dd15`: Applications defaults to all states and text
 is larger. The local gate is 236 tests. Browser acceptance and A01–A12 remain
-pending; no P6 cloud fixture has been created.
+pending. The [P6 scenario run](docs/mvp/P6_SCENARIO_EXECUTION_2026-09-07.md)
+has now created its cloud fixtures: A07/A08/A11 pass, while browser/device
+checks remain outstanding.
 
 Start with an authenticated Job Search inventory, Today, and application detail
 including completed Tasks. Reuse application services and preserve authority,

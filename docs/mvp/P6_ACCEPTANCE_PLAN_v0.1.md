@@ -2,6 +2,11 @@
 
 **Date:** 2026-09-07 (Australia/Sydney).
 
+**Latest scenario checkpoint:** fixtures created; A07/A08/A11 PASS,
+A02/A04/A05/A09 PARTIAL. Browser/device evidence remains outstanding. Use the
+[scenario execution ledger](P6_SCENARIO_EXECUTION_2026-09-07.md) for current
+results; earlier deployment/pre-fixture notes below are historical.
+
 **Execution update:** S2 `da0a879` is deployed after successful migration and
 rollback rehearsal. Automated Phase 0B passes; authenticated browser smoke
 awaits the user. No P6 cloud fixture or A01–A12 scenario has run. See the

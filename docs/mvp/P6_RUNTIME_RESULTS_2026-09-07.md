@@ -1,5 +1,12 @@
 # P6 release and acceptance execution — 2026-09-07
 
+**Latest execution:** after the user accepted the overview/font update and
+requested continuation, P6 fixtures were created and A07/A08/A11 passed through
+live MCP. A02/A04/A05/A09 have partial evidence; remaining browser/device
+checks are pending. There are now 140 applications (23 real + 117 synthetic).
+See the authoritative [scenario ledger](P6_SCENARIO_EXECUTION_2026-09-07.md).
+The pre-fixture status/matrix below is historical.
+
 **Status:** S2 deployed; automated Phase 0B checks pass. Authenticated browser
 smoke awaits the user's result. A01–A12 have not started and no P6 fixtures
 have been written to the cloud database.

@@ -24,7 +24,7 @@
 
 **RECOMMENDATION CONTINUITY S2-03 = LOCALLY VERIFIED — 222 TESTS; DIGEST RUN RECORDING AND COVERAGE**
 
-**S2 CLOUD RELEASE = DEPLOYED 0a9dd15 — COMPLETE APPLICATION OVERVIEW + LARGER TEXT; 236 LOCAL TESTS; P6 ACCEPTANCE PENDING**
+**S2 CLOUD RELEASE = DEPLOYED 0a9dd15 — 236 LOCAL TESTS; P6 A07/A08/A11 PASS; BROWSER/DEVICE ACCEPTANCE IN PROGRESS**
 
 The 2026-09-05 handoff led to the completed local
 [S1-04 Task completion package](docs/mvp/S1_04_TASK_COMPLETION_RESULTS_v0.1.md).
@@ -127,6 +127,15 @@ The Workspace will not initially rebuild Gmail/Drive/Calendar connectors. The fi
 - [ ] M4 Day-28 utility gate
 
 ## Immediate Next Step
+
+**Latest acceptance checkpoint — 2026-09-07:** P6 fixtures now exist; 140
+applications = 23 real + 117 synthetic. A07/A08/A11 passed; A02/A04/A05/A09
+are partial. Await the user's 106-application/11-evidence browser paging
+result, then coordinate bounded browser completion and Windows-off iPhone
+checks. Writes/bootstrap remain false. The
+[scenario ledger](docs/mvp/P6_SCENARIO_EXECUTION_2026-09-07.md) supersedes
+the earlier pre-fixture notes below. Task-A09 is now DONE; A03/A06/A10 retain
+their independent fixtures.
 
 **Latest UI checkpoint — 2026-09-07:** user feedback requested rejected
 applications in the default overview and larger fonts. The
