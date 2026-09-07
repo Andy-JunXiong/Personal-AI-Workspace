@@ -61,6 +61,13 @@ temporary local SSH credentials at session closeout.
 
 ## Runtime results
 
-Pending execution. Current preflight confirmed the existing Workspace is
+Initial rehearsal stopped safely on a schema comparison mismatch. Read-only
+diagnosis found historical CRLF inside ALTER TABLE definitions, compared with
+LF in a fresh Linux schema. The verifier now reconstructs the historical DDL
+exactly in memory and applies only 006–008, without weakening row/schema checks.
+A Windows-history regression was added; 27 files / 234 tests now pass.
+The failed candidate was not deployed. Full cloud rehearsal must be rerun.
+
+Current preflight confirmed the existing Workspace is
 available, the VM source is `4cb9015`, the running image is `paw:9303de5`,
 and HTTPS health passes with port 80 closed and application ports on loopback.

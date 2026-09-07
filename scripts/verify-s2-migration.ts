@@ -1,9 +1,8 @@
 import Database from "better-sqlite3";
 import { createHash } from "node:crypto";
-import { readdirSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
-import { openDatabase } from "../src/persistence/database.js";
 
 const baseline = ["001_integration_spike.sql", "002_real_job_application_inventory.sql",
   "003_task_attention.sql", "004_web_identity_links.sql", "005_task_command_audit.sql"];
@@ -45,7 +44,15 @@ export function verifyS2Migration(beforePath: string, afterPath: string, migrati
     if (!equal(readdirSync(migrations).filter(f => f.endsWith(".sql")).sort(), [...baseline, ...additions])) {
       throw new Error("Unexpected migration source set");
     }
-    expected = openDatabase(":memory:", migrations);
+    // Preserve the exact historical DDL (including Windows line endings).
+    // Reconstruct only schema in memory, then apply the allowed additions.
+    // Copying/deserializing a WAL database into memory is not portable.
+    expected = new Database(":memory:");
+    const oldSchema = schema(before) as { type: string; sql: string | null }[];
+    for (const object of [...oldSchema.filter(o => o.type === "table"), ...oldSchema.filter(o => o.type !== "table")]) {
+      if (object.sql) expected.exec(object.sql);
+    }
+    for (const migration of additions) expected.exec(readFileSync(resolve(migrations, migration), "utf8"));
     if (!equal(schema(expected), schema(after))) throw new Error("Unexpected schema change");
     const oldTables = before.prepare("SELECT name FROM sqlite_schema WHERE type = 'table' AND name NOT LIKE 'sqlite_%' ORDER BY name").all() as { name: string }[];
     for (const { name } of oldTables) {

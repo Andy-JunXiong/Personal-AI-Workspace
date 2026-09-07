@@ -1,5 +1,5 @@
 import Database from "better-sqlite3";
-import { copyFileSync, mkdtempSync, readdirSync, mkdirSync, rmSync } from "node:fs";
+import { copyFileSync, mkdtempSync, readdirSync, mkdirSync, rmSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
@@ -10,13 +10,14 @@ import { testPrincipal } from "../helpers/test-workspace.js";
 
 const roots: string[] = [];
 afterEach(() => { for (const root of roots.splice(0)) rmSync(root, { recursive: true, force: true }); });
-function fixture() {
+function fixture(windowsHistory = false) {
   const root = mkdtempSync(join(tmpdir(), "paw-s2-migration-"));
   roots.push(root);
   const oldMigrations = join(root, "migrations");
   mkdirSync(oldMigrations);
   for (const file of readdirSync(resolve("db/migrations")).filter(f => /^00[1-5]_/u.test(f))) {
     copyFileSync(resolve("db/migrations", file), join(oldMigrations, file));
+    if (windowsHistory) writeFileSync(join(oldMigrations, file), readFileSync(join(oldMigrations, file), "utf8").replace(/\r?\n/gu, "\r\n"));
   }
   const before = join(root, "before.db");
   const after = join(root, "after.db");
@@ -36,6 +37,10 @@ function mutate(path: string, sql: string) {
   try { db.exec(sql); } finally { db.close(); }
 }
 describe("S1 to S2 migration verification", () => {
+  it("preserves historical Windows DDL when upgrading with Linux migration files", () => {
+    const f = fixture(true);
+    expect(verifyS2Migration(f.before, f.after).status).toBe("PASS");
+  });
   it("preserves existing data and accepts only expected schema additions, including repeat and old migration startup", () => {
     const f = fixture();
     expect(verifyS2Migration(f.before, f.after)).toMatchObject({ status: "PASS" });
