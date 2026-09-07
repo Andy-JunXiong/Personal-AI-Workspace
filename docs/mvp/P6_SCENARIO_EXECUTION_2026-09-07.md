@@ -35,7 +35,7 @@ still requires actual dogfood, not synthetic success.
 | A01 | PENDING | Saved-link login and wrong-account denial need user/browser evidence |
 | A02 | PARTIAL | MCP state APPLIED, stored proposal PROPOSED; Web display pending |
 | A03 | PENDING | Dedicated task TODO; stale browser write not attempted |
-| A04 | PARTIAL | Deployed query path read 106 applications over 5 pages and 11 NOTE rows over 3 pages, no duplicates; user browser paging pending |
+| A04 | PARTIAL | Deployed query path read 106 applications over 5 pages and 11 NOTE rows over 3 pages, no duplicates; user screenshot shows 106/106 applications loaded and end reached; browser duplicate check and evidence paging remain pending |
 | A05 | PARTIAL | HIGH_PRIORITY; OVERDUE + BLOCKED counted once; gap present; Web comparison pending |
 | A06 | PENDING | Dedicated task TODO; Web completion/fresh conversation pending |
 | A07 | PASS | Saved/dismissed decisions survive a repeat run; no new candidate/application/lifecycle rows |

@@ -32,5 +32,13 @@ separate P6 gates; local event checks do not establish either.
 
 ## Deployment
 
-Pending deployment verification. Pre-release database backup:
-`workspace-20260907T045311Z.db`, integrity OK.
+Deployed `paw:55b09fd` in browser read mode. Pre-release database backup:
+`workspace-20260907T045311Z.db`, integrity OK. Both new and previous (`0a9dd15`)
+images passed unchanged-database recovery rehearsal: 18 tables / 617 rows.
+All five public HTTPS release checks passed. A read-only invocation of the
+deployed application/task renderer confirmed the collapsed panel and retained
+reference. This does not substitute for authenticated user/device acceptance.
+
+Temporary SSH access was removed and original firewall rules restored; temporary
+SSH credentials were deleted. The previous image and active-tag receipt remain
+available for rollback.
