@@ -65,6 +65,21 @@ function createRepositoryFixture(label: string) {
     ],
     { cwd: fixtureRoot, encoding: "utf8" },
   );
+  writeFileSync(resolve(fixtureRoot, "fixture-marker.txt"), "second commit\n");
+  git(["add", "fixture-marker.txt"]);
+  execFileSync(
+    "git",
+    [
+      "-c",
+      "user.name=PAW Test",
+      "-c",
+      "user.email=paw-test@example.invalid",
+      "commit",
+      "-m",
+      "fixture head",
+    ],
+    { cwd: fixtureRoot, encoding: "utf8" },
+  );
 
   return {
     fixtureRoot,
@@ -198,15 +213,22 @@ describe("Workspace Skills release packaging", () => {
   });
 
   it("rejects a source commit that is not the checked-out HEAD", () => {
-    const outputDirectory = createOutputDirectory("wrong-commit");
+    const fixture = createRepositoryFixture("wrong-commit");
+    const outputDirectory = resolve(fixture.fixtureRoot, "dist/workspace-skills");
     const parentCommit = execFileSync("git", ["rev-parse", "HEAD^"], {
-      cwd: repositoryRoot,
+      cwd: fixture.fixtureRoot,
       encoding: "utf8",
     }).trim();
     const result = spawnSync(
       process.execPath,
-      [packageScript, "--source-ref", parentCommit, "--output", outputDirectory],
-      { cwd: repositoryRoot, encoding: "utf8" },
+      [
+        fixture.fixtureScript,
+        "--source-ref",
+        parentCommit,
+        "--output",
+        outputDirectory,
+      ],
+      { cwd: fixture.fixtureRoot, encoding: "utf8" },
     );
 
     expect(result.status).not.toBe(0);
