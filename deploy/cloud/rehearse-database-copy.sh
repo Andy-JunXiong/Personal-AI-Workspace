@@ -10,9 +10,16 @@ backup_name="${1:-}"
 current_tag="${2:-}"
 previous_tag="${3:-}"
 mode="${4:-unchanged}"
-if [[ "${mode}" != unchanged && "${mode}" != --s2-upgrade ]]; then
-  echo "Optional fourth argument must be --s2-upgrade" >&2
+if [[ "${mode}" != unchanged && "${mode}" != --s2-upgrade && "${mode}" != --mail-batch-upgrade && "${mode}" != --mail-ingestion-upgrade ]]; then
+  echo "Optional fourth argument must be --s2-upgrade, --mail-batch-upgrade or --mail-ingestion-upgrade" >&2
   exit 1
+fi
+upgrade_verifier=dist/scripts/verify-s2-migration.js
+if [[ "${mode}" == --mail-batch-upgrade ]]; then
+  upgrade_verifier=dist/scripts/verify-mail-batch-migration.js
+fi
+if [[ "${mode}" == --mail-ingestion-upgrade ]]; then
+  upgrade_verifier=dist/scripts/verify-mail-ingestion-migration.js
 fi
 if [[ ! "${backup_name}" =~ ^workspace-[0-9]{8}T[0-9]{6}Z\.db$ ]]; then
   echo "Usage: $0 workspace-YYYYMMDDTHHMMSSZ.db <current-tag> <previous-tag>" >&2
@@ -117,7 +124,8 @@ run_image() {
   IFS=$'\t' read -r before_hash before_tables before_rows <<<"${before_fingerprint}"
 
   container_name="paw-recovery-${sequence}-$$"
-  docker run --detach --rm \
+  # Keep an exited probe until cleanup so startup failures remain diagnosable.
+  docker run --detach \
     --name "${container_name}" \
     --network none \
     --env-file "${identity_env}" \
@@ -142,6 +150,7 @@ run_image() {
     sleep 1
   done
   if [[ "${health}" != "healthy" ]]; then
+    docker logs --tail 30 "${container_name}" >&2 || true
     echo "Isolated startup failed for paw:${image_tag}; health=${health:-missing}" >&2
     exit 1
   fi
@@ -149,6 +158,7 @@ run_image() {
   local memory_sample
   memory_sample="$(docker stats --no-stream --format '{{.MemUsage}}' "${container_name}")"
   docker stop --time 15 "${container_name}" >/dev/null
+  docker rm "${container_name}" >/dev/null
   container_name=""
 
   local after_hash after_tables after_rows
@@ -161,7 +171,7 @@ run_image() {
       --mount "type=bind,source=${backup_path},target=/app/before.db,readonly" \
       --mount "type=bind,source=${data_dir},target=/app/data,readonly" \
       --entrypoint node "paw:${image_tag}" \
-      dist/scripts/verify-s2-migration.js /app/before.db /app/data/workspace.db
+      "${upgrade_verifier}" /app/before.db /app/data/workspace.db
   elif [[ "${before_hash}" != "${after_hash}" ||
         "${before_tables}" != "${after_tables}" ||
         "${before_rows}" != "${after_rows}" ]]; then
@@ -172,8 +182,8 @@ run_image() {
   echo "paw:${image_tag} copy passed: check=${check}, healthy, integrity ok, ${after_tables} tables/${after_rows} rows, memory ${memory_sample}"
 }
 
-if [[ "${mode}" == --s2-upgrade ]]; then
-  # current_tag is the candidate; previous_tag is the deployed S1 image.
+if [[ "${mode}" != unchanged ]]; then
+  # current_tag is the candidate; previous_tag is the deployed baseline image.
   # All three starts share the upgraded COPY, never the live database.
   run_image "${current_tag}" upgrade upgrade
   run_image "${current_tag}" upgrade

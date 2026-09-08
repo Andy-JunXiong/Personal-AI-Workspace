@@ -41,15 +41,20 @@ export async function googleGmailAuthorization(clientId: string, clientSecret: s
 
 export interface MailMessage { id: string; threadId: string; receivedAt: string; senderDomain: string; subject: string; text: string; }
 export interface MailSearch { messages: MailMessage[]; complete: boolean; scope: string; }
-export interface MailReader { search(accessToken: string, company: string, role: string, since: string, signal: AbortSignal): Promise<MailSearch>; }
+export interface MailRange { searchedFrom:string; coveredThrough:string; }
+export interface MailReader { search(accessToken: string, company: string, role: string, since: string, signal: AbortSignal, range?:MailRange): Promise<MailSearch>; }
 export class GmailReader implements MailReader {
   constructor(private readonly fetcher: typeof fetch = fetch) {}
-  async search(token: string, company: string, role: string, since: string, signal: AbortSignal): Promise<MailSearch> {
+  async search(token: string, company: string, role: string, since: string, signal: AbortSignal, range?:MailRange): Promise<MailSearch> {
     // Only literal words enter Gmail's query grammar; metadata cannot inject operators.
     const words = (value: string) => value.replace(/[^\p{L}\p{N} ]/gu, " ").replace(/\s+/gu, " ").trim().slice(0, 150);
     if (!words(company)) throw new Error("Company search is empty");
     if (!Number.isFinite(Date.parse(since))) throw new Error("Invalid search date");
-    const query = `after:${Math.floor(Date.parse(since) / 1000) - 86400} {"${words(company)}" "${words(role) || words(company)}"}`;
+    const from=range?Date.parse(range.searchedFrom):Date.parse(since)-86400000;
+    const through=range?Date.parse(range.coveredThrough):Infinity;
+    if(range && (!Number.isFinite(from)||!Number.isFinite(through)||from>=through||through-from>7*86400000))
+      throw new Error("Manual email interval must be increasing and at most seven days");
+    const query = `after:${Math.floor(from / 1000) - 1}${range?` before:${Math.ceil(through/1000)+1}`:""} {"${words(company)}" "${words(role) || words(company)}"}`;
     const url = new URL("https://gmail.googleapis.com/gmail/v1/users/me/messages");
     url.searchParams.set("q", query); url.searchParams.set("maxResults", "30");
     url.searchParams.set("includeSpamTrash", "true");
@@ -90,10 +95,10 @@ export class GmailReader implements MailReader {
         return { id, threadId: z.string().parse(value.threadId), receivedAt: new Date(Number(value.internalDate)).toISOString(),
           senderDomain: from, subject: header("subject").slice(0, 300), text: full.slice(0, 12000) };
       }));
-      messages.push(...batch);
+      messages.push(...batch.filter(message=>Date.parse(message.receivedAt)>=from && Date.parse(message.receivedAt)<through));
     }
     return { messages: messages.sort((a,b)=>a.receivedAt.localeCompare(b.receivedAt)), complete,
-      scope: `已连接邮箱；从 ${since.slice(0,10)} 前一天起按公司或职位检索（含垃圾邮件）；最多读取 120 封，正文最多 12000 字符。` };
+      scope: `已连接邮箱；${range?`${range.searchedFrom} 至 ${range.coveredThrough}`:`从 ${since.slice(0,10)} 前一天起`}按公司或职位检索（含垃圾邮件）；最多读取 120 封，正文最多 12000 字符。` };
   }
 }
 

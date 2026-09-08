@@ -1,6 +1,23 @@
 # Project Kickoff ? Personal AI Workspace v0.1
 
-## Current status ? 2026-09-07
+## Current status — 2026-09-08
+
+Latest production is `mail-layout-20260908-r2`: [mail status layout](docs/mvp/MAIL_STATUS_LAYOUT_2026-09-08.md)
+replaces the expanded log panel with two collapsible status cards. Migration 011,
+mail processing behavior and the paused ChatGPT tasks are unchanged.
+
+Production recovery and paused-task status are recorded in [README](README.md)
+and the [September 8 recovery log](docs/mvp/JOB_TRACKER_RECOVERY_2026-09-08.md).
+The [mail ingestion alignment](docs/mvp/MAIL_INGESTION_ALIGNMENT_2026-09-08.md)
+first shipped as `mail-ingestion-20260908-r1` and is included in the current release,
+with migration 011, 291 passing tests,
+a successful build, database-copy rollback rehearsal and live data-preservation verification.
+It preserves the shared database and reporting-first
+website, adds stable source identity and bounded manual checks, and does not
+resolve the platform write block. The [release handoff](docs/mvp/RELEASE_HANDOFF_2026-09-08.md)
+records final verification and remaining work. The September 7 status below is historical.
+
+## Historical status ? 2026-09-07
 
 **Core workflow:** [GPT operates; Workspace persists; website reports](docs/architecture/CORE_JOB_WORKFLOW.md). The daily GPT task reads both Gmail accounts through Workspace MCP, classifies evidence and performs authorized updates. The website reads the same cloud database and primarily shows statistics, history and saved reports.
 

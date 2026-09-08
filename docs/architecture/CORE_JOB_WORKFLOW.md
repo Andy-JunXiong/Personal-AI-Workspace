@@ -3,6 +3,27 @@
 Confirmed by Jun on 2026-09-07. This decision supersedes conflicting earlier
 proposals to make the website a parallel operational workspace.
 
+## Product clarification — 2026-09-08
+
+Jun reaffirmed that the website primarily displays stored results, with an
+occasional explicit manual email check between daily GPT runs. The website's
+database reads do not depend on or wake the daily ChatGPT task. Both ingestion
+entry points persist to the same database; no second website synchronization
+ledger is needed. Share source identity, evidence validation and deduplication
+while retaining explicit scope and authority for each entry point.
+
+The existing manual check saves evidence for already registered applications;
+it is not yet equivalent to the complete daily policy. The
+[September 8 flow review](JOB_TRACKER_FLOW_REVIEW_2026-09-08.md) records these
+implementation gaps and proposed increments. It does not select a replacement
+scheduler or expand website write authority. Current deployment and platform
+status are in the [release handoff](../mvp/RELEASE_HANDOFF_2026-09-08.md) and
+[recovery record](../mvp/JOB_TRACKER_RECOVERY_2026-09-08.md). The current
+`mail-layout-20260908-r2` release includes shared mail identity, durable
+application-scoped manual checks and collapsed status cards; both daily tasks
+remain paused pending platform recovery and scheduled acceptance;
+the September 7 execution evidence below is historical.
+
 ## Core flow
 
 Two Gmail accounts -> daily ChatGPT Update Job Tracker -> structured observations,
@@ -82,8 +103,10 @@ with PARTIAL for both mailboxes. Mailbox 2 listed 136 IDs; not all bodies were
 processed. Receipt persistence/readback and existing Synogize deduplication were
 reported successful; zero new business records were written. This does not
 verify complete coverage or new-write behavior in that run. The user then
-narrowed lookback to seven days. Migration 010 and 29-tool bounded resumption
-are locally verified (269 tests) but not deployed or activated in the daily task.
+narrowed lookback to seven days. At the end of September 7, migration 010 and
+29-tool bounded resumption were locally verified (269 tests) but not deployed
+or activated in the daily task. The September 8 deployment supersedes that
+historical release status; scheduled acceptance is still pending.
 
 The historical ledger below must not be interpreted as full scan acceptance.
 

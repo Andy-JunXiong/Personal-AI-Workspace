@@ -21,3 +21,34 @@
 .match-table { overflow-x: auto; }
 .match-table table { width: 100%; border-collapse: collapse; text-align: left; }
 .match-table th, .match-table td { padding: 12px; border-bottom: 1px solid #dce2d8; vertical-align: top; min-width: 100px; }
+
+/* Status first; source coverage and technical receipts are opt-in detail. */
+.mail-updates{margin:0 0 30px}
+.mail-updates-heading{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:14px}
+.mail-updates-heading h2{font-size:16px}
+.mail-update-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;align-items:start}
+.mail-update-card{min-width:0;background:var(--white);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.mail-update-card>summary{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:18px 16px;padding:24px;cursor:pointer;list-style:none}
+.mail-update-card>summary::-webkit-details-marker{display:none}
+.mail-update-card>summary:hover{background:#fafbf7}
+.mail-update-card summary:focus-visible{outline:3px solid #78a997;outline-offset:-4px;border-radius:8px}
+.mail-update-title{font-size:16px;font-weight:600;align-self:center}
+.mail-update-card .chip{font-size:13px;align-self:start;white-space:normal}
+.mail-update-time{font-size:14px;color:var(--muted);align-self:center}
+.mail-update-toggle{display:flex;align-items:center;justify-content:flex-end;gap:10px;font-size:14px;color:var(--green);white-space:nowrap}
+.mail-update-card:not([open]) .when-open,.mail-update-card[open] .when-closed{display:none}
+.mail-update-card[open] .mail-update-toggle>span:last-child{transform:rotate(180deg)}
+.mail-update-body{border-top:1px solid var(--line);padding:24px;display:grid;gap:22px;overflow-wrap:anywhere;font-size:14px;line-height:1.85}
+.mail-update-note{color:var(--muted);font-size:14px;line-height:1.85}
+.mail-mailboxes{display:grid;gap:20px}
+.mail-mailbox{display:grid;gap:7px;padding-bottom:20px;border-bottom:1px solid var(--line)}
+.mail-mailbox:last-child{border-bottom:0;padding-bottom:0}
+.mail-mailbox h3{font-size:15px}
+.mail-technical>summary{padding:8px 0;cursor:pointer;color:var(--green);font-size:14px;min-height:44px}
+.mail-technical>p{margin-top:10px;color:var(--muted);font-size:14px}
+.mail-history-item{display:grid;gap:12px;border-top:1px solid var(--line);padding-top:20px;overflow-wrap:anywhere}
+.mail-history-heading{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px}
+.mail-technical .mail-history-item{margin-top:14px}
+@media(max-width:1100px){.mail-update-card>summary{grid-template-columns:minmax(0,1fr);gap:12px}.mail-update-card .chip{justify-self:start}.mail-update-toggle{justify-content:flex-start}}
+@media(max-width:700px){.mail-update-grid{grid-template-columns:minmax(0,1fr);gap:12px}.mail-update-card>summary{grid-template-columns:minmax(0,1fr) auto;padding:20px;gap:16px 12px}.mail-update-card .chip{justify-self:end}.mail-update-toggle{justify-content:flex-end}.mail-update-body{padding:20px}.mail-updates{margin-bottom:24px}}
+@media(max-width:380px){.mail-update-card>summary{grid-template-columns:minmax(0,1fr)}.mail-update-card .chip{justify-self:start}.mail-update-toggle{justify-content:flex-start}}

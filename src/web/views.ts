@@ -94,27 +94,41 @@ export function todayView(service: WorkspaceService, asOf: string): string {
 export function mailScanPanel(service: WorkspaceService, zone: string): string {
   const data = service.mailScanService.overview();
   const processing = service.mailBatchService.progress();
-  const names: Record<string,string> = { RUNNING: "未收到完成回执", COMPLETE: "两邮箱检查完成", PARTIAL: "检查不完整", FAILED: "检查失败" };
-  const mailboxNames: Record<string,string> = { COMPLETE: "检查及写入完成", PARTIAL: "部分完成", FAILED: "未完成" };
-  const origins: Record<string,string> = { SCHEDULED: "定时执行（GPT 回报）", MANUAL: "手动执行", UNKNOWN: "执行来源待确认" };
-  const latest = data.runs[0];
-  return `<section class="panel"><header class="section-heading"><h2>每日邮件扫描</h2><span class="muted">GPT 执行 · Workspace 回执</span></header>${latest
-    ? `<p><strong>${e(names[latest.status])}</strong> · ${e(origins[latest.triggerType])} · 开始于 ${e(date(latest.startedAt, zone))}${latest.finishedAt ? ` · 完成于 ${e(date(latest.finishedAt, zone))}` : ""}</p>${latest.executionReference ? `<p class="muted">执行来源：${e(latest.executionReference)}</p>` : ""}`
-    : `<p>尚无每日扫描回执，不能据此判断邮箱没有更新。</p>`}
-    ${data.unfinishedCount ? `<p class="advisory">${data.unfinishedCount} 次扫描尚未提交完成回执，可能仍在运行或已中断。</p>` : ""}
-    <div class="two-column">${["mailbox-1", "mailbox-2"].map((key, i) => {
-      const checkpoint = data.checkpoints.find(c => c.mailbox === key);
-      const result = latest?.mailboxes.find(m => m.mailbox === key);
-      return `<div><h3>邮箱 ${i+1}</h3><p>最近成功覆盖至：${checkpoint ? e(date(checkpoint.coveredThrough, zone)) : "尚未记录"}</p>${result ? `<p>${e(mailboxNames[result.status])}</p>${result.searchedFrom ? `<p class="muted">本次搜索起点：${e(date(result.searchedFrom, zone))}</p>` : ""}${result.failureReason ? `<p>${e(result.failureReason)}</p>` : ""}` : ""}</div>`;
-    }).join("")}</div>
-    ${processing.streams.length ? `<details open><summary>可恢复的邮件处理进度</summary><p class="muted">近期检查与一周内补查独立推进。以下待处理数量仅包含已列出的当前批次，不代表邮箱全部剩余邮件。</p>${processing.streams.map(s => `<p>邮箱 ${s.mailbox === "mailbox-1" ? "1" : "2"} · ${s.lane === "RECENT" ? "近期检查" : "一周内补查"}：${s.coveredThrough === s.startedFrom ? "尚无完整批次" : `已处理至 ${e(date(s.coveredThrough, zone))}`} · 本批待处理 ${s.pendingMessages} 封${s.blockedMessages ? ` · 读取受阻 ${s.blockedMessages} 封` : ""}${s.backfillComplete ? " · 一周内补查完成" : ""}${s.excludedBefore ? ` · ${e(date(s.excludedBefore, zone))} 之前未完成部分已超出一周范围` : ""}</p>`).join("")}</details>` : ""}
-    ${latest?.counts ? `<p>本次已核对写入：${latest.counts.applications} 条新申请 · ${latest.counts.evidence} 条邮件证据 · ${latest.counts.transitions} 次状态变化 · ${latest.counts.tasks} 项待办</p>` : ""}
-    ${data.runs.length ? `<details><summary>最近 ${data.runs.length} 次回执</summary>${data.runs.map(r => `<article class="evidence-row"><p>${e(date(r.startedAt, zone))} · ${e(names[r.status])} · ${e(origins[r.triggerType])}</p>${r.counts ? `<p>申请 ${r.counts.applications} · 证据 ${r.counts.evidence} · 状态变化 ${r.counts.transitions} · 待办 ${r.counts.tasks}</p>` : ""}${r.mailboxes.filter(m => m.failureReason).map(m => `<p>邮箱 ${m.mailbox === "mailbox-1" ? "1" : "2"}：${e(m.failureReason)}</p>`).join("")}</article>`).join("")}</details>` : ""}
-    <p class="muted">失败邮箱保留上次成功进度。覆盖时间反映已提交的搜索范围，不代表已扫描全部历史邮件。</p></section>`;
+  const manual = service.manualMailService.recent();
+  const names: Record<string, string> = { RUNNING: "未收到完成回执", COMPLETE: "两邮箱检查完成", PARTIAL: "检查不完整", FAILED: "检查失败" };
+  const manualNames: Record<string, string> = { UPDATED: "已保存新邮件证据", NO_UPDATE: "范围内暂无新增证据", PARTIAL: "补查不完整", FAILED: "补查失败" };
+  const mailboxNames: Record<string, string> = { COMPLETE: "检查及写入完成", PARTIAL: "部分完成", FAILED: "未完成" };
+  const origins: Record<string, string> = { SCHEDULED: "定时执行（GPT 回报）", MANUAL: "手动执行", UNKNOWN: "执行来源待确认" };
+  const latest = data.runs[0], lastManual = manual[0];
+  const manualStatus = (run: typeof manual[number]) => run.interrupted ? "检查已中断，可重试" : run.state === "RUNNING" ? "正在补查" : manualNames[run.outcome ?? "PARTIAL"]!;
+  const stamp = (value: string) => `<time datetime="${e(value)}">${e(date(value, zone))}</time>`;
+  const readableScope = (scope: string) => e(scope).replace(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z/gu, value => stamp(value));
+  const badge = (text: string, warn: boolean, good = false) => `<span class="chip ${warn ? "warn" : good ? "good" : ""}">${e(text)}</span>`;
+  return `<section class="mail-updates" aria-label="邮件更新"><header class="mail-updates-heading"><h2>邮件更新</h2><span class="muted">最近检查结果</span></header><div class="mail-update-grid">
+    <details class="mail-update-card"><summary><span class="mail-update-title">每日邮件扫描</span>${badge(latest ? names[latest.status]! : "尚无记录", !!latest && latest.status !== "COMPLETE", latest?.status === "COMPLETE")}<span class="mail-update-time">${latest ? `最近检查 ${stamp(latest.startedAt)}` : "尚无每日扫描回执"}</span><span class="mail-update-toggle"><span class="when-closed">查看详情</span><span class="when-open">收起详情</span><span aria-hidden="true">⌄</span></span></summary>
+      <div class="mail-update-body">
+        <p class="mail-update-note">${latest ? `${e(origins[latest.triggerType])} · ${latest.finishedAt ? `结束于 ${stamp(latest.finishedAt)}` : "尚未收到结束时间"}` : "尚无每日扫描回执，不能据此判断邮箱没有更新。"}</p>
+        ${latest?.executionReference ? `<p class="mail-update-note">执行来源：${e(latest.executionReference)}</p>` : ""}
+        ${data.unfinishedCount ? `<p class="advisory">${data.unfinishedCount} 次扫描尚未提交完成回执，可能仍在运行或已中断。</p>` : ""}
+        <div class="mail-mailboxes">${["mailbox-1", "mailbox-2"].map((key, i) => {
+          const checkpoint = data.checkpoints.find(c => c.mailbox === key);
+          const result = latest?.mailboxes.find(m => m.mailbox === key);
+          return `<article class="mail-mailbox"><h3>邮箱 ${i + 1}</h3><p>${result ? e(mailboxNames[result.status]) : "尚无检查结果"}</p><p class="muted">最近成功覆盖至：${checkpoint ? stamp(checkpoint.coveredThrough) : "尚未记录"}</p>${result?.searchedFrom ? `<p class="muted">搜索起点：${stamp(result.searchedFrom)}</p>` : ""}${result?.failureReason ? `<details class="mail-technical"><summary>未完成原因</summary><p>${e(result.failureReason)}</p></details>` : ""}</article>`;
+        }).join("")}</div>
+        ${processing.streams.length ? `<details class="mail-technical"><summary>可恢复的邮件处理进度</summary><p class="muted">以下数量仅包含当前批次，不代表邮箱全部剩余邮件。</p>${processing.streams.map(s => `<p>邮箱 ${s.mailbox === "mailbox-1" ? "1" : "2"} · ${s.lane === "RECENT" ? "近期检查" : "一周内补查"}：${s.coveredThrough === s.startedFrom ? "尚无完整批次" : `已处理至 ${stamp(s.coveredThrough)}`} · 本批待处理 ${s.pendingMessages} 封${s.blockedMessages ? ` · 读取受阻 ${s.blockedMessages} 封` : ""}${s.backfillComplete ? " · 一周内补查完成" : ""}${s.excludedBefore ? ` · ${stamp(s.excludedBefore)} 之前未完成部分已超出一周范围` : ""}</p>`).join("")}</details>` : ""}
+        ${latest?.counts ? `<p class="mail-update-note">本次已核对写入：${latest.counts.applications} 条新申请 · ${latest.counts.evidence} 条邮件证据 · ${latest.counts.transitions} 次状态变化 · ${latest.counts.tasks} 项待办</p>` : ""}
+        ${data.runs.length > 1 ? `<details class="mail-technical"><summary>最近 ${data.runs.length} 次回执</summary>${data.runs.map(r => `<article class="mail-history-item"><p>${stamp(r.startedAt)} · ${e(names[r.status])} · ${e(origins[r.triggerType])}</p>${r.counts ? `<p>申请 ${r.counts.applications} · 证据 ${r.counts.evidence} · 状态变化 ${r.counts.transitions} · 待办 ${r.counts.tasks}</p>` : ""}${r.mailboxes.filter(m => m.failureReason).map(m => `<p>邮箱 ${m.mailbox === "mailbox-1" ? "1" : "2"}：${e(m.failureReason)}</p>`).join("")}</article>`).join("")}</details>` : ""}
+        <p class="mail-update-note">失败邮箱保留上次成功进度；以上不代表已扫描全部历史邮件。</p>
+      </div>
+    </details>
+    <details class="mail-update-card"><summary><span class="mail-update-title">网页按需补查</span>${badge(lastManual ? manualStatus(lastManual) : "尚未补查", !!lastManual && (lastManual.interrupted || ["PARTIAL", "FAILED"].includes(lastManual.outcome ?? "")), !!lastManual && !lastManual.interrupted && ["UPDATED", "NO_UPDATE"].includes(lastManual.outcome ?? ""))}<span class="mail-update-time">${lastManual ? `最近检查 ${stamp(new Date(lastManual.startedAt).toISOString())}` : "有新邮件时，可在申请页面发起"}</span><span class="mail-update-toggle"><span class="when-closed">查看详情</span><span class="when-open">收起详情</span><span aria-hidden="true">⌄</span></span></summary>
+      <div class="mail-update-body"><p class="mail-update-note">仅检查已有申请的相关邮件，不代表每日全邮箱扫描完成。页面刷新仅重新读取数据库。</p>${manual.map(r => `<article class="mail-history-item"><div class="mail-history-heading"><p>${stamp(new Date(r.startedAt).toISOString())} · ${e(manualStatus(r))}</p><a class="text-link" href="${appLink(r.projectId)}">查看申请 ↗</a></div>${r.scope.map(scope => `<p class="muted">${readableScope(scope)}</p>`).join("")}</article>`).join("") || `<a class="text-link" href="${rootPath}/applications">前往我的申请 ↗</a>`}</div>
+    </details>
+  </div></section>`;
 }
 
 export function applicationListView(service: WorkspaceService, query: Record<string, string | number>, zone: string, gmailEnabled = false): string {
-  const bulk = gmailEnabled ? `<section class="panel" data-gmail-batch><button type="button" class="button primary" data-gmail-check-all>检查全部岗位</button><p>检查所有申请（含已拒绝），不受当前筛选影响。结果分别保存到各岗位。</p><p data-gmail-batch-status role="status"></p><div data-gmail-batch-results></div></section>` : "";
+  const bulk = gmailEnabled ? `<section class="panel" data-gmail-batch><button type="button" class="button primary" data-gmail-check-all>补查全部岗位的新邮件</button><p>补查已有申请（含已拒绝）的近期邮件，不受当前筛选影响。首次检查最近两天，之后接续补查，最多回看七天。保存邮件摘要，不自动更改申请状态或待办。</p><p data-gmail-batch-status role="status"></p><div data-gmail-batch-results></div></section>` : "";
   query = { ...query, status: query.status ?? "ALL" };
   const page = service.jobSearchQueryService.listApplications(query);
   const status = String(query.status), sort = String(query.sort ?? "APPLIED_DESC");

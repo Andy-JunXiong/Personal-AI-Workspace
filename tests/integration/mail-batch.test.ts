@@ -1,5 +1,6 @@
 import { afterEach, expect, it } from "vitest";
 import { randomUUID } from "node:crypto";
+import { gmailAccountKey, gmailSourceId } from "../../src/gmail/source-identity.js";
 import { resolve } from "node:path";
 import { mkdirSync, readdirSync, copyFileSync } from "node:fs";
 import { createEmptyTestWorkspace, testPrincipal } from "../helpers/test-workspace.js";
@@ -20,18 +21,20 @@ const authority={userConfirmed:true as const,authorityReference:"Jun authorized 
 function setup() {const w=createEmptyTestWorkspace({fileBacked:true,clock});cleanups.push(w.cleanup);return w;}
 function start(service:WorkspaceService) {const runId=randomUUID();service.mailScanService.start({...authority,runId,triggerType:"MANUAL",executionReference:""});return runId;}
 function input(runId:string,lane="RECENT",mailbox="mailbox-1") {return {...authority,runId,mailbox,lane,limit:2};}
+const accountSource={accountKey:(_identity:unknown,mailbox:string)=>gmailAccountKey(mailbox)};
 function fake(pages:string[][]) {
   const listed:Parameters<GmailMcpReader["list"]>[1][]=[];
   const reads:string[]=[];let from="2026-09-05T00:00:00Z";let complete=true;let failure=false;
-  const reader:Pick<GmailMcpReader,"list"|"read">={
+  const reader:Pick<GmailMcpReader,"list"|"read"|"accountKey">={
+    ...accountSource,
     async list(_identity,p) {listed.push(p);from=p.searchedFrom;const index=p.pageToken ? Number(p.pageToken):0;
       return {...p,messages:(pages[index]??[]).map(id=>({id,threadId:"t"})),nextPageToken:index+1<pages.length?String(index+1):null,listingComplete:index+1>=pages.length,note:""};},
-    async read(_identity,p) {reads.push(p.messageId);if(failure)throw new Error("unavailable");return {mailbox:p.mailbox,id:p.messageId,externalId:`${p.mailbox}:${p.messageId}`,threadId:"t",receivedAt:new Date(Date.parse(from)+1).toISOString(),subject:"Synthetic job alert",senderDomain:"example.test",sourceUrl:`https://mail.google.com/mail/#all/${p.messageId}`,text:"Synthetic content",bodyFormat:"TEXT",bodyComplete:complete,note:""};},
+    async read(_identity,p) {reads.push(p.messageId);if(failure)throw new Error("unavailable");return {mailbox:p.mailbox,id:p.messageId,externalId:gmailSourceId(gmailAccountKey(p.mailbox),p.messageId),threadId:"t",receivedAt:new Date(Date.parse(from)+1).toISOString(),subject:"Synthetic job alert",senderDomain:"example.test",sourceUrl:`https://mail.google.com/mail/#all/${p.messageId}`,text:"Synthetic content",bodyFormat:"TEXT",bodyComplete:complete,note:""};},
   };
   return {reader,listed,reads,setComplete:(v:boolean)=>{complete=v;},setFailure:(v:boolean)=>{failure=v;}};
 }
 function ack(service:WorkspaceService,runId:string,batchId:string,ids:string[]) {
-  return service.mailBatchService.ack({...authority,runId,batchId,items:ids.map(messageId=>({messageId,outcome:"IRRELEVANT"}))});
+  return service.mailBatchService.ack({...authority,runId,batchId,items:ids.map(messageId=>({messageId,outcome:"IRRELEVANT"}))},accountSource);
 }
 
 it("resumes pending messages and page cursor after process restart and a partial receipt",async()=>{
@@ -72,10 +75,10 @@ it("requires complete body and saved evidence for relevant acknowledgements; ret
   const first=await w.service.mailBatchService.next(input(run),f.reader),id=first.batch!.id;
   expect(first.messages[0]?.processable).toBe(false);expect(()=>ack(w.service,run,id,["a1"])).toThrow();
   f.setComplete(true);await w.service.mailBatchService.next(input(run),f.reader);
-  expect(()=>w.service.mailBatchService.ack({...authority,runId:run,batchId:id,items:[{messageId:"a1",outcome:"RECORDED"}]})).toThrow("persisted");
+  expect(()=>w.service.mailBatchService.ack({...authority,runId:run,batchId:id,items:[{messageId:"a1",outcome:"RECORDED"}]},accountSource)).toThrow("persisted");
   ack(w.service,run,id,["a1"]);const before=w.database.prepare("SELECT total_changes() n").get();
   ack(w.service,run,id,["a1"]);expect(w.database.prepare("SELECT total_changes() n").get()).toEqual(before);
-  expect(()=>w.service.mailBatchService.ack({...authority,runId:run,batchId:id,items:[{messageId:"a1",outcome:"EXISTING"}]})).toThrow("immutable");
+  expect(()=>w.service.mailBatchService.ack({...authority,runId:run,batchId:id,items:[{messageId:"a1",outcome:"EXISTING"}]},accountSource)).toThrow("immutable");
 });
 
 it("retains unread failures and can restart stale pagination without losing acknowledgements",async()=>{

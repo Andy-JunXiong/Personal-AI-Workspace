@@ -7,3 +7,7 @@ dist/
 coverage/
 *.log
 .DS_Store
+# Raw support conversations remain local; public diagnostics are in Markdown.
+docs/mvp/JOB_TRACKER_SUPPORT_ERROR_2026-09-08.png
+docs/mvp/JOB_TRACKER_SUPPORT_ESCALATED_2026-09-08.png
+docs/mvp/JOB_TRACKER_SUPPORT_MESSAGE_2026-09-08.txt

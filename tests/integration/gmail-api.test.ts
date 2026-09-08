@@ -58,6 +58,26 @@ it("does not classify unreadable HTML-only emails as a complete search", async (
   expect(result.complete).toBe(false);
 });
 
+it("bounds incremental application searches and filters exact timestamp boundaries",async()=>{
+  const range={searchedFrom:"2026-09-07T00:00:00.500Z",coveredThrough:"2026-09-08T00:00:00.500Z"};
+  const times:Record<string,number>={aa:Date.parse(range.searchedFrom)-1,bb:Date.parse(range.searchedFrom),
+    cc:Date.parse(range.coveredThrough)-1,dd:Date.parse(range.coveredThrough)};
+  let query="";
+  const reader=new GmailReader(async input=>{
+    const url=new URL(String(input));
+    if(url.pathname.endsWith("/messages")) {query=url.searchParams.get("q")!;return Response.json({messages:Object.keys(times).map(id=>({id}))});}
+    const id=url.pathname.split("/").at(-1)!;
+    return Response.json({threadId:"thread",internalDate:times[id],payload:{mimeType:"text/plain",
+      headers:[{name:"From",value:"source@example.test"}],body:{data:Buffer.from("Application received").toString("base64url")}}});
+  });
+  const result=await reader.search("token","Company","Role","2025-01-01",new AbortController().signal,range);
+  expect(result.messages.map(m=>m.id)).toEqual(["bb","cc"]);
+  expect(query).toContain(`before:${Math.ceil(Date.parse(range.coveredThrough)/1000)+1}`);
+  expect(result.complete).toBe(true);
+  await expect(reader.search("token","Company","Role","2025-01-01",new AbortController().signal,
+    {...range,searchedFrom:"2026-08-01T00:00:00Z"})).rejects.toThrow("seven days");
+});
+
 it("rejects model output with invented evidence, duplicate IDs, or leaked addresses", async () => {
   const message = { id: "1", threadId: "t", receivedAt: "2026-09-07T00:00:00Z", senderDomain: "example.test", subject: "Job", text: "Application received" };
   const good = { messageId: "1", relevant: true, summary: "申请已收到", evidenceQuote: "Application received", requiresAction: false };

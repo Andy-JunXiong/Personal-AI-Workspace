@@ -62,7 +62,7 @@ export function createGmailRouter(runtime: GmailRuntime, origin: string,
   router.get("/api/v1/gmail/applications/:id/check", (req, res) => {
     const identity = identityFor(req), projectId = z.string().uuid().parse(req.params.id);
     serviceFor(req).jobSearchQueryService.getApplication(projectId);
-    res.json({ run: checks.current(identity, projectId) });
+    res.json({ run: checks.current(identity, projectId,serviceFor(req)) });
   });
   return router;
 }

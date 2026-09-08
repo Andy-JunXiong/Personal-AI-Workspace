@@ -27,6 +27,12 @@ function digest(db: Database.Database, table: string): string {
 
 /** Read-only verification of exactly the S1 -> S2 upgrade; never prints row data. */
 export function verifyS2Migration(beforePath: string, afterPath: string, migrations = resolve("db/migrations")) {
+  return verifyAdditiveMigration(beforePath, afterPath, baseline, additions, migrations);
+}
+
+/** Verify an explicitly selected additive release without exposing stored row data. */
+export function verifyAdditiveMigration(beforePath: string, afterPath: string,
+  baseline: readonly string[], additions: readonly string[], migrations: string) {
   if (resolve(beforePath) === resolve(afterPath)) throw new Error("Distinct before/after databases required");
   const before = new Database(beforePath, { readonly: true, fileMustExist: true });
   let after: Database.Database | undefined;

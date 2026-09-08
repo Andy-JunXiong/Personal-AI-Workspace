@@ -1,4 +1,5 @@
 import { expect, it } from "vitest";
+import { gmailAccountKey, gmailSourceId } from "../../src/gmail/source-identity.js";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { GmailMcpReader } from "../../src/gmail/mcp-reader.js";
@@ -49,7 +50,7 @@ it("returns evidence provenance and explicit incomplete-body flags, skips attach
       { filename: "private.txt", mimeType: "text/plain", body: { data: Buffer.from("attachment secret").toString("base64url") } },
     ] } }));
   const read = () => reader.read(owner, { mailbox: "mailbox-1", messageId: "ab12" });
-  expect(await read()).toMatchObject({ bodyFormat: "HTML", bodyComplete: true, externalId: "mailbox-1:ab12", senderDomain: "example.test", receivedAt: "2026-01-01T00:00:00.500Z", text: body });
+  expect(await read()).toMatchObject({ bodyFormat: "HTML", bodyComplete: true, externalId: gmailSourceId(gmailAccountKey("s1"),"ab12"), senderDomain: "example.test", receivedAt: "2026-01-01T00:00:00.500Z", text: body });
   body = "x".repeat(24001);
   const truncated = await read(); expect(truncated.bodyComplete).toBe(false); expect(truncated.text).toHaveLength(24000);
   body = ""; expect((await read()).bodyComplete).toBe(false);

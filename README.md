@@ -1,6 +1,44 @@
 # Personal AI Workspace
 
-## Current status ? 2026-09-07
+## Current status — 2026-09-08
+
+**Current production:** `mail-layout-20260908-r2`, migrations 001–011.
+[Mail status layout](docs/mvp/MAIL_STATUS_LAYOUT_2026-09-08.md) now uses two collapsed
+status cards, with source coverage and technical details available on demand.
+The release preserves the ingestion behavior and paused-task limitations below.
+
+**Deployed ingestion update:** [shared mail identity and incremental manual checks](docs/mvp/MAIL_INGESTION_ALIGNMENT_2026-09-08.md)
+first shipped as `mail-ingestion-20260908-r1` and remain included in the current
+layout release (36 files / 291 tests, typecheck and build).
+Migration 011 is additive. The website remains evidence-only for manual checks;
+unproven legacy mailbox identities require reconciliation. Production is on migration 011;
+database-copy upgrade/restart/old-image rehearsals and the live preservation check passed.
+This deployment does not resolve the platform block.
+The live Synogize website check saved four EMAIL records and one NOTE, but returned
+PARTIAL for mailbox 1; only mailbox 2 advanced application-scoped coverage.
+The saved messages are job recommendations, not confirmed application-state changes.
+Both the incomplete source check and relevance filtering remain follow-up items.
+
+**Product review:** the website remains primarily a view of the shared database,
+with explicit manual email checks between daily GPT runs. The
+[flow review](docs/architecture/JOB_TRACKER_FLOW_REVIEW_2026-09-08.md) identifies
+cross-entry source-ID differences, manual-check scope and progress gaps. Its
+implementation and remaining limits are tracked in the deployed package above.
+
+**Recovery in progress:** production now runs the seven-day resumption release
+with migrations 001–011 and 29 tools. Plugin discovery has been refreshed; manual
+acceptance and a separately user-authorized retry both reported a platform
+safety block on scan creation; exact-run readback confirms no receipt was saved.
+The replacement schedule is saved and verified paused. See the
+[September 8 recovery record](docs/mvp/JOB_TRACKER_RECOVERY_2026-09-08.md).
+
+User-approved Workspace override is now **Allow read actions / ask before
+writes**; the global default is unchanged. A real approval card appeared and
+**Allow once** was selected after checking all five parameters, but ChatGPT
+still reported the safety block. Exact-run readback returned NOT_FOUND.
+See the [platform investigation report](docs/mvp/JOB_TRACKER_PLATFORM_BLOCK_REPORT_2026-09-08.md).
+The user-authorized support submission is confirmed escalated to an OpenAI
+support specialist; awaiting their response. No numeric case ID was displayed.
 
 **Core workflow:** [GPT operates; Workspace persists; website reports](docs/architecture/CORE_JOB_WORKFLOW.md). The daily GPT task reads both Gmail accounts through Workspace MCP, classifies evidence and performs authorized updates. The website reads the same cloud database and primarily shows statistics, history and saved reports.
 
@@ -8,16 +46,26 @@
 
 | Layer | Verified state | Remaining gate |
 | --- | --- | --- |
-| Production | `gmail-mcp-20260907204200`, migrations 001-009, 27 tools; both Gmail identities and bounded live list/read verified; 24 applications preserved at deployment | Deploy the bounded resumption package |
-| ChatGPT integration | User refreshed plugin discovery; both mailboxes AVAILABLE through Workspace; one-off scheduled `workspace_ping` succeeded | Refresh to 29 tools after deployment and verify the recurring task context |
-| Manual scan | User supplied PARTIAL receipt `d483b9a3-e355-4367-8436-15b3943fd8a6`, saved/read back, zero new business records, existing Synogize evidence deduplicated | Complete bounded source coverage; PARTIAL is not a no-update finding |
-| Local implementation | Seven-day resumable batches, migration 010, 29 tools, read-only progress display; 33 test files / 269 tests, typecheck and build passed | Not yet deployed or proven in a real scheduled scan |
+| Production | `mail-layout-20260908-r2`, migrations 001-011, 29 tools; latest cutover preserved all 28 tables / 239 rows; prior ingestion upgrade preserved all old data | Verify actual resumed daily processing |
+| ChatGPT integration | Plugin refreshed to include both batch tools; old task conversation rejects developer MCP calls; working manual conversation verified | Verify replacement scheduled task context |
+| GPT scan receipts | Only historical PARTIAL `d483b9a3-e355-4367-8436-15b3943fd8a6` remains; today's GPT acceptance created no receipt or processing streams | Resolve platform write authorization, then verify bounded batches |
+| Website manual check | Synogize check saved 4 EMAIL records and 1 NOTE; PARTIAL with only mailbox 2 advancing application-scoped coverage | Diagnose mailbox 1 processing and tighten job-ad relevance filtering |
+| Implementation | Shared mail identity, incremental manual checks and durable per-application progress deployed; 36 test files / 291 tests, typecheck and build passed | Actual scheduled scan acceptance |
 
-Next: deploy [bounded daily resumption](docs/mvp/MAIL_SCAN_RESUME_2026-09-07.md), refresh plugin discovery, activate the updated policy, verify a manual run and then a real recurring scan/write/receipt run. Keep the existing daily schedule and Gmail consent. Publishing code to GitHub is not a cloud deployment or a task configuration change.
+Next: diagnose the incomplete website check and relevance filtering; separately resolve the reported platform safety block, update the online policy, then verify a bounded GPT run and a real scheduled scan using the [daily resumption policy](docs/mvp/MAIL_SCAN_RESUME_2026-09-07.md). Both tasks remain paused. Only the replacement may be activated after acceptance, preserving daily 08:00 Australia/Sydney. Publishing code to GitHub is not a cloud deployment or a task configuration change.
 
-The [complete recurring policy](docs/mvp/UPDATE_JOB_TRACKER_WORKSPACE_PROMPT.txt) and [self-contained manual acceptance prompt](docs/mvp/UPDATE_JOB_TRACKER_MANUAL_ACCEPTANCE.txt) require the new batch tools. Activate them only after deployment and plugin refresh. The latest seven-day revision has not been confirmed saved in ChatGPT.
+The earlier seven-day policy was saved and read back in replacement task
+`6a9f456860248191b81d0361dd42cad3`, paused, daily 08:00 Australia/Sydney, never run.
+The [local recurring policy](docs/mvp/UPDATE_JOB_TRACKER_WORKSPACE_PROMPT.txt) and
+[manual acceptance](docs/mvp/UPDATE_JOB_TRACKER_MANUAL_ACCEPTANCE.txt) now also
+specify the stable source identifiers in the deployed ingestion update. Those
+latest local edits have not been saved to the online task. Platform authorization
+recovery, online policy update and actual scheduled acceptance remain pending.
 
 ## Delivery records
+
+- [September 8 release handoff](docs/mvp/RELEASE_HANDOFF_2026-09-08.md): final deployed version, validation, publication scope and remaining work.
+- [Mail ingestion alignment](docs/mvp/MAIL_INGESTION_ALIGNMENT_2026-09-08.md) and [status layout](docs/mvp/MAIL_STATUS_LAYOUT_2026-09-08.md): shared source identity, incremental manual checks and collapsible status cards.
 
 - [Gmail MCP reader](docs/mvp/GMAIL_MCP_READER_2026-09-07.md): currently deployed; reuses website OAuth and avoids the built-in Gmail/developer-MCP restriction.
 - [Scan receipts](docs/mvp/MAIL_SCAN_RECEIPTS_2026-09-07.md): deployed with migration 009; durable readback is user-verified for the PARTIAL manual run.

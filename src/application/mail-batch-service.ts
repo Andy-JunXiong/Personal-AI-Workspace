@@ -4,6 +4,7 @@ import type { WorkspaceDatabase } from "../persistence/database.js";
 import type { IdentityContext } from "../domain/types.js";
 import type { GmailMcpReader } from "../gmail/mcp-reader.js";
 import { AuthorizationError, ValidationError, NotFoundError } from "../domain/errors.js";
+import { gmailSourceId } from "../gmail/source-identity.js";
 
 const authority = { userConfirmed: z.literal(true), authorityReference: z.string().trim().min(1).max(1000), runId: z.string().uuid() };
 export const nextMailBatchSchema = z.object({ ...authority, mailbox: z.enum(["mailbox-1", "mailbox-2"]), lane: z.enum(["RECENT", "BACKFILL"]), limit: z.number().int().min(1).max(5).default(3), restartListing:z.boolean().default(false) }).strict();
@@ -13,7 +14,7 @@ export const ackMailBatchSchema = z.object({ ...authority, batchId: z.string().u
 type Batch = { id: string; workspace_id: string; mailbox: "mailbox-1" | "mailbox-2"; lane: string; searched_from: string; covered_through: string; page_token: string | null; listing_done: number; revision: number; status: string };
 type Stream = { mailbox: string; lane: string; starts_at: string; covered_through: string; target_at: string | null; excluded_before:string|null };
 type Item = { message_id: string; read_run_id: string | null; body_complete: number; outside_range: number; last_error: string | null };
-type MailSource = Pick<GmailMcpReader, "list" | "read">;
+type MailSource = Pick<GmailMcpReader, "list" | "read" | "accountKey">;
 const DAY = 86400000;
 
 export class MailBatchService {
@@ -37,6 +38,25 @@ export class MailBatchService {
       this.db.prepare("INSERT INTO mail_scan_streams VALUES(?,?,?,?,?,?,NULL)").run(workspaceId,mailbox,"RECENT",recent,recent,null);
       this.db.prepare("INSERT INTO mail_scan_streams VALUES(?,?,?,?,?,?,NULL)").run(workspaceId,mailbox,"BACKFILL",baseline,baseline,recent);
     }
+  }
+
+  private bindAccount(identity: IdentityContext, mailbox: "mailbox-1" | "mailbox-2", reader: Pick<MailSource, "accountKey">) {
+    const key = reader.accountKey(identity, mailbox);
+    const binding = this.db.prepare("SELECT account_key FROM mail_source_bindings WHERE workspace_id=? AND mailbox=?")
+      .get(identity.workspaceId, mailbox) as {account_key:string}|undefined;
+    if (binding && binding.account_key !== key)
+      throw new ValidationError("Mailbox account changed; reconcile its prior coverage before resuming");
+    if (!binding) {
+      // Historical slot-only processing cannot safely be assigned to whichever
+      // account happens to occupy the slot at upgrade time.
+      const legacy = this.db.prepare(`SELECT 1 FROM mail_scan_batches WHERE workspace_id=? AND mailbox=?
+        UNION ALL SELECT 1 FROM mail_scan_processed WHERE workspace_id=? AND mailbox=?
+        UNION ALL SELECT 1 FROM mail_scan_checkpoints WHERE workspace_id=? AND mailbox=? LIMIT 1`)
+        .get(identity.workspaceId,mailbox,identity.workspaceId,mailbox,identity.workspaceId,mailbox);
+      if (legacy) throw new ValidationError("Historical mailbox coverage needs account reconciliation before resuming");
+      this.db.prepare("INSERT INTO mail_source_bindings VALUES(?,?,?)").run(identity.workspaceId, mailbox, key);
+    }
+    return key;
   }
 
   private batch(id: string, workspaceId: string) {
@@ -76,6 +96,7 @@ export class MailBatchService {
     if (!parsed.success) throw new ValidationError("Invalid mail batch request");
     const p=parsed.data, {identity,cutoff}=this.authorized(p.runId);
     let batch=this.db.transaction(() => {
+      this.bindAccount(identity,p.mailbox,reader);
       this.initialize(identity.workspaceId,cutoff);
       const floor=new Date(Date.parse(cutoff)-7*DAY).toISOString();
       // Expire old query windows, retaining their rows and the explicit excluded
@@ -115,6 +136,7 @@ export class MailBatchService {
     if (!this.pending(batch).some(item=>!item.last_error) && !batch.listing_done) {
       const snapshot=batch;
       const listed=await reader.list(identity,{mailbox:p.mailbox,searchedFrom:batch.searched_from,coveredThrough:batch.covered_through,...(batch.page_token ? {pageToken:batch.page_token}: {})});
+      this.bindAccount(identity,p.mailbox,reader);
       if (listed.nextPageToken && listed.nextPageToken === snapshot.page_token) throw new ValidationError("Repeated Gmail page token; progress retained");
       batch=this.db.transaction(() => {
         this.authorized(p.runId);
@@ -130,12 +152,17 @@ export class MailBatchService {
     for(const item of this.pending(batch).slice(0,p.limit)) {
       try {
         const message=await reader.read(identity,{mailbox:p.mailbox,messageId:item.message_id});
+        const accountKey=this.bindAccount(identity,p.mailbox,reader);
+        if(message.externalId!==gmailSourceId(accountKey,item.message_id)) throw new ValidationError("Unexpected message account identity");
         const outside=message.receivedAt < batch.searched_from || message.receivedAt >= batch.covered_through;
         const failure=message.bodyComplete ? null : "Message body is incomplete; source processing remains pending";
         this.db.transaction(()=>{
           this.authorized(p.runId);
           this.db.prepare("UPDATE mail_scan_batch_items SET read_run_id=?,body_complete=?,outside_range=?,last_error=? WHERE batch_id=? AND message_id=?")
             .run(p.runId,message.bodyComplete?1:0,outside?1:0,outside?null:failure,batch.id,item.message_id);
+          this.db.prepare(`INSERT INTO mail_batch_source_ids VALUES(?,?,?)
+            ON CONFLICT(batch_id,message_id) DO UPDATE SET external_id=excluded.external_id`)
+            .run(batch.id,item.message_id,message.externalId);
         })();
         if (!outside) messages.push({ ...message,processable:message.bodyComplete });
       } catch {
@@ -150,13 +177,14 @@ export class MailBatchService {
       messages,progress:this.progress(),note:"Process returned evidence and verify required writes, then acknowledge only completed messages. Pending IDs and pagination survive interruption. No business records are written by this tool." };
   }
 
-  ack(input: unknown) {
+  ack(input: unknown, reader: Pick<MailSource, "accountKey">) {
     const parsed=ackMailBatchSchema.safeParse(input);
     if (!parsed.success) throw new ValidationError("Invalid mail processing acknowledgement");
     const p=parsed.data,{identity}=this.authorized(p.runId);
     if(new Set(p.items.map(i=>i.messageId)).size!==p.items.length) throw new ValidationError("Duplicate message acknowledgement");
     return this.db.transaction(()=>{
       const batch=this.batch(p.batchId,identity.workspaceId);
+      this.bindAccount(identity,batch.mailbox,reader);
       if(batch.status==="EXPIRED") throw new ValidationError("This batch is outside the one-week policy window; request the current batch");
       for(const item of p.items) {
         const old=this.db.prepare("SELECT outcome FROM mail_scan_processed WHERE workspace_id=? AND mailbox=? AND message_id=?").get(identity.workspaceId,batch.mailbox,item.messageId) as {outcome:string}|undefined;
@@ -165,7 +193,8 @@ export class MailBatchService {
         if(old) {if(old.outcome!==item.outcome) throw new ValidationError("Processed outcome is immutable"); continue;}
         if(source.read_run_id!==p.runId || !source.body_complete || source.outside_range) throw new ValidationError("Read complete source in this run before acknowledging");
         if(item.outcome!=="IRRELEVANT") {
-          const evidence=this.db.prepare(`SELECT 1 FROM resources r JOIN projects p ON p.id=r.project_id WHERE p.workspace_id=? AND r.provider='gmail' AND r.resource_type='EMAIL' AND r.external_id=?`).get(identity.workspaceId,`${batch.mailbox}:${item.messageId}`);
+          const sourceId=this.db.prepare("SELECT external_id FROM mail_batch_source_ids WHERE batch_id=? AND message_id=?").get(batch.id,item.messageId) as {external_id:string}|undefined;
+          const evidence=sourceId && this.db.prepare(`SELECT 1 FROM resources r JOIN projects p ON p.id=r.project_id WHERE p.workspace_id=? AND r.provider='gmail' AND r.resource_type='EMAIL' AND r.external_id=?`).get(identity.workspaceId,sourceId.external_id);
           if(!evidence) throw new ValidationError("Relevant messages require persisted account-qualified Gmail evidence before acknowledgement");
         }
         this.db.prepare("INSERT INTO mail_scan_processed VALUES(?,?,?,?,?,?)").run(identity.workspaceId,batch.mailbox,item.messageId,item.outcome,p.runId,this.clock().toISOString());

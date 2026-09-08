@@ -2,6 +2,7 @@ import { z } from "zod";
 import type { IdentityContext } from "../domain/types.js";
 import type { GmailConnections, GmailConnection } from "./connections.js";
 import type { GmailAuthorization } from "./providers.js";
+import { gmailAccountKey, gmailSourceId } from "./source-identity.js";
 
 const mailbox = z.enum(["mailbox-1", "mailbox-2"]);
 const messageId = z.string().regex(/^[a-f0-9]{1,128}$/u);
@@ -21,6 +22,10 @@ export class GmailMcpReader {
     const connection = this.connections.get(identity, alias === "mailbox-1" ? 1 : 2);
     if (!connection) throw new Error("Mailbox is not connected for this Workspace user");
     return connection;
+  }
+
+  accountKey(identity: IdentityContext, alias: z.infer<typeof mailbox>) {
+    return gmailAccountKey(this.connection(identity, alias).subject);
   }
 
   private async get(connection: GmailConnection, path: string, params = new URLSearchParams()) {
@@ -67,7 +72,10 @@ export class GmailMcpReader {
 
   async read(identity: IdentityContext, input: z.infer<typeof mailReadSchema>) {
     const value = mailReadSchema.parse(input);
-    const result = await this.get(this.connection(identity, value.mailbox), `messages/${value.messageId}`, new URLSearchParams({ format: "full" }));
+    const connection = this.connection(identity, value.mailbox);
+    const result = await this.get(connection, `messages/${value.messageId}`, new URLSearchParams({ format: "full" }));
+    if (this.accountKey(identity, value.mailbox) !== gmailAccountKey(connection.subject))
+      throw new Error("Mailbox account changed during read");
     const root = z.object({ id: messageId, threadId: z.string(), internalDate: z.string().regex(/^\d+$/u),
       payload: z.object({ headers: z.array(z.object({ name: z.string(), value: z.string() })).optional() }).passthrough() }).parse(result);
     if (root.id !== value.messageId) throw new Error("Gmail message identity mismatch");
@@ -88,7 +96,7 @@ export class GmailMcpReader {
     visit(root.payload);
     const body = (plain.length ? plain : html).join("\n");
     const header = (name: string) => root.payload.headers?.find(h => h.name.toLowerCase() === name)?.value ?? "";
-    return { mailbox: value.mailbox, id: root.id, externalId: `${value.mailbox}:${root.id}`, threadId: root.threadId,
+    return { mailbox: value.mailbox, id: root.id, externalId: gmailSourceId(gmailAccountKey(connection.subject), root.id), threadId: root.threadId,
       receivedAt: new Date(Number(root.internalDate)).toISOString(), subject: header("subject").slice(0, 1000),
       senderDomain: header("from").match(/@([a-z0-9.-]+\.[a-z]{2,})/iu)?.[1]?.toLowerCase() ?? null,
       sourceUrl: `https://mail.google.com/mail/#all/${root.id}`, text: body.slice(0, 24000),

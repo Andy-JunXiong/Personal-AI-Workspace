@@ -10,6 +10,7 @@ import { JobSearchQueryService } from "./job-search-query-service.js";
 import { CandidateService } from "./candidate-service.js";
 import { MailScanService } from "./mail-scan-service.js";
 import { MailBatchService } from "./mail-batch-service.js";
+import { ManualMailService } from "./manual-mail-service.js";
 import {
   AuthorizationError,
   ConcurrencyConflictError,
@@ -243,6 +244,7 @@ export class WorkspaceService {
   readonly candidateService: CandidateService;
   readonly mailScanService: MailScanService;
   readonly mailBatchService: MailBatchService;
+  readonly manualMailService: ManualMailService;
 
   constructor(
     private readonly database: WorkspaceDatabase,
@@ -258,6 +260,7 @@ export class WorkspaceService {
     this.jobSearchQueryService = new JobSearchQueryService(database, resolveIdentity, options.clock);
     this.mailScanService = new MailScanService(database, resolveTaskContext, options.clock);
     this.mailBatchService = new MailBatchService(database, resolveTaskContext, options.clock);
+    this.manualMailService = new ManualMailService(database, resolveTaskContext, options.clock);
     const assertProjectVisible = (projectId: string, workspaceId: string) => {
       this.getAuthorizedProject(projectId, workspaceId);
     };
@@ -861,6 +864,24 @@ export class WorkspaceService {
     return this.recordObservationInternal(input, "workspace_record_gmail_observation");
   }
 
+  findGmailEvidence(projectId: string, externalId: string): {summary:string;observedAt:string}|null {
+    this.getAuthorizedProject(projectId,this.resolveIdentity().workspaceId);
+    const row=this.database.prepare("SELECT observed_facts_json,observed_at FROM resources WHERE project_id=? AND provider='gmail' AND resource_type='EMAIL' AND external_id=?")
+      .get(projectId,externalId) as {observed_facts_json:string;observed_at:string}|undefined;
+    if(row) {
+      const facts=JSON.parse(row.observed_facts_json) as {interpretation?:{summary?:string}};
+      return {summary:facts.interpretation?.summary ?? "已有邮件证据",observedAt:row.observed_at};
+    }
+    // Slot-only and unqualified historical IDs contain no proof of account
+    // ownership. Preserve them and require reconciliation rather than guessing.
+    const canonical=/^[a-f0-9]{24}:([a-f0-9]{1,128})$/u.exec(externalId);
+    if(canonical && this.database.prepare(`SELECT 1 FROM resources WHERE project_id=? AND provider='gmail'
+      AND resource_type='EMAIL' AND external_id IN (?,?,?) LIMIT 1`)
+      .get(projectId,canonical[1],`mailbox-1:${canonical[1]}`,`mailbox-2:${canonical[1]}`))
+      throw new ValidationError("Historical Gmail evidence needs account reconciliation; existing records were preserved");
+    return null;
+  }
+
   private recordObservationInternal(input: RecordObservationInput, operation: string): {
     resource: ResourceRecord; projectStateChanged: false; deduplicated: boolean; replayed: boolean;
   } {
@@ -890,6 +911,8 @@ export class WorkspaceService {
         const exactHash = canonicalHash(payload);
 
         let existing: ResourceRow | undefined;
+        if(normalizedInput.provider === "gmail" && normalizedInput.resourceType === "EMAIL" && normalizedInput.externalId)
+          this.findGmailEvidence(normalizedInput.projectId,normalizedInput.externalId);
         if (normalizedInput.externalId) {
           existing = this.database
             .prepare(

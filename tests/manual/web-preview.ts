@@ -57,16 +57,32 @@ process.stdin.on("data", (input: string) => {
 });
 app.use((_request, response, next) => {
   response.set({ "Cache-Control": "no-store", "X-Synthetic-Preview": "true",
-    "Content-Security-Policy": "default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'" });
+    "Content-Security-Policy": "default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'; frame-src 'self'; base-uri 'none'; frame-ancestors 'self'; form-action 'self'" });
   next();
 });
 app.get("/auth/start", (_request, response) => response.type("html").send(loginView(`${rootPath}/today`)));
+// Same-origin fixture framing only; production keeps frame-ancestors 'none'.
+app.get("/preview/narrow", (_request, response) => response.type("html").send(`<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><title>390px synthetic layout</title><link rel="stylesheet" href="/preview/narrow.css"></head><body><iframe title="390px 合成页面" src="${rootPath}/today" width="390" height="1100"></iframe></body></html>`));
+app.get("/preview/narrow.css", (_request, response) => response.type("css").send("body{margin:20px;background:#e9ebe6}iframe{border:1px solid #cdd7cc;border-radius:12px;background:white}"));
 const previewCsrf = "synthetic-preview-csrf";
 app.get("/api/v1/session", (_request, response) => response.status(fault === "expired" ? 401 : 200)
   .json({ authenticated: fault !== "expired", csrfToken: previewCsrf }));
 const serviceFor = () => new WorkspaceService(w.database,
   verifiedRequestContext(w.database, w.identity, "WEB", randomUUID()),
   { timeZone: "Australia/Sydney", clock: () => new Date(now) });
+// Synthetic partial receipts exercise collapsed, expanded and narrow layouts.
+const scanAuthority = { userConfirmed: true as const, authorityReference: "Synthetic visual fixture" };
+const previewScan = randomUUID();
+w.service.mailScanService.start({ ...scanAuthority, runId: previewScan, triggerType: "MANUAL", executionReference: "Synthetic local preview" });
+w.service.mailScanService.finish({ ...scanAuthority, runId: previewScan,
+  newApplicationIds: [], evidenceIds: [], admittedTransitionIds: [], newTaskIds: [],
+  mailboxes: ["mailbox-1", "mailbox-2"].map(mailbox => ({ mailbox, status: "PARTIAL",
+    searchedFrom: new Date(now - 2 * 86400000).toISOString(), coveredThrough: null,
+    failureReason: "Synthetic preview: pagination and message-level body reads were not completed. Source coverage is incomplete." })) });
+const previewManual = serviceFor().manualMailService.begin(firstProject);
+serviceFor().manualMailService.complete(previewManual.id, firstProject, "PARTIAL", {
+  scope: [1, 2].map(slot => `邮箱 ${slot}：${new Date(now - 2 * 86400000).toISOString()} 至 ${new Date(now).toISOString()}，${slot === 1 ? "搜索或正文不完整" : "搜索完成"}`),
+}, [], () => {});
 app.use("/api/v1/job-search", (request, response, next) => {
   if (request.headers.origin !== "http://127.0.0.1:4173" || request.headers["x-csrf-token"] !== previewCsrf) {
     response.status(403).json({ error: "ACTION_DENIED" }); return;
