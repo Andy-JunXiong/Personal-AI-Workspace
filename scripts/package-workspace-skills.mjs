@@ -43,6 +43,20 @@ function compareNames(left, right) {
   return left < right ? -1 : left > right ? 1 : 0;
 }
 
+function gitText(argumentsList) {
+  return execFileSync("git", argumentsList, {
+    cwd: repositoryRoot,
+    encoding: "utf8",
+  }).trim();
+}
+
+function gitBuffer(argumentsList) {
+  return execFileSync("git", argumentsList, {
+    cwd: repositoryRoot,
+    encoding: null,
+  });
+}
+
 function collectFiles(directory, prefix = "") {
   const entries = readdirSync(directory, { withFileTypes: true }).sort((left, right) =>
     compareNames(left.name, right.name),
@@ -158,16 +172,64 @@ function parseArguments(argumentsList) {
 }
 
 function resolveSourceCommit(sourceRef) {
-  const commit =
-    sourceRef ??
-    execFileSync("git", ["rev-parse", "HEAD"], {
-      cwd: repositoryRoot,
-      encoding: "utf8",
-    }).trim();
+  const commit = sourceRef ?? gitText(["rev-parse", "HEAD"]);
   if (!/^[0-9a-f]{40}$/u.test(commit)) {
     throw new Error(`Source ref must be a lowercase 40-character commit SHA: ${commit}`);
   }
+
+  let resolvedCommit;
+  try {
+    resolvedCommit = gitText(["rev-parse", "--verify", `${commit}^{commit}`]);
+  } catch {
+    throw new Error(`Source ref is not an available Git commit: ${commit}`);
+  }
+  const headCommit = gitText(["rev-parse", "HEAD"]);
+  if (resolvedCommit !== headCommit) {
+    throw new Error(
+      `Source commit must match the checked-out HEAD: source=${resolvedCommit} HEAD=${headCommit}`,
+    );
+  }
+
   return commit;
+}
+
+function assertCanonicalSourcesMatchCommit(sourceCommit) {
+  const skillsRoot = resolve(repositoryRoot, ".agents/skills");
+  const workingFiles = collectFiles(skillsRoot);
+  const committedPrefix = ".agents/skills/";
+  const committedFiles = gitText([
+    "ls-tree",
+    "-r",
+    "--name-only",
+    sourceCommit,
+    "--",
+    ".agents/skills",
+  ])
+    .split("\n")
+    .filter(Boolean)
+    .map((path) => path.slice(committedPrefix.length))
+    .sort(compareNames);
+  const workingPaths = workingFiles
+    .map((file) => file.archivePath)
+    .sort(compareNames);
+
+  if (JSON.stringify(workingPaths) !== JSON.stringify(committedFiles)) {
+    throw new Error(
+      "Canonical Skills file list does not match the declared source commit",
+    );
+  }
+
+  for (const file of workingFiles) {
+    const committedContent = gitBuffer([
+      "show",
+      `${sourceCommit}:${committedPrefix}${file.archivePath}`,
+    ]);
+    if (!file.content.equals(committedContent)) {
+      throw new Error(
+        `Canonical Skill source does not match the declared source commit: ${file.archivePath}`,
+      );
+    }
+  }
 }
 
 function assertSafeOutputDirectory(outputDirectory) {
@@ -241,6 +303,7 @@ function main() {
     (skill) => `${skill.name}-${skill.skillVersion}.zip`,
   );
 
+  assertCanonicalSourcesMatchCommit(sourceCommit);
   assertSafeOutputDirectory(options.outputDirectory);
   assertManagedOutputDirectory(options.outputDirectory, packageFiles);
 
