@@ -1,7 +1,7 @@
 # Application Lifecycle Review — S2 Evaluation
 
-Status: implementation complete; static validation runnable in this repository;
-runtime platform acceptance remains a separate evidence gate.
+Status: implementation and representative local synthetic contract acceptance
+complete; fresh runtime platform acceptance remains a separate evidence gate.
 
 This protocol evaluates `.agents/skills/application-lifecycle-review`. Use only
 isolated synthetic Workspace fixtures for mutation cases. It does not authorize a
@@ -31,7 +31,7 @@ npm test -- tests/unit/application-lifecycle-review-skill.test.ts
 | Check | Expected | Result |
 |---|---|---|
 | Skill package validation | pass | PASS — 2026-09-08 |
-| Repository static contract | pass | NOT RUN — dependencies are absent and registry access is unavailable in the authoring environment; run in repository CI/reviewer environment |
+| Repository static contract | pass | PASS — main Verify run [34195197793](https://github.com/Andy-JunXiong/Personal-AI-Workspace/actions/runs/34195197793), 40 test files / 310 tests, typecheck and production build |
 
 The static contract verifies progressive disclosure, routing separation, the exact
 allowed Workspace tool set, three-gate authority separation, exact readback,
@@ -191,6 +191,26 @@ links, Task IDs/status/record versions, timestamps, audit attribution, and absen
 of unrelated changes. Workspace behavior, not Skill prose, defines the expected
 valid edge and derived effects.
 
+### Recorded local synthetic results
+
+At merge commit `495a12955f75df486418f0e99a6c61258ac2fb2d`, the deterministic
+Workspace/MCP harness passed 7 representative S2 cases:
+
+| Case | Result |
+|---|---|
+| T1 active read-only | PASS — exact find/read; unchanged fingerprint |
+| T2 ambiguous identity | PASS — stopped after find; unchanged fingerprint |
+| T5 authorized transition | PASS — propose/read/admit/read with bounded durable delta |
+| T6 proposal only | PASS — exact readback; lifecycle/version unchanged |
+| T8 observation only | PASS — one Resource; lifecycle/version unchanged |
+| T9 invalid transition | PASS — rejected proposal; no lifecycle or Task delta |
+| T9 stale version | PASS — concurrency conflict, exact readback and zero failed-call delta |
+
+See [the synthetic acceptance record](workspace-skills-synthetic-acceptance-2026-09-08.md).
+T3, T4, T7 and the remaining T9 matrix remain open. The harness verifies the
+Workspace/MCP sequence and durable deltas; it does not prove model routing or
+model-applied authority judgment.
+
 ## Baseline comparison
 
 Run P1–P6 and T5–T8 against the current prompt-driven baseline and the Skill with
@@ -202,9 +222,9 @@ without authority, missing readbacks, retries, and bounded durable deltas.
 
 | Runtime | Required evidence | Current result |
 |---|---|---|
-| Codex | fresh context discovers Skill; routing, trace, authority pause, and state cases captured | NOT RUN until a fresh Codex runtime with PAW MCP binding is available |
-| ChatGPT | verified ChatGPT distribution/binding; fresh conversation executes the same cases | BLOCKED by the unresolved ChatGPT Skill distribution/binding gate from S0 |
-| ChatGPT iPhone | production binding and permission behavior verified on mobile | BLOCKED with ChatGPT binding; not implied by desktop acceptance |
+| Codex | fresh context discovers Skill; routing, trace, authority pause, and state cases captured | INCONCLUSIVE — not run in a fresh Codex context with PAW binding |
+| ChatGPT | verified ChatGPT distribution/binding; fresh conversation executes the same cases | INCONCLUSIVE — installed discovery, PAW binding and a positive read-only smoke were observed; mutation, failure and complete routing cases remain unrun in the hosted model |
+| ChatGPT iPhone | production binding and permission behavior verified on mobile | INCONCLUSIVE — not run; desktop evidence does not imply mobile acceptance |
 
 Vitest or simulated traces do not satisfy platform acceptance.
 

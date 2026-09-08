@@ -122,6 +122,19 @@ The following remain unavailable from this campaign:
 The natural-language statement that no mutation occurred is not treated as
 independent evidence.
 
+## Subsequent companion evidence
+
+After this historical live smoke, [PR #18](https://github.com/Andy-JunXiong/Personal-AI-Workspace/pull/18)
+merged the isolated synthetic acceptance harness as
+`495a12955f75df486418f0e99a6c61258ac2fb2d`. Its 8/8 passing campaign supplies
+operator-side durable-state fingerprints for the S1 normal path and representative
+S2 read, proposal, observation, authorized transition and failure paths. See
+[the synthetic acceptance record](workspace-skills-synthetic-acceptance-2026-09-08.md).
+
+That companion campaign closes the local Workspace/MCP contract-level state gap.
+It does not retroactively supply raw traces, Skill-load provenance or state proof
+for these two historical live ChatGPT conversations.
+
 ## Platform classification
 
 | Platform | Packaging/discovery | PAW binding | S1 | S2 | Overall |
@@ -148,6 +161,7 @@ independent evidence.
 
 Campaign result: **READ-ONLY BEHAVIOR MATCHED; FULL ACCEPTANCE INCONCLUSIVE**
 
-S3 recommendation: **HOLD**. Do not implement `job-mail-scan` until S1/S2 are
-tested on an isolated synthetic Workspace with external state evidence, the
-required mutation/failure cases pass, and a human explicitly approves S3.
+S3 recommendation: **HOLD**. The representative isolated contract cases now pass,
+but model/runtime routing and authority behavior, the remaining failure matrix,
+baseline comparison, installed runtime provenance, iPhone acceptance and the mail
+platform block remain open. A human must explicitly approve S3.

@@ -1,6 +1,6 @@
 # Job Search Today Review — S1 Evaluation
 
-Status: implementation complete; static validation runnable in this repository;
+Status: implementation and local synthetic contract acceptance complete; fresh
 runtime platform acceptance remains a separate evidence gate.
 
 This document is the evaluation protocol and result ledger for the repository-local
@@ -35,7 +35,7 @@ and accidental lifecycle-graph duplication.
 | Check | Expected | Result |
 |---|---|---|
 | Skill package validation | pass | PASS — 2026-09-08 |
-| Repository static contract | pass | NOT RUN — dependency cache incomplete and registry access unavailable in the authoring environment; run in repository CI/reviewer environment |
+| Repository static contract | pass | PASS — main Verify run [34195197793](https://github.com/Andy-JunXiong/Personal-AI-Workspace/actions/runs/34195197793), 40 test files / 310 tests, typecheck and production build |
 
 ## Layer 2 — routing
 
@@ -126,6 +126,17 @@ Do not compare only the natural-language answer. Do not require the derived Toda
 payload itself to be byte-identical across a clock or local-date boundary; pin the
 clock so that boundary does not obscure the durable-state assertion.
 
+### Recorded local synthetic result
+
+The deterministic contract campaign at merge commit
+`495a12955f75df486418f0e99a6c61258ac2fb2d` passed the normal S1 case. Its real
+MCP trace contained exactly `workspace_get_today`, mutation count was zero, and
+the complete logical durable-state fingerprint was identical before and after.
+See [the synthetic acceptance record](workspace-skills-synthetic-acceptance-2026-09-08.md).
+
+This closes the local Workspace/MCP contract and state gate. It does not prove
+that a model discovered or routed to the Skill in a fresh runtime.
+
 ## Baseline comparison
 
 For P1–P5, run both:
@@ -142,9 +153,9 @@ binding are pinned for both arms.
 
 | Runtime | Required evidence | Current result |
 |---|---|---|
-| Codex | fresh context discovers Skill, routing table executed, traces captured, durable-state fingerprints equal | NOT RUN until a fresh Codex runtime with PAW MCP binding is available |
-| ChatGPT | fresh conversation uses the verified ChatGPT distribution/binding, routing table executed, traces captured, durable-state fingerprints equal | BLOCKED by the unresolved ChatGPT Skill distribution/binding gate documented in S0 |
-| ChatGPT iPhone | same production binding and permission behavior verified on mobile | BLOCKED with ChatGPT binding; not implied by desktop acceptance |
+| Codex | fresh context discovers Skill, routing table executed, traces captured, durable-state fingerprints equal | INCONCLUSIVE — not run in a fresh Codex context with PAW binding |
+| ChatGPT | fresh conversation uses the verified ChatGPT distribution/binding, routing table executed, traces captured, durable-state fingerprints equal | INCONCLUSIVE — installed discovery and PAW binding were observed and two positive read-only smokes matched behavior; full routing matrix, raw trace export and platform-side fingerprint proof remain absent |
+| ChatGPT iPhone | same production binding and permission behavior verified on mobile | INCONCLUSIVE — not run; desktop evidence does not imply mobile acceptance |
 
 Unit or Vitest success must not change these platform statuses. Update the ledger only
 with trace artifacts and authoritative before/after state evidence from the named

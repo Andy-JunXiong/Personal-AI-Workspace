@@ -137,7 +137,20 @@ Unexpected retries: none observed.
 Unredacted or production data exposure in committed evidence: none. Live read results
 were used transiently and sanitized before this record was created.
 
-## 10. Stop-condition answers
+## 10. Subsequent companion evidence
+
+[PR #18](https://github.com/Andy-JunXiong/Personal-AI-Workspace/pull/18) later
+merged an isolated synthetic Workspace/MCP harness as
+`495a12955f75df486418f0e99a6c61258ac2fb2d`. The 8/8 passing result independently
+verifies the S1 normal-path zero-mutation fingerprint and representative S2
+read/propose/admit/readback, bounded-delta and fail-closed concurrency contracts.
+See [the synthetic acceptance record](workspace-skills-synthetic-acceptance-2026-09-08.md).
+
+This is companion contract evidence, not a rewrite of this historical ChatGPT
+campaign. It does not prove which Skill a hosted model loaded, export this run's
+raw trace, or demonstrate the model's authority decisions.
+
+## 11. Stop-condition answers
 
 | Question | Answer | Evidence reference |
 |---|---|---|
@@ -149,9 +162,9 @@ were used transiently and sanitized before this record was created.
 | Did lifecycle mutation preserve all authority gates and exact readback? | Not tested | Section 6 |
 | Which Codex/ChatGPT distribution differences remain? | Codex repository discovery and ChatGPT registry/package installation must still be accepted independently; ChatGPT did expose both Skills and the PAW connector in this runtime | Section 8 |
 | What policy/snapshot/capability drift risks remain? | Installed Skill source/version is not exposed, PAW release is not exposed, and artifact/tool-schema compatibility is not runtime-enforced | Sections 1 and 9 |
-| Is `job-mail-scan` justified and platform-testable? | No; S1/S2 release gates remain incomplete and mail-scan blockers were not retested | Sections 8 and 11 |
+| Is `job-mail-scan` justified and platform-testable? | No; S1/S2 release gates remain incomplete and mail-scan blockers were not retested | Sections 8 and 12 |
 
-## 11. Final decision
+## 12. Final decision
 
 Campaign result: `INCONCLUSIVE`.
 
@@ -160,8 +173,10 @@ S3 recommendation: `HOLD`.
 The smoke establishes three useful facts: both Skills are discoverable in ChatGPT
 Work, the required PAW read tools are bound and callable, and the observed S1/S2
 read-only traces match their procedures without fallback or write calls. It does not
-establish fresh-context routing, independently verified zero mutation, controlled
-baseline improvement, installed-package provenance, or any lifecycle write safety.
+establish fresh-context routing, platform-side zero-mutation proof, controlled
+baseline improvement, installed-package provenance, or hosted-model lifecycle
+write safety. The subsequent synthetic campaign establishes the corresponding
+local Workspace/MCP contract evidence only.
 
 Human decision and reference: continue S0–S2 acceptance only; no authorization to
 start S3 was supplied in this campaign.

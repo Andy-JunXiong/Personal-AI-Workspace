@@ -1,6 +1,6 @@
 # Workspace Skills Platform Acceptance Runbook
 
-**Status:** READY — NOT EXECUTED
+**Status:** LOCAL SYNTHETIC CONTRACT CAMPAIGN EXECUTED — PLATFORM CAMPAIGN INCOMPLETE
 
 This runbook closes the evidence gaps identified in the
 [S0–S2 assessment](../../docs/architecture/WORKSPACE_SKILLS_S0_S2_ASSESSMENT.md).
@@ -140,6 +140,10 @@ It does **not** run a model and therefore does not prove Skill discovery, routin
 authority judgment, prompt-size improvement, or fresh-context platform acceptance.
 Retain its JSON output as supporting contract evidence, not as a replacement for
 the runtime traces required below.
+
+The campaign merged as `495a12955f75df486418f0e99a6c61258ac2fb2d`
+passed 8/8 cases. Its durable result is recorded in
+[Workspace Skills Synthetic Contract Acceptance — 2026-09-08](workspace-skills-synthetic-acceptance-2026-09-08.md).
 
 Use the repository's read-only logical fingerprint script against the isolated
 database immediately before and after each case:
