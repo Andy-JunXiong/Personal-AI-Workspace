@@ -1,5 +1,18 @@
 # Gmail 申请进展检查员：Workspace Agent 配置
 
+> **Historical configuration draft; not a current execution policy (2026-09-08).**
+> Preserve the original instructions below as history. Their search-from-application
+> window and bare message-ID assumptions predate the current seven-day,
+> account-qualified source policy. Do not copy them into a live task or Agent.
+> Use the [current recurring policy](UPDATE_JOB_TRACKER_WORKSPACE_PROMPT.txt),
+> [manual acceptance policy](UPDATE_JOB_TRACKER_MANUAL_ACCEPTANCE.txt) and
+> [daily acceptance procedure](DAILY_WORKFLOW_ACCEPTANCE.md). Agent eligibility,
+> admin enablement, API/token path and target PAW acceptance remain unverified;
+> absence of an available management interface does not prove entitlement denial.
+> See the [current boundary review](../strategy/OPENAI_PLATFORM_WATCH.md#2026-09-08-current-boundary-review).
+
+## Historical draft (original text)
+
 状态：配置稿已准备；尚未在 ChatGPT 创建或发布，也未获取 API 触发通道或令牌。
 
 ## Continuity and benefits

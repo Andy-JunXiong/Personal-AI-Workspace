@@ -120,3 +120,17 @@ explicitly; a proposal filename is not proof that all its contents remain unbuil
 Link superseded rules/status to their successor and retain original evidence.
 Before adding a dated handoff, prefer updating the relevant active entry or
 appending evidence to its existing ledger. Do not index private local evidence.
+
+## Platform ownership check
+
+For a proposed capability or a compatibility workaround that changes a relied-on
+platform boundary, include the four-question [ownership check](strategy/OPENAI_PLATFORM_WATCH.md#ownership-check)
+in the existing continuity statement. Link a still-applicable prior decision
+instead of repeating it. State whether the capability is generic or domain-specific,
+what the target platform demonstrably provides, why PAW implementation is needed,
+and its exit/revisit condition. Routine fixes that preserve the boundary do not
+require a separate strategy review or approval process.
+
+Record material findings in the maintained Watch. Changes to established architecture
+boundaries follow its ADR gate; implementation that needs no ADR still requires
+appropriate acceptance and a closed result or explicit revisit condition.

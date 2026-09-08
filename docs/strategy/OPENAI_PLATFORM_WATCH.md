@@ -1,202 +1,209 @@
 # OpenAI Platform Watch
 
-**Status:** ADVISORY  
-**Adopted:** 2026-09-04  
-**Last reviewed:** 2026-09-04
+**Status:** ACTIVE GOVERNANCE CONTRACT AND MAINTAINED STRATEGY LEDGER; findings are advisory until human disposition.
+**Adopted:** 2026-09-04. **Current boundary review:** 2026-09-08.
+**Review owner:** repository maintainer.
+**Last completed weekly scan:** Not recorded; the targeted review below is not a complete weekly scan.
+**Next review:** first manual weekly scan by 2026-09-15, or a material event sooner.
 
-## Purpose
+## Continuity and benefits
 
-Track only OpenAI and ChatGPT platform changes that could alter the product
-boundary, roadmap, architecture, or distribution path of Personal AI Workspace.
+The user-approved Topic A/B conclusion and [core workflow](../architecture/CORE_JOB_WORKFLOW.md)
+require an explicit current boundary and a maintained correction mechanism. This
+bounded documentation package replaces stale M4 constraints, separates platform
+claims from PAW acceptance, and connects ownership checks to existing development
+practice. It enables subsequent work to proceed from one current decision record
+and the [daily acceptance gate](../mvp/DAILY_WORKFLOW_ACCEPTANCE.md). Immediate
+benefits are traceable evidence and preserved historical observations; expected
+long-term benefit is lower unnecessary maintenance without premature dependency.
+No runtime, deployment, task, mailbox, authority or business-data change is included.
+Document link, scope and history checks are the local acceptance for this package;
+they do not establish successful daily execution or continuous Watch operation.
 
-This is not an AI-news log. Every entry must answer:
+## Topic A: current responsibility boundary
 
-> What does this change alter for Personal AI Workspace?
+PAW is using real Job Search work to validate an authoritative domain-state,
+evidence and coordination pattern behind AI interfaces. Job Search remains the
+actual product domain; a universal multi-domain state kernel is not established.
 
-The watch belongs in this repository because it governs this product's scope.
-It is not a separate project or intelligence pipeline.
+Prefer verified OpenAI primitives for reasoning, interaction, model execution,
+generic automation/scheduling, distribution, compatible UI hosting, connectors,
+host confirmation UX and OAuth client registration. Platform availability is not
+PAW scenario acceptance. Keep adapters small and replaceable where practical;
+this is a direction, not a claim of complete provider independence in current code.
 
-## Stable product boundary
+PAW defines and enforces its domain objects, state/version relationships,
+evidence/provenance, lifecycle invariants, identity mapping, object access,
+business admission, idempotency, concurrency, coverage, coordination, readback
+and applicable correction contracts. Responsibility is not proof that every
+scenario is implemented or verified. Authoritative state does not make model
+interpretations true; source quality and reconciliation still need evidence.
+External systems retain native-record authority. Store necessary references,
+normalized source identities and domain facts rather than entire source archives.
 
-**ChatGPT owns:**
+Keep existing reporting Web and bounded manual controls. It reads the shared
+database and supports inspection outside chat, but shared services mean it is
+not a fully independent verifier of all mutations or source interpretation.
+Do not expand it into a generic chat or agent console. Prefer MCP Apps for new
+suitable conversational UI only after target-environment acceptance.
 
-- primary interaction, general reasoning, and generic intelligence;
-- platform connectors and source access;
-- generic automation primitives where sufficiently reliable; and
-- the host surface for compatible embedded UI.
+Keep one canonical Skill source. Server instructions summarize trust and authority;
+Skills specify HOW and tool ordering; Workspace code enforces actual contracts.
+Neither instructions nor a Skill grant authority. Plugin adapters may generate
+target artifacts when an installation need is established; do not duplicate Skill
+sources, assume every command uses proposal/admission, or extract a generic framework now.
 
-**Personal AI Workspace owns:**
+The [M4 v0.1/v0.2 frozen evaluation is retired](../dogfood/M4_REAL_USE_EVALUATION_v0.3.md).
+v0.3 is adopted but NOT STARTED; bounded manual and real scheduled acceptance
+precede its new observation period. Old dates and scores are not rewritten.
+This Watch does not activate v0.3 or authorize changes to runtime or evaluation metrics.
 
-- authoritative domain state, lifecycle, and invariants;
-- provenance, evidence relationships, and mutation authority;
-- version history, concurrency control, and durable coordination;
-- domain-specific operational models; and
-- formal inspection and control surfaces where conversation is insufficient.
+## Topic B: maintained correction mechanism
 
-External providers own their native facts. Workspace stores only the minimum
-references, evidence, and cross-system state needed for the domain workflow.
+Correct boundary, not minimum boundary. Every responsibility needs a justified
+owner; actual dependencies need target-environment evidence, and unverified parts
+need explicit limitations and next steps. NARROW is not a success metric. Platform
+capabilities may eventually replace current PAW implementations or responsibilities;
+this mechanism must permit the hypothesis above to be revised.
 
-Implementation boundaries may move. The thesis must not drift in response to
-individual releases.
+Three triggers enter the same lightweight review:
 
-## M4 constraint
+- **Platform change:** official releases affecting UI, state, automation,
+  connectors, distribution, authentication or permissions.
+- **Compatibility failure:** an actual failure that challenges a relied-on
+  capability or requires a replacement implementation. Diagnose routine incidents
+  normally; do not turn every error into an architecture review.
+- **New feature proposal:** especially generic scheduling, connector, UI, memory,
+  orchestration, auth or agent-runtime work. Reuse the ownership check below.
 
-The feature freeze remains authoritative through the Day 28 decision in
-[M4 Real Use Evaluation](../dogfood/M4_REAL_USE_EVALUATION_v0.2.md).
+Flow: trigger -> ownership check -> material impact? -> candidate if material ->
+overlap analysis -> bounded experiment if needed -> target verification -> human
+decision -> accepted ADR only when an established architecture boundary changes ->
+implementation or no change -> appropriate acceptance -> close or revisit.
+Every branch closes: implementation without an ADR still needs acceptance;
+rejection, deferral and no-change outcomes record their reason/next condition.
+A candidate finding does not itself authorize an experiment or implementation.
 
-This document is advisory only. An entry does not authorize a runtime feature,
-schema migration, connector, scheduler, MCP tool, model call, automatic
-admission, metric change, or retrospective M4 rescore. Before Day 28, only
-safety and correctness defects may change the frozen runtime under the existing
-M4 rules.
+## Ownership check
 
-## Watch scope
+Use these four questions in the existing development continuity statement; link
+an applicable prior decision instead of repeating it. This is not a new approval board.
 
-| Category | Watch | Boundary question |
-| --- | --- | --- |
-| **Interaction / UI** | Interactive UI, MCP Apps, inline/full-screen views, deep links, navigation | Can ChatGPT host the domain inspection and control surface while Workspace owns state and rules? |
-| **Persistent State** | Memory, Projects, structured/versioned objects, long-running state, recovery/export | Is this authoritative domain state or only contextual recall? |
-| **Automation** | Scheduled tasks, event triggers, monitoring, background agents | Can generic triggering be delegated without delegating domain truth or admission? |
-| **Connectors / Sync** | Gmail, Drive, Calendar, GitHub, browser, indexing, sync | Can ChatGPT use provider-native facts/actions without a duplicate Workspace connector? |
-| **Ecosystem / Distribution** | Plugins, MCP, auth, permissions, publishing, packaging, monetization | Can the OpenAI ecosystem host and distribute Workspace as a domain/state product? |
+1. Is this generic platform capability or domain-specific responsibility?
+2. Does the target platform/runtime/plan already provide it, with what evidence?
+3. If so, why is a PAW implementation still necessary?
+4. What is its exit or revisit condition?
 
-A state capability threatens the thesis only when it supports addressable
-structured objects, domain invariants, explicit mutation authority, version
-history or concurrency, durable readback, and recovery.
+## Evidence and finding fields
 
-Workspace Today remains a deterministic domain query and classifier. It is not
-a generic scheduler.
+Official documentation establishes platform capability and its stated conditions.
+Repository code establishes implementation; committed runtime records establish
+only their named environment, operation and date. Human approval, tool discovery,
+local tests and a model's completion statement are not interchangeable evidence.
+Do not label a feature GA without source support, or infer account entitlement.
 
-## Evidence and maturity
+Use these five fields for material findings; no new issue-tracking subsystem:
 
-Use official OpenAI documentation or official release notes as the primary
-source. Do not change the roadmap from social posts, commentary, rumours, or
-generic AI news.
-
-Every entry records:
-
-- **Availability:** ANNOUNCED, PREVIEW, ELIGIBLE-PLANS, or GA;
-- **Workspace scenario verified:** YES, NO, or NOT APPLICABLE; and
-- the official source URL.
-
-An announcement may justify observation or an experiment. It does not justify
-removing a Workspace responsibility. Predictions may influence implementation
-reversibility, but cannot remove an accepted roadmap item.
-
-## Decision labels
-
-Each entry has one primary decision.
-
-| Decision | Meaning |
+| Field | Required content |
 | --- | --- |
-| **IGNORE** | A major or easily confused change was reviewed and does not alter the boundary or roadmap. |
-| **ADOPT** | Use the platform capability; do not duplicate its generic implementation. |
-| **REMOVE** | Remove an accepted Workspace responsibility or roadmap item because the platform replaces it. |
-| **DOUBLE-DOWN** | The change increases the value of a Workspace-owned domain, state, evidence, authority, or coordination capability. |
+| Finding | Date, trigger, affected capability, official source and/or actual failure evidence |
+| Direction | IGNORE / ADOPT / REMOVE / DOUBLE-DOWN; strategic recommendation, not implementation status |
+| Verification | Target runtime/plan/version/permissions; NOT_TESTED / LIVE_VERIFIED / BLOCKED / UNRESOLVED / NOT_APPLICABLE, scoped evidence links |
+| Human decision | PENDING / ACCEPTED / REJECTED / DEFERRED and short rationale |
+| Outcome / next step | Implementation and acceptance links or explicit no-change result; remaining work and revisit condition |
 
-If one release affects two different capabilities, add a short **Secondary
-implication**. Example: ADOPT a platform event trigger; DOUBLE-DOWN on Workspace
-admission and lifecycle enforcement.
+IGNORE records no material boundary consequence; ADOPT prefers a platform primitive;
+REMOVE retires an accepted PAW implementation/responsibility; DOUBLE-DOWN retains
+or strengthens justified PAW domain responsibility. Separate capabilities when a
+release supports both ADOPT and DOUBLE-DOWN. A human may accept a direction while
+its implementation remains deferred; state both explicitly.
 
 ### REMOVE gate
 
-Use REMOVE only after confirming:
+Before a REMOVE decision is accepted, confirm and link evidence that:
 
 1. the capability is available in the intended environment;
-2. the Workspace scenario has been tested;
-3. reliability, permissions, failure visibility, and run history are adequate;
+2. the actual PAW scenario has been tested;
+3. reliability, permissions, failure visibility and run history are adequate;
 4. domain invariants and explicit authority remain enforceable;
-5. recovery, export, or a viable fallback exists; and
-6. an accepted Workspace responsibility actually exists to remove.
+5. recovery, export or a viable fallback exists; and
+6. there is an accepted PAW implementation/responsibility to remove.
 
-If Workspace never accepted the capability, use ADOPT with “do not build,” not
-REMOVE.
+Identify the exact replacement owner, plan/runtime/version, permission state,
+scenario results, history-preserving migration and rollback where applicable.
+Record concrete invalidation/revisit conditions. Removing implementation does not
+automatically remove responsibility. If nothing was accepted to build, use ADOPT
+with 'do not build', not REMOVE. Predictions cannot retire an accepted responsibility.
 
-## Cadence
+## Cadence and automation boundary
 
-### Weekly platform scan
+Weekly: limit the official-source scan to 15-20 minutes. Record its scoped result
+below, even when there is no material candidate. Incomplete retrieval is not a
+no-change result. Monthly: review boundaries only when material findings exist;
+answer what changed, what platform capability can be used, what PAW can stop doing,
+what remains its responsibility, and whether the thesis changes.
 
-Spend at most 15–20 minutes on official ChatGPT, Memory/Projects, automation,
-Plugins/MCP/UI, connector, and developer-platform updates.
+Conclusions are NO DRIFT, NARROW, EXPAND or REPOSITION; any may be correct.
+Major relevant releases, material compatibility failures and generic feature
+proposals trigger a focused review without waiting for the monthly date.
 
-No entry is the normal result. A scheduled scan may draft a candidate finding,
-but must not modify the repository or create an ADR automatically.
+Begin with manual cycles. Future automation may read official sources/repository
+and draft findings, scope and run results. A maintainer confirms them before
+updating this ledger. Automation must not commit the Watch, create ADRs, change
+roadmap, remove capabilities, deploy, edit tasks or change authority policy.
+Do not build a news database, scheduler, dashboard or second agent framework.
+No recurring scan has been created by this package.
 
-### Monthly architecture boundary review
+### Weekly scan ledger
 
-Run only when the month contains a material entry. Answer:
+| Date | Scope | Result | Material candidates |
+| --- | --- | --- | --- |
 
-- What changed?
-- What did the platform absorb?
-- What can Workspace stop implementing?
-- What became easier?
-- What still belongs to Workspace?
-- Has the thesis changed?
+No completed weekly scans recorded. Allowed results: NO MATERIAL CHANGE,
+COMPLETE - MATERIAL FINDING, INCOMPLETE. Completion means the stated source scope
+was checked, not that every OpenAI change everywhere was discovered.
 
-Record one conclusion:
+## 2026-09-08 current boundary review
 
-| Conclusion | Meaning |
-| --- | --- |
-| **NO DRIFT** | Thesis and Workspace-owned capability set remain unchanged. |
-| **NARROW** | Workspace-owned implementation scope becomes smaller. |
-| **EXPAND** | A platform change justifies an additional Workspace-owned capability. |
-| **REPOSITION** | The thesis or ecosystem role must materially change. |
+**Trigger:** user-requested governance reconciliation after production expansion
+and documented compatibility failures. **Repository baseline:** main at e196bd5.
+**Human decision:** user accepted Topic A/B and authorized this bounded document
+correction. **Conclusion:** NO DRIFT in the state/authority thesis; reconcile actual
+expanded implementation and remove stale frozen-runtime claims. This is not a
+retroactive finding that September 4-8 implementation scope stayed unchanged.
 
-ADOPT can still result in NO DRIFT when the current architecture already
-delegates that capability.
+The following matrix separates official capability from PAW evidence and action.
+All platform sources were consulted in the preceding September 8 review; no
+new live mailbox, write, scheduler, entitlement or production-image test is claimed.
 
-### Major release review
+| Capability / direction | Official capability and limits | PAW evidence, retained responsibility and disposition |
+| --- | --- | --- |
+| Scheduling / Workspace Agents: ADOPT direction | [Tasks](https://learn.chatgpt.com/docs/automations) provides supported scheduled execution. [Agent API](https://developers.openai.com/workspace-agents/trigger-runs) describes queueing, invocation idempotency and beta run status; [access tokens](https://developers.openai.com/workspace-agents/authentication) require admin enablement. | [Daily acceptance](../mvp/DAILY_WORKFLOW_ACCEPTANCE.md) remains pending. Agent eligibility/admin/API path and PAW scenario are UNRESOLVED, not confirmed entitlement denial. Implementation DEFERRED; revisit when access and a bounded read/write/readback/terminal-status test are available. PAW retains domain coverage, evidence, admission and receipt semantics; generic execution status does not prove these. |
+| Specific hosted write failure: DOUBLE-DOWN on truthful evidence | Platform documentation cannot establish the cause of this particular refusal. | [Recovery](../mvp/JOB_TRACKER_RECOVERY_2026-09-08.md) and [block report](../mvp/JOB_TRACKER_PLATFORM_BLOCK_REPORT_2026-09-08.md) record ChatGPT scan-start refusal despite approval and exact-run NOT_FOUND. This path is BLOCKED in the recorded attempt, not proof all ChatGPT writes fail. The separate Codex observation trial used a different operation/context. Next: resolve and verify the actual path, then manual/scheduled acceptance; no workaround around refused writes. |
+| Gmail adapter: retain, review for replacement | Platform connectors are preferred where the actual mixed-tool workflow works; their existence alone proves no PAW replacement. | [Reader evidence](../mvp/GMAIL_MCP_READER_2026-09-07.md) records built-in Gmail unavailable in the tested developer-MCP context; [current release](../mvp/RELEASE_HANDOFF_2026-09-08.md) includes direct reads/shared source identities. Retain the adapter and PAW evidence/coverage semantics. Revisit on compatible platform access; removal requires both accounts, complete bounded reads, stable identity, retry/coverage and current manual-use parity, with preserved history/fallback. Gmail owns original messages. |
+| MCP Apps: ADOPT when suitable; keep reporting Web | [Optional UI](https://developers.openai.com/plugins/build/chatgpt-ui) provides hosted components while tools remain usable without UI. | [Core workflow](../architecture/CORE_JOB_WORKFLOW.md) retains direct reporting, diagnostics and bounded existing controls. No replacement UI acceptance exists. Human decision: keep Web, defer new generic UI; revisit a concrete user scenario, not a hosting announcement. Shared database/services are not an independent proof of all mutation or semantic correctness. |
+| Plugins: ADOPT mechanism; retain Skill content | [Plugins](https://learn.chatgpt.com/docs/plugins) provides installation/distribution mechanisms. | [S0-S2 assessment](../architecture/WORKSPACE_SKILLS_S0_S2_ASSESSMENT.md) records canonical source, deterministic packaging and limited real read smokes; full platform provenance/routing/mutation acceptance remains incomplete. Keep existing artifacts; defer a thin adapter until target installation requires it. Do not duplicate sources or claim all platforms verified. |
+| OAuth/CIMD: conditional ADOPT direction | [August 21 update](https://developers.openai.com/plugins/changelog) documents stable ChatGPT callbacks/CIMD subject to issuer support; [Codex MCP](https://learn.chatgpt.com/docs/extend/mcp) separately describes shared stable CIMD as coming soon. [Auth guide](https://developers.openai.com/plugins/build/auth) retains server token-validation duties. | Current MCP uses [private Tunnel](../cloud/C2_SECURE_MCP_TUNNEL.md); Web uses [OIDC/identity linking](../mvp/S1_01_IDENTITY_RESULTS_v0.1.md) and [operations](../cloud/S1_WEB_OPERATIONS_RUNBOOK.md). [ADR-007](../adr/ADR-007-identity-auth-boundary.md) is an early scoped contract, not the whole current auth design. No CIMD migration is implemented or accepted here. Retain applicable token/scope validation, principal mapping, object access, provider authorization and admission; revisit only a concrete auth integration need. |
+| Memory / structured state: DOUBLE-DOWN on demonstrated domain needs | [Memory](https://learn.chatgpt.com/docs/customization/memories) is recall support, not sole storage for required rules. | [ADR-001](../adr/ADR-001-conversation-not-system-of-record.md), [ADR-008](../adr/ADR-008-transition-admission-idempotency.md) and current services retain structured state and mutation contracts. No platform replacement is verified. Revisit if platform primitives satisfy actual object, authority, version, recovery and readback requirements; do not assume they never will. |
 
-Review immediately when OpenAI materially changes authoritative structured
-state, versioned objects, formal domain workflows, rich custom UI, automation
-runtime, major connectors, or plugin distribution/authentication.
+**Local document acceptance:** 343 local link/anchor checks passed across five
+modified files; the original Watch baseline and Agent draft bodies are preserved,
+and the Watch has exactly one primary index entry under active contracts. Whitespace
+checks passed. Application tests and live execution were not rerun for this package.
 
-## Relationship to ADRs
+**Outcome / next step:** governance correction complete locally; no production
+adoption or REMOVE is approved by this record. Continue daily workflow acceptance. First manual weekly scan
+is due by September 15. Deferred candidates close for now with the revisit
+conditions above; daily compatibility investigation remains open. No new ADR,
+generic state kernel, Plugin adapter or automatic scan is part of this package.
 
-Platform change → Platform Watch → impact review → ADR only if the architecture
-must change → implementation.
+## Historical observations and conclusion
 
-A Watch entry is a candidate decision. Only an accepted ADR may change an
-established architecture boundary.
-
-## New-feature ownership test
-
-Before adding a feature, ask:
-
-1. Does the OpenAI platform already provide it?
-2. Is it officially announced, available, and verified, or only predicted?
-3. Is it generic platform capability or domain-specific operational value?
-4. If GPT became ten times more capable, would authoritative state, lifecycle,
-   evidence, authority, or coordination still be required?
-5. Can implementation remain small and reversible until verified?
-
-Prefer the platform for generic reasoning, recall, search, scheduling,
-connectors, and chat UI. Prefer Workspace for domain state, lifecycle, evidence,
-authority, version history, deterministic domain rules, coordination, and
-formal inspection/control.
-
-## Entry template
-
-~~~markdown
-## YYYY-MM-DD — Change title
-
-Official source: <URL>
-Availability: ANNOUNCED / PREVIEW / ELIGIBLE-PLANS / GA
-Workspace scenario verified: YES / NO / NOT APPLICABLE
-Category: Interaction / UI | Persistent State | Automation |
-  Connectors / Sync | Ecosystem / Distribution
-Affected Workspace boundary: <specific capability or roadmap item>
-
-Change: <one sentence>
-Workspace implication: <one or two sentences>
-Decision: IGNORE / ADOPT / REMOVE / DOUBLE-DOWN
-Secondary implication: <optional>
-Action now: NONE / EXPERIMENT / ADR CANDIDATE
-Revisit trigger: <concrete condition>
-Architecture review required: YES / NO
-~~~
-
-Do not write a long news summary.
+The original September 4 baseline below is retained verbatim as dated evidence.
+Its GA labels, ADOPT directions, M4 triggers and 'Current boundary conclusion'
+refer to that historical review only. The current contract and September 8 review
+above supersede its present-tense scope/activation claims; do not execute old
+M4 triggers or infer acceptance from historical ADOPT labels.
 
 ## Baseline — 2026-09-04
 

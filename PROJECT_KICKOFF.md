@@ -2,6 +2,13 @@
 
 ## Current status — 2026-09-08
 
+Topic A/B governance decision: [Platform Watch](docs/strategy/OPENAI_PLATFORM_WATCH.md#2026-09-08-current-boundary-review)
+now maintains the current domain-state boundary, ownership checks and scoped
+verification/closure. Historical observations remain intact. This bounded
+correction changes no runtime or schedule; the next engineering gate remains
+real daily workflow acceptance, not another strategy or framework project.
+
+
 Current navigation: [README](README.md) and [documentation index](docs/INDEX.md).
 The user-approved review follow-up retires the original frozen M4 contracts;
 [v0.3](docs/dogfood/M4_REAL_USE_EVALUATION_v0.3.md) is adopted but NOT STARTED.

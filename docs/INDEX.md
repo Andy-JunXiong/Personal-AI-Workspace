@@ -48,6 +48,7 @@ deployment, manual acceptance and scheduled acceptance separately.
 | [UPDATE JOB TRACKER — WORKSPACE WRITE MODE](mvp/UPDATE_JOB_TRACKER_WORKSPACE_PROMPT.txt) | Existing recurring policy; saved policy and task activation are separate checks. |
 | [Workspace Skills Platform Acceptance Results](../tests/evaluations/workspace-skills-platform-acceptance-results-template.md) | Maintained platform acceptance procedure/template; completion requires separately recorded real evidence. |
 | [Workspace Skills Platform Acceptance Runbook](../tests/evaluations/workspace-skills-platform-acceptance-runbook.md) | Maintained platform acceptance procedure/template; completion requires separately recorded real evidence. |
+| [OpenAI Platform Watch](strategy/OPENAI_PLATFORM_WATCH.md) | Active governance contract and maintained strategy ledger; historical observations retained, platform adoption requires scoped verification and human disposition. |
 
 ## Historical evidence
 
@@ -123,7 +124,6 @@ deployment, manual acceptance and scheduled acceptance separately.
 | [Existing Update Job Tracker task: verified configuration and handoff](mvp/UPDATE_JOB_TRACKER_HANDOFF_2026-09-07.md) | Historical scoped plan/result or verification procedure; preserve original evidence. Current product/deployment status: [core workflow](architecture/CORE_JOB_WORKFLOW.md) / [release](mvp/RELEASE_HANDOFF_2026-09-08.md). |
 | [Application overview and readability — 2026-09-07](mvp/WEB_OVERVIEW_READABILITY_2026-09-07.md) | Historical scoped plan/result or verification procedure; preserve original evidence. Current product/deployment status: [core workflow](architecture/CORE_JOB_WORKFLOW.md) / [release](mvp/RELEASE_HANDOFF_2026-09-08.md). |
 | [Results-focused detail pages — 2026-09-07](mvp/WEB_RESULTS_FOCUS_2026-09-07.md) | Historical scoped plan/result or verification procedure; preserve original evidence. Current product/deployment status: [core workflow](architecture/CORE_JOB_WORKFLOW.md) / [release](mvp/RELEASE_HANDOFF_2026-09-08.md). |
-| [OpenAI Platform Watch](strategy/OPENAI_PLATFORM_WATCH.md) | Dated advisory platform observations; not a current platform guarantee or an implemented capability. |
 | [Application Lifecycle Review — S2 Evaluation](../tests/evaluations/application-lifecycle-review-s2.md) | Historical scoped plan/result or verification procedure; preserve original evidence. Current product/deployment status: [core workflow](architecture/CORE_JOB_WORKFLOW.md) / [release](mvp/RELEASE_HANDOFF_2026-09-08.md). |
 | [ChatGPT M1 Smoke Evaluation](../tests/evaluations/chatgpt-m1.md) | Historical scoped plan/result or verification procedure; preserve original evidence. Current product/deployment status: [core workflow](architecture/CORE_JOB_WORKFLOW.md) / [release](mvp/RELEASE_HANDOFF_2026-09-08.md). |
 | [ChatGPT M2 Platform Evaluation](../tests/evaluations/chatgpt-m2.md) | Historical scoped plan/result or verification procedure; preserve original evidence. Current product/deployment status: [core workflow](architecture/CORE_JOB_WORKFLOW.md) / [release](mvp/RELEASE_HANDOFF_2026-09-08.md). |
