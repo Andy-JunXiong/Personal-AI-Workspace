@@ -1,0 +1,36 @@
+{
+  "schemaVersion": "paw-workspace-skills-release-v1",
+  "releaseVersion": "0.1.0",
+  "workspaceCompatibility": {
+    "capabilitySet": "paw-job-search-skills-s0-s2-v1",
+    "toolsBySkill": {
+      "job-search-today-review": [
+        "workspace_get_today",
+        "workspace_get_project",
+        "workspace_get_task"
+      ],
+      "application-lifecycle-review": [
+        "workspace_admit_transition",
+        "workspace_find_job_application",
+        "workspace_get_project",
+        "workspace_list_job_applications",
+        "workspace_propose_transition",
+        "workspace_record_observation"
+      ]
+    }
+  },
+  "skills": [
+    {
+      "name": "job-search-today-review",
+      "skillVersion": "0.1.0",
+      "sourceDirectory": ".agents/skills/job-search-today-review",
+      "policyVersion": null
+    },
+    {
+      "name": "application-lifecycle-review",
+      "skillVersion": "0.1.0",
+      "sourceDirectory": ".agents/skills/application-lifecycle-review",
+      "policyVersion": null
+    }
+  ]
+}
