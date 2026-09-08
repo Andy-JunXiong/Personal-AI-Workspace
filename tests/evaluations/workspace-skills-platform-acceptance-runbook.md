@@ -62,7 +62,23 @@ discovery, routing, MCP binding, authority behavior, or platform acceptance.
 
 ## 4. Artifact pinning
 
-From the pinned checkout, record:
+Build the ChatGPT-uploadable Skill snapshots deterministically from the canonical
+repository files. Do not edit or flatten a second copy by hand:
+
+```sh
+npm run skills:package -- --source-ref "$(git rev-parse HEAD)"
+```
+
+This writes one ZIP per Skill plus
+`dist/workspace-skills/release-manifest.json`. The manifest records the source
+commit, release and Skill versions, canonical file hashes, package hashes, and
+the release-config hash and reviewed PAW tool compatibility set. The output
+directory may contain only files managed by this command; the command stops rather
+than deleting unrelated content. Upload the ZIPs without modifying their contents
+and retain the manifest with the acceptance evidence. A declared tool dependency
+does not grant platform permission, Workspace authority, or domain admission.
+
+From the pinned checkout, also record:
 
 ```sh
 git rev-parse HEAD
@@ -70,6 +86,10 @@ sha256sum .agents/skills/job-search-today-review/SKILL.md
 sha256sum .agents/skills/application-lifecycle-review/SKILL.md
 sha256sum .agents/skills/application-lifecycle-review/references/mutation-procedure.md
 ```
+
+Compare those hashes with the generated manifest. Stop if they differ, if the
+installed platform snapshot cannot retain the S2 reference file, or if the
+installed snapshot cannot be tied back to the recorded package hash.
 
 Export or capture the currently exposed PAW tool schemas through the supported
 runtime inspection surface. Hash the exact captured schema artifact. Stop if any
