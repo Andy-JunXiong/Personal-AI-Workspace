@@ -37,3 +37,15 @@ jobs:
 
       - name: Run repository verification
         run: npm run verify
+
+      - name: Package pinned Workspace Skills
+        run: npm run skills:package -- --source-ref "$GITHUB_SHA"
+
+      - name: Upload Workspace Skill release
+        uses: actions/upload-artifact@v6
+        with:
+          name: workspace-skills-${{ github.sha }}
+          path: dist/workspace-skills/
+          if-no-files-found: error
+          retention-days: 30
+          compression-level: 0
