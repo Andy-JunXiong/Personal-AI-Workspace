@@ -3,6 +3,13 @@
 Current production: `mail-layout-20260908-r2`, migrations 001–011, 29 MCP tools.
 Website: https://workspace.ai-radar-lab.com/workspace/job-search/today
 
+Later requirements-only follow-up: [backend-managed scan receipts](../architecture/MAIL_SCAN_BACKEND_LEDGER_REQUIREMENTS_2026-09-08.md)
+defines server-owned progress and receipt aggregation while retaining GPT
+interpretation, accurate write permissions and separate scheduled acceptance.
+It is not implemented or deployed. The [recovery log](JOB_TRACKER_RECOVERY_2026-09-08.md)
+also records a successful two-observation Codex trial without a receipt; this
+does not change the active release or establish daily coverage.
+
 Later local follow-up: [manual-check diagnostics and relevance filtering](MAIL_CHECK_DIAGNOSTICS_2026-09-08.md)
 implements the next code changes for items 1–2 below, with 327 passing tests in
 an independent LF verification tree. It is not deployed; historical failure
@@ -49,6 +56,11 @@ the running container. This publication-only probe adjustment was syntax-checked
 it was not rerun against production and does not change the deployed application.
 
 ## Remaining work
+
+The new backend receipt requirements add a contract-design and implementation
+workstream. They do not remove the platform authorization and real-run gates
+below. Keep the current online tool policy until a compatible implementation is
+deployed and its tools are available; do not treat this documentation as activation.
 
 1. Diagnose why mailbox 1's real Synogize website check returned PARTIAL.
    The handler retained a generic failure description, not a precise underlying

@@ -26,6 +26,13 @@ the September 7 execution evidence below is historical.
 
 ## Core flow
 
+The [September 8 backend receipt requirements](MAIL_SCAN_BACKEND_LEDGER_REQUIREMENTS_2026-09-08.md)
+record a target responsibility change: GPT retains evidence interpretation and
+authorized business operations; the backend would maintain run identity,
+processing progress and receipt aggregation. It preserves this core flow and
+does not select an API executor or replacement scheduler. Implementation and
+platform acceptance remain pending; existing tools retain their current contracts.
+
 Two Gmail accounts -> daily ChatGPT Update Job Tracker -> structured observations,
 applications, supported state changes and action tasks -> Workspace cloud database
 -> website reports, statistics, application inventory, timelines and dossier views.

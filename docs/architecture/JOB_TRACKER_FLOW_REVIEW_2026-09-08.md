@@ -6,6 +6,11 @@
 已完成 291 项测试，并上线为 `mail-ingestion-20260908-r1`。以下保留评估时的发现；完整执行方式和剩余范围以该交接记录为准。
 当前线上版本为 `mail-layout-20260908-r2`，另已完成[状态卡布局调整](../mvp/MAIL_STATUS_LAYOUT_2026-09-08.md)。
 
+后续需求：用户要求记录[后台维护扫描回执](MAIL_SCAN_BACKEND_LEDGER_REQUIREMENTS_2026-09-08.md)。
+该文细化本评估第 3 项的后台进度职责，包括自动汇总的证据条件、授权、兼容和验收。
+目标仍保留 GPT 分析及同一数据库，尚未实现或部署。单独的 Codex 试验已成功保存并
+读取核对两条真实邮件证据，但没有扫描回执或完整覆盖，不能作为定时任务恢复证明。
+
 ## Continuity and benefits
 
 - Upstream requirement：用户确认每日 GPT 查邮件并保存结构化结果，网页主要查看同一数据库，下午有新邮件时可手动补查。延续 [核心流程](CORE_JOB_WORKFLOW.md)。

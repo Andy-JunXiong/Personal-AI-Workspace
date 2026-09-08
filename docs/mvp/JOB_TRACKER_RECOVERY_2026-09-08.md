@@ -2,6 +2,11 @@
 
 Status: production upgrade and plugin refresh passed. Manual acceptance did not execute; the ChatGPT conversation reported a platform safety block at scan creation. Actual scheduled-run acceptance remains pending; automation is not restored.
 
+Later bounded evidence trial succeeded in Codex; it is recorded at the end of
+this document and does not supersede the failed ChatGPT scan acceptance.
+[Backend receipt requirements](../architecture/MAIL_SCAN_BACKEND_LEDGER_REQUIREMENTS_2026-09-08.md)
+are now documented for future development, not implemented or deployed.
+
 Subsequent release: [mail ingestion alignment](MAIL_INGESTION_ALIGNMENT_2026-09-08.md)
 first shipped as `mail-ingestion-20260908-r1`, migration 011. Current production
 is `mail-layout-20260908-r2`; see the [final release handoff](RELEASE_HANDOFF_2026-09-08.md).
@@ -186,3 +191,37 @@ No mail batches, acknowledgements or business changes were attempted in this
 check. The daily tasks were not resumed. The next gate remains platform write
 recovery, then bounded manual and actual scheduled acceptance. The website-only
 diagnostics/filtering code does not remove this platform restriction.
+
+## Separate user-authorized evidence trial — September 8, 18:01–18:02 Sydney
+
+The user explicitly requested skipping receipt creation and actually trying
+downstream evidence processing. This bounded experiment used the normal
+Workspace mail reader and observation tool in the current Codex environment.
+It did not retry the rejected start operation through another entry point.
+
+One fully read, in-range application-activity email contained facts relevant to
+two existing applications. Each project and its complete existing resource list
+were read first; this source was absent in both. Two ordinary
+`workspace_record_observation` calls saved minimized, account-qualified EMAIL
+evidence at 08:01:48.443Z and 08:02:02.651Z. Both responses reported
+`deduplicated=false`, `replayed=false`, `projectStateChanged=false`. Independent
+project readback confirmed both resource IDs, source identities and saved facts;
+each resource count increased from one to two. Lifecycle remained APPLIED at
+version 1 and both open-task lists remained empty.
+
+Only relevant facts were stored, not whole messages. Public documentation omits
+private mail content and source identifiers. The observed job activity did not
+justify an interview/rejection transition or an action task.
+
+No run receipt, batch acknowledgement or coverage checkpoint was created. The
+mailbox sample was not a complete daily scan; the tasks were not changed or
+resumed. These results establish that this Codex environment can read sources
+and persist real evidence without a receipt. They do not prove that ChatGPT
+scheduled writes work, that receipt creation now works, or that all Workspace
+writes are accepted. The platform blocker's specific cause remains unknown.
+
+The subsequent user request records a future backend-owned run ledger and
+derived receipts in the linked requirements. It preserves declared write
+effects, authorization, evidence and coverage checks; it does not authorize
+concealed writes or rerouting the rejected request. Implementation, deployment,
+new-tool availability and actual manual/scheduled acceptance remain outstanding.

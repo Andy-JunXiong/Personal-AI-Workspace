@@ -2,6 +2,15 @@
 
 ## Current status — 2026-09-08
 
+**New documented requirement:** [backend-managed scan receipts](docs/architecture/MAIL_SCAN_BACKEND_LEDGER_REQUIREMENTS_2026-09-08.md)
+keeps GPT responsible for mail interpretation and authorized business updates,
+while the backend would maintain run identity, durable progress and derived
+receipts. This is a requirements package, not implemented or deployed. A separate
+user-authorized Codex trial saved and read back two real EMAIL observations
+without a scan receipt; it does not establish complete coverage or ChatGPT
+scheduled acceptance. Both tasks remain paused. New write-capable tools must
+declare their effects and pass actual authorization; no platform fix is claimed.
+
 **Current production:** `mail-layout-20260908-r2`, migrations 001–011.
 [Mail status layout](docs/mvp/MAIL_STATUS_LAYOUT_2026-09-08.md) now uses two collapsed
 status cards, with source coverage and technical details available on demand.
@@ -75,6 +84,8 @@ on scan creation; independent exact-run readback returned NOT_FOUND. See the
 Platform authorization recovery and actual scheduled acceptance remain pending.
 
 ## Delivery records
+
+- [Backend-managed scan receipt requirements](docs/architecture/MAIL_SCAN_BACKEND_LEDGER_REQUIREMENTS_2026-09-08.md): target responsibilities, truthful completion, permissions, compatibility and acceptance; implementation pending.
 
 - [Manual-check diagnostics and relevance filtering](docs/mvp/MAIL_CHECK_DIAGNOSTICS_2026-09-08.md): locally verified follow-up, 327 tests; production and live-mail acceptance pending.
 - [September 8 release handoff](docs/mvp/RELEASE_HANDOFF_2026-09-08.md): final deployed version, validation, publication scope and remaining work.

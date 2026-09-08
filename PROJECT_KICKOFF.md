@@ -2,6 +2,13 @@
 
 ## Current status — 2026-09-08
 
+The user requested [backend-managed scan receipt requirements](docs/architecture/MAIL_SCAN_BACKEND_LEDGER_REQUIREMENTS_2026-09-08.md):
+retain GPT interpretation and the shared database, move mechanical run tracking
+and result aggregation to explicitly authorized backend operations. This is
+documented only; next are service/tool contract design, implementation and
+separate manual/scheduled acceptance. Two real evidence writes were verified in
+Codex without receipts; that bounded trial did not restore daily processing.
+
 Latest production is `mail-layout-20260908-r2`: [mail status layout](docs/mvp/MAIL_STATUS_LAYOUT_2026-09-08.md)
 replaces the expanded log panel with two collapsible status cards. Migration 011,
 mail processing behavior and the paused ChatGPT tasks are unchanged.
