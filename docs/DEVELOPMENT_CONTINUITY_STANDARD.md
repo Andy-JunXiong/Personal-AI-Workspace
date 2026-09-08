@@ -109,3 +109,14 @@ This standard applies to feature work, infrastructure, migrations, security
 hardening, defect remediation and research spikes. Small maintenance changes may
 use a concise paragraph instead of five subsections, but must still cover the
 same chain when they affect a planned milestone or downstream gate.
+
+## Documentation navigation
+
+Every new document under docs/ and every dated evaluation record under
+tests/evaluations/ must have an entry in [INDEX.md](INDEX.md) in the same change.
+Use exactly one primary category: active contracts, historical evidence, or
+proposals not yet implemented. Record partial implementation and pending acceptance
+explicitly; a proposal filename is not proof that all its contents remain unbuilt.
+Link superseded rules/status to their successor and retain original evidence.
+Before adding a dated handoff, prefer updating the relevant active entry or
+appending evidence to its existing ledger. Do not index private local evidence.

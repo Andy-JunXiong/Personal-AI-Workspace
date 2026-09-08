@@ -1,5 +1,9 @@
 # M4 Real-Data Dogfood Plan v0.1
 
+> **Retired as an active contract/ledger on 2026-09-08.** See [v0.3](M4_REAL_USE_EVALUATION_v0.3.md) for the retirement decision and prospective replacement. Original status, dates, thresholds and observations below are historical; no retrospective rescore or completed utility claim is implied. Do not append new-cohort events to this ledger.
+
+## Historical record (original text)
+
 **Status:** ACTIVE — DAY 1 STARTED; 1 OF 7 DAILY CHECK-INS COMPLETE
 
 ## Objective

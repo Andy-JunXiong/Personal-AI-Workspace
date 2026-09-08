@@ -1,5 +1,9 @@
 # M4 Prospective Real-Use Evaluation Addendum v0.2
 
+> **Retired as an active contract/ledger on 2026-09-08.** See [v0.3](M4_REAL_USE_EVALUATION_v0.3.md) for the retirement decision and prospective replacement. Original status, dates, thresholds and observations below are historical; no retrospective rescore or completed utility claim is implied. Do not append new-cohort events to this ledger.
+
+## Historical record (original text)
+
 **Status:** LOCKED BEFORE DAY 2
 
 **Adopted:** 2026-09-04, after the Day 1 operational evidence was complete

@@ -1,5 +1,7 @@
 # Logical Architecture v0.1
 
+> Historical frozen-MVP architecture snapshot. Current product/deployment boundaries are in [Core job workflow](CORE_JOB_WORKFLOW.md) and the [release handoff](../mvp/RELEASE_HANDOFF_2026-09-08.md); the former M4 freeze is [retired](../dogfood/M4_REAL_USE_EVALUATION_v0.3.md).
+
 > This document describes the verified and frozen MVP. The proposed post-M4
 > Job Search Intelligence extension is specified separately in
 > [`JOB_SEARCH_INTELLIGENCE_ARCHITECTURE_v1.md`](JOB_SEARCH_INTELLIGENCE_ARCHITECTURE_v1.md)

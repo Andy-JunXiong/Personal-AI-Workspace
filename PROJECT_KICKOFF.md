@@ -2,6 +2,17 @@
 
 ## Current status — 2026-09-08
 
+Current navigation: [README](README.md) and [documentation index](docs/INDEX.md).
+The user-approved review follow-up retires the original frozen M4 contracts;
+[v0.3](docs/dogfood/M4_REAL_USE_EVALUATION_v0.3.md) is adopted but NOT STARTED.
+Old M4 Day 7/14/28 dates and ACTIVE/freeze statements below are historical only.
+Original evidence and thresholds are retained without retrospective rescoring.
+The next engineering gate is [daily workflow acceptance](docs/mvp/DAILY_WORKFLOW_ACCEPTANCE.md),
+including actual ChatGPT host recovery, bounded manual processing and a real
+scheduled run. A fresh September 8 19:48 Sydney read found the service available
+but only one historical PARTIAL receipt, no checkpoints and no processing streams.
+Task switches and production image were not re-inspected during this review.
+
 The user requested [backend-managed scan receipt requirements](docs/architecture/MAIL_SCAN_BACKEND_LEDGER_REQUIREMENTS_2026-09-08.md):
 retain GPT interpretation and the shared database, move mechanical run tracking
 and result aggregation to explicitly authorized backend operations. This is
@@ -70,7 +81,7 @@ Earlier milestone sections below are historical records, not overrides of this c
 
 **REAL JOB SEARCH MVP SLICE M3 = COMPLETE — CHATGPT PLATFORM SUPPORTED**
 
-**M4 REAL-DATA DOGFOOD = ACTIVE — DAY 1 OF 7 COMPLETE**
+**Historical M4 milestone: Day 1 complete; frozen evaluation retired on 2026-09-08.**
 
 **CLOUD C1/C2/C3/C4/C5 = ACCEPTED — REAL DATABASE ON CLOUD; PC-OFF MOBILE TEST PASSED**
 

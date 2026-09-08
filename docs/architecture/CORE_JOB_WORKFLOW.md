@@ -24,6 +24,8 @@ application-scoped manual checks and collapsed status cards; both daily tasks
 remain paused pending platform recovery and scheduled acceptance;
 the September 7 execution evidence below is historical.
 
+Current recovery and live ledger evidence are consolidated in [daily workflow acceptance](../mvp/DAILY_WORKFLOW_ACCEPTANCE.md). The frozen M4 evaluation is retired; [v0.3](../dogfood/M4_REAL_USE_EVALUATION_v0.3.md) evaluates this integrated boundary prospectively after acceptance.
+
 ## Core flow
 
 The [September 8 backend receipt requirements](MAIL_SCAN_BACKEND_LEDGER_REQUIREMENTS_2026-09-08.md)

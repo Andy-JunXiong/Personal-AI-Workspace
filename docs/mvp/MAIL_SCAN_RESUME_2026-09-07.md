@@ -1,5 +1,7 @@
 # Bounded daily mail processing and resumption
 
+> Historical implementation result: its original not-deployed status below is superseded by the [September 8 release handoff](RELEASE_HANDOFF_2026-09-08.md). The seven-day processing policy remains applicable. Use [daily acceptance](DAILY_WORKFLOW_ACCEPTANCE.md) for the current recovery sequence; scheduled acceptance is still pending.
+
 Status: implemented locally, 33 test files / 269 tests, typecheck/build passed.
 Not deployed. Cloud remains gmail-mcp-20260907204200 with 27 tools.
 This package adds migration 010 and two tools, bringing discovery to 29.

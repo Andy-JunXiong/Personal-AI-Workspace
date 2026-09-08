@@ -3,6 +3,8 @@
 Current production: `mail-layout-20260908-r2`, migrations 001–011, 29 MCP tools.
 Website: https://workspace.ai-radar-lab.com/workspace/job-search/today
 
+Governance/navigation follow-up: [documentation index](../INDEX.md), [M4 retirement and v0.3](../dogfood/M4_REAL_USE_EVALUATION_v0.3.md), and [daily workflow acceptance](DAILY_WORKFLOW_ACCEPTANCE.md). The follow-up changes no deployment; live ledger reads still show no completed daily scan.
+
 Later requirements-only follow-up: [backend-managed scan receipts](../architecture/MAIL_SCAN_BACKEND_LEDGER_REQUIREMENTS_2026-09-08.md)
 defines server-owned progress and receipt aggregation while retaining GPT
 interpretation, accurate write permissions and separate scheduled acceptance.

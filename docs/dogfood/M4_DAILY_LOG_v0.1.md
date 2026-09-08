@@ -1,5 +1,9 @@
 # M4 Sanitized Daily Log v0.1
 
+> **Retired as an active contract/ledger on 2026-09-08.** See [v0.3](M4_REAL_USE_EVALUATION_v0.3.md) for the retirement decision and prospective replacement. Original status, dates, thresholds and observations below are historical; no retrospective rescore or completed utility claim is implied. Do not append new-cohort events to this ledger.
+
+## Historical record (original text)
+
 **Status:** ACTIVE — DAY 1 COMPLETE; v0.2 METRICS LOCKED BEFORE DAY 2
 
 Record aggregates and sanitized friction only. Do not record company names,

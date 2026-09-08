@@ -1,5 +1,7 @@
 # S1 local implementation scope decision — 2026-09-05
 
+> Historical authorization record: this exception remains evidence of local S1 authority only. The original frozen M4 evaluation was subsequently [retired on 2026-09-08](../dogfood/M4_REAL_USE_EVALUATION_v0.3.md). This record is not a blanket production authorization.
+
 The user explicitly approved advancing S1 local development and synthetic-data
 testing after the assistant identified the M4 freeze and asked for that bounded
 exception. This is the recorded exception to the original freeze, not a change

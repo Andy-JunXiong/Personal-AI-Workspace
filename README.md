@@ -1,105 +1,5 @@
 # Personal AI Workspace
 
-## Current status — 2026-09-08
-
-**New documented requirement:** [backend-managed scan receipts](docs/architecture/MAIL_SCAN_BACKEND_LEDGER_REQUIREMENTS_2026-09-08.md)
-keeps GPT responsible for mail interpretation and authorized business updates,
-while the backend would maintain run identity, durable progress and derived
-receipts. This is a requirements package, not implemented or deployed. A separate
-user-authorized Codex trial saved and read back two real EMAIL observations
-without a scan receipt; it does not establish complete coverage or ChatGPT
-scheduled acceptance. Both tasks remain paused. New write-capable tools must
-declare their effects and pass actual authorization; no platform fix is claimed.
-
-**Current production:** `mail-layout-20260908-r2`, migrations 001–011.
-[Mail status layout](docs/mvp/MAIL_STATUS_LAYOUT_2026-09-08.md) now uses two collapsed
-status cards, with source coverage and technical details available on demand.
-The release preserves the ingestion behavior and paused-task limitations below.
-
-**Latest local development:** [manual-check diagnostics and relevance filtering](docs/mvp/MAIL_CHECK_DIAGNOSTICS_2026-09-08.md)
-adds durable failure categories and excludes model-classified job advertisements
-from new application evidence. Uncertain classifications retain incomplete
-coverage. Type checks, 327 tests and build pass in an independent LF verification
-tree; the record explains the Windows checkout/test portability fixes. This
-package is not deployed and has not yet been evaluated on live mail.
-
-**Deployed ingestion update:** [shared mail identity and incremental manual checks](docs/mvp/MAIL_INGESTION_ALIGNMENT_2026-09-08.md)
-first shipped as `mail-ingestion-20260908-r1` and remain included in the current
-layout release (36 files / 291 tests, typecheck and build).
-Migration 011 is additive. The website remains evidence-only for manual checks;
-unproven legacy mailbox identities require reconciliation. Production is on migration 011;
-database-copy upgrade/restart/old-image rehearsals and the live preservation check passed.
-This deployment does not resolve the platform block.
-The live Synogize website check saved four EMAIL records and one NOTE, but returned
-PARTIAL for mailbox 1; only mailbox 2 advanced application-scoped coverage.
-The saved messages are job recommendations, not confirmed application-state changes.
-The local package above prepares precise failure reporting and stricter filtering;
-the historical failure's exact cause and real-mail acceptance remain open.
-
-**Product review:** the website remains primarily a view of the shared database,
-with explicit manual email checks between daily GPT runs. The
-[flow review](docs/architecture/JOB_TRACKER_FLOW_REVIEW_2026-09-08.md) identifies
-cross-entry source-ID differences, manual-check scope and progress gaps. Its
-implementation and remaining limits are tracked in the deployed package above.
-
-**Recovery in progress:** production now runs the seven-day resumption release
-with migrations 001–011 and 29 tools. Plugin discovery has been refreshed; manual
-acceptance and a separately user-authorized retry both reported a platform
-safety block on scan creation; exact-run readback confirms no receipt was saved.
-The replacement schedule is saved and verified paused. See the
-[September 8 recovery record](docs/mvp/JOB_TRACKER_RECOVERY_2026-09-08.md).
-
-User-approved Workspace override is now **Allow read actions / ask before
-writes**; the global default is unchanged. A real approval card appeared and
-**Allow once** was selected after checking all five parameters, but ChatGPT
-still reported the safety block. Exact-run readback returned NOT_FOUND.
-See the [platform investigation report](docs/mvp/JOB_TRACKER_PLATFORM_BLOCK_REPORT_2026-09-08.md).
-The user-authorized support submission is confirmed escalated to an OpenAI
-support specialist; awaiting their response. No numeric case ID was displayed.
-
-**Core workflow:** [GPT operates; Workspace persists; website reports](docs/architecture/CORE_JOB_WORKFLOW.md). The daily GPT task reads both Gmail accounts through Workspace MCP, classifies evidence and performs authorized updates. The website reads the same cloud database and primarily shows statistics, history and saved reports.
-
-**Scan scope:** at most the last seven days; normal daily checks focus on yesterday/today. Resume pending work within that window. Do not restore the superseded 30-day bootstrap or label excluded older mail as successfully scanned.
-
-| Layer | Verified state | Remaining gate |
-| --- | --- | --- |
-| Production | `mail-layout-20260908-r2`, migrations 001-011, 29 tools; latest cutover preserved all 28 tables / 239 rows; prior ingestion upgrade preserved all old data | Verify actual resumed daily processing |
-| ChatGPT integration | Plugin refreshed to include both batch tools; old task conversation rejects developer MCP calls; working manual conversation verified | Verify replacement scheduled task context |
-| GPT scan receipts | Only historical PARTIAL `d483b9a3-e355-4367-8436-15b3943fd8a6` remains; today's GPT acceptance created no receipt or processing streams | Resolve platform write authorization, then verify bounded batches |
-| Website manual check | Synogize check saved 4 EMAIL records and 1 NOTE; PARTIAL with only mailbox 2 advancing application-scoped coverage | Diagnose mailbox 1 processing and tighten job-ad relevance filtering |
-| Implementation | Shared mail identity, incremental manual checks and durable per-application progress deployed; 36 test files / 291 tests, typecheck and build passed | Actual scheduled scan acceptance |
-
-Next: release the locally verified diagnostics/filtering package and inspect a bounded real website check; separately resolve the reported platform safety block, then verify a bounded GPT run and a real scheduled scan using the [daily resumption policy](docs/mvp/MAIL_SCAN_RESUME_2026-09-07.md). Both tasks remain paused. Only the replacement may be activated after acceptance, preserving daily 08:00 Australia/Sydney. Publishing code to GitHub is not a cloud deployment or a task configuration change.
-
-The earlier seven-day policy was saved and read back in replacement task
-`6a9f456860248191b81d0361dd42cad3`, paused, daily 08:00 Australia/Sydney, never run.
-The [local recurring policy](docs/mvp/UPDATE_JOB_TRACKER_WORKSPACE_PROMPT.txt) and
-[manual acceptance](docs/mvp/UPDATE_JOB_TRACKER_MANUAL_ACCEPTANCE.txt) now also
-specify the stable source identifiers in the deployed ingestion update. Those
-latest local edits were saved and exactly read back on September 8 before the
-17:26 user-authorized restart check (13,936 characters after LF normalization and
-trimming). That same-conversation manual attempt again reported a platform block
-on scan creation; independent exact-run readback returned NOT_FOUND. See the
-[restart record](docs/mvp/JOB_TRACKER_RECOVERY_2026-09-08.md#user-authorized-restart-check--september-8-1726-sydney).
-Platform authorization recovery and actual scheduled acceptance remain pending.
-
-## Delivery records
-
-- [Backend-managed scan receipt requirements](docs/architecture/MAIL_SCAN_BACKEND_LEDGER_REQUIREMENTS_2026-09-08.md): target responsibilities, truthful completion, permissions, compatibility and acceptance; implementation pending.
-
-- [Manual-check diagnostics and relevance filtering](docs/mvp/MAIL_CHECK_DIAGNOSTICS_2026-09-08.md): locally verified follow-up, 327 tests; production and live-mail acceptance pending.
-- [September 8 release handoff](docs/mvp/RELEASE_HANDOFF_2026-09-08.md): final deployed version, validation, publication scope and remaining work.
-- [Mail ingestion alignment](docs/mvp/MAIL_INGESTION_ALIGNMENT_2026-09-08.md) and [status layout](docs/mvp/MAIL_STATUS_LAYOUT_2026-09-08.md): shared source identity, incremental manual checks and collapsible status cards.
-
-- [Gmail MCP reader](docs/mvp/GMAIL_MCP_READER_2026-09-07.md): currently deployed; reuses website OAuth and avoids the built-in Gmail/developer-MCP restriction.
-- [Scan receipts](docs/mvp/MAIL_SCAN_RECEIPTS_2026-09-07.md): deployed with migration 009; durable readback is user-verified for the PARTIAL manual run.
-- [Application timeline and dates](docs/mvp/APPLICATION_DETAIL_2026-09-07.md), [recent sorting and read-only dossiers](docs/mvp/APPLICATION_PROFILE_EDIT_2026-09-07.md): deployed; confirmed historical JD/skill-match content backfill remains pending.
-- [Website batch checks](docs/mvp/GMAIL_BATCH_2026-09-07.md) and [direct Gmail integration](docs/mvp/GMAIL_DIRECT_API_2026-09-07.md): deployed secondary conveniences; GPT remains the primary operations interface.
-- [Original task reconciliation](docs/mvp/UPDATE_JOB_TRACKER_HANDOFF_2026-09-07.md): retains historical Sheet-only instructions and the later Workspace authorization.
-- [Workspace Agent setup](docs/mvp/GMAIL_WORKSPACE_AGENT_SETUP.md): historical alternative, not a prerequisite for the selected workflow.
-
-Earlier milestone sections below are historical records, not overrides of this current status.
-
 ## Thesis
 
 **Build a persistent work-state layer for ChatGPT that turns conversations and external events into long-running goals, projects, tasks, actions, and outcomes.**
@@ -108,260 +8,77 @@ Earlier milestone sections below are historical records, not overrides of this c
 
 > **Conversation is an interface, not the system of record.**
 
-## Development standard
-
-All development packages follow the required
-[Development Continuity and Benefits Standard](docs/DEVELOPMENT_CONTINUITY_STANDARD.md).
-Before work begins and again in the result or handoff, state the upstream
-requirement, current bounded capability, downstream enablement, short-term
-benefits and long-term benefits. Keep unverified future value distinct from
-verified outcomes and preserve deployment, data and authority boundaries.
-
 ## Architecture
 
-- **ChatGPT = primary interaction + reasoning host**
-- **Workspace = persistent state + coordination**
-- **Domain interfaces = proposed secondary structured views and governed operations**
-- **Connected services = source facts + capabilities**
-- **MCP / Apps SDK = integration surface**
+- **ChatGPT = primary interaction and reasoning host**, including interactive operations and the intended daily Job Tracker execution.
+- **Workspace = persistent state and coordination**, with evidence, lifecycle validation, ownership, versioning, idempotency and authorization.
+- **Website = reporting interface over the same database**, with existing explicit manual email checks as a secondary convenience.
+- **Connected services = source facts and capabilities**; Gmail remains authoritative for original messages.
+- **MCP / Apps SDK = integration surface**; the deployed tool transport is MCP.
 
-## MVP
+First domain: **Job Search**. Cross-conversation continuity is the original verified
+proof; reliable daily ingestion is the next operational acceptance gate.
+See the [authoritative core workflow](docs/architecture/CORE_JOB_WORKFLOW.md).
 
-First domain: **Job Search**
+## Current state — 2026-09-08
 
-First proof: **cross-conversation continuity**.
+The [release handoff](docs/mvp/RELEASE_HANDOFF_2026-09-08.md) is the current deployment
+record. The [documentation index](docs/INDEX.md) separates active contracts,
+historical evidence and unimplemented proposals. Versioned milestone records
+retain the scope and results of their own dates.
 
-A recruiter message is interpreted in one ChatGPT conversation, the Job Application state is persisted in the Workspace, and a later conversation can continue from the same durable state without reconstructing prior chats.
+| Area | Documented state | Remaining gate |
+| --- | --- | --- |
+| Production | `mail-layout-20260908-r2`, migrations 001–011, 29 MCP tools; Lightsail Sydney, Caddy web ingress, private MCP tunnel and OIDC login | No new image inspection in this documentation review |
+| Durable operations | Applications, evidence, lifecycle transitions, Tasks, candidates, recommendation runs and scan receipts; shared SQLite database | Availability does not establish daily adoption or complete ingestion |
+| Website | [Job Search](https://workspace.ai-radar-lab.com/workspace/job-search/today): inventory, Today, timelines, saved dossiers, recommendation views and collapsed mail-status cards | Existing manual checks cover registered applications, not the full daily policy |
+| Mail ingestion | Gmail MCP reads, stable account-qualified source identities, bounded resumable batches and incremental manual checks deployed | Complete manual and actual scheduled scan acceptance pending |
+| Daily automation | Latest task evidence records both tasks paused after a reported host write block; fresh live ledger read still shows only one historical PARTIAL manual run and no checkpoints or processing streams | Resolve actual ChatGPT execution blocker, then pass [daily acceptance](docs/mvp/DAILY_WORKFLOW_ACCEPTANCE.md); task switches were not fetched in this review |
+| Latest local code | [Diagnostics and relevance filtering](docs/mvp/MAIL_CHECK_DIAGNOSTICS_2026-09-08.md): 40 files / 327 tests, type checks and build reported passing in an independent LF worktree | Not deployed; real-mail accuracy and historical mailbox failure cause remain unverified |
+| Backend-owned receipts | [Requirements recorded](docs/architecture/MAIL_SCAN_BACKEND_LEDGER_REQUIREMENTS_2026-09-08.md) | Contract design, implementation, deployment and platform acceptance pending |
+| Evaluation | [v0.2 retired; v0.3 adopted but not started](docs/dogfood/M4_REAL_USE_EVALUATION_v0.3.md) | Record a verified integrated baseline after manual and scheduled acceptance |
 
-## Spike status
+Production release evidence reports 291 passing tests and preservation of all
+28 tables / 239 rows at the layout cutover. These are release-time observations,
+not today's live counts or a test run performed by this documentation review.
+The local 327-test result belongs to the later, undeployed package.
 
-Spike 1A is complete and frozen. The repository also implements the approved
-local Spike 1B delta:
+The last real website check saved four EMAIL records and one NOTE but was PARTIAL;
+only one mailbox advanced application-scoped coverage. Those messages were job
+recommendations, not confirmed application-state changes. A later authorized Codex
+trial saved and read back two observations without a receipt. Neither establishes
+complete daily coverage or successful ChatGPT scheduled writes.
 
-- a Streamable HTTP MCP endpoint at `/mcp`,
-- one configured development Principal and Workspace,
-- one seeded Job Application,
-- separate observation, proposal, and explicit-user admission commands,
-- SQLite persistence, optimistic concurrency, and command idempotency,
-- one read-only exact Job Application lookup scoped to the current Workspace.
+**Next engineering gate:** restore the daily flow and independently verify its
+receipt, actual source coverage, business writes and website readback. Scope stays
+within seven days, normally yesterday/today with a 24-hour overlap. Only the existing
+replacement task may eventually run at 08:00 Australia/Sydney after acceptance;
+the obsolete task stays paused. See [recovery evidence](docs/mvp/JOB_TRACKER_RECOVERY_2026-09-08.md)
+and the [ordered acceptance procedure](docs/mvp/DAILY_WORKFLOW_ACCEPTANCE.md).
 
-Spike 1B is complete at `spike-1b-cross-app-verified-v0.1`. Automated/local and
-manual ChatGPT/Gmail verification passed, including exact work-object
-resolution, minimized evidence handoff, explicit admission, retry safety,
-privacy/data minimization, and separate-conversation durable readback. Gmail
-remains a ChatGPT-connected source app and is not integrated into Workspace.
-UI, external connectors, background automation, and model API calls remain out
-of scope.
+## Evaluation and historical milestones
 
-The approved Spike 1B plan is in
-[`docs/mvp/INTEGRATION_SPIKE_1B_PLAN_v0.1.md`](docs/mvp/INTEGRATION_SPIKE_1B_PLAN_v0.1.md).
-Final evidence is in
-[`docs/mvp/INTEGRATION_SPIKE_1B_RESULTS_v0.1.md`](docs/mvp/INTEGRATION_SPIKE_1B_RESULTS_v0.1.md).
+Spike 1B and M1/M2/M3 retain their verified milestone results in the
+[historical index](docs/INDEX.md#historical-evidence). M4 Day 0/1 evidence remains
+valid for its original operational checks. The frozen 12-tool evaluation no
+longer describes the expanded shared production environment: its original
+September 10/17 and October 1 decisions are retired, without rewriting thresholds
+or claiming a pass or failure. [v0.3](docs/dogfood/M4_REAL_USE_EVALUATION_v0.3.md)
+defines a new prospective integrated-workflow evaluation; its clock has not started.
 
-The approved Real Job Search MVP baseline and M1 -> M2 -> M3 gates are in
-[`docs/mvp/REAL_JOB_SEARCH_MVP_PLAN_v0.1.md`](docs/mvp/REAL_JOB_SEARCH_MVP_PLAN_v0.1.md).
-Slice M1 is complete and verified locally and through the ChatGPT platform. Its
-final evidence is in
-[`docs/mvp/REAL_JOB_SEARCH_M1_RESULTS_v0.1.md`](docs/mvp/REAL_JOB_SEARCH_M1_RESULTS_v0.1.md).
-The verified milestone is frozen at
-`m1-real-application-inventory-verified-v0.1`.
-It replaces fixture-only inventory with user-authorized creation,
-Workspace-scoped listing, narrow versioned registration updates, exact lookup,
-and bounded Project readback. Slice M2 is complete locally and through the
-ChatGPT platform. Its first platform run found a blocking create-Task
-Project-visibility defect; the server-side visibility invariant was hardened,
-regression coverage was added, and the canonical fresh-database M2-A/B/C
-retest passed. The verified milestone is frozen at
-`m2-task-today-verified-v0.1`. Slice M3 is complete locally and through the
-fresh-database ChatGPT platform gate and is frozen at
-`m3-real-lifecycle-verified-v0.1`.
-Exact active creation duplicates return `POSSIBLE_DUPLICATE` with zero writes;
-ordinary creation authority is not a duplicate override. A deliberate distinct
-duplicate requires `allowDistinctDuplicate=true` and a different sanitized
-posting reference.
+The [intelligence ledger architecture](docs/architecture/JOB_SEARCH_INTELLIGENCE_ARCHITECTURE_v1.md)
+and [ADR-012](docs/adr/ADR-012-job-search-intelligence-boundary.md) remain a design
+baseline, not a fully implemented analysis system. Deployed candidate/digest
+storage does not imply implementation of the full versioned skills and analysis ledger.
 
-M2 adds explicitly authorized, idempotent, versioned single-Task creation and
-updates plus a deterministic read-only `workspace_get_today`. Workspace—not a
-model—classifies overdue, due-today, high/critical undated, blocked, and
-upcoming work using `PAW_TIME_ZONE` (default `Australia/Sydney`) and server
-time. It also returns active applications without an open Task and at most five
-recent admitted lifecycle changes. `DONE` and `CANCELLED` Tasks are terminal.
-See the frozen M2 contract in
-[`docs/mvp/REAL_JOB_SEARCH_M2_PLAN_v0.1.md`](docs/mvp/REAL_JOB_SEARCH_M2_PLAN_v0.1.md)
-and ADR-011 in
-[`docs/adr/ADR-011-task-attention-today-view.md`](docs/adr/ADR-011-task-attention-today-view.md).
-Local M2 results, the blocking defect investigation, and platform retest status
-are recorded in
-[`docs/mvp/REAL_JOB_SEARCH_M2_RESULTS_v0.1.md`](docs/mvp/REAL_JOB_SEARCH_M2_RESULTS_v0.1.md).
+## Development and operations
 
-M3 implements the complete approved lifecycle graph, transition-derived Tasks,
-and atomic terminal Project closure plus cancellation of obsolete open Tasks.
-It adds no migration or MCP tool. The scoped implementation contract and
-verified local/platform results are in
-[`docs/mvp/REAL_JOB_SEARCH_M3_PLAN_v0.1.md`](docs/mvp/REAL_JOB_SEARCH_M3_PLAN_v0.1.md)
-and
-[`docs/mvp/REAL_JOB_SEARCH_M3_RESULTS_v0.1.md`](docs/mvp/REAL_JOB_SEARCH_M3_RESULTS_v0.1.md).
-The supported manual platform evidence is
-[`tests/evaluations/chatgpt-m3.md`](tests/evaluations/chatgpt-m3.md).
+Follow the [Development Continuity and Benefits Standard](docs/DEVELOPMENT_CONTINUITY_STANDARD.md).
+New documentation must be entered in [docs/INDEX.md](docs/INDEX.md), including every
+dated result or handoff. Historical evidence is retained; superseded rules link
+to their replacement. Publishing source is separate from deploying or activating tasks.
 
-### Proposed Job Search Intelligence architecture
-
-The post-M4 design baseline now covers versioned job descriptions and resume
-relationships, an evidence-backed skill taxonomy and matching ledger, a
-review-first ingestion pipeline, Google Sheets as a projection, and complete
-analysis provenance. It is documented in
-[`docs/architecture/JOB_SEARCH_INTELLIGENCE_ARCHITECTURE_v1.md`](docs/architecture/JOB_SEARCH_INTELLIGENCE_ARCHITECTURE_v1.md)
-and
-[`docs/adr/ADR-012-job-search-intelligence-boundary.md`](docs/adr/ADR-012-job-search-intelligence-boundary.md).
-
-This is an architecture baseline, not an active runtime feature. The M4
-feature freeze remains in force: no connector, scheduler, migration, new MCP
-tool, model call, or automatic admission has been added.
-
-### Proposed domain secondary interfaces
-
-ChatGPT remains the primary conversation and reasoning entry. Domain interfaces
-will provide structured inspection and operations over the same authoritative
-Workspace state. The repository assessment, target architecture, Job Search UI
-MVP, future-domain boundaries, risks, and gated delivery sequence are in
-[`docs/architecture/DOMAIN_SECONDARY_INTERFACES_PROPOSAL_v0.1.md`](docs/architecture/DOMAIN_SECONDARY_INTERFACES_PROPOSAL_v0.1.md).
-
-The refined [Job Search interface requirements](docs/mvp/JOB_SEARCH_SECONDARY_INTERFACE_REQUIREMENTS_v0.1.md)
-define the complete recommendation-to-application-to-task journey, independent
-mobile entry, state/freshness rules, sixteen requirements, twelve acceptance
-scenarios and a concrete development checklist. A read-only interface is an
-intermediate release; completing the first increment also requires durable
-candidate decisions and cross-entry task readback.
-
-The [P0 technical plan](docs/mvp/JOB_SEARCH_SECONDARY_INTERFACE_P0_v0.1.md)
-specifies a proposed Google login association with the existing Workspace,
-separate browser HTTPS ingress, an S1 application/task operating release and
-an S2 recommendation-continuity release. It includes the terminal-task MCP read
-gap, audit and retry boundaries, rollback, and stage-specific acceptance.
-The user subsequently approved a
-[local S1 scope exception](docs/mvp/S1_LOCAL_SCOPE_DECISION_2026-09-05.md).
-[S1-01 identity linking and login](docs/mvp/S1_01_IDENTITY_RESULTS_v0.1.md) are
-implemented locally and passed 153 tests, typechecking and build. The subsequent
-S1-05B.2 deployment passed real Google login, identity mapping and public
-authentication acceptance without exposing identity values in repository evidence.
-[S1-02 bounded reads and terminal-task readback](docs/mvp/S1_02_QUERY_RESULTS_v0.1.md)
-are also implemented locally (166-test milestone). The subsequent
-[S1-03 responsive pages](docs/mvp/S1_03_WEB_RESULTS_v0.1.md) passed 171 tests,
-server/browser typechecking, build and synthetic Chrome checks at desktop,
-390px and 320px viewports. Local MCP discovery has 13 tools, with the original
-twelve contracts preserved. [S1-04 browser Task completion](docs/mvp/S1_04_TASK_COMPLETION_RESULTS_v0.1.md)
-now passes 177 tests, full typechecking/build and 390px/320px synthetic Chrome
-completion checks. It adds opt-in completion, actor-attributed Task command
-audit and atomic state/audit/idempotency recovery. Publishing this source
-checkpoint to GitHub does not deploy or enable the web interface.
-[S1-05A local operations](docs/mvp/S1_05A_LOCAL_OPERATIONS_RESULTS_v0.1.md)
-adds the Web-off/read/write deployment contract, loopback-only port 3001,
-read-only secret injection, hardened Cloudflare service templates, health probes
-and rollback guards. Its [operations runbook](docs/cloud/S1_WEB_OPERATIONS_RUNBOOK.md)
-now governs the deployed Route 53/Caddy S1-05B path; browser writes and identity
-bootstrap are disabled after the bounded synthetic completion.
-[S1-05A.1 GPT-to-Web handoff](docs/mvp/S1_05A1_GPT_WEB_LINK_RESULTS_v0.1.md)
-now conditionally adds exact Today, inventory, application and Task URLs to the
-existing MCP read results. Web-off deployments advertise no links and tool
-discovery remains at 13.
-[S1-05B.0 HTTPS release checking](docs/mvp/S1_05B0_HTTPS_RELEASE_CHECK_RESULTS_v0.1.md)
-adds a no-secret `web:check` command for the public signed-out boundary. It is
-locally verified against synthetic responses and passed against the external
-hostname in both writes-off and the authorized writes-on mode.
-[S1-05B.1 external binding preflight](docs/mvp/S1_05B1_EXTERNAL_BINDING_PREFLIGHT_RESULTS_v0.1.md)
-adds the VM-side fail-closed check for exact host/origin/ingress agreement,
-disabled writes/bootstrap, restricted secret files and valid Tunnel ingress.
-Its provider-neutral contract was extended for the approved Route 53/Caddy
-binding and passed on the real VM.
-[S1-05B.2 AI Radar domain ingress](docs/mvp/S1_05B2_AI_RADAR_DOMAIN_INGRESS_RESULTS_v0.1.md)
-selects `workspace.ai-radar-lab.com` and adds a mutually exclusive Route 53/Caddy
-path. It exposes only Caddy on IPv4 TCP 443, keeps MCP/Web application ports on
-loopback, and does not modify the existing AI Radar application or DNS records.
-External identity, restart/reboot, database-copy recovery, concurrent capacity,
-one authorized synthetic browser completion and fresh ChatGPT exact-Task
-readback have passed. The deployment is back in read mode; the
-Windows-PC-OFF iPhone Safari direct-Web read has since passed over cellular
-(see [S1-05B.3](docs/mvp/S1_05B3_IPHONE_SAFARI_ACCEPTANCE_RESULTS_v0.1.md)).
-An iPhone *completion* (strict G08) is the remaining S1 item, recorded in the
-[S1-05B.4 plan](docs/mvp/S1_05B4_IPHONE_COMPLETION_PLAN_v0.1.md). The exact stop
-state and resume sequence are recorded in the
-[2026-09-06 S1 handoff](docs/mvp/S1_HANDOFF_2026-09-06.md).
-
-The first recommendation-continuity increment is
-[S2-01 candidate storage and decisions](docs/mvp/S2_01_CANDIDATE_RESULTS_v0.1.md).
-It adds durable candidate save/dismiss/restore decisions with actor-attributed
-audit, idempotent recording by provider posting identity or canonical source URL,
-four new MCP tools (17 total), and bounded candidate reads.
-[S2-02 candidate Web views and application linking](docs/mvp/S2_02_CANDIDATE_VIEWS_AND_LINKING_RESULTS_v0.1.md)
-adds the browser Jobs list and candidate detail with save/dismiss/restore
-controls, actor-attributed application linking, and the
-`workspace_link_job_candidate` MCP tool (18 total).
-[S2-03 digest run recording and coverage](docs/mvp/S2_03_DIGEST_RUN_RECORDING_RESULTS_v0.1.md)
-completes recommendation continuity with the run/item ledger, a narrowly scoped
-idempotent recording command, truthful coverage/delivery tracking, per-run fit
-snapshots, and three new MCP tools (21 total). The full P6 acceptance run
-(A01–A12) is the remaining S2 gate; its execution procedure is recorded in
-[P6 Acceptance Plan](docs/mvp/P6_ACCEPTANCE_PLAN_v0.1.md).
-The [2026-09-07 preparation review](docs/mvp/P6_PREPARATION_RESULTS_2026-09-07.md)
-was followed by the [S2 cloud release](docs/mvp/P6_RUNTIME_RESULTS_2026-09-07.md):
-`da0a879` is deployed after migration/rollback rehearsal and automated smoke.
-The [overview/readability update](docs/mvp/WEB_OVERVIEW_READABILITY_2026-09-07.md)
-subsequently deployed `0a9dd15`: Applications defaults to all states and text
-is larger. The local gate is 236 tests. Browser acceptance and A01–A12 remain
-pending. The [P6 scenario run](docs/mvp/P6_SCENARIO_EXECUTION_2026-09-07.md)
-has now created its cloud fixtures: A07/A08/A11 pass, while browser/device
-checks remain outstanding.
-
-Start with an authenticated Job Search inventory, Today, and application detail
-including completed Tasks. Reuse application services and preserve authority,
-versioning, idempotency, and ownership checks. Browser login and HTTPS ingress
-are separate work from the verified private MCP cloud connection. Property,
-Travel, and Shopping remain future candidates, not implementation scope.
-
-The external ChatGPT daily job digest currently reads application state for
-filtering; its recommendations are not durable Workspace records. The proposal
-therefore includes a separately gated candidate/history integration with short
-advisory fit reasons, without requiring full resume or skill analysis.
-
-Local S1-01 adds an optional loopback authentication listener, immutable request
-identity, identity-link migration and an operator command. It defaults off and
-exposes no MCP route. S1-02 adds authenticated web read APIs and
-the private `workspace_get_task` MCP read. S1-03 adds read-only Today, inventory,
-application/task detail, evidence/history and context-copy pages. S1-04 adds an
-independently gated individual Task completion route and audit migration.
-S1-05A adds independently selected deployment modes while retaining MCP-only as
-the default.
-Candidate storage and manual save/dismiss/restore decisions are implemented in
-S2-01; candidate Web views and application linking are implemented in S2-02.
-Digest run recording and coverage are implemented in S2-03, completing the S2
-recommendation-continuity data layer.
-For a synthetic local UI preview, run `npm.cmd exec tsx tests/manual/web-preview.ts`;
-this test-only fixture accepts no real database or account and is excluded from
-the production build.
-The original 12-tool cloud deployment and real-data M4 evaluation remain frozen;
-local synthetic S1 work proceeds under the recorded exception.
-
-### M4 real-data Dogfood
-
-M4 is a seven-day operating evaluation of the frozen MVP, not a feature slice.
-Its scope, privacy boundary, Day-0 gate, daily protocol, exit criteria, and stop
-conditions are in
-[`docs/dogfood/M4_DOGFOOD_PLAN_v0.1.md`](docs/dogfood/M4_DOGFOOD_PLAN_v0.1.md).
-Sanitized initialization evidence is recorded in
-[`docs/dogfood/M4_DAY0_RESULTS_v0.1.md`](docs/dogfood/M4_DAY0_RESULTS_v0.1.md).
-The seven-day aggregate log template is
-[`docs/dogfood/M4_DAILY_LOG_v0.1.md`](docs/dogfood/M4_DAILY_LOG_v0.1.md).
-The prospectively locked adoption and utility metrics, definitions, and Day
-7/14/28 decisions are in
-[`docs/dogfood/M4_REAL_USE_EVALUATION_v0.2.md`](docs/dogfood/M4_REAL_USE_EVALUATION_v0.2.md).
-Day 0 passed with a fresh, unseeded external Workspace and the frozen 12-tool
-surface. Day 1 then imported the explicitly authorized inventory with minimized
-Gmail provenance and passed aggregate verification. Before Day 2, the
-prospective utility metrics were locked without changing or retrospectively
-rescoring the original seven-day gate. The frozen evaluation is active on the
-M4 branch.
-
-### Local setup
+## Local setup
 
 For real-data dogfooding on Windows, keep the SQLite database outside both the
 repository and OneDrive. `PAW_DB_PATH` is the configuration boundary:
@@ -386,40 +103,22 @@ Before backing up or restoring, stop the Workspace process. Back up the closed
 process and move the DB to a dated quarantine filename before restarting; the
 runtime will create and migrate a fresh DB. Startup never deletes existing data.
 
-### Cloud always-on deployment
+## Cloud operations
 
-Cloud deployment is operated separately from the frozen M4 product evaluation.
-The C0 architecture and readiness decision is recorded in
-[`docs/cloud/C0_READINESS_REVIEW.md`](docs/cloud/C0_READINESS_REVIEW.md).
-The C1 runtime and operations procedure is in
-[`docs/cloud/C1_RUNTIME_RUNBOOK.md`](docs/cloud/C1_RUNTIME_RUNBOOK.md).
-The C2 private ChatGPT transport procedure is in
-[`docs/cloud/C2_SECURE_MCP_TUNNEL.md`](docs/cloud/C2_SECURE_MCP_TUNNEL.md).
-The deployed Job Search Web procedure is in
-[`docs/cloud/S1_WEB_OPERATIONS_RUNBOOK.md`](docs/cloud/S1_WEB_OPERATIONS_RUNBOOK.md).
-C1/C2 were deployed and accepted on Sydney Lightsail on 2026-09-05 using a
-fresh non-production database. Backup/restore, image rollback, private connector
-readback, authentication rejection, and whole-instance reboot recovery passed;
-see the [runtime results](docs/cloud/C1_C2_RUNTIME_RESULTS_v0.1.md).
-C3 subsequently migrated the real M4 database and passed complete read-only
-comparison plus an independent new ChatGPT conversation. The current connector
-reads the original real Workspace on the cloud; the local original remains
-stopped and retained for rollback. See [C3 runtime results](docs/cloud/C3_RUNTIME_RESULTS_v0.1.md).
-The gated, recoverable migration procedure is documented in
-[`docs/cloud/C3_REAL_DATABASE_MIGRATION.md`](docs/cloud/C3_REAL_DATABASE_MIGRATION.md).
-The post-migration ChatGPT and Windows-PC-OFF acceptance procedure is in
-[`docs/cloud/C4_C5_ACCEPTANCE_RUNBOOK.md`](docs/cloud/C4_C5_ACCEPTANCE_RUNBOOK.md).
-C4 controlled-write persistence and C5 Windows-PC-OFF iPhone acceptance passed.
-The user confirmed two independent mobile conversations, and cloud readback
-verified the completed C5 test Task and preserved original Task; see
-[C4/C5 runtime results](docs/cloud/C4_C5_RUNTIME_RESULTS_v0.1.md).
+The deployed service runs on Sydney Lightsail. Use the [C1 runtime runbook](docs/cloud/C1_RUNTIME_RUNBOOK.md),
+[private MCP transport runbook](docs/cloud/C2_SECURE_MCP_TUNNEL.md), and
+[web operations runbook](docs/cloud/S1_WEB_OPERATIONS_RUNBOOK.md), reconciled with
+the current release handoff. Backup, rollback and logical-fingerprint procedures
+are in the repository; earlier acceptance results remain indexed as history.
 
-### Verification
+## Verification
+
+Node.js 24 or later is required by package.json.
 
 ```text
 npm run verify
 ```
 
-Local tests prove domain, persistence, privacy enforcement, idempotency, and MCP
-protocol behavior. Separate manual ChatGPT/Gmail evidence proves cross-app tool
-orchestration, explicit approval behavior, and cross-conversation continuity.
+This runs server/browser type checks, tests and the production build. Local checks
+verify code behavior; real ChatGPT authorization, mailbox processing, independent
+readback and actual scheduled execution require their own acceptance evidence.
