@@ -110,6 +110,8 @@ export function mailScanPanel(service: WorkspaceService, zone: string): string {
         <p class="mail-update-note">${latest ? `${e(origins[latest.triggerType])} · ${latest.finishedAt ? `结束于 ${stamp(latest.finishedAt)}` : "尚未收到结束时间"}` : "尚无每日扫描回执，不能据此判断邮箱没有更新。"}</p>
         ${latest?.executionReference ? `<p class="mail-update-note">执行来源：${e(latest.executionReference)}</p>` : ""}
         ${data.unfinishedCount ? `<p class="advisory">${data.unfinishedCount} 次扫描尚未提交完成回执，可能仍在运行或已中断。</p>` : ""}
+        ${latest?.ledger?.liveness === "EXPIRED" ? `<p class="advisory">本次扫描已超过活动期限，处理尚未完成。下次获授权的扫描将保留旧回执并继续待处理邮件。</p>` : ""}
+        ${latest?.ledger?.unresolvedActions ? `<p class="advisory">本次有 ${latest.ledger.unresolvedActions} 项邮件处理操作尚未成功，不能据此判断相关邮件处理完成。</p>` : ""}
         <div class="mail-mailboxes">${["mailbox-1", "mailbox-2"].map((key, i) => {
           const checkpoint = data.checkpoints.find(c => c.mailbox === key);
           const result = latest?.mailboxes.find(m => m.mailbox === key);

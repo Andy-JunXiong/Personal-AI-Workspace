@@ -5,10 +5,15 @@ Website: https://workspace.ai-radar-lab.com/workspace/job-search/today
 
 Governance/navigation follow-up: [documentation index](../INDEX.md), [M4 retirement and v0.3](../dogfood/M4_REAL_USE_EVALUATION_v0.3.md), and [daily workflow acceptance](DAILY_WORKFLOW_ACCEPTANCE.md). The follow-up changes no deployment; live ledger reads still show no completed daily scan.
 
-Later requirements-only follow-up: [backend-managed scan receipts](../architecture/MAIL_SCAN_BACKEND_LEDGER_REQUIREMENTS_2026-09-08.md)
-defines server-owned progress and receipt aggregation while retaining GPT
-interpretation, accurate write permissions and separate scheduled acceptance.
-It is not implemented or deployed. The [recovery log](JOB_TRACKER_RECOVERY_2026-09-08.md)
+End-of-day source follow-up: the [backend-managed receipt implementation](../architecture/MAIL_SCAN_BACKEND_LEDGER.md)
+delivers opt-in server-owned progress, transactional write attribution and derived
+receipts while retaining GPT interpretation and existing business authority.
+Local verification passed 41 files / 340 tests, type checks, build, migration 012
+and previous-code compatibility checks. The candidate exposes 30 tools; it is
+not deployed and saved task policies remain unchanged. Publication to GitHub main
+is the requested stopping point today. Next: verify the actual deployment copy,
+prepare the release, then independently pass hosted manual and scheduled acceptance.
+The [recovery log](JOB_TRACKER_RECOVERY_2026-09-08.md)
 also records a successful two-observation Codex trial without a receipt; this
 does not change the active release or establish daily coverage.
 

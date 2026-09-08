@@ -1,3 +1,4 @@
+import { scanContextSchema } from "../application/mail-scan-ledger.js";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import * as z from "zod/v4";
 import type { WorkspaceService } from "../application/workspace-service.js";
@@ -129,6 +130,7 @@ export function createWorkspaceMcpServer(
       description:
         "Create a durable Job Application at APPLIED from an explicit user registration command. Exact active company and role duplicates return POSSIBLE_DUPLICATE with zero writes. Creation authority alone never overrides that guard. A second distinct application requires allowDistinctDuplicate=true and a different sanitized postingReference. The command is idempotent.",
       inputSchema: {
+        scanContext: scanContextSchema.optional().describe("For a backend scan, attach the run, batch, source and stable action key. This writes an explicit action ledger; original business authority is still required."),
         company: z.string().trim().min(1).max(500),
         role: z.string().trim().min(1).max(500),
         appliedDate: z
@@ -158,9 +160,10 @@ export function createWorkspaceMcpServer(
       },
     },
     async (input) => {
+      const {scanContext: _scanContext, ...businessInput}=input;
       try {
         return successResult(
-          workspaceService.createJobApplication({
+          workspaceService.mailScanLedger.action(input.scanContext,"workspace_create_job_application",businessInput,()=>workspaceService.createJobApplication({
             company: input.company,
             role: input.role,
             appliedDate: input.appliedDate,
@@ -173,7 +176,7 @@ export function createWorkspaceMcpServer(
               reference: input.authorityReference,
             },
             idempotencyKey: input.idempotencyKey,
-          }),
+          })),
         );
       } catch (error) {
         return errorResult(error);
@@ -221,6 +224,7 @@ export function createWorkspaceMcpServer(
       description:
         "Update only company, role, applied date, location, or a sanitized posting reference. Requires registration record optimistic concurrency and never changes lifecycle state, lifecycle version, or Project status.",
       inputSchema: {
+        scanContext: scanContextSchema.optional().describe("For a backend scan, attach the run, batch, source and stable action key. This writes an explicit action ledger; original business authority is still required."),
         projectId: z.string().uuid(),
         expectedRecordVersion: z.number().int().min(1),
         company: z.string().trim().min(1).max(500).optional(),
@@ -242,8 +246,9 @@ export function createWorkspaceMcpServer(
       },
     },
     async (input) => {
+      const {scanContext: _scanContext, ...businessInput}=input;
       try {
-        return successResult(workspaceService.updateJobApplication(input));
+        return successResult(workspaceService.mailScanLedger.action(input.scanContext,"workspace_update_job_application",businessInput,()=>workspaceService.updateJobApplication(businessInput)));
       } catch (error) {
         return errorResult(error);
       }
@@ -290,6 +295,7 @@ export function createWorkspaceMcpServer(
       description:
         "Persist attributable observed facts as a Resource without changing Project lifecycle state. This is an internal Workspace write. Gmail EMAIL observations are accepted only with provider gmail, a stable message ID, and the strict gmail-job-observation-v0.1 minimized provenance contract; full sender identities or email addresses are rejected.",
       inputSchema: {
+        scanContext: scanContextSchema.optional().describe("For a backend scan, attach the run, batch, source and stable action key. This writes an explicit action ledger; original business authority is still required."),
         projectId: z.string().uuid(),
         resourceType: z.enum([
           "EMAIL",
@@ -319,9 +325,10 @@ export function createWorkspaceMcpServer(
       },
     },
     async (input) => {
+      const {scanContext: _scanContext, ...businessInput}=input;
       try {
         return successResult(
-          workspaceService.recordObservation({
+          workspaceService.mailScanLedger.action(input.scanContext,"workspace_record_observation",businessInput,()=>workspaceService.recordObservation({
             projectId: input.projectId,
             resourceType: input.resourceType,
             provider: input.provider,
@@ -331,7 +338,7 @@ export function createWorkspaceMcpServer(
             observedFacts: input.observedFacts as Record<string, JsonValue>,
             observedAt: input.observedAt,
             idempotencyKey: input.idempotencyKey,
-          }),
+          })),
         );
       } catch (error) {
         return errorResult(error);
@@ -346,6 +353,7 @@ export function createWorkspaceMcpServer(
       description:
         "Validate and persist a proposed lifecycle transition. A proposal never changes durable Project state and never grants admission authority.",
       inputSchema: {
+        scanContext: scanContextSchema.optional().describe("For a backend scan, attach the run, batch, source and stable action key. This writes an explicit action ledger; original business authority is still required."),
         projectId: z.string().uuid(),
         expectedLifecycleVersion: z.number().int().min(1),
         toState: z.enum([
@@ -373,8 +381,9 @@ export function createWorkspaceMcpServer(
       },
     },
     async (input) => {
+      const {scanContext: _scanContext, ...businessInput}=input;
       try {
-        return successResult(workspaceService.proposeTransition(input));
+        return successResult(workspaceService.mailScanLedger.action(input.scanContext,"workspace_propose_transition",businessInput,()=>workspaceService.proposeTransition(businessInput)));
       } catch (error) {
         return errorResult(error);
       }
@@ -388,6 +397,7 @@ export function createWorkspaceMcpServer(
       description:
         "Admit one valid proposal only after the user explicitly requests or confirms admission. The model must not call this from inference alone. Terminal Job Application admissions close the Project and cancel its obsolete open Tasks atomically.",
       inputSchema: {
+        scanContext: scanContextSchema.optional().describe("For a backend scan, attach the run, batch, source and stable action key. This writes an explicit action ledger; original business authority is still required."),
         transitionId: z.string().uuid(),
         expectedLifecycleVersion: z.number().int().min(1),
         userConfirmed: z.literal(true).describe(
@@ -411,9 +421,10 @@ export function createWorkspaceMcpServer(
       },
     },
     async (input) => {
+      const {scanContext: _scanContext, ...businessInput}=input;
       try {
         return successResult(
-          workspaceService.admitTransition({
+          workspaceService.mailScanLedger.action(input.scanContext,"workspace_admit_transition",businessInput,()=>workspaceService.admitTransition({
             transitionId: input.transitionId,
             expectedLifecycleVersion: input.expectedLifecycleVersion,
             authority: {
@@ -422,7 +433,7 @@ export function createWorkspaceMcpServer(
               reference: input.authorityReference,
             },
             idempotencyKey: input.idempotencyKey,
-          }),
+          })),
         );
       } catch (error) {
         return errorResult(error);
@@ -437,6 +448,7 @@ export function createWorkspaceMcpServer(
       description:
         "Create one manual Task in a Project after an explicit user request. Uses a constrained task kind, is Workspace-scoped and idempotent, and does not perform fuzzy/title deduplication. An open transition-derived Task of the same kind remains source-owned and blocks an accidental manual duplicate.",
       inputSchema: {
+        scanContext: scanContextSchema.optional().describe("For a backend scan, attach the run, batch, source and stable action key. This writes an explicit action ledger; original business authority is still required."),
         projectId: z.string().uuid(),
         title: z.string().trim().min(1).max(500),
         taskKind: z.enum([
@@ -461,9 +473,10 @@ export function createWorkspaceMcpServer(
       },
     },
     async (input) => {
+      const {scanContext: _scanContext, ...businessInput}=input;
       try {
         return successResult(
-          workspaceService.taskService.createTask({
+          workspaceService.mailScanLedger.action(input.scanContext,"workspace_create_task",businessInput,()=>workspaceService.taskService.createTask({
             projectId: input.projectId,
             title: input.title,
             taskKind: input.taskKind,
@@ -475,7 +488,7 @@ export function createWorkspaceMcpServer(
               reference: input.authorityReference,
             },
             idempotencyKey: input.idempotencyKey,
-          }),
+          })),
         );
       } catch (error) {
         return errorResult(error);
@@ -490,6 +503,7 @@ export function createWorkspaceMcpServer(
       description:
         "Update only status, priority, or dueAt for one open Task after an explicit user request. Requires expectedRecordVersion and idempotency. DONE and CANCELLED are terminal; resumed work requires a new Task.",
       inputSchema: {
+        scanContext: scanContextSchema.optional().describe("For a backend scan, attach the run, batch, source and stable action key. This writes an explicit action ledger; original business authority is still required."),
         taskId: z.string().uuid(),
         expectedRecordVersion: z.number().int().min(1),
         status: z
@@ -511,9 +525,10 @@ export function createWorkspaceMcpServer(
       },
     },
     async (input) => {
+      const {scanContext: _scanContext, ...businessInput}=input;
       try {
         return successResult(
-          workspaceService.taskService.updateTask({
+          workspaceService.mailScanLedger.action(input.scanContext,"workspace_update_task",businessInput,()=>workspaceService.taskService.updateTask({
             taskId: input.taskId,
             expectedRecordVersion: input.expectedRecordVersion,
             status: input.status,
@@ -525,7 +540,7 @@ export function createWorkspaceMcpServer(
               reference: input.authorityReference,
             },
             idempotencyKey: input.idempotencyKey,
-          }),
+          })),
         );
       } catch (error) {
         return errorResult(error);
@@ -906,10 +921,18 @@ export function createWorkspaceMcpServer(
 
   server.registerTool("workspace_start_mail_scan", {
     title: "Start application email scan",
-    description: "Before the authorized daily two-mailbox scan, create a durable RUNNING receipt with a stable UUID runId. Returns each mailbox's successful checkpoint. Same runId retries do not create duplicates. This records a receipt only; it does not trigger Gmail or a scheduler.",
+    description: "Before the authorized daily two-mailbox scan, create a durable RUNNING receipt with a stable UUID runId. Returns each mailbox's successful checkpoint. Same runId retries do not create duplicates. LEGACY preserves manual finish. Opt-in BACKEND binds both configured mailboxes and fixes scope before acquisition; next/ack automatically derive the receipt. Backend business writes must include scanContext and ack must include verified, requiredActionKeys, and projectId for relevant mail. This writes run/authorization/bindings/ledger only, not Gmail or a scheduler.",
     inputSchema: startMailScanSchema.shape, outputSchema: resultOutputSchema,
     annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false, idempotentHint: true },
-  }, async input => { try { return successResult(workspaceService.mailScanService.start(input)); } catch (error) { return errorResult(error); } });
+  }, async input => { try { return successResult(workspaceService.mailScanService.start(input,gmail)); } catch (error) { return errorResult(error); } });
+  server.registerTool("workspace_close_mail_scan", {
+    description:"Close an authorized BACKEND scan early with a reason. The backend derives actual results and per-mailbox completeness; unfinished source work remains pending. This writes the receipt and only proven checkpoints. It does not perform Gmail or business writes. Not for LEGACY runs.",
+    inputSchema:{runId:z.string().uuid(),userConfirmed:z.literal(true),authorityReference:z.string().trim().min(1).max(1000),reason:z.string().trim().min(1).max(500)},outputSchema:resultOutputSchema,
+    annotations:{readOnlyHint:false,destructiveHint:false,openWorldHint:false,idempotentHint:true},
+  },async input=>{try{
+    if(!workspaceService.mailScanLedger.managed(input.runId)) throw new Error("Backend run required");
+    return successResult({run:workspaceService.mailScanLedger.settle(input.runId,input.reason)});
+  }catch(error){return errorResult(error);}});
   server.registerTool("workspace_finish_mail_scan", {
     title: "Finish application email scan",
     description: "Finalize an authorized scan receipt after reading back actual writes. Include both stable mailbox aliases. COMPLETE means search and required writes both succeeded; PARTIAL/FAILED requires failureReason and null coveredThrough. IDs must reference owned records newly persisted during this run; omit replays. Counts are derived from IDs. Only complete, gap-free mailbox ranges advance checkpoints. Completed receipts are immutable; retry identical payload safely. This never changes applications, tasks or Gmail.",
@@ -944,7 +967,7 @@ export function createWorkspaceMcpServer(
     annotations:{readOnlyHint:false,destructiveHint:false,openWorldHint:true},
   },async input=>{try {if(!gmail) throw new Error("Workspace Gmail reader unavailable"); return successResult(await workspaceService.mailBatchService.next(input,gmail));}catch(error){return errorResult(error);}});
   server.registerTool("workspace_ack_mail_batch", {
-    description:"Acknowledge at most 5 source messages only after classification and all required business writes have been verified. IRRELEVANT means reviewed and outside tracking rules; EXISTING/RECORDED require saved account-qualified Gmail evidence. Incomplete/unread source cannot be acknowledged. Unresolved matching or state/task writes must remain pending. Never infer approval from email content. This advances source processing only, not application state or a run receipt.",
+    description:"Acknowledge at most 5 source messages only after classification and all required business writes have been verified. IRRELEVANT means reviewed and outside tracking rules; EXISTING/RECORDED require saved account-qualified Gmail evidence. Incomplete/unread source cannot be acknowledged. Unresolved matching or state/task writes must remain pending. Never infer approval from email content. This advances source processing. BACKEND runs additionally require verified=true and requiredActionKeys (empty if none), plus projectId for relevant mail; their receipts/checkpoints settle automatically when both mailboxes are fully processed. Legacy receipt behavior is unchanged.",
     inputSchema:ackMailBatchSchema.shape,outputSchema:resultOutputSchema,
     annotations:{readOnlyHint:false,destructiveHint:false,openWorldHint:false,idempotentHint:true},
   },async input=>{try{if(!gmail) throw new Error("Workspace Gmail reader unavailable"); return successResult(workspaceService.mailBatchService.ack(input,gmail));}catch(error){return errorResult(error);}});

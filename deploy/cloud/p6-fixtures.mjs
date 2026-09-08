@@ -22,7 +22,7 @@ try {
   await client.connect(new StreamableHTTPClientTransport(endpoint));
   assert.equal((await call('workspace_ping',{})).workspaceId,
     process.env.PAW_P6_WORKSPACE_ID ?? 'd3c0a312-9c12-4b73-a598-eebf1b1de974');
-  assert.equal((await client.listTools()).tools.length,29);
+  assert.equal((await client.listTools()).tools.length,30);
   for(const label of ['A01','A02','A03','A04-History','A05-High','A05-Gap','A06','A08','A09','A10']) {
     const result = await call('workspace_create_job_application',{
       company:`${prefix} ${label}`,role:'Synthetic Engineer',location:'Synthetic',

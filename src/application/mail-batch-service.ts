@@ -1,3 +1,4 @@
+import type { MailScanLedger } from "./mail-scan-ledger.js";
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import type { WorkspaceDatabase } from "../persistence/database.js";
@@ -10,6 +11,7 @@ const authority = { userConfirmed: z.literal(true), authorityReference: z.string
 export const nextMailBatchSchema = z.object({ ...authority, mailbox: z.enum(["mailbox-1", "mailbox-2"]), lane: z.enum(["RECENT", "BACKFILL"]), limit: z.number().int().min(1).max(5).default(3), restartListing:z.boolean().default(false) }).strict();
 export const ackMailBatchSchema = z.object({ ...authority, batchId: z.string().uuid(), items: z.array(z.object({
   messageId: z.string().regex(/^[a-f0-9]{1,128}$/u), outcome: z.enum(["IRRELEVANT", "EXISTING", "RECORDED"]),
+  projectId:z.string().uuid().optional(),verified:z.literal(true).optional(),requiredActionKeys:z.array(z.string().trim().min(1).max(200)).max(50).optional(),
 }).strict()).min(1).max(5) }).strict();
 type Batch = { id: string; workspace_id: string; mailbox: "mailbox-1" | "mailbox-2"; lane: string; searched_from: string; covered_through: string; page_token: string | null; listing_done: number; revision: number; status: string };
 type Stream = { mailbox: string; lane: string; starts_at: string; covered_through: string; target_at: string | null; excluded_before:string|null };
@@ -18,9 +20,11 @@ type MailSource = Pick<GmailMcpReader, "list" | "read" | "accountKey">;
 const DAY = 86400000;
 
 export class MailBatchService {
+  ledger?: MailScanLedger;
   constructor(private db: WorkspaceDatabase, private context: () => IdentityContext & {channel: "WEB" | "MCP"}, private clock = () => new Date()) {}
 
   private authorized(runId: string) {
+    this.ledger?.guard(runId);
     const identity = this.context();
     if (identity.channel !== "MCP") throw new AuthorizationError("Mail processing is performed through GPT tools");
     const run = this.db.prepare("SELECT started_at,status FROM mail_scan_runs WHERE id=? AND workspace_id=?").get(runId, identity.workspaceId) as {started_at:string;status:string}|undefined;
@@ -59,6 +63,18 @@ export class MailBatchService {
     return key;
   }
 
+  prepareManagedScope(cutoff:string,reader:Pick<MailSource,"accountKey">) {
+    const identity=this.context();
+    const floor=new Date(Date.parse(cutoff)-7*DAY).toISOString();
+    // Bind both slots before any external acquisition. Outer start transaction is atomic.
+    const keys=(["mailbox-1","mailbox-2"] as const).map(mailbox=>({mailbox,accountKey:this.bindAccount(identity,mailbox,reader)}));
+    this.initialize(identity.workspaceId,cutoff);
+    return keys.map(m=>{
+      const history=this.db.prepare("SELECT starts_at FROM mail_scan_streams WHERE workspace_id=? AND mailbox=? AND lane='BACKFILL'").get(identity.workspaceId,m.mailbox) as {starts_at:string};
+      return {...m,searchedFrom:history.starts_at<floor?floor:history.starts_at,cutoff};
+    });
+  }
+
   private batch(id: string, workspaceId: string) {
     const row = this.db.prepare("SELECT * FROM mail_scan_batches WHERE id=? AND workspace_id=?").get(id,workspaceId) as Batch|undefined;
     if (!row) throw new NotFoundError("Mail batch not found");
@@ -95,7 +111,9 @@ export class MailBatchService {
     const parsed=nextMailBatchSchema.safeParse(input);
     if (!parsed.success) throw new ValidationError("Invalid mail batch request");
     const p=parsed.data, {identity,cutoff}=this.authorized(p.runId);
+    this.ledger?.touch(p.runId);
     let batch=this.db.transaction(() => {
+      this.authorized(p.runId);
       this.bindAccount(identity,p.mailbox,reader);
       this.initialize(identity.workspaceId,cutoff);
       const floor=new Date(Date.parse(cutoff)-7*DAY).toISOString();
@@ -131,7 +149,8 @@ export class MailBatchService {
       this.db.prepare("INSERT INTO mail_scan_batches(id,workspace_id,mailbox,lane,searched_from,covered_through,status) VALUES(?,?,?,?,?,?,'ACTIVE')").run(id,identity.workspaceId,p.mailbox,p.lane,start,end);
       return this.batch(id,identity.workspaceId);
     })();
-    if (!batch) return { batch:null,messages:[],progress:this.progress(),note:"This lane is caught up to this run's cutoff; other lanes may be incomplete." };
+    if(batch) this.ledger?.claim(p.runId,batch.id);
+    if (!batch) { this.ledger?.settle(p.runId); return { batch:null,messages:[],progress:this.progress(),note:"This lane is caught up to this run's cutoff; other lanes may be incomplete." }; }
 
     if (!this.pending(batch).some(item=>!item.last_error) && !batch.listing_done) {
       const snapshot=batch;
@@ -141,6 +160,7 @@ export class MailBatchService {
       batch=this.db.transaction(() => {
         this.authorized(p.runId);
         const current=this.batch(snapshot.id,identity.workspaceId);
+        if(current.status!=="ACTIVE") throw new ValidationError("Batch no longer active; discard late response");
         if (current.revision !== snapshot.revision) return current;
         for(const message of listed.messages) this.db.prepare("INSERT OR IGNORE INTO mail_scan_batch_items(batch_id,message_id) VALUES(?,?)").run(current.id,message.id);
         this.db.prepare("UPDATE mail_scan_batches SET page_token=?,listing_done=?,revision=revision+1 WHERE id=?").run(listed.nextPageToken,listed.listingComplete?1:0,current.id);
@@ -158,6 +178,7 @@ export class MailBatchService {
         const failure=message.bodyComplete ? null : "Message body is incomplete; source processing remains pending";
         this.db.transaction(()=>{
           this.authorized(p.runId);
+          if(this.batch(batch.id,identity.workspaceId).status!=="ACTIVE") throw new ValidationError("Batch no longer active");
           this.db.prepare("UPDATE mail_scan_batch_items SET read_run_id=?,body_complete=?,outside_range=?,last_error=? WHERE batch_id=? AND message_id=?")
             .run(p.runId,message.bodyComplete?1:0,outside?1:0,outside?null:failure,batch.id,item.message_id);
           this.db.prepare(`INSERT INTO mail_batch_source_ids VALUES(?,?,?)
@@ -171,7 +192,7 @@ export class MailBatchService {
         messages.push({ id:item.message_id,processable:false,error:"Message read failed; retry later" });
       }
     }
-    this.db.transaction(()=>this.advance(this.batch(batch.id,identity.workspaceId)))();
+    this.db.transaction(()=>{this.authorized(p.runId);this.advance(this.batch(batch.id,identity.workspaceId));this.ledger?.settle(p.runId);})();
     const current=this.batch(batch.id,identity.workspaceId);
     return { batch:{id:current.id,mailbox:p.mailbox,lane:p.lane,searchedFrom:current.searched_from,coveredThrough:current.covered_through,status:current.status,listingComplete:!!current.listing_done},
       messages,progress:this.progress(),note:"Process returned evidence and verify required writes, then acknowledge only completed messages. Pending IDs and pagination survive interruption. No business records are written by this tool." };
@@ -180,8 +201,10 @@ export class MailBatchService {
   ack(input: unknown, reader: Pick<MailSource, "accountKey">) {
     const parsed=ackMailBatchSchema.safeParse(input);
     if (!parsed.success) throw new ValidationError("Invalid mail processing acknowledgement");
-    const p=parsed.data,{identity}=this.authorized(p.runId);
+    const p=parsed.data;
     if(new Set(p.items.map(i=>i.messageId)).size!==p.items.length) throw new ValidationError("Duplicate message acknowledgement");
+    if(this.ledger?.replayAck(p.runId,p.batchId,p.items)) return {batchId:p.batchId,status:this.batch(p.batchId,this.context().workspaceId).status,progress:this.progress(),replayed:true};
+    const {identity}=this.authorized(p.runId);
     return this.db.transaction(()=>{
       const batch=this.batch(p.batchId,identity.workspaceId);
       this.bindAccount(identity,batch.mailbox,reader);
@@ -189,6 +212,7 @@ export class MailBatchService {
       for(const item of p.items) {
         const old=this.db.prepare("SELECT outcome FROM mail_scan_processed WHERE workspace_id=? AND mailbox=? AND message_id=?").get(identity.workspaceId,batch.mailbox,item.messageId) as {outcome:string}|undefined;
         const source=this.db.prepare("SELECT * FROM mail_scan_batch_items WHERE batch_id=? AND message_id=?").get(batch.id,item.messageId) as Item|undefined;
+        this.ledger?.verifyAck(p.runId,batch.id,item);
         if(!source) throw new ValidationError("Message was not listed in this batch");
         if(old) {if(old.outcome!==item.outcome) throw new ValidationError("Processed outcome is immutable"); continue;}
         if(source.read_run_id!==p.runId || !source.body_complete || source.outside_range) throw new ValidationError("Read complete source in this run before acknowledging");
@@ -198,8 +222,10 @@ export class MailBatchService {
           if(!evidence) throw new ValidationError("Relevant messages require persisted account-qualified Gmail evidence before acknowledgement");
         }
         this.db.prepare("INSERT INTO mail_scan_processed VALUES(?,?,?,?,?,?)").run(identity.workspaceId,batch.mailbox,item.messageId,item.outcome,p.runId,this.clock().toISOString());
+        this.ledger?.saveAck(p.runId,batch.id,item);
       }
       this.advance(batch);
+      this.ledger?.settle(p.runId);
       return {batchId:batch.id,status:this.batch(batch.id,identity.workspaceId).status,progress:this.progress()};
     })();
   }

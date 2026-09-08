@@ -30,10 +30,11 @@ Current recovery and live ledger evidence are consolidated in [daily workflow ac
 
 The [September 8 backend receipt requirements](MAIL_SCAN_BACKEND_LEDGER_REQUIREMENTS_2026-09-08.md)
 record a target responsibility change: GPT retains evidence interpretation and
-authorized business operations; the backend would maintain run identity,
-processing progress and receipt aggregation. It preserves this core flow and
-does not select an API executor or replacement scheduler. Implementation and
-platform acceptance remain pending; existing tools retain their current contracts.
+authorized business operations; the backend maintains run identity, processing
+progress and receipt aggregation in the [locally implemented opt-in mode](MAIL_SCAN_BACKEND_LEDGER.md).
+It preserves this core flow and selects no API executor or replacement scheduler.
+Deployment and platform acceptance remain pending; existing saved task prompts
+continue to use the deployed contracts.
 
 Two Gmail accounts -> daily ChatGPT Update Job Tracker -> structured observations,
 applications, supported state changes and action tasks -> Workspace cloud database

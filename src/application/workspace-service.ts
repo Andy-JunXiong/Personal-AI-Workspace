@@ -1,3 +1,4 @@
+import { MailScanLedger } from "./mail-scan-ledger.js";
 import { randomUUID } from "node:crypto";
 import { gmailCheckSchema } from "../domain/gmail-check.js";
 import { applicationProfileSchema } from "../domain/application-profile.js";
@@ -242,6 +243,7 @@ export class WorkspaceService {
   readonly todayQueryService: TodayQueryService;
   readonly jobSearchQueryService: JobSearchQueryService;
   readonly candidateService: CandidateService;
+  readonly mailScanLedger: MailScanLedger;
   readonly mailScanService: MailScanService;
   readonly mailBatchService: MailBatchService;
   readonly manualMailService: ManualMailService;
@@ -260,6 +262,10 @@ export class WorkspaceService {
     this.jobSearchQueryService = new JobSearchQueryService(database, resolveIdentity, options.clock);
     this.mailScanService = new MailScanService(database, resolveTaskContext, options.clock);
     this.mailBatchService = new MailBatchService(database, resolveTaskContext, options.clock);
+    this.mailScanLedger = new MailScanLedger(database,resolveTaskContext,this.mailScanService,options.clock);
+    this.mailScanService.ledger=this.mailScanLedger;
+    this.mailScanService.batches=this.mailBatchService;
+    this.mailBatchService.ledger=this.mailScanLedger;
     this.manualMailService = new ManualMailService(database, resolveTaskContext, options.clock);
     const assertProjectVisible = (projectId: string, workspaceId: string) => {
       this.getAuthorizedProject(projectId, workspaceId);

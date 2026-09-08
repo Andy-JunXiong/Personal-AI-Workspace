@@ -11,6 +11,12 @@
 > absence of an available management interface does not prove entitlement denial.
 > See the [current boundary review](../strategy/OPENAI_PLATFORM_WATCH.md#2026-09-08-current-boundary-review).
 
+The [backend receipt contract](../architecture/MAIL_SCAN_BACKEND_LEDGER.md) is
+implemented and locally verified but not deployed. Its optional `BACKEND` mode
+does not establish Workspace Agent eligibility or fix the hosted write refusal.
+Refresh actual tool discovery and pass authorized manual acceptance before
+updating a saved task policy; the historical draft below remains unchanged.
+
 ## Historical draft (original text)
 
 状态：配置稿已准备；尚未在 ChatGPT 创建或发布，也未获取 API 触发通道或令牌。

@@ -22,6 +22,7 @@ deployment, manual acceptance and scheduled acceptance separately.
 | Document | Status / scope |
 | --- | --- |
 | [Development Continuity and Benefits Standard v0.1](DEVELOPMENT_CONTINUITY_STANDARD.md) | Required development and document-index maintenance standard. |
+| [Backend-managed mail scan receipts](architecture/MAIL_SCAN_BACKEND_LEDGER.md) | Local opt-in contract and verification; migration 012, 30 tools. Not deployed or accepted in ChatGPT. |
 | [ADR-001 — Conversation is not the system of record](adr/ADR-001-conversation-not-system-of-record.md) | Accepted design/domain contract within its recorded scope; current runtime inventory is in the release handoff. |
 | [ADR-002 — Workspace owns persistent work state](adr/ADR-002-workspace-owns-state.md) | Accepted design/domain contract within its recorded scope; current runtime inventory is in the release handoff. |
 | [ADR-003 — ChatGPT-native first](adr/ADR-003-chatgpt-native-first.md) | Accepted design/domain contract within its recorded scope; current runtime inventory is in the release handoff. |
@@ -54,6 +55,7 @@ deployment, manual acceptance and scheduled acceptance separately.
 
 | Document | Status / scope |
 | --- | --- |
+| [后台维护邮件扫描回执：需求与验收](architecture/MAIL_SCAN_BACKEND_LEDGER_REQUIREMENTS_2026-09-08.md) | Approved requirements; [local implementation](architecture/MAIL_SCAN_BACKEND_LEDGER.md) delivered. Deployment and platform acceptance pending. |
 | [Repository review follow-up](REVIEW_FOLLOWUP.md) | Current review result and verification; GitHub metadata and daily recovery remain pending. |
 | [ADR-006 — Integration Spike runtime and persistence](adr/ADR-006-spike-runtime-and-persistence.md) | Historical scoped plan/result or verification procedure; preserve original evidence. Current product/deployment status: [core workflow](architecture/CORE_JOB_WORKFLOW.md) / [release](mvp/RELEASE_HANDOFF_2026-09-08.md). |
 | [ADR-009 — ChatGPT-mediated cross-app evidence handoff](adr/ADR-009-cross-app-evidence-handoff.md) | Accepted Spike evidence-handoff design; no-connector constraint was stage-specific. Current integration: [core workflow](architecture/CORE_JOB_WORKFLOW.md). |
@@ -143,4 +145,3 @@ deployment, manual acceptance and scheduled acceptance separately.
 | --- | --- |
 | [ADR-012 — Evidence-first Job Search Intelligence boundary](adr/ADR-012-job-search-intelligence-boundary.md) | Proposed full intelligence ledger; candidate/digest storage does not implement this entire design. |
 | [Job Search Intelligence Architecture v1](architecture/JOB_SEARCH_INTELLIGENCE_ARCHITECTURE_v1.md) | Full versioned skills/analysis architecture remains unimplemented; see ADR-012. |
-| [后台维护邮件扫描回执：需求与验收](architecture/MAIL_SCAN_BACKEND_LEDGER_REQUIREMENTS_2026-09-08.md) | Requirements only; backend-owned progress/derived receipts await design, implementation and acceptance. |

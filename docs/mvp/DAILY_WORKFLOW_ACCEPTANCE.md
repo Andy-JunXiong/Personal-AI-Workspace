@@ -32,7 +32,9 @@ There is no new evidence that the reported host write block has cleared. The
 existing escalation; no new support message was sent or reply fetched here.
 
 The [backend receipt requirements](../architecture/MAIL_SCAN_BACKEND_LEDGER_REQUIREMENTS_2026-09-08.md)
-are a separate implementation workstream. Renaming rejected writes, concealing
+now have a [locally verified opt-in implementation](../architecture/MAIL_SCAN_BACKEND_LEDGER.md).
+Deployment-copy migration, deployment and actual hosted acceptance remain separate
+gates; no production scan or task switch was performed in the implementation package. Renaming rejected writes, concealing
 write effects in reads, or writing directly to the database is not a recovery
 procedure. The successful Codex evidence-only trial proves neither ChatGPT
 scheduled acceptance nor scan completion.

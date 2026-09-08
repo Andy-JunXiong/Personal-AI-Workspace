@@ -14,6 +14,8 @@ it("adds empty ingestion metadata while preserving populated historical queues, 
   const old=join(root,"old");mkdirSync(old);
   for(const file of readdirSync(resolve("db/migrations")).filter(file=>/^(00[1-9]|010)_/.test(file)))
     copyFileSync(resolve("db/migrations",file),join(old,file));
+  const v11=join(root,"v11");mkdirSync(v11);
+  for(const file of readdirSync(resolve("db/migrations")).filter(f=>f.endsWith(".sql") && f<"012")) copyFileSync(resolve("db/migrations",file),join(v11,file));
   const before=join(root,"before.db"),after=join(root,"after.db");
   const db=openDatabase(before,old),service=new WorkspaceService(db,testPrincipal);
   const identity=service.ensureDevelopmentIdentity();
@@ -22,10 +24,10 @@ it("adds empty ingestion metadata while preserving populated historical queues, 
   db.prepare("INSERT INTO mail_scan_streams VALUES(?,'mailbox-1','RECENT','2026-09-06','2026-09-06',NULL,NULL)").run(identity.workspaceId);
   db.prepare("INSERT INTO mail_scan_batches(id,workspace_id,mailbox,lane,searched_from,covered_through,status) VALUES('old-batch',?,'mailbox-1','RECENT','2026-09-06','2026-09-07','ACTIVE')").run(identity.workspaceId);
   db.exec("INSERT INTO mail_scan_batch_items(batch_id,message_id) VALUES('old-batch','aa')");
-  db.close();copyFileSync(before,after);openDatabase(after).close();
-  openDatabase(after).close();openDatabase(after,old).close();
-  expect(verifyMailIngestionMigration(before,after)).toMatchObject({status:"PASS",migrations:["011_mail_ingestion_identity.sql"],
+  db.close();copyFileSync(before,after);openDatabase(after,v11).close();
+  openDatabase(after,v11).close();openDatabase(after,old).close();
+  expect(verifyMailIngestionMigration(before,after,v11)).toMatchObject({status:"PASS",migrations:["011_mail_ingestion_identity.sql"],
     addedTables:["mail_batch_source_ids","mail_manual_coverage","mail_manual_runs","mail_source_bindings"]});
-  const changed=openDatabase(after);changed.exec("UPDATE mail_scan_batches SET page_token='modified'");changed.close();
-  expect(()=>verifyMailIngestionMigration(before,after)).toThrow(/Pre-existing rows changed/);
+  const changed=openDatabase(after,v11);changed.exec("UPDATE mail_scan_batches SET page_token='modified'");changed.close();
+  expect(()=>verifyMailIngestionMigration(before,after,v11)).toThrow(/Pre-existing rows changed/);
 });

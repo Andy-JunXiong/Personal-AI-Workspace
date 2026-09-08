@@ -42,6 +42,7 @@ describe("Streamable HTTP MCP transport", () => {
       const tools = await client.listTools();
       expect(tools.tools.map((tool) => tool.name).sort()).toEqual([
         "workspace_admit_transition",
+        "workspace_close_mail_scan",
         "workspace_create_job_application",
         "workspace_create_task",
         "workspace_decide_candidate",

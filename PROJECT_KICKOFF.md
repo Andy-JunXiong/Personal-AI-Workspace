@@ -2,6 +2,16 @@
 
 ## Current status — 2026-09-08
 
+End-of-day handoff: implementation work is complete for the
+[backend receipt package](docs/architecture/MAIL_SCAN_BACKEND_LEDGER.md).
+The user requested documentation reconciliation and publication to GitHub main;
+this session stops at source publication. The final local run passed 41 test
+files / 340 tests, type checks, build, additive migration and previous-code
+compatibility verification. No production deployment or task enablement was performed.
+Resume with a deployment-copy backup/migration check and release preparation,
+then refreshed tool discovery and separate ChatGPT manual/scheduled acceptance.
+The host-write refusal remains unresolved; M4 v0.3 has not started.
+
 Topic A/B governance decision: [Platform Watch](docs/strategy/OPENAI_PLATFORM_WATCH.md#2026-09-08-current-boundary-review)
 now maintains the current domain-state boundary, ownership checks and scoped
 verification/closure. Historical observations remain intact. This bounded
@@ -22,9 +32,11 @@ Task switches and production image were not re-inspected during this review.
 
 The user requested [backend-managed scan receipt requirements](docs/architecture/MAIL_SCAN_BACKEND_LEDGER_REQUIREMENTS_2026-09-08.md):
 retain GPT interpretation and the shared database, move mechanical run tracking
-and result aggregation to explicitly authorized backend operations. This is
-documented only; next are service/tool contract design, implementation and
-separate manual/scheduled acceptance. Two real evidence writes were verified in
+and result aggregation to explicitly authorized backend operations. The
+[opt-in implementation](docs/architecture/MAIL_SCAN_BACKEND_LEDGER.md) now passes
+local type checks, build, 41 files / 340 tests, additive migration and previous-code
+compatibility checks. Deployment and separate ChatGPT manual/scheduled acceptance
+remain pending; no task prompt or switch was changed. Two real evidence writes were verified in
 Codex without receipts; that bounded trial did not restore daily processing.
 
 Latest production is `mail-layout-20260908-r2`: [mail status layout](docs/mvp/MAIL_STATUS_LAYOUT_2026-09-08.md)

@@ -35,7 +35,7 @@ retain the scope and results of their own dates.
 | Mail ingestion | Gmail MCP reads, stable account-qualified source identities, bounded resumable batches and incremental manual checks deployed | Complete manual and actual scheduled scan acceptance pending |
 | Daily automation | Latest task evidence records both tasks paused after a reported host write block; fresh live ledger read still shows only one historical PARTIAL manual run and no checkpoints or processing streams | Resolve actual ChatGPT execution blocker, then pass [daily acceptance](docs/mvp/DAILY_WORKFLOW_ACCEPTANCE.md); task switches were not fetched in this review |
 | Latest local code | [Diagnostics and relevance filtering](docs/mvp/MAIL_CHECK_DIAGNOSTICS_2026-09-08.md): 40 files / 327 tests, type checks and build reported passing in an independent LF worktree | Not deployed; real-mail accuracy and historical mailbox failure cause remain unverified |
-| Backend-owned receipts | [Requirements recorded](docs/architecture/MAIL_SCAN_BACKEND_LEDGER_REQUIREMENTS_2026-09-08.md) | Contract design, implementation, deployment and platform acceptance pending |
+| Backend-owned receipts | [Opt-in implementation and contract](docs/architecture/MAIL_SCAN_BACKEND_LEDGER.md): local migration 012, 30 tools, 41 files / 340 tests; type checks, build and synthetic migration/previous-code checks pass | Not deployed; actual deployment-copy migration and ChatGPT manual/scheduled acceptance pending |
 | Evaluation | [v0.2 retired; v0.3 adopted but not started](docs/dogfood/M4_REAL_USE_EVALUATION_v0.3.md) | Record a verified integrated baseline after manual and scheduled acceptance |
 
 Production release evidence reports 291 passing tests and preservation of all
