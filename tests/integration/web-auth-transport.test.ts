@@ -23,7 +23,7 @@ function gmailFixture(workspace: ReturnType<typeof createTestWorkspace>): GmailR
     reader: { async search() { return { complete: true, scope: "synthetic", messages: [{ id: "abcd", threadId: "1234",
       receivedAt: "2026-09-07T05:00:00Z", senderDomain: "example.test", subject: "Interview", text: "Interview invitation" }] }; } },
     interpreter: { async interpret(_company, _role, messages) { return { items: messages.map(m => ({ messageId: m.id,
-      relevant: true, summary: "收到面试邀请", evidenceQuote: "Interview invitation", requiresAction: true })) }; } },
+      relevant: true, category: "INTERVIEW" as const, summary: "收到面试邀请", evidenceQuote: "Interview invitation", requiresAction: true })) }; } },
   };
 }
 

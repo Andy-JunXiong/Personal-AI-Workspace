@@ -6,6 +6,12 @@ Latest production is `mail-layout-20260908-r2`: [mail status layout](docs/mvp/MA
 replaces the expanded log panel with two collapsible status cards. Migration 011,
 mail processing behavior and the paused ChatGPT tasks are unchanged.
 
+The next [manual-check diagnostics and relevance filtering package](docs/mvp/MAIL_CHECK_DIAGNOSTICS_2026-09-08.md)
+is implemented and locally verified (40 files / 327 tests, type checks and build
+in an independent LF worktree). It records future failure reasons and excludes
+advertisement categories from new evidence. Deployment and real-mail evaluation
+are pending; it does not resolve the paused daily task's platform block.
+
 Production recovery and paused-task status are recorded in [README](README.md)
 and the [September 8 recovery log](docs/mvp/JOB_TRACKER_RECOVERY_2026-09-08.md).
 The [mail ingestion alignment](docs/mvp/MAIL_INGESTION_ALIGNMENT_2026-09-08.md)

@@ -3,6 +3,8 @@ import type { WorkspaceService } from "../application/workspace-service.js";
 import type { IdentityContext } from "../domain/types.js";
 import type { GmailConnections } from "./connections.js";
 import type { GmailAuthorization, MailInterpreter, MailReader } from "./providers.js";
+import { isApplicationEvidence, validateInterpretation } from "./providers.js";
+import { diagnosticText, mailDiagnostic, MailCheckError, type MailCheckStage, type MailDiagnostic } from "../domain/mail-diagnostics.js";
 import { gmailAccountKey, gmailSourceId } from "./source-identity.js";
 
 export interface GmailRuntime {
@@ -62,35 +64,46 @@ export class GmailChecks {
     if(!persisted.created) return persisted;
     const run: CheckRun = { id: persisted.id, state: "RUNNING", startedAt: persisted.startedAt };
     this.runs.set(key, run);
-    const promise = this.execute(identity, service, detail.project, run)
-      .catch(() => { service.manualMailService.fail(run.id,projectId); run.state = "FAILED"; run.outcome = "PARTIAL"; })
+    const diagnostics: MailDiagnostic[] = [];
+    const promise = this.execute(identity, service, detail.project, run, diagnostics)
+      .catch(error => {
+        run.state = "FAILED"; run.outcome = "PARTIAL";
+        try { service.manualMailService.fail(run.id,projectId,[...diagnostics,mailDiagnostic(error,"COMPLETE")]); }
+        catch { console.error("Manual mail failure receipt could not be saved", { runId: run.id, code: "RECEIPT_SAVE_FAILED" }); }
+      })
       .finally(() => { this.pending.delete(key); });
     this.pending.set(key, promise);
     return run;
   }
   private async execute(identity: IdentityContext, service: WorkspaceService,
-    project: ReturnType<WorkspaceService["jobSearchQueryService"]["getApplication"]>["project"], run: CheckRun) {
+    project: ReturnType<WorkspaceService["jobSearchQueryService"]["getApplication"]>["project"], run: CheckRun, diagnostics: MailDiagnostic[]) {
     const { connections, authorization, reader, interpreter } = this.runtime;
     const signal = AbortSignal.timeout(180_000);
     let successful = 0, matched = 0, newMessages = 0, complete = true;
     const summaries: { at: string; text: string }[] = [], scopes: string[] = [];
+    const report = (diagnostic: MailDiagnostic) => { diagnostics.push(diagnostic); scopes.push(diagnosticText(diagnostic)); };
     const company = String(project.metadata.company ?? ""), role = String(project.metadata.role ?? project.title);
     const since = typeof project.metadata.appliedDate === "string" ? project.metadata.appliedDate : project.createdAt;
     const queryKey=createHash("sha256").update(JSON.stringify([company,role,since])).digest("hex");
     const coverage:{accountKey:string;queryKey:string;coveredThrough:string}[]=[];
     for (const slot of [1, 2]) {
+      let stage: MailCheckStage = "AUTHORIZE";
       try {
         const connection = connections.get(identity, slot);
-        if (!connection) { complete = false; scopes.push(`邮箱 ${slot} 未连接`); continue; }
+        if (!connection) throw new MailCheckError("NOT_CONNECTED");
         const accountKey=gmailAccountKey(connection.subject);
         const range=service.manualMailService.range(project.id,accountKey,queryKey,run.startedAt);
         const token = await authorization.access(connection);
         signal.throwIfAborted();
+        stage = "SEARCH";
         const search = await reader.search(token, company, role, since, signal,range);
-        complete &&= search.complete;
+        let mailboxComplete = search.complete && !search.issues?.length;
+        for (const code of new Set(search.issues ?? [])) report(mailDiagnostic(new MailCheckError(code),stage,slot));
+        complete &&= mailboxComplete;
         scopes.push(`邮箱 ${slot}：${range.searchedFrom} 至 ${range.coveredThrough}，${search.complete ? "搜索完成" : "搜索或正文不完整"}`);
         const messages=search.messages.filter(m=>Date.parse(m.receivedAt)>=Date.parse(range.searchedFrom)&&Date.parse(m.receivedAt)<Date.parse(range.coveredThrough));
         const unseen=[];
+        stage = "DEDUPLICATE";
         for(const message of messages) {
           const old=service.findGmailEvidence(project.id,gmailSourceId(accountKey,message.id));
           if(old) {matched++;summaries.push({at:old.observedAt,text:`${old.observedAt.slice(0,10)}：${old.summary}`});}
@@ -98,10 +111,17 @@ export class GmailChecks {
         }
         for (let offset = 0; offset < unseen.length; offset += 10) {
           const batch = unseen.slice(offset, offset + 10);
-          const interpreted = await interpreter.interpret(company, role, batch, signal);
+          stage = "INTERPRET";
+          const interpreted = validateInterpretation(await interpreter.interpret(company, role, batch, signal),batch);
           signal.throwIfAborted();
-          if(connections.get(identity,slot)?.subject!==connection.subject) throw new Error("Mailbox account changed during check");
-          for (const item of interpreted.items.filter(i => i.relevant)) {
+          if(connections.get(identity,slot)?.subject!==connection.subject) throw new MailCheckError("ACCOUNT_CHANGED");
+          if (interpreted.items.some(item => item.category === "UNCERTAIN")) {
+            mailboxComplete = false; complete = false;
+            if (!diagnostics.some(d => d.mailbox === `mailbox-${slot}` && d.code === "CLASSIFICATION_UNCERTAIN"))
+              report(mailDiagnostic(new MailCheckError("CLASSIFICATION_UNCERTAIN"),stage,slot));
+          }
+          stage = "SAVE";
+          for (const item of interpreted.items.filter(isApplicationEvidence)) {
             const message = batch.find(m => m.id === item.messageId)!;
             matched++;
             const externalId = gmailSourceId(accountKey,message.id);
@@ -116,16 +136,16 @@ export class GmailChecks {
           }
         }
         signal.throwIfAborted();
-        if(connections.get(identity,slot)?.subject!==connection.subject) throw new Error("Mailbox account changed during check");
-        if(search.complete) coverage.push({accountKey,queryKey,coveredThrough:range.coveredThrough});
+        if(connections.get(identity,slot)?.subject!==connection.subject) throw new MailCheckError("ACCOUNT_CHANGED");
+        if(mailboxComplete) coverage.push({accountKey,queryKey,coveredThrough:range.coveredThrough});
         successful++;
-      } catch { complete = false; scopes.push(`邮箱 ${slot} 检查未完成：请检查授权、历史邮件归属或稍后重试`); }
+      } catch (error) { complete = false; report(mailDiagnostic(error,stage,slot)); }
     }
     const status = successful === 0 && matched === 0 ? "FAILED" : !complete ? "PARTIAL" : newMessages > 0 ? "UPDATED" : "NO_UPDATE";
     const latest = summaries.sort((a, b) => b.at.localeCompare(a.at)).slice(0, 3).map(s => s.text).join("\n");
     const summary = (status === "FAILED" ? "未能完成邮箱检查，不能确认是否有更新。"
       : `${complete ? "两个邮箱检查完成。" : "检查不完整，不能排除其他更新。"}${newMessages ? `保存 ${newMessages} 封新增相关邮件。` : "未保存新增相关邮件。"}${latest ? `\n${latest}` : complete ? "未找到该岗位的相关邮件。" : ""}`).slice(0, 1000);
-    service.manualMailService.complete(run.id,project.id,status,{scope:scopes,matchedMessageCount:matched},coverage,()=>service.recordGmailObservationFromWeb({ projectId: project.id, provider: "workspace-gmail-check", resourceType: "NOTE",
+    service.manualMailService.complete(run.id,project.id,status,{scope:scopes,diagnostics,matchedMessageCount:matched},coverage,()=>service.recordGmailObservationFromWeb({ projectId: project.id, provider: "workspace-gmail-check", resourceType: "NOTE",
       externalId: run.id, externalUri: null, title: "双邮箱岗位检查", observedAt: new Date(this.now()).toISOString(),
       idempotencyKey: run.id, observedFacts: { contractVersion: "gmail-application-check-v0.1", status,
         summary, searchScope: `仅本申请按公司或岗位补查（含垃圾邮件），最多回看七天；不代表全邮箱覆盖。${scopes.join("；")}`.slice(0, 1000), matchedMessageCount: matched } }));

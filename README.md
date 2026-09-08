@@ -7,6 +7,13 @@
 status cards, with source coverage and technical details available on demand.
 The release preserves the ingestion behavior and paused-task limitations below.
 
+**Latest local development:** [manual-check diagnostics and relevance filtering](docs/mvp/MAIL_CHECK_DIAGNOSTICS_2026-09-08.md)
+adds durable failure categories and excludes model-classified job advertisements
+from new application evidence. Uncertain classifications retain incomplete
+coverage. Type checks, 327 tests and build pass in an independent LF verification
+tree; the record explains the Windows checkout/test portability fixes. This
+package is not deployed and has not yet been evaluated on live mail.
+
 **Deployed ingestion update:** [shared mail identity and incremental manual checks](docs/mvp/MAIL_INGESTION_ALIGNMENT_2026-09-08.md)
 first shipped as `mail-ingestion-20260908-r1` and remain included in the current
 layout release (36 files / 291 tests, typecheck and build).
@@ -17,7 +24,8 @@ This deployment does not resolve the platform block.
 The live Synogize website check saved four EMAIL records and one NOTE, but returned
 PARTIAL for mailbox 1; only mailbox 2 advanced application-scoped coverage.
 The saved messages are job recommendations, not confirmed application-state changes.
-Both the incomplete source check and relevance filtering remain follow-up items.
+The local package above prepares precise failure reporting and stricter filtering;
+the historical failure's exact cause and real-mail acceptance remain open.
 
 **Product review:** the website remains primarily a view of the shared database,
 with explicit manual email checks between daily GPT runs. The
@@ -52,7 +60,7 @@ support specialist; awaiting their response. No numeric case ID was displayed.
 | Website manual check | Synogize check saved 4 EMAIL records and 1 NOTE; PARTIAL with only mailbox 2 advancing application-scoped coverage | Diagnose mailbox 1 processing and tighten job-ad relevance filtering |
 | Implementation | Shared mail identity, incremental manual checks and durable per-application progress deployed; 36 test files / 291 tests, typecheck and build passed | Actual scheduled scan acceptance |
 
-Next: diagnose the incomplete website check and relevance filtering; separately resolve the reported platform safety block, update the online policy, then verify a bounded GPT run and a real scheduled scan using the [daily resumption policy](docs/mvp/MAIL_SCAN_RESUME_2026-09-07.md). Both tasks remain paused. Only the replacement may be activated after acceptance, preserving daily 08:00 Australia/Sydney. Publishing code to GitHub is not a cloud deployment or a task configuration change.
+Next: release the locally verified diagnostics/filtering package and inspect a bounded real website check; separately resolve the reported platform safety block, update the online policy, then verify a bounded GPT run and a real scheduled scan using the [daily resumption policy](docs/mvp/MAIL_SCAN_RESUME_2026-09-07.md). Both tasks remain paused. Only the replacement may be activated after acceptance, preserving daily 08:00 Australia/Sydney. Publishing code to GitHub is not a cloud deployment or a task configuration change.
 
 The earlier seven-day policy was saved and read back in replacement task
 `6a9f456860248191b81d0361dd42cad3`, paused, daily 08:00 Australia/Sydney, never run.
@@ -64,6 +72,7 @@ recovery, online policy update and actual scheduled acceptance remain pending.
 
 ## Delivery records
 
+- [Manual-check diagnostics and relevance filtering](docs/mvp/MAIL_CHECK_DIAGNOSTICS_2026-09-08.md): locally verified follow-up, 327 tests; production and live-mail acceptance pending.
 - [September 8 release handoff](docs/mvp/RELEASE_HANDOFF_2026-09-08.md): final deployed version, validation, publication scope and remaining work.
 - [Mail ingestion alignment](docs/mvp/MAIL_INGESTION_ALIGNMENT_2026-09-08.md) and [status layout](docs/mvp/MAIL_STATUS_LAYOUT_2026-09-08.md): shared source identity, incremental manual checks and collapsible status cards.
 

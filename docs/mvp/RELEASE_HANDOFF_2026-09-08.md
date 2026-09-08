@@ -3,6 +3,12 @@
 Current production: `mail-layout-20260908-r2`, migrations 001–011, 29 MCP tools.
 Website: https://workspace.ai-radar-lab.com/workspace/job-search/today
 
+Later local follow-up: [manual-check diagnostics and relevance filtering](MAIL_CHECK_DIAGNOSTICS_2026-09-08.md)
+implements the next code changes for items 1–2 below, with 327 passing tests in
+an independent LF verification tree. It is not deployed; historical failure
+diagnosis and real-mail accuracy remain unverified. This release record remains
+the evidence for the active production image.
+
 ## Continuity and benefits
 
 - Upstream requirement: the [confirmed workflow](../architecture/CORE_JOB_WORKFLOW.md)

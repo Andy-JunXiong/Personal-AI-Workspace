@@ -11,7 +11,7 @@ import {
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
-import { join, resolve } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { afterAll, describe, expect, it } from "vitest";
 
 const repositoryRoot = process.cwd();
@@ -200,11 +200,12 @@ describe("Workspace Skills release packaging", () => {
 
   it("refuses to remove unmanaged output content", () => {
     const outputDirectory = createOutputDirectory("unmanaged-output");
-    writeFileSync(outputDirectory.replace(/\/release$/u, "/keep.txt"), "keep\n");
+    const unmanagedDirectory = dirname(outputDirectory);
+    writeFileSync(join(unmanagedDirectory, "keep.txt"), "keep\n");
 
     const result = spawnSync(
       process.execPath,
-      [packageScript, "--source-ref", sourceCommit, "--output", outputDirectory.replace(/\/release$/u, "")],
+      [packageScript, "--source-ref", sourceCommit, "--output", unmanagedDirectory],
       { cwd: repositoryRoot, encoding: "utf8" },
     );
 

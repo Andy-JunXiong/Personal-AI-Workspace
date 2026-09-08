@@ -9,6 +9,8 @@ import { GmailConnections } from "../../src/gmail/connections.js";
 import { GmailMcpReader } from "../../src/gmail/mcp-reader.js";
 import { gmailAccountKey, gmailSourceId } from "../../src/gmail/source-identity.js";
 import { mailScanPanel } from "../../src/web/views.js";
+import { MailCheckError } from "../../src/domain/mail-diagnostics.js";
+import { OpenAiMailInterpreter, type Interpretation } from "../../src/gmail/providers.js";
 
 const cleanups:(()=>void)[]=[];
 afterEach(()=>cleanups.splice(0).reverse().forEach(fn=>fn()));
@@ -27,7 +29,7 @@ function setup() {
       calls.ranges.push({from:range!.searchedFrom,through:range!.coveredThrough});
       if(token==="s2") {if(failSecond) throw new Error("Mailbox unavailable");return {messages:[],complete:true,scope:"synthetic"};}
       return {messages,complete:true,scope:"synthetic"};
-    }},interpreter:{async interpret(_company,_role,items){calls.models++;return {items:items.map(m=>({messageId:m.id,relevant:true,summary:"申请已收到",evidenceQuote:m.text,requiresAction:false}))};}}};
+    }},interpreter:{async interpret(_company,_role,items){calls.models++;return {items:items.map(m=>({messageId:m.id,relevant:true,category:"APPLICATION_CONFIRMATION" as const,summary:"申请已收到",evidenceQuote:m.text,requiresAction:false}))};}}};
   const mcp=new GmailMcpReader(connections,runtime.authorization,async input=>String(input).includes("format=full")
     ?Response.json({id:source.id,threadId:source.threadId,internalDate:String(Date.parse(source.receivedAt)),payload:{mimeType:"text/plain",body:{data:Buffer.from(source.text).toString("base64url")}}})
     :Response.json({messages:[{id:source.id,threadId:source.threadId}]}));
@@ -77,6 +79,7 @@ it("keeps ambiguous legacy slot evidence intact rather than merging or duplicati
   const run=await check(w);
   expect(run.outcome).toBe("PARTIAL");
   expect(run.scope.join(" ")).toContain("历史邮件归属");
+  expect(run.diagnostics).toEqual([{mailbox:"mailbox-1",stage:"DEDUPLICATE",code:"IDENTITY_UNPROVEN"}]);
   expect(w.database.prepare("SELECT * FROM resources WHERE provider='gmail'").all()).toEqual(rows);
   expect(w.calls.models).toBe(0);
 });
@@ -124,6 +127,7 @@ it("retains failure, restart and account-specific coverage without reporting fal
 it("does not advance manual coverage when completion receipt persistence fails",async()=>{
   const w=setup();w.database.exec("CREATE TRIGGER fail_manual_receipt BEFORE INSERT ON resources WHEN NEW.provider='workspace-gmail-check' BEGIN SELECT RAISE(ABORT,'receipt failed'); END");
   const run=await check(w);expect(run.state).toBe("FAILED");
+  expect(run.diagnostics).toEqual([{mailbox:null,stage:"COMPLETE",code:"RECEIPT_SAVE_FAILED"}]);
   expect(w.database.prepare("SELECT count(*) n FROM mail_manual_coverage").get()).toEqual({n:0});
   expect(w.database.prepare("SELECT count(*) n FROM resources WHERE provider='gmail'").get()).toEqual({n:1});
 });
@@ -164,4 +168,88 @@ it("retains website authority and project ownership boundaries for manual checks
   expect(()=>w.service.manualMailService.begin(w.projectId)).toThrow("website action");
   expect(()=>w.web().manualMailService.begin(randomUUID())).toThrow("Application unavailable");
   expect(w.database.prepare("SELECT count(*) n FROM mail_manual_runs").get()).toEqual({n:0});
+});
+
+it("saves a confirmation but excludes matching job ads even when the model marks both relevant",async()=>{
+  const w=setup(),before=w.service.getProject(w.projectId);
+  w.setMessages([w.source,{...w.source,id:"bb",text:"Recommended for you: Example Engineer. Apply now."}]);
+  w.runtime.interpreter=new OpenAiMailInterpreter("test","configured-model",async()=>Response.json({status:"completed",output:[{content:[{
+    type:"output_text",text:JSON.stringify({items:[
+      {messageId:"aa",category:"APPLICATION_CONFIRMATION",relevant:true,summary:"申请已收到",evidenceQuote:w.source.text,requiresAction:false},
+      {messageId:"bb",category:"JOB_ADVERTISEMENT",relevant:true,summary:"推荐岗位",evidenceQuote:"Apply now.",requiresAction:true},
+    ]}),
+  }]}]}));
+  const run=await check(w);
+  expect(run.outcome).toBe("UPDATED");expect(run.diagnostics).toEqual([]);
+  expect(w.database.prepare("SELECT external_id FROM resources WHERE provider='gmail'").all())
+    .toEqual([{external_id:gmailSourceId(gmailAccountKey("s1"),"aa")}]);
+  expect(w.database.prepare("SELECT count(*) n FROM mail_manual_coverage").get()).toEqual({n:2});
+  const after=w.service.getProject(w.projectId);
+  expect(after.project).toEqual(before.project);expect(after.transitions).toEqual(before.transitions);
+  expect(after.totalCounts.openTasks).toBe(before.totalCounts.openTasks);
+});
+
+it("retains valid evidence but does not advance a mailbox containing an uncertain classification",async()=>{
+  const w=setup();w.setMessages([w.source,{...w.source,id:"bb"}]);
+  w.runtime.interpreter.interpret=async()=>({items:[
+    {messageId:"aa",category:"APPLICATION_CONFIRMATION",relevant:true,summary:"申请已收到",evidenceQuote:w.source.text,requiresAction:false},
+    {messageId:"bb",category:"UNCERTAIN",relevant:false,summary:"",evidenceQuote:"",requiresAction:false},
+  ]});
+  const run=await check(w);
+  expect(run.outcome).toBe("PARTIAL");
+  expect(run.diagnostics).toEqual([{mailbox:"mailbox-1",stage:"INTERPRET",code:"CLASSIFICATION_UNCERTAIN"}]);
+  expect(w.database.prepare("SELECT count(*) n FROM resources WHERE provider='gmail'").get()).toEqual({n:1});
+  expect(w.database.prepare("SELECT account_key FROM mail_manual_coverage").all()).toEqual([{account_key:gmailAccountKey("s2")}]);
+});
+
+it.each(["AUTHORIZE","SEARCH","INTERPRET","SAVE"] as const)("persists safe %s failure diagnostics across service instances",async stage=>{
+  const w=setup();
+  const privateError=new Error("private-token person@example.test mail body");
+  const codes={AUTHORIZE:"AUTHORIZATION_FAILED",SEARCH:"GMAIL_RATE_LIMITED",INTERPRET:"TIMEOUT",SAVE:"EVIDENCE_SAVE_FAILED"};
+  if(stage==="AUTHORIZE") w.runtime.authorization.access=async c=>{if(c.subject==="s1") throw privateError;return c.subject;};
+  if(stage==="SEARCH") w.runtime.reader.search=async token=>{if(token==="s1") throw new MailCheckError("GMAIL_RATE_LIMITED");return {messages:[],complete:true,scope:"synthetic"};};
+  if(stage==="INTERPRET") w.runtime.interpreter.interpret=async()=>{throw new DOMException(privateError.message,"TimeoutError");};
+  if(stage==="SAVE") w.database.exec("CREATE TRIGGER fail_email BEFORE INSERT ON resources WHEN NEW.provider='gmail' BEGIN SELECT RAISE(ABORT,'private-token'); END");
+  const run=await check(w);
+  expect(run.outcome).toBe("PARTIAL");
+  expect(w.web().manualMailService.current(w.projectId)?.diagnostics).toEqual([{mailbox:"mailbox-1",stage,code:codes[stage]}]);
+  const row=w.database.prepare("SELECT result_json FROM mail_manual_runs WHERE id=?").get(run.id) as {result_json:string};
+  expect(row.result_json).not.toContain("private-token");expect(row.result_json).not.toContain("person@example.test");
+  expect(w.database.prepare("SELECT account_key FROM mail_manual_coverage").all()).toEqual([{account_key:gmailAccountKey("s2")}]);
+  expect(mailScanPanel(w.web(),"Australia/Sydney")).toContain(run.scope.at(-2)!);
+  expect(w.service.mailScanService.overview().checkpoints).toEqual([]);
+});
+
+it("rejects an entire malformed model batch before saving its otherwise valid first item",async()=>{
+  const w=setup();w.setMessages([w.source,{...w.source,id:"bb"}]);
+  w.runtime.interpreter.interpret=async()=>({items:[
+    {messageId:"aa",category:"APPLICATION_CONFIRMATION",relevant:true,summary:"申请已收到",evidenceQuote:w.source.text,requiresAction:false},
+    {messageId:"bb",relevant:true,summary:"缺少类别",evidenceQuote:w.source.text,requiresAction:false},
+  ]} as Interpretation);
+  const run=await check(w);
+  expect(run.diagnostics).toEqual([{mailbox:"mailbox-1",stage:"INTERPRET",code:"MODEL_RESPONSE_INVALID"}]);
+  expect(w.database.prepare("SELECT count(*) n FROM resources WHERE provider='gmail'").get()).toEqual({n:0});
+  expect(w.database.prepare("SELECT account_key FROM mail_manual_coverage").all()).toEqual([{account_key:gmailAccountKey("s2")}]);
+});
+
+it("keeps a body-limited search partial and preserves its diagnostic without calling the model",async()=>{
+  const w=setup();
+  w.runtime.reader.search=async token=>({messages:[],complete:token==="s2",scope:"synthetic",issues:token==="s1"?["BODY_MISSING","BODY_TRUNCATED"]:[]});
+  const run=await check(w);
+  expect(run.outcome).toBe("PARTIAL");expect(w.calls.models).toBe(0);
+  expect(run.diagnostics.map(d=>d.code)).toEqual(["BODY_MISSING","BODY_TRUNCATED"]);
+  expect(w.database.prepare("SELECT account_key FROM mail_manual_coverage").all()).toEqual([{account_key:gmailAccountKey("s2")}]);
+});
+
+it("preserves earlier success coverage when a later check fails, and reads old receipts without inventing diagnostics",async()=>{
+  const w=setup();const first=await check(w);
+  w.database.prepare("UPDATE mail_manual_runs SET result_json=? WHERE id=?").run(JSON.stringify({scope:["Historical generic failure"]}),first.id);
+  expect(w.web().manualMailService.current(w.projectId)?.diagnostics).toEqual([]);
+  const previous=w.database.prepare("SELECT covered_through FROM mail_manual_coverage WHERE account_key=?").get(gmailAccountKey("s1"));
+  w.advance(4*3600000);
+  w.runtime.authorization.access=async c=>{if(c.subject==="s1") throw new Error("expired");return c.subject;};
+  expect((await check(w)).outcome).toBe("PARTIAL");
+  expect(w.database.prepare("SELECT covered_through FROM mail_manual_coverage WHERE account_key=?").get(gmailAccountKey("s1"))).toEqual(previous);
+  expect(w.database.prepare("SELECT covered_through FROM mail_manual_coverage WHERE account_key=?").get(gmailAccountKey("s2")))
+    .toEqual({covered_through:new Date(w.now()).toISOString()});
 });

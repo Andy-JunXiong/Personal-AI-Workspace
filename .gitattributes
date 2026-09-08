@@ -1,0 +1,2 @@
+# Skill packages compare canonical source bytes with Git; preserve LF on Windows.
+.agents/skills/** text eol=lf

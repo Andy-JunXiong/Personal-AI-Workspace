@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import type { WorkspaceDatabase } from "../persistence/database.js";
 import type { IdentityContext } from "../domain/types.js";
 import { AuthorizationError, ValidationError } from "../domain/errors.js";
+import { diagnosticText, type MailDiagnostic } from "../domain/mail-diagnostics.js";
 
 export type ManualMailOutcome = "UPDATED" | "NO_UPDATE" | "PARTIAL" | "FAILED";
 type RunRow = { id:string; project_id:string; started_at:string; finished_at:string|null;
@@ -22,11 +23,11 @@ export class ManualMailService {
   }
   private map(row:RunRow) {
     const expired=row.status==="RUNNING" && Date.parse(row.started_at)+180000<this.clock().getTime();
-    const result=row.result_json?JSON.parse(row.result_json) as {scope?:string[]}:null;
+    const result=row.result_json?JSON.parse(row.result_json) as {scope?:string[];diagnostics?:MailDiagnostic[]}:null;
     return {id:row.id,projectId:row.project_id,startedAt:Date.parse(row.started_at),finishedAt:row.finished_at,
       state:expired?"FAILED" as const:row.status==="INTERRUPTED"?"FAILED" as const:row.status,
       outcome:row.outcome??(expired?"PARTIAL" as const:undefined),
-      interrupted:expired||row.status==="INTERRUPTED",scope:result?.scope??[]};
+      interrupted:expired||row.status==="INTERRUPTED",scope:result?.scope??[],diagnostics:result?.diagnostics??[]};
   }
   current(projectId:string) {
     const row=this.db.prepare("SELECT * FROM mail_manual_runs WHERE workspace_id=? AND project_id=? ORDER BY started_at DESC,rowid DESC LIMIT 1")
@@ -74,8 +75,8 @@ export class ManualMailService {
         .run(workspaceId,projectId,item.accountKey,item.queryKey,item.coveredThrough,runId);
     })();
   }
-  fail(runId:string,projectId:string) {
-    this.db.prepare("UPDATE mail_manual_runs SET status='FAILED',outcome='PARTIAL',finished_at=? WHERE id=? AND workspace_id=? AND project_id=? AND status='RUNNING'")
-      .run(this.clock().toISOString(),runId,this.owner(projectId,true),projectId);
+  fail(runId:string,projectId:string,diagnostics:MailDiagnostic[]=[]) {
+    this.db.prepare("UPDATE mail_manual_runs SET status='FAILED',outcome='PARTIAL',finished_at=?,result_json=? WHERE id=? AND workspace_id=? AND project_id=? AND status='RUNNING'")
+      .run(this.clock().toISOString(),JSON.stringify({diagnostics,scope:diagnostics.map(diagnosticText)}),runId,this.owner(projectId,true),projectId);
   }
 }
