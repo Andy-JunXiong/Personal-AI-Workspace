@@ -123,6 +123,24 @@ mark the case `INCONCLUSIVE` rather than reconstructing it from memory.
 
 ## 6. Operator state evidence
 
+Before using a hosted runtime, run the deterministic local contract harness:
+
+```sh
+npm run skills:acceptance:synthetic
+```
+
+It creates a fresh file-backed synthetic Workspace for every scenario, exposes it
+only through a loopback MCP server, captures ordered tool calls, and compares
+operator-side logical fingerprints and bounded table-row deltas. It covers the S1
+normal read-only path and representative S2 T1, T2, T5, T6, T8 and T9 paths,
+including an invalid transition and a stale admission.
+
+The harness proves deterministic Workspace/MCP trace recipes and durable effects.
+It does **not** run a model and therefore does not prove Skill discovery, routing,
+authority judgment, prompt-size improvement, or fresh-context platform acceptance.
+Retain its JSON output as supporting contract evidence, not as a replacement for
+the runtime traces required below.
+
 Use the repository's read-only logical fingerprint script against the isolated
 database immediately before and after each case:
 
