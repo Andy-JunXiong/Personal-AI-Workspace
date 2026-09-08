@@ -150,3 +150,39 @@ to a support specialist with an expected response in the coming days, also by
 email. No numeric case ID was displayed. The linked public report summarizes the
 submission; raw support messages and screenshots are retained locally and excluded
 from Git. No further bypass or retry was attempted.
+
+## User-authorized restart check — September 8, 17:26 Sydney
+
+The user explicitly requested another check before restarting daily Job Tracker.
+The existing task conversation was used for one new manual attempt; no alternate
+write route or scheduled execution was used after its rejection.
+
+Before the attempt, the replacement's instructions were updated in the scheduler
+editor to the latest `UPDATE_JOB_TRACKER_WORKSPACE_PROMPT.txt`, including copying
+the reader's exact account-qualified externalId and preserving uncertain legacy
+identities. Reopening the editor confirmed exact equality after LF normalization
+and trimming (13,936 characters). The existing daily 08:00 schedule remained;
+both the replacement and the retired task were verified paused afterward.
+This supersedes the earlier statement that the latest local policy was not saved
+online. It does not establish unattended scheduling acceptance.
+
+Independent connector reads confirmed the database available, both expected
+mailboxes AVAILABLE, only the historical PARTIAL receipt, no unfinished runs and
+empty processing streams. This Codex tool catalog exposed 27 Workspace tools,
+without next/ack batch tools; the actual ChatGPT task conversation separately
+reported all five required scan/batch tools available. Neither context's discovery
+should be generalized to the other.
+
+The manual attempt used runId `1eccccb0-9986-494b-80f1-19e44fa41246`,
+`userConfirmed=true`, the existing September 7 authority reference,
+`triggerType=MANUAL` and `executionReference=""`. ChatGPT reported one start call
+and the same platform safety-check error. No approval card was observed in this
+attempt. The tool list exposed scan readback; a separate raw start error payload
+and specific classifier reason were not recovered. Therefore the error wording
+remains a ChatGPT-reported result, not independently inspected platform internals.
+
+Independent exact-run connector readback returned `NOT_FOUND: Run not found`.
+No mail batches, acknowledgements or business changes were attempted in this
+check. The daily tasks were not resumed. The next gate remains platform write
+recovery, then bounded manual and actual scheduled acceptance. The website-only
+diagnostics/filtering code does not remove this platform restriction.

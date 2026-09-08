@@ -60,15 +60,19 @@ support specialist; awaiting their response. No numeric case ID was displayed.
 | Website manual check | Synogize check saved 4 EMAIL records and 1 NOTE; PARTIAL with only mailbox 2 advancing application-scoped coverage | Diagnose mailbox 1 processing and tighten job-ad relevance filtering |
 | Implementation | Shared mail identity, incremental manual checks and durable per-application progress deployed; 36 test files / 291 tests, typecheck and build passed | Actual scheduled scan acceptance |
 
-Next: release the locally verified diagnostics/filtering package and inspect a bounded real website check; separately resolve the reported platform safety block, update the online policy, then verify a bounded GPT run and a real scheduled scan using the [daily resumption policy](docs/mvp/MAIL_SCAN_RESUME_2026-09-07.md). Both tasks remain paused. Only the replacement may be activated after acceptance, preserving daily 08:00 Australia/Sydney. Publishing code to GitHub is not a cloud deployment or a task configuration change.
+Next: release the locally verified diagnostics/filtering package and inspect a bounded real website check; separately resolve the reported platform safety block, then verify a bounded GPT run and a real scheduled scan using the [daily resumption policy](docs/mvp/MAIL_SCAN_RESUME_2026-09-07.md). Both tasks remain paused. Only the replacement may be activated after acceptance, preserving daily 08:00 Australia/Sydney. Publishing code to GitHub is not a cloud deployment or a task configuration change.
 
 The earlier seven-day policy was saved and read back in replacement task
 `6a9f456860248191b81d0361dd42cad3`, paused, daily 08:00 Australia/Sydney, never run.
 The [local recurring policy](docs/mvp/UPDATE_JOB_TRACKER_WORKSPACE_PROMPT.txt) and
 [manual acceptance](docs/mvp/UPDATE_JOB_TRACKER_MANUAL_ACCEPTANCE.txt) now also
 specify the stable source identifiers in the deployed ingestion update. Those
-latest local edits have not been saved to the online task. Platform authorization
-recovery, online policy update and actual scheduled acceptance remain pending.
+latest local edits were saved and exactly read back on September 8 before the
+17:26 user-authorized restart check (13,936 characters after LF normalization and
+trimming). That same-conversation manual attempt again reported a platform block
+on scan creation; independent exact-run readback returned NOT_FOUND. See the
+[restart record](docs/mvp/JOB_TRACKER_RECOVERY_2026-09-08.md#user-authorized-restart-check--september-8-1726-sydney).
+Platform authorization recovery and actual scheduled acceptance remain pending.
 
 ## Delivery records
 

@@ -59,9 +59,11 @@ it was not rerun against production and does not change the deployed application
 3. Await resolution of the reported ChatGPT write block. Both old and replacement
    Job Tracker tasks remain paused. The [support report](JOB_TRACKER_PLATFORM_BLOCK_REPORT_2026-09-08.md)
    records the evidence and its limits; no exact platform root cause is established.
-4. After platform recovery, save the updated [daily policy](UPDATE_JOB_TRACKER_WORKSPACE_PROMPT.txt),
-   verify a bounded GPT run with durable readback, then accept a real scheduled run.
-   The latest local policy is not yet saved online. Only the replacement task may
+4. After platform recovery, verify a bounded GPT run with durable readback, then
+   accept a real scheduled run. The updated [daily policy](UPDATE_JOB_TRACKER_WORKSPACE_PROMPT.txt)
+   was saved and exactly read back before the September 8 17:26 restart check;
+   that attempt still reported a platform block and persisted no receipt.
+   See the [recovery record](JOB_TRACKER_RECOVERY_2026-09-08.md). Only the replacement task may
    eventually be active, at 08:00 Australia/Sydney.
 
 Per-application manual runs persist; the overall website batch envelope remains
