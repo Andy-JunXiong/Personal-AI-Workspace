@@ -1,6 +1,15 @@
-import { spawnSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+  appendFileSync,
+  cpSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { afterAll, describe, expect, it } from "vitest";
@@ -8,7 +17,10 @@ import { afterAll, describe, expect, it } from "vitest";
 const repositoryRoot = process.cwd();
 const packageScript = resolve(repositoryRoot, "scripts/package-workspace-skills.mjs");
 const releaseConfigPath = resolve(repositoryRoot, ".agents/skills/release.json");
-const sourceCommit = "0123456789abcdef0123456789abcdef01234567";
+const sourceCommit = execFileSync("git", ["rev-parse", "HEAD"], {
+  cwd: repositoryRoot,
+  encoding: "utf8",
+}).trim();
 const temporaryRoots: string[] = [];
 
 function createOutputDirectory(label: string) {
@@ -25,6 +37,55 @@ function packageSkills(outputDirectory: string) {
   );
   expect(result.status, result.stderr).toBe(0);
   return JSON.parse(readFileSync(join(outputDirectory, "release-manifest.json"), "utf8"));
+}
+
+function createRepositoryFixture(label: string) {
+  const fixtureRoot = mkdtempSync(join(tmpdir(), `paw-skills-repository-${label}-`));
+  temporaryRoots.push(fixtureRoot);
+  mkdirSync(resolve(fixtureRoot, "scripts"), { recursive: true });
+  cpSync(packageScript, resolve(fixtureRoot, "scripts/package-workspace-skills.mjs"));
+  cpSync(resolve(repositoryRoot, ".agents"), resolve(fixtureRoot, ".agents"), {
+    recursive: true,
+  });
+
+  const git = (argumentsList: string[]) =>
+    execFileSync("git", argumentsList, { cwd: fixtureRoot, encoding: "utf8" }).trim();
+  git(["init", "--initial-branch=main"]);
+  git(["add", ".agents", "scripts/package-workspace-skills.mjs"]);
+  execFileSync(
+    "git",
+    [
+      "-c",
+      "user.name=PAW Test",
+      "-c",
+      "user.email=paw-test@example.invalid",
+      "commit",
+      "-m",
+      "fixture",
+    ],
+    { cwd: fixtureRoot, encoding: "utf8" },
+  );
+  writeFileSync(resolve(fixtureRoot, "fixture-marker.txt"), "second commit\n");
+  git(["add", "fixture-marker.txt"]);
+  execFileSync(
+    "git",
+    [
+      "-c",
+      "user.name=PAW Test",
+      "-c",
+      "user.email=paw-test@example.invalid",
+      "commit",
+      "-m",
+      "fixture head",
+    ],
+    { cwd: fixtureRoot, encoding: "utf8" },
+  );
+
+  return {
+    fixtureRoot,
+    fixtureScript: resolve(fixtureRoot, "scripts/package-workspace-skills.mjs"),
+    sourceCommit: git(["rev-parse", "HEAD"]),
+  };
 }
 
 function sha256(content: Buffer) {
@@ -149,5 +210,84 @@ describe("Workspace Skills release packaging", () => {
 
     expect(result.status).not.toBe(0);
     expect(result.stderr).toContain("contains an unmanaged entry");
+  });
+
+  it("rejects a source commit that is not the checked-out HEAD", () => {
+    const fixture = createRepositoryFixture("wrong-commit");
+    const outputDirectory = resolve(fixture.fixtureRoot, "dist/workspace-skills");
+    const parentCommit = execFileSync("git", ["rev-parse", "HEAD^"], {
+      cwd: fixture.fixtureRoot,
+      encoding: "utf8",
+    }).trim();
+    const result = spawnSync(
+      process.execPath,
+      [
+        fixture.fixtureScript,
+        "--source-ref",
+        parentCommit,
+        "--output",
+        outputDirectory,
+      ],
+      { cwd: fixture.fixtureRoot, encoding: "utf8" },
+    );
+
+    expect(result.status).not.toBe(0);
+    expect(result.stderr).toContain("must match the checked-out HEAD");
+    expect(existsSync(outputDirectory)).toBe(false);
+  });
+
+  it("rejects modified canonical Skill content", () => {
+    const fixture = createRepositoryFixture("modified");
+    const outputDirectory = resolve(fixture.fixtureRoot, "dist/workspace-skills");
+    appendFileSync(
+      resolve(
+        fixture.fixtureRoot,
+        ".agents/skills/job-search-today-review/SKILL.md",
+      ),
+      "\nmodified\n",
+    );
+    const result = spawnSync(
+      process.execPath,
+      [
+        fixture.fixtureScript,
+        "--source-ref",
+        fixture.sourceCommit,
+        "--output",
+        outputDirectory,
+      ],
+      { cwd: fixture.fixtureRoot, encoding: "utf8" },
+    );
+
+    expect(result.status).not.toBe(0);
+    expect(result.stderr).toContain(
+      "Canonical Skill source does not match the declared source commit",
+    );
+    expect(existsSync(outputDirectory)).toBe(false);
+  });
+
+  it("rejects uncommitted files in the canonical Skills tree", () => {
+    const fixture = createRepositoryFixture("untracked");
+    const outputDirectory = resolve(fixture.fixtureRoot, "dist/workspace-skills");
+    writeFileSync(
+      resolve(fixture.fixtureRoot, ".agents/skills/untracked-policy.md"),
+      "not committed\n",
+    );
+    const result = spawnSync(
+      process.execPath,
+      [
+        fixture.fixtureScript,
+        "--source-ref",
+        fixture.sourceCommit,
+        "--output",
+        outputDirectory,
+      ],
+      { cwd: fixture.fixtureRoot, encoding: "utf8" },
+    );
+
+    expect(result.status).not.toBe(0);
+    expect(result.stderr).toContain(
+      "Canonical Skills file list does not match the declared source commit",
+    );
+    expect(existsSync(outputDirectory)).toBe(false);
   });
 });

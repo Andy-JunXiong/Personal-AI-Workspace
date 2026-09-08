@@ -74,9 +74,17 @@ This writes one ZIP per Skill plus
 commit, release and Skill versions, canonical file hashes, package hashes, and
 the release-config hash and reviewed PAW tool compatibility set. The output
 directory may contain only files managed by this command; the command stops rather
-than deleting unrelated content. Upload the ZIPs without modifying their contents
-and retain the manifest with the acceptance evidence. A declared tool dependency
-does not grant platform permission, Workspace authority, or domain admission.
+than deleting unrelated content. Packaging also stops unless the source commit is
+the checked-out `HEAD` and every canonical `.agents/skills` file and path matches
+that commit exactly.
+
+The `Verify` workflow runs the same command and uploads the two ZIPs plus manifest
+as the `workspace-skills-<commit>` Actions artifact for 30 days. Download the
+artifact from the workflow for the exact accepted commit; do not substitute an
+artifact from another run. Upload the contained Skill ZIPs without modifying their
+contents and retain the manifest with the acceptance evidence. A declared tool
+dependency does not grant platform permission, Workspace authority, or domain
+admission.
 
 From the pinned checkout, also record:
 
