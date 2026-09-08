@@ -1,0 +1,106 @@
+{
+  "capturedAt": "2026-09-08T05:43:15Z",
+  "runtime": "ChatGPT Work",
+  "binding": "Personal AI Workspace connector",
+  "captureFormat": "Normalized from the runtime-exposed TypeScript tool declarations; this is not a byte-for-byte provider schema export.",
+  "schemas": [
+    {
+      "name": "workspace_get_today",
+      "description": "Return the read-only deterministic Today view for the configured Workspace timezone: overdue, due-today, high/critical undated, blocked, upcoming within 7 local calendar days, active Job Applications without an open Task, and up to 5 recent admitted lifecycle changes.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    {
+      "name": "workspace_find_job_application",
+      "description": "Read-only exact lookup for non-closed Job Application Projects in the current Workspace. Both company and role are normalized with Unicode NFKC, whitespace normalization, and locale-independent lowercase comparison. Returns EXACT, NOT_FOUND, or AMBIGUOUS and never chooses among ambiguous matches.",
+      "inputSchema": {
+        "type": "object",
+        "required": ["company", "role"],
+        "properties": {
+          "company": { "type": "string" },
+          "role": { "type": "string" }
+        }
+      }
+    },
+    {
+      "name": "workspace_list_job_applications",
+      "description": "List current Workspace Job Applications, excluding closed applications by default. Results are deterministically ordered and capped at 100 without pagination.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "includeClosed": { "type": "boolean" }
+        }
+      }
+    },
+    {
+      "name": "workspace_get_project",
+      "description": "Read one durable Project with current state, all open tasks, the latest 10 Resources and transitions, and total counts. History is bounded by default.",
+      "inputSchema": {
+        "type": "object",
+        "required": ["projectId"],
+        "properties": {
+          "projectId": { "type": "string" }
+        }
+      }
+    },
+    {
+      "name": "workspace_record_observation",
+      "description": "Persist attributable observed facts as a Resource without changing Project lifecycle state. This is an internal Workspace write. Gmail EMAIL observations are accepted only with provider gmail, a stable message ID, and the strict gmail-job-observation-v0.1 minimized provenance contract; full sender identities or email addresses are rejected.",
+      "inputSchema": {
+        "type": "object",
+        "required": ["idempotencyKey", "observedAt", "observedFacts", "projectId", "provider", "resourceType"],
+        "properties": {
+          "externalId": { "type": "string" },
+          "externalUri": { "type": "string" },
+          "idempotencyKey": { "type": "string" },
+          "observedAt": { "type": "string" },
+          "observedFacts": { "type": "object", "additionalProperties": true },
+          "projectId": { "type": "string" },
+          "provider": { "type": "string" },
+          "resourceType": {
+            "enum": ["EMAIL", "DOCUMENT", "URL", "CALENDAR_EVENT", "NOTE", "OTHER"]
+          },
+          "title": { "type": "string" }
+        }
+      }
+    },
+    {
+      "name": "workspace_propose_transition",
+      "description": "Validate and persist a proposed lifecycle transition. A proposal never changes durable Project state and never grants admission authority.",
+      "inputSchema": {
+        "type": "object",
+        "required": ["expectedLifecycleVersion", "idempotencyKey", "projectId", "rationale", "toState", "triggerType"],
+        "properties": {
+          "evidenceResourceIds": { "type": "array", "items": { "type": "string" } },
+          "expectedLifecycleVersion": { "type": "number" },
+          "idempotencyKey": { "type": "string" },
+          "projectId": { "type": "string" },
+          "rationale": { "type": "string" },
+          "toState": {
+            "enum": ["RECRUITER_CONTACT", "INTERVIEWING", "OFFER", "ACCEPTED", "REJECTED", "WITHDRAWN"]
+          },
+          "triggerType": {
+            "enum": ["USER_ASSERTION", "EXTERNAL_EVIDENCE", "ACTION_OUTCOME"]
+          }
+        }
+      }
+    },
+    {
+      "name": "workspace_admit_transition",
+      "description": "Admit one valid proposal only after the user explicitly requests or confirms admission. The model must not call this from inference alone. Terminal Job Application admissions close the Project and cancel its obsolete open Tasks atomically.",
+      "inputSchema": {
+        "type": "object",
+        "required": ["authorityReference", "expectedLifecycleVersion", "idempotencyKey", "transitionId", "userConfirmed"],
+        "properties": {
+          "authorityReference": { "type": "string" },
+          "expectedLifecycleVersion": { "type": "number" },
+          "idempotencyKey": { "type": "string" },
+          "transitionId": { "type": "string" },
+          "userConfirmed": { "const": true }
+        }
+      }
+    }
+  ]
+}
