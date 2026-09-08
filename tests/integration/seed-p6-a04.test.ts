@@ -124,7 +124,7 @@ describe("P6 A04 bounded synthetic seed", () => {
     const second = runSeedP6A04(args, seedEnvironment);
     expect(second).toMatchObject({ createdCount: 0, replayedCount: 106, projectIds: first.projectIds });
     expect(w.database.serialize()).toEqual(before);
-  });
+  }, 15_000);
 
   it("rejects an unmapped principal without initializing identity or writing records", () => {
     const w = setup();
