@@ -13,6 +13,7 @@
     "db:backup": "node dist/scripts/backup-database.js",
     "db:verify": "node dist/scripts/verify-database.js",
     "seed": "tsx scripts/seed-spike.ts",
+    "skills:package": "node scripts/package-workspace-skills.mjs",
     "start": "node dist/src/server.js",
     "test": "vitest run",
     "typecheck": "tsc --noEmit && tsc -p tsconfig.browser.json",
