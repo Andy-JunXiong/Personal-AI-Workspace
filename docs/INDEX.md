@@ -5,7 +5,7 @@
 - [Application calendar and ongoing default](mvp/APPLICATION_CALENDAR_2026-09-09.md): two-month submission timeline and focused application list.
 
 Start with [README](../README.md) for current state, [core workflow](architecture/CORE_JOB_WORKFLOW.md)
-for product authority, and [current release](mvp/APPLICATION_PROGRESS_TIMELINE_2026-09-09.md#validation-and-release) for deployment evidence.
+for product authority, and [current release](mvp/APPLICATION_PROGRESS_TIMELINE_2026-09-09.md#follow-up-remove-gmail-panel-from-application-details) for deployment evidence.
 [Project kickoff](../PROJECT_KICKOFF.md) retains the chronological project record.
 
 This index covers all Markdown under docs/ (other than this index), the three

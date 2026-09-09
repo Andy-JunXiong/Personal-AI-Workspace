@@ -11,7 +11,17 @@ overview mail tools remain available. This is a presentation change without
 data writes, migration or new infrastructure. The next gate is production
 readback confirming the card is absent and real timeline milestones remain.
 
-Release evidence: pending local verification and deployment.
+Release evidence: 374 tests in 46 files, type checking and build passed.
+Deployed `jobdetail-20260909-r1` at 2026-09-09 09:26:25 UTC (19:26 Sydney),
+source `7bd8316cf72a305aef275ee17382cb6f37b6f50e`, published to main.
+Archive SHA-256 `ef7bb5b2a9391ee8ec9db960a91b1f24c32ec189a5b34b17bca6d099c46c6fec`;
+image SHA-256 `74694759d0e9bbf79e95cf3b07583ba14bf490ce3965a3af3ea942f5b0016d0d`.
+Backup/recovery, health and public website checks passed; identical pre/post
+fingerprints `e52dc4489d4433d085cd68699568dbd28caa2e63024f171f3260a9e4d30031ab`
+(38 tables, 1,533 rows), migrations 001–014. Rollback: `progress-20260909-r1`.
+Read-only live rendering verified all 24 application details have no Gmail card,
+per-job controls or copy prompt, while profile sections and overview mail tools
+remain available. Earlier per-detail check-panel descriptions below are historical.
 
 ## Continuity and benefits
 
