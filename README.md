@@ -22,13 +22,15 @@ See the [authoritative core workflow](docs/architecture/CORE_JOB_WORKFLOW.md).
 
 ## Current state — 2026-09-09
 
-In development: [proactive job discovery and interview library](docs/architecture/JOB_LIBRARY_WORKFLOW.md).
-The latest user instruction enables scoped candidate decisions, source-library edits,
-JD comparison and resume drafts in the website. Production remains on the release below
-until deployment and private-source import are verified.
+Latest release: [proactive job discovery and interview library](docs/architecture/JOB_LIBRARY_WORKFLOW.md),
+`library-20260909-r1`, source `c1399c2`. The website now supports scoped library edits,
+candidate decisions, evidence-based JD matching and tailored resume drafts. Source
+import, mobile layout, all 381 tests, additive migration preservation and public
+route checks passed. External-model comparison is now being made opt-in; the current
+user choice is source/candidate/JD storage only. Native LinkedIn/SEEK login and unattended alert scheduling are
+not provided; discovery uses connected Gmail alerts. General browser writes stay off.
 
-
-Latest release: [post-application dossier workflow](docs/architecture/APPLICATION_DOSSIER_WORKFLOW.md),
+Previous release: [post-application dossier workflow](docs/architecture/APPLICATION_DOSSIER_WORKFLOW.md),
 `dossier-20260909-r1`. Each application shows a four-item materials checklist:
 posting URL, JD, confirmed submitted resume version and structured skills comparison.
 Comparison rows include gap/evidence notes; exact project readback preserves access

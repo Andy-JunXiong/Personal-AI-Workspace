@@ -1,7 +1,7 @@
 // Delegation survives the Workspace's partial page refreshes.
 document.addEventListener('submit', async (event) => {
   const form = event.target;
-  if (!(form instanceof HTMLFormElement) || !form.matches('[data-library-source], [data-library-compare], [data-library-draft]')) return;
+  if (!(form instanceof HTMLFormElement) || !form.matches('[data-library-source], [data-library-compare], [data-library-draft], [data-library-jd]')) return;
   event.preventDefault();
   if (form.dataset.busy) return;
   const status = form.querySelector('[data-library-result]');
@@ -12,8 +12,8 @@ document.addEventListener('submit', async (event) => {
   /** @type {Record<string, unknown>} */
   let body;
   if (form.matches('[data-library-source]')) body = {...values, sourceKey: values.sourceKey || `manual:${crypto.randomUUID()}`, sourceUrl: values.sourceUrl || null, expectedVersion: Number(values.expectedVersion)};
-  else if (form.matches('[data-library-compare]')) {
-    path = `/api/v1/job-search/library/candidates/${encodeURIComponent(form.dataset.candidateId || '')}/compare`;
+  else if (form.matches('[data-library-compare], [data-library-jd]')) {
+    path = `/api/v1/job-search/library/candidates/${encodeURIComponent(form.dataset.candidateId || '')}/${form.matches('[data-library-jd]')?'description':'compare'}`;
     body = {...values, sourceUrl: values.sourceUrl || null};
   } else {
     path = `/api/v1/job-search/library/candidates/${encodeURIComponent(form.dataset.candidateId || '')}/draft`;
@@ -44,7 +44,7 @@ document.addEventListener('click', async (event) => {
     const {csrfToken}=await session.json();
     const response=await fetch('/api/v1/job-search/library/discovery',{method:'POST',headers:{'content-type':'application/json','x-csrf-token':csrfToken},body:'{}',signal:AbortSignal.timeout(15000)});
     if(!response.ok)throw new Error('无法开始同步，请检查邮箱连接后重试。');
-    status.textContent='同步已开始。正在读取职位与匹配资料，完成后会显示结果。';
+    status.textContent='同步已开始。正在读取候选职位，完成后会显示结果。';
     for(let i=0;i<180&&status.isConnected;i++){
       await new Promise(resolve=>setTimeout(resolve,5000));
       const checked=await fetch('/api/v1/job-search/library/discovery',{cache:'no-store',signal:AbortSignal.timeout(15000)});

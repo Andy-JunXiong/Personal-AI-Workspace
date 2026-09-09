@@ -6,12 +6,12 @@ import {createEmptyTestWorkspace} from "../helpers/test-workspace.js";
 import {WorkspaceService} from "../../src/application/workspace-service.js";
 import {validateJobFit} from "../../src/domain/job-fit.js";
 import {libraryView,fitPanel} from "../../src/web/job-library-views.js";
-import {alertJobLinks,canonicalJobUrl,fetchJobPosting,postingFromHtml} from "../../src/application/job-posting-source.js";
+import {alertJobLinks,alertJobReferences,resolveAlertJobUrl,canonicalJobUrl,fetchJobPosting,postingFromHtml} from "../../src/application/job-posting-source.js";
 import {openDatabase} from "../../src/persistence/database.js";
 import {verifyJobLibraryMigration} from "../../scripts/verify-job-library-migration.js";
 import * as postingSource from "../../src/application/job-posting-source.js";
 import {discoverJobs} from "../../src/application/job-discovery.js";
-import type {GmailMcpReader} from "../../src/gmail/mcp-reader.js";
+import {GmailMcpReader} from "../../src/gmail/mcp-reader.js";
 
 const sourceInput={sourceKey:"test:resume",title:"Historical resume",sourceUrl:"https://example.test/resume",content:"Acme 2020–2024: Built Python APIs.",reviewStatus:"SOURCE",expectedVersion:0};
 const report=(sourceId:string)=>({summary:"Evidence-based comparison",conflicts:[],requirements:[
@@ -105,4 +105,30 @@ it("imports targeted alert links without application events, preserves decisions
     expect(w.database.prepare("SELECT count(*) n FROM resources").get()).toEqual({n:0});
     expect(web.jobSearchQueryService.listCandidates().totalCount).toBe(2);
   }finally{fetcher.mockRestore();w.cleanup();}
+});
+
+it("resolves only job-labelled SEEK tracking links and never follows external redirect targets",async()=>{
+  const url="https://email.s.seek.com.au/uni/ss/c/test-token";
+  expect(alertJobReferences(`AI Specialist [${url}]\nUnsubscribe [${url}/remove]`)).toEqual([{url,title:"AI Specialist"}]);
+  let calls=0;
+  const fetcher=(async()=>{calls++;return new Response(null,{status:302,headers:{location:"https://www.seek.com.au/job/123?ref=alert"}});}) as typeof fetch;
+  expect(await resolveAlertJobUrl(url,fetcher)).toMatchObject({postingId:"123",provider:"seek"});
+  expect(calls).toBe(1);
+  expect(await resolveAlertJobUrl("https://evil.test/track",fetcher)).toBeNull();expect(calls).toBe(1);
+  const unsafe=(async()=>new Response(null,{status:302,headers:{location:"http://127.0.0.1/private"}})) as typeof fetch;
+  expect(await resolveAlertJobUrl(url,unsafe)).toBeNull();
+});
+
+it("queries both alert providers and reports a 204 response as unverified coverage, not a connection failure or complete scan",async()=>{
+  const queries:string[]=[];
+  const reader=new GmailMcpReader({get:()=>({subject:"mail",email:"mail@example.test",refreshToken:"test"})},
+    {access:async()=>"test"},(async(input:URL|string)=>{
+      const url=new URL(input);queries.push(url.searchParams.get("q")??"");
+      expect(url.searchParams.get("maxResults")).toBe("10");
+      return url.searchParams.get("q")?.includes("from:linkedin.com")
+        ?Response.json({messages:[{id:"abc",threadId:"def"}]}):new Response(null,{status:204});
+    }) as typeof fetch);
+  const result=await reader.jobAlerts({principalId:randomUUID(),workspaceId:randomUUID()},"mailbox-1");
+  expect(result).toEqual({messages:[{id:"abc",threadId:"def"}],complete:false,emptyResponse:true});
+  expect(queries).toHaveLength(2);expect(queries[1]).toContain("from:seek.com.au");
 });

@@ -207,7 +207,7 @@ export function createWebAuthApp(options: {
   app.use(createWebAssetsRouter());
   app.use(createJobSearchPageRouter(serviceFor, options.timeZone, now, options.writesEnabled,
     options.gmail ? (request) => [1, 2].map(slot => ({ slot,
-      email: options.gmail!.connections.get(gmailIdentityFor(request), slot)?.email ?? null })) : undefined));
+      email: options.gmail!.connections.get(gmailIdentityFor(request), slot)?.email ?? null })) : undefined, Boolean(options.jobFitAnalyzer)));
 
   // No MCP adapter or administration endpoint is mounted on the web listener.
   app.use((_request, response) => { response.status(404).json({ error: "NOT_FOUND" }); });

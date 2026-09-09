@@ -30,7 +30,7 @@ function query(request: Request, allowed: string[]): Record<string, string | num
 
 export function createJobSearchPageRouter(serviceFor: (request: Request) => WorkspaceService,
   timeZone = "Australia/Sydney", now: () => number = Date.now, completionEnabled = false,
-  gmailFor?: (request: Request) => { slot: number; email: string | null }[]) {
+  gmailFor?: (request: Request) => { slot: number; email: string | null }[], matchingEnabled=false) {
   const router = Router();
   router.get(["/", rootPath], (_request, response) => response.redirect(303, `${rootPath}/today`));
   const page = (path: string, render: (service: WorkspaceService, request: Request) => string) => {
@@ -72,9 +72,9 @@ export function createJobSearchPageRouter(serviceFor: (request: Request) => Work
   page("/tasks/:id", (service, request) => { query(request, []); return taskView(service,
     request.params.id as string, timeZone, new Date(now()).toISOString(), completionEnabled); });
   page("/jobs", (service, request) => candidateListView(service,
-    query(request, ["q", "decision", "linked", "sort", "cursor", "pageSize"]), timeZone));
+    query(request, ["q", "decision", "linked", "sort", "cursor", "pageSize"]), timeZone, matchingEnabled));
   page("/library", (service, request) => libraryView(service, String(query(request, ["q"]).q ?? "")));
   page("/jobs/:id", (service, request) => { query(request, []); return candidateView(service,
-    request.params.id as string, timeZone, new Date(now()).toISOString(), completionEnabled); });
+    request.params.id as string, timeZone, new Date(now()).toISOString(), completionEnabled, matchingEnabled); });
   return router;
 }

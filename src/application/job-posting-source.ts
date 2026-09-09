@@ -24,6 +24,41 @@ export function alertJobLinks(text:string){
   return [...found.values()];
 }
 
+function isSeekTrackingUrl(value:string){
+  try{const url=new URL(value);return url.protocol==="https:"&&!url.port&&!url.username&&!url.password
+    &&((url.hostname==="email.s.seek.com.au"&&url.pathname.startsWith("/uni/ss/c/"))
+      ||(url.hostname==="click.email.seek.com.au"&&url.pathname==="/"));}catch{return false;}
+}
+
+export function alertJobReferences(text:string){
+  const refs=new Map<string,{url:string;title:string}>();
+  for(const match of text.matchAll(/https:\/\/[^\s<>"')\]]+/gu)){
+    const url=match[0].replace(/&amp;/gu,"&");
+    const before=text.slice(Math.max(0,match.index!-240),match.index).replace(/\[$/u,"");
+    const title=before.split(/[\n\r\]]/u).at(-1)?.trim()??"";
+    if(canonicalJobUrl(url)||(isSeekTrackingUrl(url)&&/\b(engineer|architect|consultant|scientist|specialist|analyst|manager|lead|developer|designer|director|advisor|administrator|graduate|officer|coordinator|strategist)\b/iu.test(title)
+      &&!/(unsubscribe|preferences|privacy|verify|sign in)/iu.test(title)))refs.set(url,{url,title:title.slice(0,300)});
+  }
+  return [...refs.values()];
+}
+
+export async function resolveAlertJobUrl(value:string,fetcher:typeof fetch=fetch){
+  const direct=canonicalJobUrl(value);if(direct)return direct;
+  if(!isSeekTrackingUrl(value))return null;
+  let url=value;
+  for(let i=0;i<3;i++){
+    const response=await fetcher(url,{method:"GET",redirect:"manual",signal:AbortSignal.timeout(10000)});
+    await response.body?.cancel();
+    if(![301,302,303,307,308].includes(response.status))return null;
+    const location=response.headers.get("location");if(!location)return null;
+    const next=new URL(location,url).href,job=canonicalJobUrl(next);
+    if(job)return job;
+    if(!isSeekTrackingUrl(next))return null;
+    url=next;
+  }
+  return null;
+}
+
 function textContent(node:Tree.Node):string{
   if(node.nodeName==="#text")return (node as Tree.TextNode).value;
   if("childNodes" in node)return node.childNodes.map(textContent).join(" ");

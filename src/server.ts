@@ -64,7 +64,8 @@ if (webConfig) {
       const web = createWebAuthApp({ database, provider, origin: selected.origin,
         bootstrapEnabled: selected.bootstrapEnabled, writesEnabled: selected.writesEnabled,
         timeZone: config.timeZone, gmail,
-        jobFitAnalyzer: gmailConfig ? new OpenAiJobFitAnalyzer(gmailConfig.apiKey, gmailConfig.model) : undefined });
+        jobFitAnalyzer: gmailConfig && process.env.PAW_JOB_LIBRARY_EXTERNAL_MATCHING === "true"
+          ? new OpenAiJobFitAnalyzer(gmailConfig.apiKey, gmailConfig.model) : undefined });
       if (gmail) gmailMcpReader = new GmailMcpReader(gmail.connections, gmail.authorization);
       // Local S1 only: no Docker/public ingress change accompanies this listener.
       webServer = web.listen(selected.port, selected.bindHost);

@@ -33,7 +33,7 @@ export class GmailMcpReader {
     return gmailAccountKey(this.connection(identity, alias).subject);
   }
 
-  private async get(connection: GmailConnection, path: string, params = new URLSearchParams()) {
+  private async get(connection: GmailConnection, path: string, params = new URLSearchParams(), allowEmptyList = false) {
     try {
       const token = await this.authorization.access(connection);
       const url = new URL(`https://gmail.googleapis.com/gmail/v1/users/me/${path}`);
@@ -41,6 +41,7 @@ export class GmailMcpReader {
       const response = await this.fetcher(url, { method: "GET", redirect: "error",
         headers: { authorization: `Bearer ${token}` }, signal: AbortSignal.timeout(20000) });
       if (!response.ok) throw new Error("Unavailable");
+      if(response.status===204&&allowEmptyList&&path==="messages")return {messages:[],emptyResponse:true};
       return await response.json() as Record<string, unknown>;
     } catch { throw new Error("Gmail read failed; check mailbox authorization or retry later"); }
   }
@@ -94,13 +95,19 @@ export class GmailMcpReader {
 
   async jobAlerts(identity:IdentityContext,alias:"mailbox-1"|"mailbox-2") {
     const connection=this.connection(identity,alias);
-    const result=await this.get(connection,"messages",new URLSearchParams({
-      q:'newer_than:7d {from:linkedin.com from:seek.com.au} {subject:jobs subject:job subject:alert subject:职位}',
-      maxResults:"20",includeSpamTrash:"false",fields:"messages(id,threadId),nextPageToken",
-    }));
+    const messages=new Map<string,{id:string;threadId:string}>();
+    let complete=true,emptyResponse=false;
+    for(const domain of ["linkedin.com","seek.com.au"]){
+      const result=await this.get(connection,"messages",new URLSearchParams({
+        q:`newer_than:7d from:${domain} {subject:jobs subject:job subject:alert subject:职位} -subject:unlock -subject:verify`,
+        maxResults:"10",includeSpamTrash:"false",fields:"messages(id,threadId),nextPageToken",
+      }),true);
+      for(const message of z.array(z.object({id:messageId,threadId:z.string()})).max(10).parse(result.messages??[]))messages.set(message.id,message);
+      emptyResponse ||= result.emptyResponse===true;
+      complete &&= !result.nextPageToken&&!result.emptyResponse;
+    }
     if(this.accountKey(identity,alias)!==gmailAccountKey(connection.subject))throw new Error("Mailbox changed");
-    return {messages:z.array(z.object({id:messageId,threadId:z.string()})).max(20).parse(result.messages??[]),
-      complete:!result.nextPageToken};
+    return {messages:[...messages.values()],complete,emptyResponse};
   }
 
   async read(identity: IdentityContext, input: z.infer<typeof mailReadSchema>) {

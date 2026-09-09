@@ -55,6 +55,16 @@ export function createJobLibraryRouter(serviceFor:(request:Request)=>WorkspaceSe
     const input=z.object({draft:z.string().max(50000),expectedUpdatedAt:z.string().datetime()}).strict().parse(request.body);
     response.json(serviceFor(request).jobLibraryService.saveDraft(z.string().uuid().parse(request.params.id),input.draft,input.expectedUpdatedAt));
   });
+  router.post("/library/candidates/:id/description",(request,response)=>{
+    authorizeWrite(request);
+    const service=serviceFor(request),id=z.string().uuid().parse(request.params.id);
+    const candidate=service.jobSearchQueryService.getCandidate(id);
+    const input=z.object({jd:z.string().trim().min(1).max(50000),sourceUrl:z.string().url().max(2000).nullable()}).strict().parse(request.body);
+    const url=input.sourceUrl??candidate.sourceUrl;
+    if(!url)throw new ValidationError("Posting source URL required");
+    service.jobLibraryService.saveDescription(id,input.jd,url);
+    response.json({saved:true});
+  });
   router.get("/library/candidates/:id/resume",(request,response)=>{
     const service=serviceFor(request),id=z.string().uuid().parse(request.params.id);
     const candidate=service.jobSearchQueryService.getCandidate(id),fit=service.jobLibraryService.fit(id);

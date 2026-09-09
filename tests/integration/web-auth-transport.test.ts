@@ -225,6 +225,12 @@ it("allows only CSRF-authorized library and candidate decisions with general bro
   expect((await w.request(endpoint,{method:"POST",headers,body:JSON.stringify(decision)})).status).toBe(200);
   expect((await w.request(endpoint,{method:"POST",headers,body:JSON.stringify(decision)})).status).toBe(200);
   expect(w.service.jobSearchQueryService.getCandidate(candidate.id).decision).toBe("SAVED");
+  const jdPath=`/api/v1/job-search/library/candidates/${candidate.id}/description`;
+  expect((await w.request(jdPath,{method:"POST",headers,body:JSON.stringify({jd:"Saved source JD",sourceUrl:"https://www.seek.com.au/job/123"})})).status).toBe(200);
+  expect(w.service.jobLibraryService.description(candidate.id)?.jd_text).toBe("Saved source JD");
+  expect((await w.request(`/api/v1/job-search/library/candidates/${candidate.id}/compare`,{method:"POST",headers,body:JSON.stringify({jd:"Valid full JD. ".repeat(30),sourceUrl:"https://www.seek.com.au/job/123"})})).status).toBe(422);
+  const candidatePage=await (await w.request(`/workspace/job-search/jobs/${candidate.id}`,{headers:{cookie}})).text();
+  expect(candidatePage).toContain("data-library-jd");expect(candidatePage).not.toContain("data-library-compare");
   expect((await w.request(`/api/v1/job-search/tasks/${randomUUID()}/complete`,{method:"POST",headers,body:"{}"})).status).toBe(404);
   expect((await w.request(`/api/v1/job-search/library/candidates/${randomUUID()}/draft`,{method:"POST",headers,body:JSON.stringify({draft:"x",expectedUpdatedAt:new Date().toISOString()})})).status).toBe(404);
 });

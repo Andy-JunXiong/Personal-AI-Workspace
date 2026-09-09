@@ -17,6 +17,15 @@ source traceability, stale-result detection and less repeated document selection
 The longer-term foundation is a reusable body of interview and experience evidence;
 the library currently stores documents/cases, not an independently verified fact graph.
 
+## Current operating choice
+
+External model matching is disabled by default. The current user selection is to
+save library material, candidate postings and JDs only. The server supplies no
+comparison provider unless `PAW_JOB_LIBRARY_EXTERNAL_MATCHING=true` is explicitly
+configured after user authorization. With it off, alert imports make no model calls,
+and candidate details offer Save JD instead of comparison. Existing Gmail
+application-status processing is independent of this setting.
+
 ## User workflow
 
 1. Open **求职／面试资料库**. Add, search, review or exclude resume versions, project
@@ -54,15 +63,20 @@ the library currently stores documents/cases, not an independently verified fact
 ## Integration and authority
 
 Gmail queries are bounded to seven days, LinkedIn/SEEK sender domains and job-alert
-subject keywords, with at most 20 messages per mailbox. Sender metadata is checked
+subject keywords, with at most ten messages per provider in each mailbox. Sender metadata is checked
 before reading targeted bodies for posting URLs. Other mail is not read by this
 flow. Listing/body limits and mailbox failures are reported, not treated as full coverage.
+HTTP 204 empty list responses are reported separately as unverified coverage;
+they neither prove no matching mail nor imply authorization failure.
 At most ten postings are handled per run and three previously unassessed jobs with
 usable JDs are automatically compared. Further jobs can be compared individually.
 New links are prioritized on subsequent imports. Known application posting URLs
 are excluded, including closed applications. No alert enters application timelines.
 
-Only canonical HTTPS LinkedIn/SEEK posting paths may be fetched; redirects must
+Job-labelled SEEK email tracking links may be resolved through two exact official
+tracking hosts, at most twenty links per run. Unsubscribe/preferences links are
+excluded. Redirects outside those hosts and canonical posting paths are rejected.
+For JD fetches, only canonical HTTPS LinkedIn/SEEK posting paths are allowed; redirects must
 retain the same provider and posting identity. Responses are bounded and require
 one substantive JSON-LD JobPosting. Login walls, unavailable structured data and
 blocked pages produce missing JD, not fabricated matches. Website access is not
@@ -86,8 +100,22 @@ instruction, exact citations, blocked-JD behavior, candidate deduplication and
 decision preservation, migration preservation/repeated startup, and mobile layout.
 The browser check uses a 390px viewport and the real private source inventory.
 
-Production release and private-data import are pending until recorded here.
-Previous live release: `dossier-20260909-r1`. Recovery rehearsal must use
+Production release `library-20260909-r1` went live at 2026-09-09T10:42:53Z.
+Source commit: `c1399c2398aa844622e101cc4f86ba6d4e4787d9`. All 381 tests in 48
+files, server/browser type checks and production build passed. The 390px browser
+check rendered the complete private inventory without page overflow. Private source
+import and source-by-source readback passed after deployment.
+
+Image SHA256: `aaaafccfad99e2266cd36c0e261c83129fb64698ee4a56760788d4d2fcd5ce7f`.
+Archive SHA256: `f2f0bc0a67ea64f378bfee99c017e6a4dc547ecd923a62584673682335a81e91`.
+The backup-copy upgrade preserved all 37 preexisting business tables, added four
+empty tables, and passed repeated startup and previous-image startup. Before/after
+deployment had 38/42 tables and 1533/1534 rows; the sole added row was migration 015.
+Public OAuth, signed-out access, route isolation and task-write-off checks passed.
+Initial real alert discovery and external model acceptance are tracked separately
+from these deployment and import checks.
+
+Immediate rollback image: `dossier-20260909-r1`. Recovery rehearsal uses
 `--job-library-upgrade`, verify all preexisting rows, then test repeated candidate
 startup and previous-image startup against the upgraded copy. Import is a separate
 authorized data change after deployment preservation verification.

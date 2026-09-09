@@ -22,7 +22,7 @@ export class JobLibraryService {
  description(id:string){this.candidate(id);return this.db.prepare("SELECT jd_text,source_url FROM job_candidate_descriptions WHERE candidate_id=? AND workspace_id=?").get(id,this.workspaceId()) as {jd_text:string;source_url:string}|undefined;}
  saveDescription(id:string,jd:string,url:string){this.candidate(id);
    this.db.prepare("INSERT INTO job_candidate_descriptions VALUES(?,?,?,?,?) ON CONFLICT(candidate_id) DO UPDATE SET jd_text=excluded.jd_text,source_url=excluded.source_url,updated_at=excluded.updated_at")
-     .run(id,this.workspaceId(),z.string().min(200).max(50000).parse(jd),z.string().url().parse(url),this.clock().toISOString());}
+     .run(id,this.workspaceId(),z.string().min(1).max(50000).parse(jd),z.string().url().parse(url),this.clock().toISOString());}
  sources():LibrarySource[]{return this.db.prepare("SELECT * FROM job_library_sources WHERE workspace_id=? ORDER BY title,id").all(this.identity().workspaceId) as LibrarySource[];}
  snapshot(){const sources=this.sources().filter(s=>s.review_status!=="EXCLUDED");
    return {sources,hash:createHash("sha256").update(JSON.stringify(sources.map(s=>[s.id,s.record_version,s.review_status]))).digest("hex")};}
