@@ -206,6 +206,29 @@ it("shows the application date and chronological evidence, and renders a saved J
 });
 afterEach(async () => { for (const cleanup of cleanups.splice(0).reverse()) await cleanup(); });
 
+it("allows only CSRF-authorized library and candidate decisions with general browser writes disabled",async()=>{
+  const w=await setup();w.link();
+  const cookie=w.sessionCookie(await w.finish(await w.start("/workspace/job-search/library")));
+  const {csrfToken}=await (await w.request("/api/v1/session",{headers:{cookie}})).json();
+  const headers={cookie,origin:webOrigin,"x-csrf-token":csrfToken,"content-type":"application/json"};
+  const input={sourceKey:"manual:test",title:"Private project",sourceUrl:null,content:"Python engineering. ".repeat(500),reviewStatus:"SOURCE",expectedVersion:0};
+  const path="/api/v1/job-search/library/sources";
+  expect((await w.request(path,{method:"POST",headers:{cookie,"content-type":"application/json"},body:JSON.stringify(input)})).status).toBe(403);
+  expect((await w.request(path,{method:"POST",headers,body:JSON.stringify({...input,workspaceId:randomUUID()})})).status).toBe(422);
+  expect((await w.request(path,{method:"POST",headers,body:JSON.stringify(input)})).status).toBe(200);
+  expect((await w.request(path,{method:"POST",headers,body:JSON.stringify({...input,title:"Stale edit"})})).status).toBe(409);
+  expect((await w.request("/workspace/job-search/library",{headers:{cookie}})).status).toBe(200);
+  expect((await w.request("/workspace/job-search/library")).status).toBe(401);
+  const {candidate}=w.service.candidateService.recordCandidate({provider:"seek",postingId:"library-1",title:"Engineer",company:"Acme",role:"Engineer",authority:{type:"EXPLICIT_USER_DEV",confirmed:true,reference:"test"},idempotencyKey:randomUUID()});
+  const decision={action:"SAVE",expectedRecordVersion:candidate.recordVersion,intentKey:randomUUID()};
+  const endpoint=`/api/v1/job-search/library/candidates/${candidate.id}/decide`;
+  expect((await w.request(endpoint,{method:"POST",headers,body:JSON.stringify(decision)})).status).toBe(200);
+  expect((await w.request(endpoint,{method:"POST",headers,body:JSON.stringify(decision)})).status).toBe(200);
+  expect(w.service.jobSearchQueryService.getCandidate(candidate.id).decision).toBe("SAVED");
+  expect((await w.request(`/api/v1/job-search/tasks/${randomUUID()}/complete`,{method:"POST",headers,body:"{}"})).status).toBe(404);
+  expect((await w.request(`/api/v1/job-search/library/candidates/${randomUUID()}/draft`,{method:"POST",headers,body:JSON.stringify({draft:"x",expectedUpdatedAt:new Date().toISOString()})})).status).toBe(404);
+});
+
 async function setup(bootstrapEnabled = true, timeZone = "Australia/Sydney", writesEnabled = false,
   gmailFactory?: (workspace: ReturnType<typeof createTestWorkspace>) => GmailRuntime) {
   const workspace = createTestWorkspace();
@@ -762,7 +785,7 @@ describe("Signed OIDC authentication over the isolated web transport", () => {
     const jobHtml = await (await w.request(`/workspace/job-search/jobs/${candidate.id}`, { headers })).text();
     expect(jobHtml).toContain("Matches distributed systems background");
     expect(jobHtml).toContain(`Candidate ${candidate.id}`);
-    expect(jobHtml).not.toContain("data-decide-candidate"); // writes are off by default
+    expect(jobHtml).toContain("data-library-decision"); // Explicitly scoped candidate operations are available.
     expect((await w.request(`/api/v1/job-search/candidates/${randomUUID()}`, { headers })).status).toBe(404);
     expect(w.database.prepare("SELECT total_changes() AS n").get()).toEqual(before);
   });

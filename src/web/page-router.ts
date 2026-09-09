@@ -3,11 +3,12 @@ import { fileURLToPath } from "node:url";
 import type { WorkspaceService } from "../application/workspace-service.js";
 import { AuthorizationError, NotFoundError, ValidationError } from "../domain/errors.js";
 import { CursorError } from "../application/read-pagination.js";
+import { libraryView } from "./job-library-views.js";
 import { applicationListView, applicationView, candidateListView, candidateView, errorView, loginView, rootPath, taskView, todayView } from "./views.js";
 
 export function createWebAssetsRouter() {
   const router = Router();
-  for (const name of ["workspace.css", "workspace.js"]) {
+  for (const name of ["workspace.css", "workspace.js", "job-library.js"]) {
     router.get(`/assets/${name}`, (_request, response) => {
       response.sendFile(fileURLToPath(new URL(`./assets/${name}`, import.meta.url)), { cacheControl: false });
     });
@@ -36,7 +37,7 @@ export function createJobSearchPageRouter(serviceFor: (request: Request) => Work
     router.get(`${rootPath}${path}`, (request, response) => {
       let authenticated = false;
       // Keep login return paths object-only. Filters are intentionally discarded.
-      const returnTo = /^\/workspace\/job-search\/(?:today|applications(?:\/[a-f0-9-]{36})?|tasks\/[a-f0-9-]{36}|jobs(?:\/[a-f0-9-]{36})?)$/u.test(request.path)
+      const returnTo = /^\/workspace\/job-search\/(?:today|library|applications(?:\/[a-f0-9-]{36})?|tasks\/[a-f0-9-]{36}|jobs(?:\/[a-f0-9-]{36})?)$/u.test(request.path)
         ? request.path : `${rootPath}/applications`;
       try {
         const service = serviceFor(request);
@@ -71,7 +72,8 @@ export function createJobSearchPageRouter(serviceFor: (request: Request) => Work
   page("/tasks/:id", (service, request) => { query(request, []); return taskView(service,
     request.params.id as string, timeZone, new Date(now()).toISOString(), completionEnabled); });
   page("/jobs", (service, request) => candidateListView(service,
-    query(request, ["q", "decision", "linked", "cursor", "pageSize"]), timeZone));
+    query(request, ["q", "decision", "linked", "sort", "cursor", "pageSize"]), timeZone));
+  page("/library", (service, request) => libraryView(service, String(query(request, ["q"]).q ?? "")));
   page("/jobs/:id", (service, request) => { query(request, []); return candidateView(service,
     request.params.id as string, timeZone, new Date(now()).toISOString(), completionEnabled); });
   return router;

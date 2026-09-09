@@ -22,6 +22,12 @@ See the [authoritative core workflow](docs/architecture/CORE_JOB_WORKFLOW.md).
 
 ## Current state — 2026-09-09
 
+In development: [proactive job discovery and interview library](docs/architecture/JOB_LIBRARY_WORKFLOW.md).
+The latest user instruction enables scoped candidate decisions, source-library edits,
+JD comparison and resume drafts in the website. Production remains on the release below
+until deployment and private-source import are verified.
+
+
 Latest release: [post-application dossier workflow](docs/architecture/APPLICATION_DOSSIER_WORKFLOW.md),
 `dossier-20260909-r1`. Each application shows a four-item materials checklist:
 posting URL, JD, confirmed submitted resume version and structured skills comparison.

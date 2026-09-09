@@ -1,5 +1,7 @@
 # Documentation index
 
+- [Proactive job discovery and interview library](architecture/JOB_LIBRARY_WORKFLOW.md): pre-application source aggregation, evidence-based matching, candidate decisions and tailored drafts.
+
 - [Application dossier workflow](architecture/APPLICATION_DOSSIER_WORKFLOW.md): posting URL, JD snapshot, submitted resume version and requirement-to-skill comparison.
 
 - [Application progress timeline](mvp/APPLICATION_PROGRESS_TIMELINE_2026-09-09.md): meaningful application milestones, excluding check receipts and vacancy marketing.

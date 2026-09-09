@@ -236,3 +236,14 @@ downstream and short-/long-term benefits before editing. Distinguish planned,
 implemented locally, deployed, manually tested and scheduled-run verified.
 Every proposed feature must explain how it serves this core flow rather than
 introducing a competing one.
+
+
+## Proactive preparation authorized by Jun - 2026-09-09
+
+The latest instruction replaces a single generic-resume baseline with an aggregate
+interview/experience library. The user explicitly selected in-Workspace matching,
+save/ignore, resume preparation, and external-site submission. Scoped library and
+candidate preparation writes are now authorized; general application/task mutations
+retain their existing authority rules. Alert discovery remains separate from actual
+application evidence and daily mail follow-up. See [the library workflow](JOB_LIBRARY_WORKFLOW.md)
+for source provenance, score limitations, access boundaries and release evidence.

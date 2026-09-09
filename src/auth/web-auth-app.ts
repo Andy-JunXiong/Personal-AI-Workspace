@@ -22,11 +22,14 @@ import { createJobSearchPageRouter, createWebAssetsRouter } from "../web/page-ro
 import { loginFailureView } from "../web/views.js";
 import type { GmailRuntime } from "../gmail/checks.js";
 import { createGmailRouter } from "../gmail/router.js";
+import { createJobLibraryRouter } from "./job-library-router.js";
+import type { JobFitAnalyzer } from "../application/job-fit-analyzer.js";
+import { GmailMcpReader } from "../gmail/mcp-reader.js";
 
 const SESSION_COOKIE = "__Host-paw_session";
 const LOGIN_COOKIE = "__Host-paw_login";
 const cookieOptions = { secure: true, httpOnly: true, sameSite: "lax" as const, path: "/" };
-const objectRoute = /^\/workspace\/job-search\/(?:today|applications(?:\/[a-f0-9-]{36})?|tasks\/[a-f0-9-]{36}|jobs(?:\/[a-f0-9-]{36})?)$/u;
+const objectRoute = /^\/workspace\/job-search\/(?:today|library|applications(?:\/[a-f0-9-]{36})?|tasks\/[a-f0-9-]{36}|jobs(?:\/[a-f0-9-]{36})?)$/u;
 
 export function safeReturnTo(value: unknown): string {
   if (value === undefined) return "/workspace/job-search/today";
@@ -53,6 +56,7 @@ export function createWebAuthApp(options: {
   now?: () => number;
   timeZone?: string;
   gmail?: GmailRuntime;
+  jobFitAnalyzer?: JobFitAnalyzer;
 }) {
   const origin = new URL(options.origin);
   if (origin.protocol !== "https:" || origin.origin !== options.origin) {
@@ -79,6 +83,7 @@ export function createWebAuthApp(options: {
     }
     next();
   });
+  app.use("/api/v1/job-search/library", express.json({ limit: "256kb" }));
   app.use(express.json({ limit: "4kb" }));
 
   // Bounded aggregate limit: do not trust spoofable forwarding headers as an
@@ -181,6 +186,9 @@ export function createWebAuthApp(options: {
     return session;
   };
   if (options.gmail) app.use(createGmailRouter(options.gmail, options.origin, gmailIdentityFor, serviceFor, now));
+  app.use("/api/v1/job-search", createJobLibraryRouter(serviceFor,
+    (request) => gmailIdentityFor(request, true), options.jobFitAnalyzer,
+    options.gmail ? new GmailMcpReader(options.gmail.connections,options.gmail.authorization) : undefined));
   if (options.writesEnabled) {
     const writeServiceFor = (request: Request) => {
       const session = sessions.getSession(cookie(request, SESSION_COOKIE));

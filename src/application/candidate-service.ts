@@ -195,6 +195,16 @@ export class CandidateService {
     );
   }
 
+  recordDiscoveredCandidateFromWeb(input: Omit<RecordCandidateInput,"authority"|"idempotencyKey">) {
+    const context=this.resolveContext();
+    if(context.channel!=="WEB")throw new AuthorizationError("Discovery requires a verified browser request");
+    const fields=this.normalizeCandidateFields(input);
+    const existing=this.database.prepare("SELECT * FROM job_candidates WHERE workspace_id=? AND provider=? AND posting_id=?")
+      .get(context.workspaceId,fields.provider,fields.postingId) as CandidateRow|undefined;
+    if(existing&&input.sourceAvailability!=="AVAILABLE")return {candidate:mapCandidateRow(existing),created:false,changed:false};
+    return this.database.transaction(()=>this.upsertCandidateRecord(context.workspaceId,fields))();
+  }
+
   recordRecommendationRun(input: RecordRecommendationRunInput): {
     run: RecommendationRunDetails;
     replayed: boolean;

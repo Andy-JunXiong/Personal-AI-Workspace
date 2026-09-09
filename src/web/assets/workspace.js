@@ -107,7 +107,7 @@ async function decideCandidate(control) {
     if (session.status === 401) { main.replaceChildren(); location.replace(location.pathname); return; }
     if (!session.ok) throw new Error('session unavailable');
     const { csrfToken } = await session.json();
-    const response = await fetch(`/api/v1/job-search/candidates/${encodeURIComponent(candidateId)}/decide`, {
+    const response = await fetch(`/api/v1/job-search/${control.hasAttribute('data-library-decision') ? 'library/' : ''}candidates/${encodeURIComponent(candidateId)}/decide`, {
       method: 'POST',
       headers: { 'content-type': 'application/json', 'x-csrf-token': csrfToken },
       body: JSON.stringify({ action, expectedRecordVersion, intentKey }),

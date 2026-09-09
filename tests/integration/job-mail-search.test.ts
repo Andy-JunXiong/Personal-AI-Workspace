@@ -138,8 +138,10 @@ it("builds follow-up company and sender criteria only from ongoing applications"
 
 it("adds only empty policy/metadata tables and supports repeated and older startup against a migrated copy",()=>{
   const w=fixture(),base=resolve(w.directory!,"before014"),old=resolve(w.directory!,"old014");
-  mkdirSync(old);for(const f of readdirSync("db/migrations").filter(f=>f.endsWith('.sql')&&!f.startsWith('014_')))copyFileSync(resolve("db/migrations",f),resolve(old,f));
+  const current=resolve(w.directory!,"current014");mkdirSync(current);
+  for(const f of readdirSync("db/migrations").filter(f=>f.endsWith('.sql')&&f<'015_'))copyFileSync(resolve("db/migrations",f),resolve(current,f));
+  mkdirSync(old);for(const f of readdirSync(current).filter(f=>!f.startsWith('014_')))copyFileSync(resolve(current,f),resolve(old,f));
   const before=openDatabase(base,old);before.close();const after=resolve(w.directory!,"after014");copyFileSync(base,after);
-  openDatabase(after).close();openDatabase(after).close();openDatabase(after,old).close();
-  expect(verifyJobMailSearchMigration(base,after).status).toBe("PASS");
+  openDatabase(after,current).close();openDatabase(after,current).close();openDatabase(after,old).close();
+  expect(verifyJobMailSearchMigration(base,after,current).status).toBe("PASS");
 });

@@ -10,6 +10,7 @@ import { loadGmailConfig } from "./gmail/config.js";
 import { GmailConnections } from "./gmail/connections.js";
 import { googleGmailAuthorization, GmailReader, OpenAiMailInterpreter } from "./gmail/providers.js";
 import { GmailMcpReader } from "./gmail/mcp-reader.js";
+import { OpenAiJobFitAnalyzer } from "./application/job-fit-analyzer.js";
 
 const config = loadConfig();
 let webConfig: ReturnType<typeof loadWebConfig>;
@@ -62,7 +63,8 @@ if (webConfig) {
       if (shuttingDown) return;
       const web = createWebAuthApp({ database, provider, origin: selected.origin,
         bootstrapEnabled: selected.bootstrapEnabled, writesEnabled: selected.writesEnabled,
-        timeZone: config.timeZone, gmail });
+        timeZone: config.timeZone, gmail,
+        jobFitAnalyzer: gmailConfig ? new OpenAiJobFitAnalyzer(gmailConfig.apiKey, gmailConfig.model) : undefined });
       if (gmail) gmailMcpReader = new GmailMcpReader(gmail.connections, gmail.authorization);
       // Local S1 only: no Docker/public ingress change accompanies this listener.
       webServer = web.listen(selected.port, selected.bindHost);

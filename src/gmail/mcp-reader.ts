@@ -92,6 +92,17 @@ export class GmailMcpReader {
       externalId:gmailSourceId(gmailAccountKey(connection.subject),root.id)};
   }
 
+  async jobAlerts(identity:IdentityContext,alias:"mailbox-1"|"mailbox-2") {
+    const connection=this.connection(identity,alias);
+    const result=await this.get(connection,"messages",new URLSearchParams({
+      q:'newer_than:7d {from:linkedin.com from:seek.com.au} {subject:jobs subject:job subject:alert subject:职位}',
+      maxResults:"20",includeSpamTrash:"false",fields:"messages(id,threadId),nextPageToken",
+    }));
+    if(this.accountKey(identity,alias)!==gmailAccountKey(connection.subject))throw new Error("Mailbox changed");
+    return {messages:z.array(z.object({id:messageId,threadId:z.string()})).max(20).parse(result.messages??[]),
+      complete:!result.nextPageToken};
+  }
+
   async read(identity: IdentityContext, input: z.infer<typeof mailReadSchema>) {
     const value = mailReadSchema.parse(input);
     if (value.bodyOffset && !value.bodyVersion) throw new Error("Body continuation requires its version");

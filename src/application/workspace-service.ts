@@ -11,6 +11,7 @@ import { canonicalHash, canonicalJson } from "../domain/canonical-json.js";
 import { verifiedRequestContext, type RequestContext } from "./request-context.js";
 import { JobSearchQueryService } from "./job-search-query-service.js";
 import { CandidateService } from "./candidate-service.js";
+import { JobLibraryService } from "./job-library-service.js";
 import { MailScanService } from "./mail-scan-service.js";
 import { MailBatchService } from "./mail-batch-service.js";
 import { ManualMailService } from "./manual-mail-service.js";
@@ -247,6 +248,7 @@ export class WorkspaceService {
   readonly todayQueryService: TodayQueryService;
   readonly jobSearchQueryService: JobSearchQueryService;
   readonly candidateService: CandidateService;
+  readonly jobLibraryService: JobLibraryService;
   readonly mailScanLedger: MailScanLedger;
   readonly mailScanService: MailScanService;
   readonly mailBatchService: MailBatchService;
@@ -259,6 +261,7 @@ export class WorkspaceService {
   ) {
     this.identitySource = Object.freeze({ ...identitySource });
     const resolveIdentity = () => this.resolveIdentity();
+    this.jobLibraryService = new JobLibraryService(database, resolveIdentity, options.clock);
     const resolveTaskContext = () => ({
       ...resolveIdentity(),
       channel: "channel" in this.identitySource ? this.identitySource.channel : "MCP" as const,

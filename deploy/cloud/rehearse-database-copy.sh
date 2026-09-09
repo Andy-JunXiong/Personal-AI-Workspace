@@ -10,11 +10,14 @@ backup_name="${1:-}"
 current_tag="${2:-}"
 previous_tag="${3:-}"
 mode="${4:-unchanged}"
-if [[ "${mode}" != unchanged && "${mode}" != --s2-upgrade && "${mode}" != --mail-batch-upgrade && "${mode}" != --mail-ingestion-upgrade && "${mode}" != --mail-scan-ledger-upgrade && "${mode}" != --mail-body-read-upgrade && "${mode}" != --job-mail-search-upgrade ]]; then
+if [[ "${mode}" != unchanged && "${mode}" != --s2-upgrade && "${mode}" != --mail-batch-upgrade && "${mode}" != --mail-ingestion-upgrade && "${mode}" != --mail-scan-ledger-upgrade && "${mode}" != --mail-body-read-upgrade && "${mode}" != --job-mail-search-upgrade && "${mode}" != --job-library-upgrade ]]; then
   echo "Optional fourth argument must be a supported upgrade mode, including --job-mail-search-upgrade" >&2
   exit 1
 fi
 upgrade_verifier=dist/scripts/verify-s2-migration.js
+if [[ "${mode}" == --job-library-upgrade ]]; then
+  upgrade_verifier=dist/scripts/verify-job-library-migration.js
+fi
 if [[ "${mode}" == --mail-batch-upgrade ]]; then
   upgrade_verifier=dist/scripts/verify-mail-batch-migration.js
 fi

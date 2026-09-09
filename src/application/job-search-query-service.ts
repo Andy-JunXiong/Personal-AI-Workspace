@@ -9,6 +9,7 @@ import { isLifecycleState } from "../domain/job-application-lifecycle.js";
 import type { Clock } from "./task-service.js";
 import { readPage } from "./read-pagination.js";
 import { mapCandidateRow, type CandidateRow } from "./candidate-service.js";
+import { JobLibraryService } from "./job-library-service.js";
 import type { JobApplicationSummary } from "./workspace-service.js";
 
 const pageFields = {
@@ -33,6 +34,7 @@ const candidateSchema = z.object({
   ...pageFields,
   decision: z.enum(["UNREVIEWED", "SAVED", "DISMISSED", "ALL"]).default("ALL"),
   linked: z.enum(["ALL", "LINKED", "UNLINKED"]).default("ALL"),
+  sort: z.enum(["UPDATED_DESC", "FIT_DESC"]).default("UPDATED_DESC"),
   q: z.string().trim().max(500).default(""),
 }).strict();
 const recommendationRunSchema = z.object(pageFields).strict();
@@ -355,14 +357,18 @@ export class JobSearchQueryService {
     const q = searchText(options.q);
     return this.database.transaction(() => {
       const identity = this.resolveIdentity();
+      const libraryHash = new JobLibraryService(this.database,this.resolveIdentity,this.clock).snapshot().hash;
       const rows = () => this.database.prepare(`SELECT * FROM job_candidates
         WHERE workspace_id = @workspace
           AND (@decision = 'ALL' OR decision = @decision)
           AND (@linked = 'ALL'
             OR (@linked = 'LINKED' AND linked_project_id IS NOT NULL)
             OR (@linked = 'UNLINKED' AND linked_project_id IS NULL))
-        ORDER BY updated_at DESC, id ASC`
-      ).iterate({ workspace: identity.workspaceId, decision: options.decision, linked: options.linked }) as Iterable<CandidateRow>;
+        ORDER BY CASE WHEN @sort='FIT_DESC' THEN (SELECT score FROM job_candidate_fit f
+          WHERE f.candidate_id=job_candidates.id AND f.workspace_id=@workspace AND f.library_hash=@libraryHash) END DESC,
+          updated_at DESC, id ASC`
+      ).iterate({ workspace: identity.workspaceId, decision: options.decision, linked: options.linked,
+        sort: options.sort, libraryHash }) as Iterable<CandidateRow>;
       function* candidates(): Generator<JobCandidateRecord> {
         for (const row of rows()) {
           const candidate = mapCandidateRow(row);
@@ -373,7 +379,7 @@ export class JobSearchQueryService {
         }
       }
       return readPage(candidates, { kind: "candidates", principalId: identity.principalId, workspaceId: identity.workspaceId,
-        decision: options.decision, linked: options.linked, q, pageSize: options.pageSize },
+        decision: options.decision, linked: options.linked, sort: options.sort, libraryHash, q, pageSize: options.pageSize },
       options.pageSize, options.cursor, this.clock().valueOf());
     })();
   }

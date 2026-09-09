@@ -85,3 +85,5 @@
 .calendar-note { padding: 18px 24px; font-size: 12px; line-height: 1.8; }
 @media (max-width: 900px) { .calendar-months { grid-template-columns: minmax(0, 1fr); gap: 26px; } }
 @media (max-width: 700px) { .calendar-months { padding: 0 18px; } .calendar-note { padding: 16px 18px; } .calendar-grid { gap: 4px; } .calendar-day { min-height: 56px; } .calendar-day summary { min-height: 54px; } }
+
+.library-panel{padding:24px}.library-form{display:grid;gap:16px;margin:20px 0}.library-form label{display:grid;gap:8px}.library-form textarea{width:100%;font:inherit;line-height:1.6;padding:12px;border:1px solid #ccd8d0;border-radius:8px;resize:vertical}.library-form button{justify-self:start}.library-source{padding:16px 0;border-top:1px solid #e0e6e0}.library-source summary{cursor:pointer;overflow-wrap:anywhere}.library-source small{display:inline-block;margin-left:12px}.library-table{overflow-x:auto}.library-table table{width:100%;border-collapse:collapse}.library-table th,.library-table td{text-align:left;vertical-align:top;padding:12px;border-bottom:1px solid #dce5dc;min-width:140px}.library-table td small{display:block}.sidebar nav{flex-wrap:wrap}
