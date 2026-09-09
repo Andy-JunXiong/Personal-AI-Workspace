@@ -31,13 +31,19 @@ function isSeekTrackingUrl(value:string){
 }
 
 export function alertJobReferences(text:string){
-  const refs=new Map<string,{url:string;title:string}>();
+  const refs=new Map<string,{url:string;title:string;company?:string}>();
   for(const match of text.matchAll(/https:\/\/[^\s<>"')\]]+/gu)){
     const url=match[0].replace(/&amp;/gu,"&");
     const before=text.slice(Math.max(0,match.index!-240),match.index).replace(/\[$/u,"");
-    const title=before.split(/[\n\r\]]/u).at(-1)?.trim()??"";
+    // SEEK plain-text cards put the URL before the title and company, while
+    // HTML-derived anchors commonly put their label before the URL.
+    const after=text.slice(match.index!+match[0].length,match.index!+match[0].length+800);
+    const leading=after.match(/^\]([^\r\n[\]]{1,300})\r?\n\s*\r?\n([^\r\n[\]]{1,300})/u);
+    const title=(leading?.[1]??before.split(/[\n\r\]]/u).at(-1)??"").trim().replace(/(?<=[a-z])New$/u,"");
+    const company=leading?.[2]?.trim();
     if(canonicalJobUrl(url)||(isSeekTrackingUrl(url)&&/\b(engineer|architect|consultant|scientist|specialist|analyst|manager|lead|developer|designer|director|advisor|administrator|graduate|officer|coordinator|strategist)\b/iu.test(title)
-      &&!/(unsubscribe|preferences|privacy|verify|sign in)/iu.test(title)))refs.set(url,{url,title:title.slice(0,300)});
+      &&!/(unsubscribe|preferences|privacy|verify|sign in)/iu.test(title)))refs.set(url,{url,title:title.slice(0,300),
+        ...(company&&!/^(strong applicant|recently posted)$/iu.test(company)?{company}: {})});
   }
   return [...refs.values()];
 }

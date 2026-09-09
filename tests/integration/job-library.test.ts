@@ -110,6 +110,10 @@ it("imports targeted alert links without application events, preserves decisions
 it("resolves only job-labelled SEEK tracking links and never follows external redirect targets",async()=>{
   const url="https://email.s.seek.com.au/uni/ss/c/test-token";
   expect(alertJobReferences(`AI Specialist [${url}]\nUnsubscribe [${url}/remove]`)).toEqual([{url,title:"AI Specialist"}]);
+  expect(alertJobReferences(`[${url}]AI Specialist\n\nExample Company Pty Ltd\n\nStrong applicant\n\n[${url}/empty]`))
+    .toEqual([{url,title:"AI Specialist",company:"Example Company Pty Ltd"}]);
+  expect(alertJobReferences(`[${url}]Senior Applied AI EngineerNew\n\nExample Company\n\nSydney NSW`)[0])
+    .toMatchObject({title:"Senior Applied AI Engineer",company:"Example Company"});
   let calls=0;
   const fetcher=(async()=>{calls++;return new Response(null,{status:302,headers:{location:"https://www.seek.com.au/job/123?ref=alert"}});}) as typeof fetch;
   expect(await resolveAlertJobUrl(url,fetcher)).toMatchObject({postingId:"123",provider:"seek"});

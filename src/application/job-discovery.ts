@@ -10,8 +10,8 @@ export async function discoverJobs(service:WorkspaceService,reader:GmailMcpReade
   const checkAuthority=()=>{authorize();if(Date.now()>deadline)throw new Error("Discovery time limit reached");};
   const result={mailboxes:[] as {mailbox:string;complete:boolean;read:number;error:boolean;emptyResponse:boolean}[],
     candidateCount:0,jdCount:0,matchedCount:0,missingJd:0,comparisonFailures:0,unresolvedLinks:0,limited:false};
-  const jobs=new Map<string,ReturnType<typeof alertJobLinks>[number]&{title?:string}>();
-  const tracking=new Map<string,string>();
+  const jobs=new Map<string,ReturnType<typeof alertJobLinks>[number]&{title?:string;company?:string}>();
+  const tracking=new Map<string,{title:string;company?:string}>();
   for(const alias of ["mailbox-1","mailbox-2"] as const){
     const receipt={mailbox:alias,complete:false,read:0,error:false,emptyResponse:false};result.mailboxes.push(receipt);
     try{
@@ -31,16 +31,16 @@ export async function discoverJobs(service:WorkspaceService,reader:GmailMcpReade
         for(const job of alertJobLinks(message.text))jobs.set(job.url,job);
         for(const ref of alertJobReferences(message.text)){
           const direct=canonicalJobUrl(ref.url);
-          if(direct)jobs.set(direct.url,{...direct,title:ref.title});
-          else if(tracking.size<20)tracking.set(ref.url,ref.title);
+          if(direct)jobs.set(direct.url,{...direct,title:ref.title,company:ref.company});
+          else if(tracking.size<20)tracking.set(ref.url,{title:ref.title,company:ref.company});
           else result.limited=true;
         }
       }
     }catch{receipt.error=true;receipt.complete=false;}
   }
-  for(const [url,title] of tracking){
+  for(const [url,details] of tracking){
     checkAuthority();
-    try{const job=await resolveAlertJobUrl(url);if(job)jobs.set(job.url,{...job,title});else result.unresolvedLinks++;}
+    try{const job=await resolveAlertJobUrl(url);if(job)jobs.set(job.url,{...job,...details});else result.unresolvedLinks++;}
     catch{result.unresolvedLinks++;}
   }
   const applied=new Set(library.applicationPostingUrls().flatMap(url=>{const value=canonicalJobUrl(url);return value?[value.url]:[];}));
@@ -54,7 +54,7 @@ export async function discoverJobs(service:WorkspaceService,reader:GmailMcpReade
     try{posting=await fetchJobPosting(job.url);}catch{/* Access failures remain missing JD. */}
     checkAuthority();
     const saved=service.candidateService.recordDiscoveredCandidateFromWeb({provider:job.provider,postingId:job.postingId,
-      sourceUrl:job.url,title:posting?.title||job.title||`${job.provider} job ${job.postingId}`,company:posting?.company??"待补公司",
+      sourceUrl:job.url,title:posting?.title||job.title||`${job.provider} job ${job.postingId}`,company:posting?.company||job.company||"待补公司",
       role:posting?.title||job.title||"待读取职位描述",sourceAvailability:posting?"AVAILABLE":"UNKNOWN",
       fitUncertainty:"UNKNOWN",fitReason:posting?"来自 Job Alert，已获取职位描述。":"来自 Job Alert；原网站未返回可用 JD，请打开原链接补充。"});
     result.candidateCount++;
