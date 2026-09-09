@@ -1,5 +1,7 @@
+import * as resumeExport from "../../src/application/resume-export.js";
+import {resumeFixture} from "../helpers/resume-fixture.js";
 import { request as httpRequest, type Server } from "node:http";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { createWebAuthApp } from "../../src/auth/web-auth-app.js";
 import { IdentityLinks } from "../../src/auth/identity-links.js";
 import { createTestWorkspace } from "../helpers/test-workspace.js";
@@ -902,4 +904,54 @@ it("defaults to newest application date with undated applications last, independ
   const page = w.service.jobSearchQueryService.listApplications({ status: "ALL" });
   expect(page.items.map(a => a.projectId)).toEqual([newest, w.projectId, unknown]);
   expect(w.service.jobSearchQueryService.listApplications({ sort: "UPDATED_DESC" }).items[0]?.projectId).toBe(w.projectId);
+});
+
+
+it("offers scoped resume editing with CSRF, authenticated readback and full-size content while general writes are off", async () => {
+  const w=await setup();w.link();
+  const content=resumeFixture();content.summary="Example resume text. ".repeat(400);
+  w.service.resumeService.initialize(Buffer.from("PKsynthetic"),content,"https://drive.google.com/file/d/example/view");
+  expect((await w.request("/api/v1/job-search/resume")).status).toBe(401);
+  expect((await w.request("/workspace/job-search/resume")).status).toBe(401);
+  const cookie=w.sessionCookie(await w.finish(await w.start("/workspace/job-search/resume")));
+  const {csrfToken}=await (await w.request("/api/v1/session",{headers:{cookie}})).json();
+  const input={expectedVersion:1,content:{...content,headline:"Updated Engineer"}};
+  const headers={cookie,origin:webOrigin,"x-csrf-token":csrfToken,"content-type":"application/json"};
+  const path="/api/v1/job-search/resume";
+  expect((await w.request(path,{method:"POST",headers:{...headers,"x-csrf-token":"bad"},body:JSON.stringify(input)})).status).toBe(403);
+  expect((await w.request(path,{method:"POST",headers:{...headers,origin:"https://evil.test"},body:JSON.stringify(input)})).status).toBe(403);
+  expect((await w.request(path,{method:"POST",headers,body:JSON.stringify(input)})).status).toBe(200);
+  expect((await w.request(path,{method:"POST",headers,body:JSON.stringify(input)})).status).toBe(409);
+  expect(await (await w.request(path,{headers:{cookie}})).json()).toMatchObject({recordVersion:2,content:{headline:"Updated Engineer"}});
+  expect((await w.request(path+"/export",{method:"POST",headers,body:'{"version":1,"format":"docx"}'})).status).toBe(409);
+  expect((await w.request(path+"/export",{method:"POST",headers:{...headers,"x-csrf-token":"bad"},body:'{"version":2,"format":"docx"}'})).status).toBe(403);
+  const page=await (await w.request("/workspace/job-search/resume",{headers:{cookie}})).text();
+  expect(page).toContain("data-resume-editor");expect(page).toContain("Updated Engineer");
+});
+
+
+it("previews an unsaved resume with scoped authority without persisting it",async()=>{
+  const w=await setup();w.link();const content=resumeFixture();
+  w.service.resumeService.initialize(Buffer.from("PKsynthetic"),content,"https://drive.google.com/file/d/example/view");
+  const cookie=w.sessionCookie(await w.finish(await w.start("/workspace/job-search/resume")));
+  const {csrfToken}=await (await w.request("/api/v1/session",{headers:{cookie}})).json();
+  const headers={cookie,origin:webOrigin,"x-csrf-token":csrfToken,"content-type":"application/json"};
+  const before=w.service.resumeService.get(),draft={...content,summary:"Unsaved preview content"};
+  const body=JSON.stringify({version:1,content:draft}),path="/api/v1/job-search/resume/preview";
+  const exporter=vi.spyOn(resumeExport,"exportResume").mockResolvedValue(Buffer.from("%PDF-1.4 synthetic transport fixture"));
+  try{
+    expect((await w.request(path,{method:"POST",headers:{...headers,"x-csrf-token":"invalid"},body})).status).toBe(403);
+    expect((await w.request(path,{method:"POST",headers,body:JSON.stringify({version:2,content:draft})})).status).toBe(409);
+    expect((await w.request(path,{method:"POST",headers,body:JSON.stringify({version:1,content:{...draft,name:"Wrong identity"}})})).status).toBe(422);
+    expect(exporter).not.toHaveBeenCalled();
+    const response=await w.request(path,{method:"POST",headers,body});
+    expect(response.status).toBe(200);expect(response.headers.get("content-type")).toContain("application/pdf");
+    expect(response.headers.get("content-disposition")).toContain("inline;");
+    expect(exporter).toHaveBeenCalledWith(expect.objectContaining({content:draft}),"pdf");
+    expect(w.service.resumeService.get()).toEqual(before);
+    const page=await w.request("/workspace/job-search/resume",{headers:{cookie}});
+    expect(page.headers.get("content-security-policy")).toContain("frame-src blob:");
+    expect(await page.text()).toContain("data-resume-preview");
+    expect((await w.request("/workspace/job-search/today",{headers:{cookie}})).headers.get("content-security-policy")).not.toContain("frame-src");
+  }finally{exporter.mockRestore();}
 });

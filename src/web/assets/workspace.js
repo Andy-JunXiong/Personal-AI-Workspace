@@ -399,6 +399,7 @@ document.addEventListener('click', async (event) => {
   }
 });
 async function resume() {
+  if (document.querySelector("[data-resume-editor]")) return;
   void gmailBatch();
   if (!dirty) { void readPage(firstPageUrl()); return; }
   announce('筛选条件尚未应用，已保留你的输入。应用筛选后会读取最新状态。');

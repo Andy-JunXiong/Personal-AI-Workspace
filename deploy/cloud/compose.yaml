@@ -30,7 +30,7 @@ services:
         target: /app/backups
     read_only: true
     tmpfs:
-      - /tmp:rw,noexec,nosuid,size=64m
+      - /tmp:rw,noexec,nosuid,size=128m
     cap_drop:
       - ALL
     security_opt:

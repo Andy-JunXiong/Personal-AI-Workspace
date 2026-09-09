@@ -28,8 +28,10 @@ it("migrates an existing workspace additively and supports repeat and older star
     const baseline=openDatabase(before,old);
     new WorkspaceService(baseline,{issuer:"migration",subject:"user",workspaceName:"Retained"}).ensureDevelopmentIdentity();
     baseline.close();copyFileSync(before,after);
-    openDatabase(after).close();openDatabase(after).close();openDatabase(after,old).close();
-    expect(verifyJobLibraryMigration(before,after)).toMatchObject({status:"PASS",addedTables:["job_candidate_descriptions","job_candidate_fit","job_discovery_runs","job_library_sources"]});
+    const release=resolve(w.directory,"migrations015");mkdirSync(release);
+    for(const f of readdirSync("db/migrations").filter(f=>f.endsWith(".sql")&&f<"016_"))copyFileSync(resolve("db/migrations",f),resolve(release,f));
+    openDatabase(after,release).close();openDatabase(after,release).close();openDatabase(after,old).close();
+    expect(verifyJobLibraryMigration(before,after,release)).toMatchObject({status:"PASS",addedTables:["job_candidate_descriptions","job_candidate_fit","job_discovery_runs","job_library_sources"]});
   }finally{w.cleanup();}
 });
 

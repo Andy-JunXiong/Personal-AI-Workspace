@@ -11,6 +11,7 @@ import { canonicalHash, canonicalJson } from "../domain/canonical-json.js";
 import { verifiedRequestContext, type RequestContext } from "./request-context.js";
 import { JobSearchQueryService } from "./job-search-query-service.js";
 import { CandidateService } from "./candidate-service.js";
+import { ResumeService } from "./resume-service.js";
 import { JobLibraryService } from "./job-library-service.js";
 import { MailScanService } from "./mail-scan-service.js";
 import { MailBatchService } from "./mail-batch-service.js";
@@ -248,6 +249,7 @@ export class WorkspaceService {
   readonly todayQueryService: TodayQueryService;
   readonly jobSearchQueryService: JobSearchQueryService;
   readonly candidateService: CandidateService;
+  readonly resumeService: ResumeService;
   readonly jobLibraryService: JobLibraryService;
   readonly mailScanLedger: MailScanLedger;
   readonly mailScanService: MailScanService;
@@ -261,6 +263,7 @@ export class WorkspaceService {
   ) {
     this.identitySource = Object.freeze({ ...identitySource });
     const resolveIdentity = () => this.resolveIdentity();
+    this.resumeService = new ResumeService(database, resolveIdentity, options.clock);
     this.jobLibraryService = new JobLibraryService(database, resolveIdentity, options.clock);
     const resolveTaskContext = () => ({
       ...resolveIdentity(),

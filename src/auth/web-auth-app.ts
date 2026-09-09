@@ -22,6 +22,7 @@ import { createJobSearchPageRouter, createWebAssetsRouter } from "../web/page-ro
 import { loginFailureView } from "../web/views.js";
 import type { GmailRuntime } from "../gmail/checks.js";
 import { createGmailRouter } from "../gmail/router.js";
+import { createResumeRouter } from "./resume-router.js";
 import { createJobLibraryRouter } from "./job-library-router.js";
 import type { JobFitAnalyzer } from "../application/job-fit-analyzer.js";
 import { GmailMcpReader } from "../gmail/mcp-reader.js";
@@ -29,7 +30,7 @@ import { GmailMcpReader } from "../gmail/mcp-reader.js";
 const SESSION_COOKIE = "__Host-paw_session";
 const LOGIN_COOKIE = "__Host-paw_login";
 const cookieOptions = { secure: true, httpOnly: true, sameSite: "lax" as const, path: "/" };
-const objectRoute = /^\/workspace\/job-search\/(?:today|library|applications(?:\/[a-f0-9-]{36})?|tasks\/[a-f0-9-]{36}|jobs(?:\/[a-f0-9-]{36})?)$/u;
+const objectRoute = /^\/workspace\/job-search\/(?:today|library|resume|applications(?:\/[a-f0-9-]{36})?|tasks\/[a-f0-9-]{36}|jobs(?:\/[a-f0-9-]{36})?)$/u;
 
 export function safeReturnTo(value: unknown): string {
   if (value === undefined) return "/workspace/job-search/today";
@@ -73,7 +74,7 @@ export function createWebAuthApp(options: {
     response.set({
       "Cache-Control": "private, no-store",
       "Referrer-Policy": "no-referrer",
-      "Content-Security-Policy": "default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'",
+      "Content-Security-Policy": "default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'" + (request.path==="/workspace/job-search/resume"?"; frame-src blob:":""),
       "X-Content-Type-Options": "nosniff",
       "X-Frame-Options": "DENY",
     });
@@ -84,6 +85,7 @@ export function createWebAuthApp(options: {
     next();
   });
   app.use("/api/v1/job-search/library", express.json({ limit: "256kb" }));
+  app.use("/api/v1/job-search/resume", express.json({ limit: "256kb" }));
   app.use(express.json({ limit: "4kb" }));
 
   // Bounded aggregate limit: do not trust spoofable forwarding headers as an
@@ -186,6 +188,7 @@ export function createWebAuthApp(options: {
     return session;
   };
   if (options.gmail) app.use(createGmailRouter(options.gmail, options.origin, gmailIdentityFor, serviceFor, now));
+  app.use("/api/v1/job-search", createResumeRouter(serviceFor, request => gmailIdentityFor(request, true)));
   app.use("/api/v1/job-search", createJobLibraryRouter(serviceFor,
     (request) => gmailIdentityFor(request, true), options.jobFitAnalyzer,
     options.gmail ? new GmailMcpReader(options.gmail.connections,options.gmail.authorization) : undefined));

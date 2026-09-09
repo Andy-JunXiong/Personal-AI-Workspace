@@ -16,13 +16,26 @@
 - **Connected services = source facts and capabilities**; Gmail remains authoritative for original messages.
 - **MCP / Apps SDK = integration surface**; the deployed tool transport is MCP.
 
+Storage is SQLite on AWS Lightsail (`/srv/paw/data/workspace.db`), shared by the
+website and GPT tools. Resume editing/preview/export makes no model calls. GPT
+interprets the MCP workflow; the separate website manual mail-check feature uses
+the OpenAI Responses API. Optional external job matching remains OFF. See the
+[storage and analysis responsibilities](docs/architecture/CORE_JOB_WORKFLOW.md#storage-and-analysis-responsibilities-clarified--2026-09-10).
+
 First domain: **Job Search**. Cross-conversation continuity is the original verified
 proof; reliable daily ingestion is the next operational acceptance gate.
 See the [authoritative core workflow](docs/architecture/CORE_JOB_WORKFLOW.md).
 
-## Current state — 2026-09-09
+## Current state — 2026-09-10
 
-Latest release: [proactive job discovery and interview library](docs/architecture/JOB_LIBRARY_WORKFLOW.md),
+Current development priority: [nine-region resume editor](docs/architecture/RESUME_EDITOR.md),
+following Jun's instruction to finish the reusable resume before further external
+job updates. The editor is deployed to AWS as `resume-editor-20260909-r3`, with
+migration 016 and the base resume saved as version 1. Real save, PDF preview and
+Word/PDF downloads passed; both cloud PDF pages were inspected, including spacing
+and education-date fixes. [Open Resume](https://workspace.ai-radar-lab.com/workspace/job-search/resume).
+
+Previous release: [proactive job discovery and interview library](docs/architecture/JOB_LIBRARY_WORKFLOW.md),
 `library-20260909-r4`, source `b8da4bb`. The website supports scoped library edits,
 candidate decisions and JD storage. External-model matching and draft generation
 are disabled by default, following the user's storage-only choice. All 384 tests,
@@ -101,7 +114,7 @@ September 10. Actual scheduled acceptance remains pending.
 
 | Area | Delivered and verified | Remaining gate |
 | --- | --- | --- |
-| Production | `library-20260909-r4`, migrations 001-015; 384 tests, build, backup/recovery, health and data preservation passed; runtime source `b8da4bb` | Ten candidate JDs still missing; alert coverage incomplete; external matching disabled |
+| Production | `resume-editor-20260909-r3`, migrations 001-016; backup/recovery, health, data preservation and live resume preview/export verified; source tracked by a 149-file manifest | Ten candidate JDs still missing; alert coverage incomplete; external matching disabled; named resume variants remain a future increment |
 | Durable operations | Applications, attributable observations, lifecycle transitions, Tasks, candidates, recommendation runs and scan receipts share one Workspace database | Sustained daily use remains to be evaluated |
 | Website | [Job Search](https://workspace.ai-radar-lab.com/workspace/job-search/today): Today, inventory, timelines, JD/skill reports and resume file/version links | Historical JD and skill reports still need source-grounded backfill |
 | Mail search | Both mailboxes; subject keywords, stored companies and linked exact senders; normal 24-hour / maximum 72-hour recovery; matching-body review and deduplication | New applications require explicit submission-confirmation evidence; filtered completion does not cover every email |

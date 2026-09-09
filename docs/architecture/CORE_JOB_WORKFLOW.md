@@ -1,5 +1,47 @@
 # Core job workflow — authoritative product boundary
 
+## Storage and analysis responsibilities clarified — 2026-09-10
+
+The deployed system stores Workspace records in SQLite on the existing AWS
+Lightsail instance, at `/srv/paw/data/workspace.db` (container path
+`/app/data/workspace.db`). Local backup files are under `/srv/paw/backups`; this is
+not a separate RDS database or evidence of an off-instance backup. Website and MCP
+use the same database. The resume table retains structured content, the private
+template copy and a version counter. Original messages stay in Gmail; original
+Drive files stay in Drive. Ordinary conversation text is not automatically stored:
+GPT must invoke the appropriate Workspace write tools to persist its results.
+
+| Path | Analysis/execution responsibility | Model API behavior |
+| --- | --- | --- |
+| Interactive GPT and hosted Job Tracker via MCP | GPT interprets evidence; Workspace supplies sources, validates operations and persists admitted results | This MCP mail-read path adds no backend model call; scheduled-run acceptance remains separate |
+| Website resume save, Preview, Word/PDF export | Workspace service plus Python template processing and LibreOffice PDF rendering | No OpenAI model call |
+| Website manual application email check | Gmail search returns matching subjects/snippets; backend `GmailChecks` invokes `OpenAiMailInterpreter` | Calls the OpenAI Responses API for eligible nonempty batches; independent of the external job-matching switch |
+| External job matching/draft generation | Optional backend `OpenAiJobFitAnalyzer` | Remains disabled with `PAW_JOB_LIBRARY_EXTERNAL_MATCHING` off |
+
+The earlier conversational statement that the entire Workspace makes no OpenAI
+API calls was too broad. The deployed Gmail overlay enables Gmail, and server
+wiring creates the manual-check interpreter. Code evidence is in `src/server.ts`,
+`src/gmail/checks.ts`, `src/gmail/providers.ts` and `deploy/cloud/compose.gmail.yaml`.
+This clarification does not claim actual usage volume or API charges from billing
+records, and does not disable the existing feature or change any credentials.
+
+This handoff preserves the accepted resume-first priority: the online base resume
+is usable now, and future named per-job variants/JD comparison can reuse its saved
+content. Keeping each analysis path explicit avoids confusing backend storage APIs
+with model APIs when choosing the next increment.
+
+## Resume editing prioritized by Jun — 2026-09-09
+
+Jun explicitly requests a dedicated nine-region website editor before more external
+job updates. Name/contact stay fixed; other content saves to the same Workspace
+database, with Word/PDF exports based on the private Drive template. This authorizes
+scoped resume edits, not submission or application lifecycle changes. The
+[editor contract](RESUME_EDITOR.md) records the AWS deployment on September 10
+Sydney time: `resume-editor-20260909-r3`, migration 016, saved baseline version 1,
+live save/preview/Word/PDF acceptance and retained business data. Next, use the base
+resume for later per-job variants and JD comparisons. Daily task configuration and
+external matching OFF remain unchanged; this release does not validate a scheduled run.
+
 ## Post-application materials — 2026-09-09
 
 Jun requires a saved job link and JD after each application, a company-named
