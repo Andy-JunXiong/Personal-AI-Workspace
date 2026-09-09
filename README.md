@@ -22,15 +22,17 @@ See the [authoritative core workflow](docs/architecture/CORE_JOB_WORKFLOW.md).
 
 ## Current state — 2026-09-09
 
-Local follow-up: [resume event-conflict correction](docs/architecture/APPLICATION_RESUME_ASSOCIATIONS.md#local-event-conflict-correction--2026-09-09)
+Deployed follow-up: [resume event-conflict correction](docs/architecture/APPLICATION_RESUME_ASSOCIATIONS.md#production-event-conflict-correction--2026-09-09)
 rejects changed content under a reused resume event ID, preserving safe retries
 and explicit confirmation failures. Type checks, 368 tests and build passed;
-this correction is not deployed. The next operational gate remains the first
+production backup, recovery rehearsal, data preservation and web checks passed.
+Source commit `1451def` was pushed and independently verified on GitHub main.
+The next operational gate remains the first
 actual September 10 scheduled execution described below.
 
 The latest release is [Drive resume association](docs/architecture/APPLICATION_RESUME_ASSOCIATIONS.md),
-`resume-20260909-r2`, retaining migration 014 and the mail-search workflow below.
-367 tests passed. Production backup/recovery, source checks, health and data
+`resume-20260909-r3`, retaining migration 014 and the mail-search workflow below.
+368 tests passed. Production backup/recovery, source checks, health and data
 preservation passed. Sixteen candidate file/revision associations across nine
 existing applications were saved through MCP and read back; RSM's website matches.
 Candidates are explicitly separate from actual submitted-file/version confirmation.
@@ -54,7 +56,7 @@ September 10. Actual scheduled acceptance remains pending.
 
 | Area | Delivered and verified | Remaining gate |
 | --- | --- | --- |
-| Production | `resume-20260909-r2`, migrations 001–014, 30 MCP tools; 367 tests, build, backup/recovery, health and pre/post-cutover data preservation passed | This source publication makes no further deployment |
+| Production | `resume-20260909-r3`, migrations 001–014, 30 MCP tools; 368 tests, build, backup/recovery, health and pre/post-cutover data preservation passed; source commit `1451def` published | First actual scheduled execution remains a separate gate |
 | Durable operations | Applications, attributable observations, lifecycle transitions, Tasks, candidates, recommendation runs and scan receipts share one Workspace database | Sustained daily use remains to be evaluated |
 | Website | [Job Search](https://workspace.ai-radar-lab.com/workspace/job-search/today): Today, inventory, timelines, JD/skill reports and resume file/version links | Historical JD and skill reports still need source-grounded backfill |
 | Mail search | Both mailboxes; subject keywords, stored companies and linked exact senders; normal 24-hour / maximum 72-hour recovery; matching-body review and deduplication | New applications require explicit submission-confirmation evidence; filtered completion does not cover every email |

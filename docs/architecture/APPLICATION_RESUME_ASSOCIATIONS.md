@@ -70,7 +70,7 @@ No migration or extra MCP tool is required. Use `workspace_record_observation`:
 - `externalId`: a unique observation/event ID, **not just the Drive file ID**.
   Reuse the same event ID and idempotency key when retrying that exact write.
   A later confirmation/correction needs a new event ID and idempotency key.
-  The local follow-up below rejects reuse of an event ID with different content
+  The r3 follow-up below rejects reuse of an event ID with different content
   as `IDEMPOTENCY_CONFLICT`, even with a fresh idempotency key. An identical
   event with a fresh key still returns the saved historical Resource; it does
   not undo a subsequent correction. Read `resumeAssociations` for current state.
@@ -115,9 +115,55 @@ profiles and resume associations do not overwrite one another.
 
 ## Validation and release evidence
 
+### Production event-conflict correction — 2026-09-09
+
+**Continuity and benefits:** The user authorized publishing/deploying the verified
+immutable-event correction, followed by material-grounded interview preparation.
+Release `resume-20260909-r3` makes conflicting event reuse fail explicitly in
+production while preserving exact retries and confirmation history. It enables
+reliable subsequent file/version confirmations through the existing tool. Actual
+submitted-material evidence and first scheduled mail acceptance remain pending;
+the expected longer-term benefit is attributable JD/resume analysis. No migration,
+new tool, schedule change or broader browser write authority was introduced.
+
+Commit `1451defb5f1c43ba3288cdb8477470eb6d12eacd` contains the code tested
+by the 368-test run. Its exact Git archive was deployed, with matching local/remote
+SHA-256 `4f7e08f49e11fdb512acbe973b0abb1e3946e5574448a05abac07788a85c2ac3`.
+After the user's explicit publication confirmation, the push from `20d575a` to
+`1451def` succeeded and `git ls-remote origin refs/heads/main` independently
+returned that exact full commit. This documentation follow-up records the verified
+release and publication; it makes no further deployment or schedule change.
+
+Image `paw:resume-20260909-r3` has SHA-256
+`c34fb941aceeaa8ad95e4e0db7544195b26fa61ad213d15210497617f5cbcb11` and source
+directory `/opt/paw-resume-20260909-r3`. Backup `workspace-20260909T061018Z.db`
+passed integrity and migrations 001–014; new/previous images started healthy on
+isolated copies, retaining 38 tables / 1,423 rows. A fresh backup also preceded
+cutover. A deployment-script fingerprint-path error triggered successful rollback
+to healthy r2; the corrected script then preflighted fingerprinting before stopping
+the container. Final r3 verification completed at 2026-09-09T06:12:55Z (16:12 Sydney).
+
+Pre/post-cutover logical fingerprints were identical:
+`e4d2dd659985ae2f502be1b32adcd965fa488ec81abc2a4145a70596fd735efd`,
+38 tables / 1,423 rows. Health, public route isolation, read-only web boundary,
+OAuth start and unsafe-return rejection passed. Web and Gmail overlays were
+retained; ports 3000/3001 remain loopback-only. Temporary operator-only SSH access
+was removed by restoring the original firewall. r2 remains the rollback image.
+Private evidence is `/srv/paw/deployments/resume-20260909-r3-*`.
+
+After cutover, a separately authorized candidate-based JD comparison and interview
+preparation report was appended to one existing application's dossier using the
+existing profile observation contract. Exact readback verified eight comparison
+rows and the report, one added Resource, and unchanged project, transitions,
+open tasks and resume associations. It explicitly retains CANDIDATE status and
+distinguishes current JD content from a historical posting snapshot. Private
+resume content, source IDs and preparation text are kept outside this public repo.
+This is MCP readback; no authenticated browser acceptance of the new report is claimed.
+
 ### Local event-conflict correction — 2026-09-09
 
-**Status:** Implemented and verified locally; not deployed or published.
+**Status at local verification:** Implemented and verified locally; subsequently
+deployed in r3 above, with source publication independently verified.
 
 **Continuity and benefits:** The existing immutable-event and attributable
 confirmation contract requires later corrections to use new event IDs. Review

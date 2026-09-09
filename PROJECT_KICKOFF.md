@@ -2,16 +2,23 @@
 
 ## Current status — 2026-09-09
 
-### Local development follow-up
+### Deployed development follow-up
 
 [Resume event-conflict correction](docs/architecture/APPLICATION_RESUME_ASSOCIATIONS.md#local-event-conflict-correction--2026-09-09)
 now rejects changed observations reusing an existing event ID, avoiding silently
 skipped confirmation/correction writes. Exact retries preserve the historical
 result and current association. Local type checks, 368 tests in 44 files and
-build passed, including a repaired date-sensitive mail fixture. This follow-up
-is not deployed or published and changes no actual application or task state.
+build passed, including a repaired date-sensitive mail fixture. The user subsequently
+authorized publication and deployment, then JD/resume comparison and interview
+preparation. Release `resume-20260909-r3` passed production checks at 16:12 Sydney;
+38 tables / 1,423 rows and the logical fingerprint were preserved at cutover.
+Commit `1451def` was pushed and independently verified on GitHub main after the
+user's explicit publication confirmation. A separate candidate-based
+preparation report was then saved and read back for one existing application;
+submission confirmation remains pending. Application state, tasks and resume
+associations were preserved. See the [release evidence](docs/architecture/APPLICATION_RESUME_ASSOCIATIONS.md#production-event-conflict-correction--2026-09-09).
 First scheduled mail acceptance and actual submitted-version evidence remain
-the next operational gates; the deployed release below remains unchanged.
+the next operational gates; the earlier r2 handoff below is retained as history.
 
 ### End-of-day handoff
 
