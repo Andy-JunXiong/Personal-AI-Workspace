@@ -1,6 +1,6 @@
 # Documentation index
 
-- [Proactive job discovery and interview library](architecture/JOB_LIBRARY_WORKFLOW.md): pre-application source aggregation, evidence-based matching, candidate decisions and tailored drafts.
+- [Proactive job discovery and interview library](architecture/JOB_LIBRARY_WORKFLOW.md): deployed storage-only library and alert candidates; external-model matching and tailored drafts remain disabled by user choice.
 
 - [Application dossier workflow](architecture/APPLICATION_DOSSIER_WORKFLOW.md): posting URL, JD snapshot, submitted resume version and requirement-to-skill comparison.
 

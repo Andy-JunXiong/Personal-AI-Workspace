@@ -23,11 +23,14 @@ See the [authoritative core workflow](docs/architecture/CORE_JOB_WORKFLOW.md).
 ## Current state — 2026-09-09
 
 Latest release: [proactive job discovery and interview library](docs/architecture/JOB_LIBRARY_WORKFLOW.md),
-`library-20260909-r1`, source `c1399c2`. The website now supports scoped library edits,
-candidate decisions, evidence-based JD matching and tailored resume drafts. Source
-import, mobile layout, all 381 tests, additive migration preservation and public
-route checks passed. External-model comparison is now being made opt-in; the current
-user choice is source/candidate/JD storage only. Native LinkedIn/SEEK login and unattended alert scheduling are
+`library-20260909-r4`, source `b8da4bb`. The website supports scoped library edits,
+candidate decisions and JD storage. External-model matching and draft generation
+are disabled by default, following the user's storage-only choice. All 384 tests,
+type checks, build, backup recovery, data preservation and public route checks passed.
+Private readback verified 85 library records and 10 SEEK alert candidates; all ten
+still need full JDs. No model comparisons ran. Alert coverage remains incomplete:
+one mailbox reached the query bound and the other returned an empty HTTP 204 response.
+Native LinkedIn/SEEK login and unattended alert scheduling are
 not provided; discovery uses connected Gmail alerts. General browser writes stay off.
 
 Previous release: [post-application dossier workflow](docs/architecture/APPLICATION_DOSSIER_WORKFLOW.md),

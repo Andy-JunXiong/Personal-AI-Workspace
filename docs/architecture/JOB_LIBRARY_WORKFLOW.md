@@ -35,7 +35,7 @@ application-status processing is independent of this setting.
    email-alert integration, not a native LinkedIn/SEEK account login.
 3. Inspect candidates, sorted by current match score by default. Save or ignore.
    Missing JD remains visibly missing; paste the full description on the detail page.
-4. Compare the JD with the library. Inspect each requirement, evidence passage,
+4. Only after separate authorization and configuration, compare the JD with the library. Inspect each requirement, evidence passage,
    source, gap and unresolved conflict. Update facts and rerun when necessary.
 5. Edit the selected-source resume draft, save and download Markdown with company
    and role in its filename. Follow the original posting to apply. A candidate or
@@ -68,8 +68,9 @@ before reading targeted bodies for posting URLs. Other mail is not read by this
 flow. Listing/body limits and mailbox failures are reported, not treated as full coverage.
 HTTP 204 empty list responses are reported separately as unverified coverage;
 they neither prove no matching mail nor imply authorization failure.
-At most ten postings are handled per run and three previously unassessed jobs with
-usable JDs are automatically compared. Further jobs can be compared individually.
+At most ten postings are handled per run. Only when external matching is authorized
+and enabled can three previously unassessed jobs with usable JDs be automatically
+compared, with further jobs compared individually. Current runs only save sources.
 New links are prioritized on subsequent imports. Known application posting URLs
 are excluded, including closed applications. No alert enters application timelines.
 
@@ -100,6 +101,32 @@ and user-specific corrections must never be committed to this public repository.
 
 ## Validation and release
 
+Current production release `library-20260909-r4` went live at 2026-09-09T11:16:09Z,
+source `b8da4bb55784ad8e49829cac18310b001d1a3308`. All 384 tests in 48 files,
+server/browser type checks and build passed. This release preserves job-labelled
+official alert references when redirects cannot resolve, and retains the default-off
+external matching gate introduced in r2. The r3 parser supports SEEK's actual
+URL-before-title plain-text cards.
+
+Image SHA256: `a85b07dd2269cf72c5806694888898c9e1f3603b5fa0cd28c6876494d9419fc2`.
+Archive SHA256: `e445be71f59ee37c08d51f930435d362cbd1414845a17551936708eb82d5bee7`.
+Backup `workspace-20260909T111539Z.db` passed current/previous-image recovery checks.
+Cutover preserved all 42 tables and 1622 rows exactly, fingerprint
+`53caceb9ae971bcbfc8cea3b8d74ed336f685e0b4e44b2df3391b4b10f87d90b`.
+Public access, OAuth, route isolation and general task-write-off checks passed.
+Immediate rollback image is `library-20260909-r3`, which also defaults matching off.
+
+The separate, authorized storage-only import then saved ten SEEK candidates with
+their original alert references. None yielded a full JD; all ten remain visibly
+incomplete. It read 17 targeted messages in mailbox 1 with bounded/incomplete
+coverage; mailbox 2 returned HTTP 204, which is unverified coverage. No direct
+LinkedIn posting was extracted in this batch. No model call ran. Private readback
+verified 85 library records (84 source documents and one confirmed correction),
+10 candidates, zero JD records, zero fit records, external matching off, database
+integrity and all 24 existing application pages. Candidate pages offer Save JD.
+
+### Initial migration release (historical)
+
 Local validation: source ownership, CSRF, stale writes, corrected-fact precedence
 instruction, exact citations, blocked-JD behavior, candidate deduplication and
 decision preservation, migration preservation/repeated startup, and mobile layout.
@@ -117,10 +144,10 @@ The backup-copy upgrade preserved all 37 preexisting business tables, added four
 empty tables, and passed repeated startup and previous-image startup. Before/after
 deployment had 38/42 tables and 1533/1534 rows; the sole added row was migration 015.
 Public OAuth, signed-out access, route isolation and task-write-off checks passed.
-Initial real alert discovery and external model acceptance are tracked separately
-from these deployment and import checks.
+Initial real alert discovery was completed by the storage-only r4 import above.
+External model acceptance was declined by the user and remains disabled.
 
-Immediate rollback image: `dossier-20260909-r1`. Recovery rehearsal uses
+The initial r1 rollback image was `dossier-20260909-r1`. Its recovery rehearsal used
 `--job-library-upgrade`, verify all preexisting rows, then test repeated candidate
 startup and previous-image startup against the upgraded copy. Import is a separate
 authorized data change after deployment preservation verification.
