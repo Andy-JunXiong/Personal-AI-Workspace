@@ -1,5 +1,7 @@
 # Documentation index
 
+- [Application dossier workflow](architecture/APPLICATION_DOSSIER_WORKFLOW.md): posting URL, JD snapshot, submitted resume version and requirement-to-skill comparison.
+
 - [Application progress timeline](mvp/APPLICATION_PROGRESS_TIMELINE_2026-09-09.md): meaningful application milestones, excluding check receipts and vacancy marketing.
 
 - [Application calendar and ongoing default](mvp/APPLICATION_CALENDAR_2026-09-09.md): two-month submission timeline and focused application list.

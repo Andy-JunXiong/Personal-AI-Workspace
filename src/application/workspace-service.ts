@@ -122,6 +122,7 @@ interface IdempotencyRow {
 }
 
 export interface ProjectDetails {
+  applicationProfile: ReturnType<JobSearchQueryService["applicationProfile"]> | null;
   project: ProjectRecord;
   resumeAssociations: ReturnType<JobSearchQueryService["applicationResumes"]>;
   resources: ResourceRecord[];
@@ -779,6 +780,7 @@ export class WorkspaceService {
     return {
       project,
       resumeAssociations: project.projectType === "job_application" ? this.jobSearchQueryService.applicationResumes(projectId) : [],
+      applicationProfile: project.projectType === "job_application" ? this.jobSearchQueryService.applicationProfile(projectId) : null,
       resources: resources.map((row) => this.mapResource(row)),
       transitions: transitionRows.map((row) => this.mapTransition(row)),
       openTasks: tasks.map((row) => mapTask(row)),

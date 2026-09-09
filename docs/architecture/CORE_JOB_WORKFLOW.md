@@ -1,5 +1,12 @@
 # Core job workflow — authoritative product boundary
 
+## Post-application materials — 2026-09-09
+
+Jun requires a saved job link and JD after each application, a company-named
+resume for locating the correct file, and a requirement-to-skill comparison.
+Follow the [application dossier workflow](APPLICATION_DOSSIER_WORKFLOW.md).
+Missing materials stay visible; filename matches alone do not confirm submission.
+
 Confirmed by Jun on 2026-09-07. This decision supersedes conflicting earlier
 proposals to make the website a parallel operational workspace.
 

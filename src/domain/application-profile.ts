@@ -14,6 +14,7 @@ export const applicationProfileSchema = z.object({
       requirement: z.string().trim().min(1).max(1000),
       evidence: z.string().trim().min(1).max(2000),
       assessment: z.enum(["MATCH", "PARTIAL", "GAP", "UNKNOWN"]),
+      gap: z.string().trim().min(1).max(2000).optional(),
     }).strict()).max(100),
     gaps: z.array(z.string().trim().min(1).max(1000)).max(100),
   }).strict().nullable(),
