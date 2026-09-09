@@ -66,7 +66,7 @@ export function createJobSearchPageRouter(serviceFor: (request: Request) => Work
       throw new ValidationError("Invalid section");
     }
     if (["resources", "timeline"].includes(String(input.section)) && input.status !== undefined) throw new ValidationError("Invalid section filter");
-    return applicationView(service, request.params.id as string, input, timeZone, gmailFor?.(request));
+    return applicationView(service, request.params.id as string, input, timeZone);
   });
   page("/tasks/:id", (service, request) => { query(request, []); return taskView(service,
     request.params.id as string, timeZone, new Date(now()).toISOString(), completionEnabled); });

@@ -1,5 +1,18 @@
 # Application progress timeline — 2026-09-09
 
+## Follow-up: remove Gmail panel from application details
+
+The user subsequently requested removal of the entire "Gmail 最新进展" card
+from individual job details. This continues the effort to focus those pages on
+application progress and saved job materials. The card, its per-application
+controls, receipt summary and copy-to-GPT prompt are removed; the route no longer
+fetches mailbox connection details for this view. Existing stored receipts and
+overview mail tools remain available. This is a presentation change without
+data writes, migration or new infrastructure. The next gate is production
+readback confirming the card is absent and real timeline milestones remain.
+
+Release evidence: pending local verification and deployment.
+
 ## Continuity and benefits
 
 Following the [calendar release](APPLICATION_CALENDAR_2026-09-09.md), the user

@@ -62,7 +62,7 @@ it("authorizes two distinct mailboxes with session-bound callbacks and checks th
   expect(w.service.jobSearchQueryService.getApplication(w.projectId).latestGmailCheck?.facts).toMatchObject({ status: "NO_UPDATE" });
   expect(w.database.prepare("SELECT count(*) AS n FROM resources WHERE provider = 'gmail'").get()).toEqual({ n: 2 });
   const html = await (await w.request(`/workspace/job-search/applications/${w.projectId}`, { headers: { cookie } })).text();
-  expect(html).toContain("检查两个邮箱的最新更新");
+  expect(html).not.toContain("检查两个邮箱的最新更新");
   expect(html).toContain("收到面试邀请");
   await w.request("/api/v1/gmail/disconnect", { method: "POST", headers, body: '{"slot":2}' });
   w.advance(61_000);
@@ -111,7 +111,7 @@ it("checks only ongoing applications beyond one page, isolates owners and surviv
   expect((await w.request(`/api/v1/gmail/applications/${w.projectId}/check`, { method: "POST", headers, body: "{}" })).status).toBe(403);
   const closedHtml = await (await w.request(`/workspace/job-search/applications/${w.projectId}`, { headers: { cookie } })).text();
   expect(closedHtml).not.toContain('data-gmail-action="check"');
-  expect(closedHtml).toContain('不再补查新邮件');
+  expect(closedHtml).not.toContain('Gmail 最新进展');
   const first = await (await w.request("/api/v1/gmail/check-all", { method: "POST", headers, body: "{}" })).json();
   expect(first.batch.total).toBe(105);
   expect(first.batch.state).toBe("RUNNING");
@@ -139,12 +139,12 @@ it("checks only ongoing applications beyond one page, isolates owners and surviv
   expect(html).toContain('补查进行中岗位');
 });
 
-it("shows Gmail check receipts independently of task counts and rejects malformed success", async () => {
+it("keeps Gmail receipts out of application details while preserving stored outcomes", async () => {
   const w = await setup();
   w.link();
   const headers = { cookie: w.sessionCookie(await w.finish(await w.start())) };
   const path = `/workspace/job-search/applications/${w.projectId}`;
-  expect(await (await w.request(path, { headers })).text()).toContain("尚无有效的邮件检查记录");
+  expect(await (await w.request(path, { headers })).text()).not.toContain("尚无有效的邮件检查记录");
   const input = { projectId: w.projectId, resourceType: "NOTE" as const, provider: "workspace-gmail-check",
     externalId: "check-1", externalUri: null, title: "Gmail check", observedAt: "2026-09-07T05:00:00Z", idempotencyKey: "check-1",
     observedFacts: { contractVersion: "gmail-application-check-v0.1", status: "NO_UPDATE",
@@ -153,10 +153,10 @@ it("shows Gmail check receipts independently of task counts and rejects malforme
   const first = w.service.recordObservation(input);
   expect(w.service.recordObservation(input).replayed).toBe(true);
   const html = await (await w.request(path, { headers })).text();
-  expect(html).toContain("已检查，暂无新进展");
-  expect(html).toContain("Only the existing confirmation was found.");
-  expect(html).toContain("搜索 Gmail");
-  expect(html).toContain("2026-09-07T05:00:00Z");
+  expect(html).not.toContain("已检查，暂无新进展");
+  expect(html).not.toContain("Only the existing confirmation was found.");
+  expect(html).not.toContain("搜索 Gmail");
+  expect(html).not.toContain("2026-09-07T05:00:00Z");
   expect(w.service.getProject(w.projectId).project).toEqual(before.project);
   expect(w.service.getProject(w.projectId).openTasks).toEqual(before.openTasks);
   expect(() => w.service.recordObservation({ ...input, externalId: "bad", idempotencyKey: "bad",
@@ -164,7 +164,7 @@ it("shows Gmail check receipts independently of task counts and rejects malforme
   w.service.recordObservation({ ...input, externalId: "failed", idempotencyKey: "failed", observedAt: "2026-09-07T06:00:00Z",
     observedFacts: { ...input.observedFacts, status: "FAILED", summary: "Gmail unavailable" } });
   const failed = await (await w.request(path, { headers })).text();
-  expect(failed).toContain("邮件检查失败");
+  expect(failed).not.toContain("邮件检查失败");
   expect(failed).not.toContain("已检查，暂无新进展");
   expect(first.projectStateChanged).toBe(false);
 });
