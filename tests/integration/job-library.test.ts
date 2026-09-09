@@ -136,3 +136,23 @@ it("queries both alert providers and reports a 204 response as unverified covera
   expect(result).toEqual({messages:[{id:"abc",threadId:"def"}],complete:false,emptyResponse:true});
   expect(queries).toHaveLength(2);expect(queries[1]).toContain("from:seek.com.au");
 });
+
+it("preserves the original alert candidate when its tracking destination cannot be resolved, without inventing a JD or posting ID",async()=>{
+  const w=createEmptyTestWorkspace();
+  const resolve=vi.spyOn(postingSource,"resolveAlertJobUrl").mockResolvedValue(null);
+  const fetcher=vi.spyOn(postingSource,"fetchJobPosting").mockResolvedValue(null);
+  try{
+    const web=new WorkspaceService(w.database,{...w.identity,channel:"WEB",requestId:randomUUID()});
+    const url="https://email.s.seek.com.au/uni/ss/c/test-job";
+    const reader={accountKey:()=>"same",jobAlerts:async()=>({messages:[{id:"abc",threadId:"def"}],complete:true,emptyResponse:false}),
+      metadata:async()=>({senderEmail:"jobs@seek.com.au",receivedAt:new Date().toISOString()}),
+      read:async()=>({text:`[${url}]AI Specialist\n\nExample Company\n\nSydney NSW`,bodyComplete:true})} as unknown as GmailMcpReader;
+    const result=await discoverJobs(web,reader,()=>{});
+    expect(result).toMatchObject({candidateCount:1,missingJd:1,unresolvedLinks:1});
+    const candidate=web.jobSearchQueryService.listCandidates().items[0]!;
+    expect(candidate).toMatchObject({sourceUrl:url,postingId:null,company:"Example Company",role:"AI Specialist",sourceAvailability:"UNKNOWN"});
+    await discoverJobs(web,reader,()=>{});
+    expect(web.jobSearchQueryService.listCandidates().totalCount).toBe(1);
+    expect(web.jobLibraryService.description(candidate.id)).toBeUndefined();
+  }finally{resolve.mockRestore();fetcher.mockRestore();w.cleanup();}
+});

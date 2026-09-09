@@ -10,7 +10,7 @@ export async function discoverJobs(service:WorkspaceService,reader:GmailMcpReade
   const checkAuthority=()=>{authorize();if(Date.now()>deadline)throw new Error("Discovery time limit reached");};
   const result={mailboxes:[] as {mailbox:string;complete:boolean;read:number;error:boolean;emptyResponse:boolean}[],
     candidateCount:0,jdCount:0,matchedCount:0,missingJd:0,comparisonFailures:0,unresolvedLinks:0,limited:false};
-  const jobs=new Map<string,ReturnType<typeof alertJobLinks>[number]&{title?:string;company?:string}>();
+  const jobs=new Map<string,{url:string;provider:string;postingId:string|null;title?:string;company?:string}>();
   const tracking=new Map<string,{title:string;company?:string}>();
   for(const alias of ["mailbox-1","mailbox-2"] as const){
     const receipt={mailbox:alias,complete:false,read:0,error:false,emptyResponse:false};result.mailboxes.push(receipt);
@@ -40,8 +40,13 @@ export async function discoverJobs(service:WorkspaceService,reader:GmailMcpReade
   }
   for(const [url,details] of tracking){
     checkAuthority();
-    try{const job=await resolveAlertJobUrl(url);if(job)jobs.set(job.url,{...job,...details});else result.unresolvedLinks++;}
-    catch{result.unresolvedLinks++;}
+    let job:Awaited<ReturnType<typeof resolveAlertJobUrl>>=null;
+    try{job=await resolveAlertJobUrl(url);}catch{/* Preserve the original alert reference below. */}
+    if(job)jobs.set(job.url,{...job,...details});
+    else{
+      result.unresolvedLinks++;
+      jobs.set(url,{url,provider:"seek",postingId:null,...details});
+    }
   }
   const applied=new Set(library.applicationPostingUrls().flatMap(url=>{const value=canonicalJobUrl(url);return value?[value.url]:[];}));
   const known=library.knownPostingUrls();

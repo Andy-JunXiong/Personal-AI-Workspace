@@ -76,6 +76,11 @@ are excluded, including closed applications. No alert enters application timelin
 Job-labelled SEEK email tracking links may be resolved through two exact official
 tracking hosts, at most twenty links per run. Unsubscribe/preferences links are
 excluded. Redirects outside those hosts and canonical posting paths are rejected.
+When an official job-labelled tracking link cannot resolve, its title, company and
+original alert URL are still saved as an unverified candidate with no posting ID.
+This preserves a useful reference without inventing a destination or JD. Exact alert
+URLs deduplicate; different unresolved URLs are not assumed to represent the same
+posting merely because titles match.
 For JD fetches, only canonical HTTPS LinkedIn/SEEK posting paths are allowed; redirects must
 retain the same provider and posting identity. Responses are bounded and require
 one substantive JSON-LD JobPosting. Login walls, unavailable structured data and
