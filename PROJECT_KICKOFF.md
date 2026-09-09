@@ -9,6 +9,13 @@ records ongoing target selection, metadata-only website reads and the separate
 release gate. This supersedes earlier instructions to include rejected records
 in manual checks, while retaining all historical evidence.
 
+The correction is deployed as `ongoing-20260909-r1`, source commit `f85b9e6`
+pushed/read back. 369 tests, build, backup/recovery, web checks and live data
+preservation passed. Production selects 12 ongoing targets and excludes 12 ended
+applications. A representative live keyword probe passed in both mailboxes with
+zero full-body requests; it was read-only and did not save a new batch receipt.
+See the ledger for exact scope and fingerprints. The r3 account below is history.
+
 ### Deployed development follow-up
 
 [Resume event-conflict correction](docs/architecture/APPLICATION_RESUME_ASSOCIATIONS.md#local-event-conflict-correction--2026-09-09)

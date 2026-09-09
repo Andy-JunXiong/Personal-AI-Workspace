@@ -37,6 +37,35 @@ includes the short snippet. The implementation requests only the needed fields.
 Local verification passed: 369 tests in 44 files, server/browser type checks and build. Coverage includes terminal/paused exclusion, mid-queue closure, owner isolation, metadata-only reads, HTML/long-body independence and exact time bounds. Release and live acceptance
 must be distinguished from these code checks. Historical releases follow below.
 
+### Ongoing-only production verification — 2026-09-09
+
+Commit `f85b9e6d325ed4203eba711e1db6e7153608b589` was pushed and independently
+verified on GitHub main. Its exact archive, SHA-256
+`d788253b4f728a41e41e31ca362d65905d16655b33bfd0cddd247a143fd9f85c`, was deployed
+as `ongoing-20260909-r1`, source `/opt/paw-ongoing-20260909-r1`, image SHA-256
+`9c5bf0e22e6d89516cde6b47fd2a8b001fae9550751e01aa1ee4027970f57053`.
+Backup `workspace-20260909T063947Z.db` passed integrity/migrations 001–014.
+New and previous image recovery rehearsals retained 38 tables / 1,533 rows.
+Final cutover verification completed at 2026-09-09T06:41:34Z (16:41 Sydney).
+Live pre/post fingerprints were identical:
+`e52dc4489d4433d085cd68699568dbd28caa2e63024f171f3260a9e4d30031ab`,
+38 tables / 1,533 rows. The website release checker and health passed; existing
+web/Gmail overlays and loopback-only bindings remained. Temporary SSH access was
+removed, and `resume-20260909-r3` remains the rollback image.
+
+Read-only verification against the deployed service selected **12 ongoing
+applications and excluded 12 ended applications**, including both Amazon
+REJECTED records. Rendering verified the new bulk button and absence of check
+buttons on those ended application pages. A representative live two-mailbox
+keyword check for Synogize returned 15 metadata hits in mailbox 1 and zero in
+mailbox 2; both searches were complete with no issues. Instrumentation confirmed
+15 metadata requests and **zero full-body requests**. No model was called and no
+database row was written by this probe. These are keyword hits, not 15 verified
+application updates; the probe did not create a new website batch receipt or
+prove interpretation of every ongoing application's mail. Historical PARTIAL
+receipts remain historical. Private release artifacts are under
+`/srv/paw/deployments/ongoing-20260909-r1-*`.
+
 Deployment successor: [resume-20260909-r2](APPLICATION_RESUME_ASSOCIATIONS.md#validation-and-release-evidence)
 adds Drive resume associations while preserving this mail contract and migration
 014. The mail release/run/task evidence below retains its own scope; the resume

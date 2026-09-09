@@ -24,8 +24,11 @@ See the [authoritative core workflow](docs/architecture/CORE_JOB_WORKFLOW.md).
 
 Follow-up correction: [ongoing-only keyword checks](docs/architecture/MAIL_SCAN_BACKEND_LEDGER.md#ongoing-only-keyword-follow-up--2026-09-09)
 exclude rejected/ended applications and replace full-body website reads with
-keyword-search metadata and snippets. Production acceptance is recorded in that
-ledger; prior release evidence below retains its original scope.
+keyword-search metadata and snippets. Deployed as `ongoing-20260909-r1`: 369 tests,
+backup/recovery, data preservation and website checks passed. Live targets are
+12 ongoing applications; 12 ended applications are excluded. A representative
+dual-mailbox keyword probe completed with zero full-body requests. A fresh full
+website batch receipt and the first scheduled run remain separate acceptance.
 
 Deployed follow-up: [resume event-conflict correction](docs/architecture/APPLICATION_RESUME_ASSOCIATIONS.md#production-event-conflict-correction--2026-09-09)
 rejects changed content under a reused resume event ID, preserving safe retries
@@ -35,9 +38,10 @@ Source commit `1451def` was pushed and independently verified on GitHub main.
 The next operational gate remains the first
 actual September 10 scheduled execution described below.
 
-The latest release is [Drive resume association](docs/architecture/APPLICATION_RESUME_ASSOCIATIONS.md),
-`resume-20260909-r3`, retaining migration 014 and the mail-search workflow below.
-368 tests passed. Production backup/recovery, source checks, health and data
+The latest release is `ongoing-20260909-r1`, retaining
+[Drive resume association](docs/architecture/APPLICATION_RESUME_ASSOCIATIONS.md),
+migration 014 and the mail-search workflow below.
+369 tests passed. Production backup/recovery, source checks, health and data
 preservation passed. Sixteen candidate file/revision associations across nine
 existing applications were saved through MCP and read back; RSM's website matches.
 Candidates are explicitly separate from actual submitted-file/version confirmation.
@@ -61,7 +65,7 @@ September 10. Actual scheduled acceptance remains pending.
 
 | Area | Delivered and verified | Remaining gate |
 | --- | --- | --- |
-| Production | `resume-20260909-r3`, migrations 001–014, 30 MCP tools; 368 tests, build, backup/recovery, health and pre/post-cutover data preservation passed; source commit `1451def` published | First actual scheduled execution remains a separate gate |
+| Production | `ongoing-20260909-r1`, migrations 001–014, 30 MCP tools; 369 tests, build, backup/recovery, health and pre/post-cutover data preservation passed; source commit `f85b9e6` published | Fresh full website keyword-check batch and first actual scheduled execution remain separate gates |
 | Durable operations | Applications, attributable observations, lifecycle transitions, Tasks, candidates, recommendation runs and scan receipts share one Workspace database | Sustained daily use remains to be evaluated |
 | Website | [Job Search](https://workspace.ai-radar-lab.com/workspace/job-search/today): Today, inventory, timelines, JD/skill reports and resume file/version links | Historical JD and skill reports still need source-grounded backfill |
 | Mail search | Both mailboxes; subject keywords, stored companies and linked exact senders; normal 24-hour / maximum 72-hour recovery; matching-body review and deduplication | New applications require explicit submission-confirmation evidence; filtered completion does not cover every email |
