@@ -22,7 +22,15 @@ See the [authoritative core workflow](docs/architecture/CORE_JOB_WORKFLOW.md).
 
 ## Current state — 2026-09-09
 
-Latest page cleanup: `jobdetail-20260909-r1` removes the entire Gmail latest-progress
+Latest release: [post-application dossier workflow](docs/architecture/APPLICATION_DOSSIER_WORKFLOW.md),
+`dossier-20260909-r1`. Each application shows a four-item materials checklist:
+posting URL, JD, confirmed submitted resume version and structured skills comparison.
+Comparison rows include gap/evidence notes; exact project readback preserves access
+to the latest profile beyond recent resources. 375 tests and live rendering of
+24 applications passed; source `1f43448` is published. Historical backfill still
+requires actual source materials.
+
+Retained page cleanup: `jobdetail-20260909-r1` removes the entire Gmail latest-progress
 card from individual application details. All 374 tests and production rendering
 checks on 24 applications passed; source `7bd8316` is published. See the
 [follow-up release record](docs/mvp/APPLICATION_PROGRESS_TIMELINE_2026-09-09.md#follow-up-remove-gmail-panel-from-application-details).
@@ -55,10 +63,10 @@ Source commit `1451def` was pushed and independently verified on GitHub main.
 The next operational gate remains the first
 actual September 10 scheduled execution described below.
 
-The latest release is `jobdetail-20260909-r1`, retaining
+The latest release is `dossier-20260909-r1`, retaining
 [Drive resume association](docs/architecture/APPLICATION_RESUME_ASSOCIATIONS.md),
 migration 014 and the mail-search workflow below.
-374 tests passed. Production backup/recovery, source checks, health and data
+375 tests passed. Production backup/recovery, source checks, health and data
 preservation passed. Sixteen candidate file/revision associations across nine
 existing applications were saved through MCP and read back; RSM's website matches.
 Candidates are explicitly separate from actual submitted-file/version confirmation.
@@ -82,7 +90,7 @@ September 10. Actual scheduled acceptance remains pending.
 
 | Area | Delivered and verified | Remaining gate |
 | --- | --- | --- |
-| Production | `jobdetail-20260909-r1`, migrations 001–014, 30 MCP tools; 374 tests, build, backup/recovery, health and pre/post-cutover data preservation passed; source commit `7bd8316` published | Fresh full website keyword-check batch and first actual scheduled execution remain separate gates |
+| Production | `dossier-20260909-r1`, migrations 001–014, 30 MCP tools; 375 tests, build, backup/recovery, health and pre/post-cutover data preservation passed; source commit `1f43448` published | Fresh full website keyword-check batch and first actual scheduled execution remain separate gates |
 | Durable operations | Applications, attributable observations, lifecycle transitions, Tasks, candidates, recommendation runs and scan receipts share one Workspace database | Sustained daily use remains to be evaluated |
 | Website | [Job Search](https://workspace.ai-radar-lab.com/workspace/job-search/today): Today, inventory, timelines, JD/skill reports and resume file/version links | Historical JD and skill reports still need source-grounded backfill |
 | Mail search | Both mailboxes; subject keywords, stored companies and linked exact senders; normal 24-hour / maximum 72-hour recovery; matching-body review and deduplication | New applications require explicit submission-confirmation evidence; filtered completion does not cover every email |

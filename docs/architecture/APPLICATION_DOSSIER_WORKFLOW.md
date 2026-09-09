@@ -62,4 +62,15 @@ Local verification passed: 375 tests in 47 files, server/browser type checks and
 build. Regression coverage includes profile readback beyond recent resources,
 candidate-versus-confirmed material status, saved JD/link/comparison without a
 submitted resume, source preservation, gap escaping and read-only rendering.
-Deployment pending. No migration or new external service.
+Deployed `dossier-20260909-r1` at 2026-09-09 09:42:44 UTC (19:42 Sydney), source
+`1f4344837fdcdc6f8ebd3f0ed7531e8ca09c362b`, published to main.
+Archive SHA-256 `e97812badc428373241388f56bdd623fc5d8e7a5a8d5b25041f110bcd9007697`;
+image SHA-256 `f6251ffaa58b14785f5281f77f3af57fe9f317bffe723e2a1442ba05bc1c6bd6`.
+Backup/recovery, health and website checks passed. Pre/post fingerprint identical:
+`e52dc4489d4433d085cd68699568dbd28caa2e63024f171f3260a9e4d30031ab`
+(38 tables, 1,533 rows). Migrations 001–014; rollback `jobdetail-20260909-r1`.
+Read-only production checks passed for all 24 application checklists, latest
+profile readback and the existing structured comparison's new gap column.
+No historical JD, resume or comparison was backfilled by this release; those
+require actual source acquisition under the workflow above. No new external
+service or scheduled acquisition was added.
