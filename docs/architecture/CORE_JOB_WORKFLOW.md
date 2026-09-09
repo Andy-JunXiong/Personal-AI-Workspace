@@ -3,6 +3,26 @@
 Confirmed by Jun on 2026-09-07. This decision supersedes conflicting earlier
 proposals to make the website a parallel operational workspace.
 
+## Ongoing-only keyword follow-up clarified by Jun — 2026-09-09
+
+Jun explicitly corrected the website bulk check after it revisited two Amazon
+applications already recorded as REJECTED/CLOSED. Rejected and ended applications
+retain history but stop receiving follow-up checks. Only ACTIVE applications at
+APPLIED, RECRUITER_CONTACT, INTERVIEWING or OFFER are follow-up targets; PAUSED,
+REJECTED, WITHDRAWN, ACCEPTED and CLOSED records are excluded. Reuse saved rejection
+evidence instead of rediscovering it from mail.
+
+For website checks, search company/role keywords through Gmail and read only the
+matching Subject and short Gmail snippet; do not retrieve every full body or
+require complete-body acquisition to search for updates. Keyword overlap alone
+does not prove an application change. Insufficient snippet evidence remains
+uncertain, and the website still does not change lifecycle or tasks. New backend
+JOB_METADATA runs derive company/exact-sender follow-up criteria only from ongoing
+applications, while retaining generic subject keywords for new-application discovery.
+Existing run snapshots and historical receipts remain unchanged. The saved hosted
+daily task and its separate source-review protocol have not been edited by this
+website correction. See the [implementation ledger](MAIL_SCAN_BACKEND_LEDGER.md#ongoing-only-keyword-follow-up--2026-09-09).
+
 ## Drive resume association approved by Jun — 2026-09-09
 
 Use the user's uploaded Google Drive resumes to supplement existing application

@@ -2,6 +2,7 @@ import type { WorkspaceService } from "../application/workspace-service.js";
 import { gmailCheckPrompt, gmailCheckSchema } from "../domain/gmail-check.js";
 import { applicationProfileSchema } from "../domain/application-profile.js";
 import { applicationResumeSchema, isResumeFileUrl, type ApplicationResume } from "../domain/application-resume.js";
+import { isOngoingApplication } from "../domain/job-application-lifecycle.js";
 import type { ReadPage } from "../application/read-pagination.js";
 import type { ApplicationListItem } from "../application/job-search-query-service.js";
 import type { JobCandidateRecord, ResourceRecord, TaskRecord, TransitionRecord } from "../domain/types.js";
@@ -132,7 +133,7 @@ export function mailScanPanel(service: WorkspaceService, zone: string): string {
 }
 
 export function applicationListView(service: WorkspaceService, query: Record<string, string | number>, zone: string, gmailEnabled = false): string {
-  const bulk = gmailEnabled ? `<section class="panel" data-gmail-batch><button type="button" class="button primary" data-gmail-check-all>补查全部岗位的新邮件</button><p>补查已有申请（含已拒绝）的近期邮件，不受当前筛选影响。首次检查最近两天，之后接续补查，最多回看七天。保存邮件摘要，不自动更改申请状态或待办。</p><p data-gmail-batch-status role="status"></p><div data-gmail-batch-results></div></section>` : "";
+  const bulk = gmailEnabled ? `<section class="panel" data-gmail-batch><button type="button" class="button primary" data-gmail-check-all>补查进行中岗位的新邮件</button><p>只补查进行中的申请，已拒绝或已结束的岗位停止追踪。按公司或岗位关键词搜索，只读取主题和摘要。首次检查最近两天，之后接续补查，最多回看七天。保存有依据的邮件摘要，不自动更改申请状态或待办。</p><p data-gmail-batch-status role="status"></p><div data-gmail-batch-results></div></section>` : "";
   query = { ...query, status: query.status ?? "ALL" };
   const page = service.jobSearchQueryService.listApplications(query);
   const status = String(query.status), sort = String(query.sort ?? "APPLIED_DESC");
@@ -209,7 +210,7 @@ export function applicationView(service: WorkspaceService, id: string, query: Re
   const check = detail.latestGmailCheck;
   const parsed = gmailCheckSchema.safeParse(check?.facts);
   const checkLabels = { NO_UPDATE: "已检查，暂无新进展", UPDATED: "已检查，结果已更新", PARTIAL: "检查尚未完成", FAILED: "邮件检查失败" };
-  const gmailControls = gmail ? `<div data-gmail-panel data-project-id="${e(id)}"><button type="button" class="button primary" data-gmail-action="check">检查两个邮箱的最新更新</button><p data-gmail-status role="status"></p><details><summary>邮箱连接（${gmail.filter(g => g.email).length}/2）</summary>${gmail.map(g => `<p>邮箱 ${g.slot}：${e(g.email ?? "尚未连接")} <button type="button" class="button secondary" data-gmail-action="connect" data-slot="${g.slot}">${g.email ? "重新授权" : "连接 Gmail"}</button>${g.email ? ` <button type="button" class="button secondary" data-gmail-action="disconnect" data-slot="${g.slot}">断开</button>` : ""}</p>`).join("")}</details></div>` : "";
+  const gmailControls = gmail ? `<div data-gmail-panel data-project-id="${e(id)}">${isOngoingApplication(p) ? '<button type="button" class="button primary" data-gmail-action="check">检查两个邮箱的最新更新</button><p>按公司或岗位关键词搜索，仅查看主题与摘要。</p>' : '<p>此申请已停止追踪，不再补查新邮件。以下为历史检查记录。</p>'}<p data-gmail-status role="status"></p><details><summary>邮箱连接（${gmail.filter(g => g.email).length}/2）</summary>${gmail.map(g => `<p>邮箱 ${g.slot}：${e(g.email ?? "尚未连接")} <button type="button" class="button secondary" data-gmail-action="connect" data-slot="${g.slot}">${g.email ? "重新授权" : "连接 Gmail"}</button>${g.email ? ` <button type="button" class="button secondary" data-gmail-action="disconnect" data-slot="${g.slot}">断开</button>` : ""}</p>`).join("")}</details></div>` : "";
   const emailCheck = `<section class="panel email-check"><h2>Gmail 最新进展</h2>${gmailControls}${check && parsed.success
     ? `<p><strong>${checkLabels[parsed.data.status]}</strong> · <time datetime="${e(check.checkedAt)}">${e(date(check.checkedAt, zone))}</time></p><p>${e(parsed.data.summary)}</p><p class="muted">检查范围：${e(parsed.data.searchScope)}</p>`
     : `<p>尚无有效的邮件检查记录。没有待办不代表邮箱没有新进展。</p>`}<details class="context-handoff"><summary>去 ChatGPT 检查 Gmail</summary><section class="context-box"><div><p>复制检查指令，粘贴到已连接 Gmail 和 Personal AI Workspace 的 ChatGPT 对话并发送。结果保存后，切回此页读取。</p></div><button type="button" class="button secondary" data-copy>复制检查指令</button><a class="button secondary" href="https://chatgpt.com/" target="_blank" rel="noopener noreferrer">打开 ChatGPT ↗</a><label class="sr-only" for="context-reference">Gmail 检查与回填指令</label><textarea id="context-reference" readonly rows="5">${e(gmailCheckPrompt(id))}</textarea></section></details></section>`;

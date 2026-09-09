@@ -1,5 +1,42 @@
 # Backend-managed mail scan receipts
 
+## Ongoing-only keyword follow-up — 2026-09-09
+
+**Continuity and benefits:** Jun corrected bulk checks to stop tracking rejected
+or ended applications and use keyword search rather than full-body acquisition.
+The previous all-application manual check ignored existing rejection state and
+flagged long/HTML-only messages as incomplete. The correction selects only ongoing
+applications, blocks direct checks on ended records, and rechecks queued targets
+before execution. It uses Gmail `format=metadata` with Subject/From headers and a
+bounded snippet, without reading body MIME parts. This immediately removes
+full-body length/HTML blockers and avoids repeat work on closed applications.
+The next gate is production release and a fresh ongoing-only website check;
+longer-term value is state-aware, bounded follow-up against the same evidence
+ledger. No migration, new scheduler or lifecycle/task write authority is added.
+
+New JOB_METADATA company/sender snapshots also exclude ended/paused applications;
+generic discovery keywords remain, so an incidentally matching message about an
+ended application is not evidence that the application should be reopened.
+Previously saved run snapshots remain immutable. The hosted daily task's saved
+prompt and full-source acknowledgement contract were not changed by this package.
+
+The manual UI now says “补查进行中岗位的新邮件”. Direct terminal checks fail before
+creating a run or contacting Gmail. A target closed while queued is SKIPPED, not
+reported as a failed mailbox. During execution, state is revalidated before the
+next search and before evidence writes. Email interpretation receives only the
+subject and up to 600 snippet characters, with instructions not to invent omitted
+content. Uncertain classification, provider failure and search pagination limits
+still produce an honest incomplete result. Existing evidence deduplication and
+quote validation remain; no keyword hit automatically changes application state.
+The query coverage key is versioned to distinguish this new acquisition policy.
+
+Provider contract: [Gmail messages.get](https://developers.google.com/workspace/gmail/api/reference/rest/v1/users.messages/get)
+supports selected headers with METADATA; [Message](https://developers.google.com/workspace/gmail/api/reference/rest/v1/users.messages)
+includes the short snippet. The implementation requests only the needed fields.
+
+Local verification passed: 369 tests in 44 files, server/browser type checks and build. Coverage includes terminal/paused exclusion, mid-queue closure, owner isolation, metadata-only reads, HTML/long-body independence and exact time bounds. Release and live acceptance
+must be distinguished from these code checks. Historical releases follow below.
+
 Deployment successor: [resume-20260909-r2](APPLICATION_RESUME_ASSOCIATIONS.md#validation-and-release-evidence)
 adds Drive resume associations while preserving this mail contract and migration
 014. The mail release/run/task evidence below retains its own scope; the resume

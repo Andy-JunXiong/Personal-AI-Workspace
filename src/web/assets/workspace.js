@@ -254,7 +254,7 @@ async function gmailBatch(start = false) {
       const response = await fetch(endpoint, { method: 'POST', headers: { 'content-type': 'application/json', 'x-csrf-token': csrfToken },
         body: '{}', signal: AbortSignal.timeout(15000) });
       if (!response.ok) throw new Error();
-      status('已开始检查全部岗位。');
+      status('已开始检查进行中的岗位。');
     }
     if (batchPolling) return;
     batchPolling = true;
@@ -271,7 +271,7 @@ async function gmailBatch(start = false) {
       status(`${batch.state === 'RUNNING' ? '正在检查' : batch.state === 'DONE' ? '本批检查结束' : '批量检查中断'}：${results.length}/${batch.total} · 有新增邮件 ${updated} · 未完成或失败 ${unresolved} · 发起于 ${new Date(batch.startedAt).toLocaleString()}`);
       const list = main.querySelector('[data-gmail-batch-results]');
       if (list) {
-        const labels = /** @type {Record<string,string>} */ ({ UPDATED: '发现新增邮件', NO_UPDATE: '无新增邮件', PARTIAL: '检查不完整', FAILED: '检查失败' });
+        const labels = /** @type {Record<string,string>} */ ({ UPDATED: '发现新增邮件', NO_UPDATE: '无新增邮件', PARTIAL: '检查不完整', FAILED: '检查失败', SKIPPED: '已停止追踪，跳过' });
         list.replaceChildren(...results.map(r => {
           const row = document.createElement('p'), link = document.createElement('a');
           link.href = `/workspace/job-search/applications/${encodeURIComponent(r.projectId)}`;

@@ -22,6 +22,11 @@ See the [authoritative core workflow](docs/architecture/CORE_JOB_WORKFLOW.md).
 
 ## Current state — 2026-09-09
 
+Follow-up correction: [ongoing-only keyword checks](docs/architecture/MAIL_SCAN_BACKEND_LEDGER.md#ongoing-only-keyword-follow-up--2026-09-09)
+exclude rejected/ended applications and replace full-body website reads with
+keyword-search metadata and snippets. Production acceptance is recorded in that
+ledger; prior release evidence below retains its original scope.
+
 Deployed follow-up: [resume event-conflict correction](docs/architecture/APPLICATION_RESUME_ASSOCIATIONS.md#production-event-conflict-correction--2026-09-09)
 rejects changed content under a reused resume event ID, preserving safe retries
 and explicit confirmation failures. Type checks, 368 tests and build passed;

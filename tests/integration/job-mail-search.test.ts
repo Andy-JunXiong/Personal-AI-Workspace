@@ -109,6 +109,33 @@ it("treats search terms as literals and matches sender addresses exactly",()=>{
   expect(matchesJobMail("Thank you for applying",null,{companies:[],senders:[]})).toBe("JOB_SUBJECT");
 });
 
+it("builds follow-up company and sender criteria only from ongoing applications", () => {
+  const w = fixture();
+  const workspaceId = w.service.getProject(w.projectId).project.workspaceId;
+  const create = (company: string, status: string, lifecycle: string) => {
+    const projectId = randomUUID();
+    w.service.seedJobApplication({ projectId, initialTransitionId: randomUUID(), title: company, company, role: "Engineer" });
+    w.database.prepare("UPDATE projects SET status=?, lifecycle_state=? WHERE id=?").run(status, lifecycle, projectId);
+    w.database.prepare("INSERT INTO job_mail_metadata VALUES(?,?,?,?,?,?,?,?)")
+      .run(workspaceId, "mailbox-1", randomUUID(), "thread", "Follow up", `${company}@example.test`, "2026-09-09T01:00:00Z", projectId);
+    return projectId;
+  };
+  const excluded = [create("rejected", "CLOSED", "REJECTED"), create("withdrawn", "CLOSED", "WITHDRAWN"),
+    create("accepted", "CLOSED", "ACCEPTED"), create("paused", "PAUSED", "APPLIED"),
+    create("inconsistent", "ACTIVE", "REJECTED")];
+  const included = create("ongoing", "ACTIVE", "INTERVIEWING");
+  const policy = w.service.mailScanService.get(w.begin()).searchPolicy!;
+  const criteria = policy.mailboxes[0]!.criteria;
+  expect(criteria.companies).toContain("ongoing");
+  expect(criteria.senders).toEqual(["ongoing@example.test"]);
+  for (const company of ["rejected", "withdrawn", "accepted", "paused", "inconsistent"]) expect(criteria.companies).not.toContain(company);
+  const targets = w.service.jobSearchQueryService.applicationCheckTargets().map(p => p.projectId);
+  expect(targets).toContain(included);
+  for (const id of excluded) expect(targets).not.toContain(id);
+  expect(policy.mailboxes[0]!.query).toContain('subject:"application"');
+  expect(w.database.prepare("SELECT count(*) n FROM job_mail_metadata").get()).toEqual({ n: 6 });
+});
+
 it("adds only empty policy/metadata tables and supports repeated and older startup against a migrated copy",()=>{
   const w=fixture(),base=resolve(w.directory!,"before014"),old=resolve(w.directory!,"old014");
   mkdirSync(old);for(const f of readdirSync("db/migrations").filter(f=>f.endsWith('.sql')&&!f.startsWith('014_')))copyFileSync(resolve("db/migrations",f),resolve(old,f));

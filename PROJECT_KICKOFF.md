@@ -2,6 +2,13 @@
 
 ## Current status — 2026-09-09
 
+Latest correction: Jun requires ongoing-only follow-up and keyword-based mail
+checks. The two Amazon applications were already REJECTED/CLOSED; bulk target
+selection was wrong. The [correction ledger](docs/architecture/MAIL_SCAN_BACKEND_LEDGER.md#ongoing-only-keyword-follow-up--2026-09-09)
+records ongoing target selection, metadata-only website reads and the separate
+release gate. This supersedes earlier instructions to include rejected records
+in manual checks, while retaining all historical evidence.
+
 ### Deployed development follow-up
 
 [Resume event-conflict correction](docs/architecture/APPLICATION_RESUME_ASSOCIATIONS.md#local-event-conflict-correction--2026-09-09)

@@ -39,6 +39,11 @@ export function isTerminalLifecycleState(state: LifecycleState): boolean {
   return terminalStates.includes(state);
 }
 
+export function isOngoingApplication(project: { status: string; lifecycleState: string | null }): boolean {
+  return project.status === "ACTIVE" &&
+    ["APPLIED", "RECRUITER_CONTACT", "INTERVIEWING", "OFFER"].includes(project.lifecycleState ?? "");
+}
+
 export function derivedTaskForTransition(
   fromState: LifecycleState,
   toState: LifecycleState,

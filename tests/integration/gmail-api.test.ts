@@ -50,15 +50,20 @@ it("reads Gmail pagination, deduplicates IDs, and reports an incomplete capped s
   expect(result.messages[0]?.senderDomain).toBe("example.test");
 });
 
-it("does not classify unreadable HTML-only emails as a complete search", async () => {
-  const reader = new GmailReader(async (input) => String(input).includes("format=full")
-    ? Response.json({ threadId: "1", internalDate: Date.now(), payload: { mimeType: "text/html",
-      headers: [{ name: "from", value: "a@example.test" }], body: { data: Buffer.from("<p>Interview</p>").toString("base64url") } } })
-    : Response.json({ messages: [{ id: "a1" }] }));
+it("uses only Gmail metadata for keyword hits, including HTML mail without a text body", async () => {
+  const reader = new GmailReader(async (input) => {
+    const url = new URL(String(input));
+    if (url.pathname.endsWith('/messages')) return Response.json({ messages: [{ id: "a1" }] });
+    expect(url.searchParams.get('format')).toBe('metadata');
+    expect(url.searchParams.getAll('metadataHeaders')).toEqual(['Subject', 'From']);
+    expect(url.searchParams.get('fields')).not.toContain('body');
+    return Response.json({ threadId: "1", internalDate: Date.now(), snippet: "Interview invitation",
+      payload: { headers: [{ name: "from", value: "a@example.test" }, { name: "Subject", value: "Company Engineer" }] } });
+  });
   const result = await reader.search("token", "Company", "Engineer", "2026-09-01", new AbortController().signal);
-  expect(result.complete).toBe(false);
-  expect(result.issues).toEqual(["BODY_MISSING"]);
-  expect(result.messages).toEqual([]);
+  expect(result.complete).toBe(true);
+  expect(result.issues).toEqual([]);
+  expect(result.messages[0]?.text).toBe("Company Engineer\nInterview invitation");
 });
 
 it("bounds incremental application searches and filters exact timestamp boundaries",async()=>{
@@ -91,18 +96,19 @@ it("rejects model output with invented evidence, duplicate IDs, or leaked addres
   }
 });
 
-it("skips overlong bodies and ignores unreadable mail outside the exact interval", async () => {
+it("does not read overlong bodies and keeps snippet retrieval within the exact interval", async () => {
   const range = { searchedFrom: "2026-09-07T00:00:00Z", coveredThrough: "2026-09-08T00:00:00Z" };
   for (const inRange of [false, true]) {
-    const reader = new GmailReader(async input => String(input).includes("format=full")
-      ? Response.json({ threadId: "t", internalDate: Date.parse(inRange ? "2026-09-07T12:00:00Z" : range.coveredThrough),
+    const reader = new GmailReader(async input => String(input).includes("format=metadata")
+      ? Response.json({ threadId: "t", snippet: "Application received", internalDate: Date.parse(inRange ? "2026-09-07T12:00:00Z" : range.coveredThrough),
         payload: { mimeType: "text/plain", headers: [{ name: "From", value: "a@example.test" }],
           body: { data: Buffer.from("x".repeat(12001)).toString("base64url") } } })
       : Response.json({ messages: [{ id: "aa" }] }));
     const result = await reader.search("token", "Company", "Role", range.searchedFrom, new AbortController().signal, range);
-    expect(result.messages).toEqual([]);
-    expect(result.complete).toBe(!inRange);
-    expect(result.issues).toEqual(inRange ? ["BODY_TRUNCATED"] : []);
+    expect(result.messages).toHaveLength(inRange ? 1 : 0);
+    if (inRange) expect(result.messages[0]?.text).toBe("Application received");
+    expect(result.complete).toBe(true);
+    expect(result.issues).toEqual([]);
   }
 });
 

@@ -111,6 +111,7 @@ export class JobSearchQueryService {
       json_extract(metadata_json, '$.company') AS company,
       json_extract(metadata_json, '$.role') AS role
       FROM projects WHERE workspace_id = ? AND project_type = 'job_application'
+      AND status = 'ACTIVE' AND lifecycle_state IN ('APPLIED', 'RECRUITER_CONTACT', 'INTERVIEWING', 'OFFER')
       ORDER BY updated_at DESC, id ASC`).all(identity.workspaceId) as { projectId: string; company: string; role: string }[];
   }
 

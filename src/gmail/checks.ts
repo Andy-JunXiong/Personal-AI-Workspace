@@ -6,6 +6,8 @@ import type { GmailAuthorization, MailInterpreter, MailReader } from "./provider
 import { isApplicationEvidence, validateInterpretation } from "./providers.js";
 import { diagnosticText, mailDiagnostic, MailCheckError, type MailCheckStage, type MailDiagnostic } from "../domain/mail-diagnostics.js";
 import { gmailAccountKey, gmailSourceId } from "./source-identity.js";
+import { isOngoingApplication } from "../domain/job-application-lifecycle.js";
+import { ActionDeniedError } from "../domain/errors.js";
 
 export interface GmailRuntime {
   connections: GmailConnections;
@@ -39,6 +41,10 @@ export class GmailChecks {
       for (const target of targets) {
         try {
           while (this.pending.size >= 2) await Promise.race(this.pending.values());
+          if (!isOngoingApplication(service.jobSearchQueryService.getApplication(target.projectId).project)) {
+            batch.results.push({ ...target, outcome: "SKIPPED" });
+            continue;
+          }
           const run = this.start(identity, service, target.projectId);
           await this.pending.get(this.key(identity, target.projectId));
           batch.results.push({ ...target, outcome: run.outcome ?? "FAILED" });
@@ -50,6 +56,7 @@ export class GmailChecks {
   }
   start(identity: IdentityContext, service: WorkspaceService, projectId: string): CheckRun {
     const detail = service.jobSearchQueryService.getApplication(projectId);
+    if (!isOngoingApplication(detail.project)) throw new ActionDeniedError("已拒绝或已结束的申请不再补查邮件");
     const key = this.key(identity, projectId), existing = this.runs.get(key);
     if (existing && (existing.state === "RUNNING" || this.now() - existing.startedAt < 60_000)) return existing;
     for (const [k, run] of this.runs) if (run.state !== "RUNNING" && this.now() - run.startedAt > 600_000) this.runs.delete(k);
@@ -84,17 +91,23 @@ export class GmailChecks {
     const report = (diagnostic: MailDiagnostic) => { diagnostics.push(diagnostic); scopes.push(diagnosticText(diagnostic)); };
     const company = String(project.metadata.company ?? ""), role = String(project.metadata.role ?? project.title);
     const since = typeof project.metadata.appliedDate === "string" ? project.metadata.appliedDate : project.createdAt;
-    const queryKey=createHash("sha256").update(JSON.stringify([company,role,since])).digest("hex");
+    const queryKey=createHash("sha256").update(JSON.stringify(["keyword-metadata-v1",company,role,since])).digest("hex");
     const coverage:{accountKey:string;queryKey:string;coveredThrough:string}[]=[];
+    const assertOngoing = () => {
+      if (!isOngoingApplication(service.jobSearchQueryService.getApplication(project.id).project))
+        throw new ActionDeniedError("Application tracking stopped during the check");
+    };
     for (const slot of [1, 2]) {
       let stage: MailCheckStage = "AUTHORIZE";
       try {
+        assertOngoing();
         const connection = connections.get(identity, slot);
         if (!connection) throw new MailCheckError("NOT_CONNECTED");
         const accountKey=gmailAccountKey(connection.subject);
         const range=service.manualMailService.range(project.id,accountKey,queryKey,run.startedAt);
         const token = await authorization.access(connection);
         signal.throwIfAborted();
+        assertOngoing();
         stage = "SEARCH";
         const search = await reader.search(token, company, role, since, signal,range);
         let mailboxComplete = search.complete && !search.issues?.length;
@@ -114,6 +127,7 @@ export class GmailChecks {
           stage = "INTERPRET";
           const interpreted = validateInterpretation(await interpreter.interpret(company, role, batch, signal),batch);
           signal.throwIfAborted();
+          assertOngoing();
           if(connections.get(identity,slot)?.subject!==connection.subject) throw new MailCheckError("ACCOUNT_CHANGED");
           if (interpreted.items.some(item => item.category === "UNCERTAIN")) {
             mailboxComplete = false; complete = false;
@@ -148,7 +162,7 @@ export class GmailChecks {
     service.manualMailService.complete(run.id,project.id,status,{scope:scopes,diagnostics,matchedMessageCount:matched},coverage,()=>service.recordGmailObservationFromWeb({ projectId: project.id, provider: "workspace-gmail-check", resourceType: "NOTE",
       externalId: run.id, externalUri: null, title: "双邮箱岗位检查", observedAt: new Date(this.now()).toISOString(),
       idempotencyKey: run.id, observedFacts: { contractVersion: "gmail-application-check-v0.1", status,
-        summary, searchScope: `仅本申请按公司或岗位补查（含垃圾邮件），最多回看七天；不代表全邮箱覆盖。${scopes.join("；")}`.slice(0, 1000), matchedMessageCount: matched } }));
+        summary, searchScope: `仅进行中申请按公司或岗位关键词补查（含垃圾邮件），只读主题和 Gmail 摘要，最多回看七天；不代表全文审阅或全邮箱覆盖。${scopes.join("；")}`.slice(0, 1000), matchedMessageCount: matched } }));
     run.state = "DONE";
     run.outcome = status;
   }

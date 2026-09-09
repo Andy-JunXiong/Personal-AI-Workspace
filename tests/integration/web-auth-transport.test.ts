@@ -80,7 +80,7 @@ it("records both-mailbox failure as FAILED rather than no update", async () => {
   expect(w.service.jobSearchQueryService.getApplication(w.projectId).latestGmailCheck?.facts).toMatchObject({ status: "FAILED" });
 });
 
-it("checks every application beyond one page including closed/rejected records, isolates owners and survives individual failures", async () => {
+it("checks only ongoing applications beyond one page, isolates owners and survives individual failures", async () => {
   let release!: () => void;
   const gate = new Promise<void>(resolve => { release = resolve; });
   let reads = 0;
@@ -108,11 +108,18 @@ it("checks every application beyond one page including closed/rejected records, 
   const headers = { cookie, origin: webOrigin, "x-csrf-token": csrfToken, "content-type": "application/json" };
   expect((await w.request("/api/v1/gmail/check-all", { method: "POST", headers: { cookie }, body: "{}" })).status).toBe(403);
   expect((await w.request("/api/v1/gmail/check-all")).status).toBe(401);
+  expect((await w.request(`/api/v1/gmail/applications/${w.projectId}/check`, { method: "POST", headers, body: "{}" })).status).toBe(403);
+  const closedHtml = await (await w.request(`/workspace/job-search/applications/${w.projectId}`, { headers: { cookie } })).text();
+  expect(closedHtml).not.toContain('data-gmail-action="check"');
+  expect(closedHtml).toContain('不再补查新邮件');
   const first = await (await w.request("/api/v1/gmail/check-all", { method: "POST", headers, body: "{}" })).json();
-  expect(first.batch.total).toBe(106);
+  expect(first.batch.total).toBe(105);
   expect(first.batch.state).toBe("RUNNING");
   const duplicate = await (await w.request("/api/v1/gmail/check-all", { method: "POST", headers, body: "{}" })).json();
   expect(duplicate.batch.id).toBe(first.batch.id);
+  // A queued application can be closed while an earlier mailbox request is in flight.
+  const stopped = w.service.jobSearchQueryService.applicationCheckTargets().filter(p => p.company !== "Failure company").at(-1)!;
+  w.database.prepare("UPDATE projects SET status='CLOSED', lifecycle_state='REJECTED' WHERE id=?").run(stopped.projectId);
   release();
   let final = first;
   for (let i = 0; i < 100; i++) {
@@ -120,14 +127,16 @@ it("checks every application beyond one page including closed/rejected records, 
     if (final.batch.state !== "RUNNING") break;
   }
   expect(final.batch.state).toBe("DONE");
-  expect(final.batch.results).toHaveLength(106);
+  expect(final.batch.results).toHaveLength(105);
   expect(final.batch.results.filter((r: { outcome: string }) => r.outcome === "FAILED")).toHaveLength(1);
-  expect(final.batch.results.map((r: { projectId: string }) => r.projectId)).toContain(w.projectId);
+  expect(final.batch.results).toContainEqual({ ...stopped, outcome: "SKIPPED" });
+  expect(final.batch.results.map((r: { projectId: string }) => r.projectId)).not.toContain(w.projectId);
   expect(final.batch.results.map((r: { projectId: string }) => r.projectId)).not.toContain(privateId);
-  expect(reads).toBe(212);
-  expect(w.database.prepare("SELECT count(*) n FROM resources WHERE provider='workspace-gmail-check'").get()).toEqual({ n: 106 });
+  expect(reads).toBe(208);
+  expect(w.database.prepare("SELECT count(*) n FROM resources WHERE provider='workspace-gmail-check'").get()).toEqual({ n: 104 });
   const html = await (await w.request('/workspace/job-search/applications?status=OPEN&pageSize=1', { headers: { cookie } })).text();
   expect(html).toContain('data-gmail-check-all');
+  expect(html).toContain('补查进行中岗位');
 });
 
 it("shows Gmail check receipts independently of task counts and rejects malformed success", async () => {
