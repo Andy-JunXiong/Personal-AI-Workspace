@@ -101,7 +101,7 @@ September 10. Actual scheduled acceptance remains pending.
 
 | Area | Delivered and verified | Remaining gate |
 | --- | --- | --- |
-| Production | `library-20260909-r4`, migrations 001?015; 384 tests, build, backup/recovery, health and data preservation passed; runtime source `b8da4bb` | Ten candidate JDs still missing; alert coverage incomplete; external matching disabled |
+| Production | `library-20260909-r4`, migrations 001-015; 384 tests, build, backup/recovery, health and data preservation passed; runtime source `b8da4bb` | Ten candidate JDs still missing; alert coverage incomplete; external matching disabled |
 | Durable operations | Applications, attributable observations, lifecycle transitions, Tasks, candidates, recommendation runs and scan receipts share one Workspace database | Sustained daily use remains to be evaluated |
 | Website | [Job Search](https://workspace.ai-radar-lab.com/workspace/job-search/today): Today, inventory, timelines, JD/skill reports and resume file/version links | Historical JD and skill reports still need source-grounded backfill |
 | Mail search | Both mailboxes; subject keywords, stored companies and linked exact senders; normal 24-hour / maximum 72-hour recovery; matching-body review and deduplication | New applications require explicit submission-confirmation evidence; filtered completion does not cover every email |
