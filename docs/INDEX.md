@@ -11,6 +11,7 @@
 Start with [README](../README.md) for current state, [core workflow](architecture/CORE_JOB_WORKFLOW.md)
 for product authority, and [current release](architecture/JOB_LIBRARY_WORKFLOW.md#validation-and-release) for deployment evidence.
 [Project kickoff](../PROJECT_KICKOFF.md) retains the chronological project record.
+[Project history](HISTORY.md) preserves the dated release and milestone narrative relocated from README.
 The [September 9 restart checklist](architecture/JOB_LIBRARY_WORKFLOW.md#session-closeout-and-restart-point---2026-09-09) records remaining JD, alert coverage and authorization gates.
 
 This index covers all Markdown under docs/ (other than this index), the three
