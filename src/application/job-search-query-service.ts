@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { applicationCalendar, type CalendarApplication } from "../domain/application-calendar.js";
 import { applicationResumeSchema, type ApplicationResume } from "../domain/application-resume.js";
 import type { WorkspaceDatabase } from "../persistence/database.js";
 import type { CoverageStatus, DeliveryStatus, FitUncertainty, IdentityContext, JobCandidateRecord, ProjectRecord, RecommendationRunDetails, RecommendationRunItem, RecommendationRunRecord, ResourceRecord, SourceAvailability, TaskRecord, TransitionRecord } from "../domain/types.js";
@@ -15,7 +16,7 @@ const pageFields = {
 };
 const applicationSchema = z.object({
   ...pageFields,
-  status: z.enum(["OPEN", "CLOSED", "ALL"]).default("OPEN"),
+  status: z.enum(["ONGOING", "OPEN", "CLOSED", "ALL"]).default("OPEN"),
   lifecycle: z.enum(["APPLIED", "RECRUITER_CONTACT", "INTERVIEWING", "OFFER", "ACCEPTED", "REJECTED", "WITHDRAWN"]).optional(),
   q: z.string().trim().max(500).default(""),
   sort: z.enum(["APPLIED_DESC", "UPDATED_DESC", "COMPANY_ASC", "NEXT_DUE_ASC"]).default("APPLIED_DESC"),
@@ -186,6 +187,17 @@ export class JobSearchQueryService {
       workspaceId: identity.workspaceId, projectId, pageSize: options.pageSize }, options.pageSize, options.cursor, this.clock().valueOf());
   }
 
+  applicationCalendar(zone: string) {
+    const identity = this.resolveIdentity();
+    const applications = this.database.prepare(`SELECT id AS projectId,
+      json_extract(metadata_json, '$.company') AS company,
+      json_extract(metadata_json, '$.role') AS role,
+      json_extract(metadata_json, '$.appliedDate') AS appliedDate
+      FROM projects WHERE workspace_id = ? AND project_type = 'job_application'
+      ORDER BY id`).all(identity.workspaceId) as CalendarApplication[];
+    return applicationCalendar(applications, this.clock(), zone);
+  }
+
   listApplications(input: unknown = {}) {
     const options = parse(applicationSchema, input);
     const q = searchText(options.q);
@@ -222,7 +234,9 @@ export class JobSearchQueryService {
         FROM projects p LEFT JOIN ranked_open n ON n.project_id = p.id AND n.position = 1
         WHERE p.workspace_id = @workspace AND p.project_type = 'job_application'
           AND (@status = 'ALL' OR (@status = 'OPEN' AND p.status <> 'CLOSED')
-            OR (@status = 'CLOSED' AND p.status = 'CLOSED'))
+            OR (@status = 'CLOSED' AND p.status = 'CLOSED')
+            OR (@status = 'ONGOING' AND p.status = 'ACTIVE'
+              AND p.lifecycle_state IN ('APPLIED', 'RECRUITER_CONTACT', 'INTERVIEWING', 'OFFER')))
           AND (@lifecycle IS NULL OR p.lifecycle_state = @lifecycle)
         ORDER BY ${order}`).iterate({ workspace: identity.workspaceId,
         status: options.status, lifecycle: options.lifecycle ?? null }) as Iterable<ApplicationRow>;

@@ -190,7 +190,7 @@ it("shows the application date and chronological evidence, and renders a saved J
   expect(() => w.service.recordObservation({ ...input, observedFacts: { ...facts, skillMatch: "invented" }, idempotencyKey: randomUUID() })).toThrow();
   expect(() => w.service.recordObservation({ ...input, provider: "gmail", idempotencyKey: randomUUID() })).toThrow();
   const changes = w.database.prepare("SELECT total_changes() n").get();
-  const html = await (await w.request(`${base}?pageSize=1`, { headers })).text();
+  const html = await (await w.request(`${base}?pageSize=1&status=ALL`, { headers })).text();
   expect(html).toContain("Existing GPT assessment");
   expect(html).toContain("Project experience");
   expect(html).toContain("&lt;script&gt;unsafe()&lt;/script&gt;");
@@ -348,7 +348,7 @@ describe("Signed OIDC authentication over the isolated web transport", () => {
     expect(w.database.prepare("SELECT total_changes() AS n").get()).toEqual(before);
   });
 
-  it("shows rejected applications by default and preserves explicit open filtering and pagination", async () => {
+  it("defaults to ongoing applications and preserves explicit all filtering and pagination", async () => {
     const w = await setup(); w.link();
     const authority = { type: "EXPLICIT_USER_DEV" as const, confirmed: true as const, reference: "Synthetic overview" };
     const created = w.service.createJobApplication({ company: "Rejected company", role: "Role", authority, idempotencyKey: randomUUID() });
@@ -358,13 +358,16 @@ describe("Signed OIDC authentication over the isolated web transport", () => {
     w.service.admitTransition({ transitionId: proposal.transition.id, expectedLifecycleVersion: 1, authority, idempotencyKey: randomUUID() });
     const headers = { cookie: w.sessionCookie(await w.finish(await w.start())) };
     const base = "/workspace/job-search/applications";
-    const all = await (await w.request(base, { headers })).text();
+    const ongoing = await (await w.request(base, { headers })).text();
+    expect(ongoing).not.toContain("Rejected company");
+    expect(ongoing).toContain('value="ONGOING" selected');
+    const all = await (await w.request(`${base}?status=ALL`, { headers })).text();
     expect(all).toContain("Rejected company");
     expect(all).toContain('value="ALL" selected');
     expect(all).toContain("共 2 项");
     expect(await (await w.request(`${base}?status=OPEN`, { headers })).text()).not.toContain("Rejected company");
-    expect(await (await w.request(`${base}?lifecycle=REJECTED`, { headers })).text()).toContain("Rejected company");
-    const first = await (await w.request(`${base}?pageSize=1`, { headers })).text();
+    expect(await (await w.request(`${base}?status=ALL&lifecycle=REJECTED`, { headers })).text()).toContain("Rejected company");
+    const first = await (await w.request(`${base}?pageSize=1&status=ALL`, { headers })).text();
     const nextPath = /data-more href="([^"]+)"/u.exec(first)![1]!.replaceAll("&amp;", "&");
     expect(nextPath).toContain("status=ALL");
     expect((await w.request(nextPath, { headers })).status).toBe(200);
