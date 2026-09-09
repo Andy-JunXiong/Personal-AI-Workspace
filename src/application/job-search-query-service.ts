@@ -1,3 +1,4 @@
+import { applicationMailEvent } from "../domain/application-mail-event.js";
 import { z } from "zod";
 import { applicationCalendar, type CalendarApplication } from "../domain/application-calendar.js";
 import { applicationResumeSchema, type ApplicationResume } from "../domain/application-resume.js";
@@ -166,24 +167,17 @@ export class JobSearchQueryService {
     const transitions = this.database.prepare(`SELECT id, to_state AS state, admitted_at AS at, proposal_rationale AS summary
       FROM state_transitions WHERE project_id = ? AND status = 'ADMITTED'`).all(projectId) as
       { id: string; state: string; at: string; summary: string }[];
-    for (const t of transitions) events.push({ id: `transition:${t.id}`, at: t.at, kind: "STATE", title: t.state, summary: t.summary });
-    const resources = this.database.prepare(`SELECT id, resource_type AS type, title, observed_at AS at, observed_facts_json AS facts
-      FROM resources WHERE project_id = ? AND (resource_type = 'EMAIL' OR provider = 'workspace-gmail-check')`).all(projectId) as
-      { id: string; type: string; title: string | null; at: string; facts: string }[];
+    for (const t of transitions.filter(t => t.state !== "APPLIED" || !events.some(e => e.kind === "APPLICATION"))) events.push({ id: `transition:${t.id}`, at: t.at, kind: "STATE", title: t.state, summary: t.summary });
+    const resources = this.database.prepare(`SELECT id, observed_at AS at, observed_facts_json AS facts
+      FROM resources WHERE project_id = ? AND resource_type = 'EMAIL'`).all(projectId) as
+      { id: string; at: string; facts: string }[];
     for (const r of resources) {
-      const facts = JSON.parse(r.facts);
-      events.push({ id: `resource:${r.id}`, at: typeof facts.sourceFacts?.receivedAt === "string" ? facts.sourceFacts.receivedAt : r.at,
-        kind: r.type === "EMAIL" ? "EMAIL" : "CHECK", title: r.title ?? "邮件记录",
-        summary: typeof facts.interpretation?.summary === "string" ? facts.interpretation.summary : typeof facts.summary === "string" ? facts.summary : "" });
-    }
-    const tasks = this.database.prepare(`SELECT id, title, created_at AS createdAt, completed_at AS completedAt
-      FROM tasks WHERE project_id = ?`).all(projectId) as { id: string; title: string; createdAt: string; completedAt: string | null }[];
-    for (const t of tasks) {
-      events.push({ id: `task-created:${t.id}`, at: t.createdAt, kind: "TASK", title: "创建待办", summary: t.title });
-      if (t.completedAt) events.push({ id: `task-done:${t.id}`, at: t.completedAt, kind: "TASK", title: "完成待办", summary: t.title });
+      const event = applicationMailEvent(JSON.parse(r.facts), project.metadata.company, project.metadata.role);
+      if (event) events.push({ id: `resource:${r.id}`, at: event.receivedAt ?? r.at,
+        kind: "EMAIL", title: event.title, summary: event.summary });
     }
     events.sort((a,b) => Date.parse(b.at) - Date.parse(a.at) || a.id.localeCompare(b.id));
-    return readPage(() => events, { kind: "application-timeline", principalId: identity.principalId,
+    return readPage(() => events, { kind: "application-progress-timeline-v2", principalId: identity.principalId,
       workspaceId: identity.workspaceId, projectId, pageSize: options.pageSize }, options.pageSize, options.cursor, this.clock().valueOf());
   }
 

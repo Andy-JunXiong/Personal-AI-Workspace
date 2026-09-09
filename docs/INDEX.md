@@ -1,5 +1,7 @@
 # Documentation index
 
+- [Application progress timeline](mvp/APPLICATION_PROGRESS_TIMELINE_2026-09-09.md): meaningful application milestones, excluding check receipts and vacancy marketing.
+
 - [Application calendar and ongoing default](mvp/APPLICATION_CALENDAR_2026-09-09.md): two-month submission timeline and focused application list.
 
 Start with [README](../README.md) for current state, [core workflow](architecture/CORE_JOB_WORKFLOW.md)

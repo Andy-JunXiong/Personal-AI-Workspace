@@ -1,3 +1,4 @@
+import { applicationMailCategorySchema, isApplicationMailCategory, isVacancyMarketing } from "../domain/application-mail-event.js";
 import * as oidc from "openid-client";
 import { z } from "zod";
 import type { LoginChecks } from "../auth/oidc.js";
@@ -115,12 +116,12 @@ export class GmailReader implements MailReader {
 
 export const interpretationSchema = z.object({ items: z.array(z.object({
   messageId: z.string(), relevant: z.boolean(), summary: z.string().max(700),
-  category: z.enum(["APPLICATION_CONFIRMATION", "APPLICATION_UPDATE", "INTERVIEW", "OFFER", "REJECTION", "ACTION_REQUEST", "JOB_ADVERTISEMENT", "UNRELATED", "UNCERTAIN"]),
+  category: applicationMailCategorySchema,
   evidenceQuote: z.string().max(500), requiresAction: z.boolean(),
 }).strict()).max(30) }).strict();
 export type Interpretation = z.infer<typeof interpretationSchema>;
 export const isApplicationEvidence = (item: Interpretation["items"][number]) => item.relevant
-  && ["APPLICATION_CONFIRMATION", "APPLICATION_UPDATE", "INTERVIEW", "OFFER", "REJECTION", "ACTION_REQUEST"].includes(item.category);
+  && isApplicationMailCategory(item.category) && !isVacancyMarketing(item.summary);
 export function validateInterpretation(value: unknown, messages: MailMessage[]): Interpretation {
   const result = interpretationSchema.safeParse(value);
   if (!result.success) throw new MailCheckError("MODEL_RESPONSE_INVALID");

@@ -200,10 +200,9 @@ it("shows the application date and chronological evidence, and renders a saved J
   const list = await (await w.request("/workspace/job-search/applications", { headers })).text();
   expect(list).toContain("申请日期：2026-07-01");
   const first = w.service.jobSearchQueryService.listTimeline(w.projectId, { pageSize: 1 });
-  expect(first.totalCount).toBe(2);
-  expect(first.nextCursor).not.toBeNull();
-  const next = w.service.jobSearchQueryService.listTimeline(w.projectId, { pageSize: 1, cursor: first.nextCursor });
-  expect(next.items[0]?.kind).toBe("APPLICATION");
+  expect(first.totalCount).toBe(1);
+  expect(first.nextCursor).toBeNull();
+  expect(first.items[0]?.kind).toBe("APPLICATION");
 });
 afterEach(async () => { for (const cleanup of cleanups.splice(0).reverse()) await cleanup(); });
 

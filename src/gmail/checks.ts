@@ -144,7 +144,7 @@ export class GmailChecks {
               observedAt: message.receivedAt, idempotencyKey: `${run.id}:${externalId}`,
               observedFacts: { contractVersion: "gmail-job-observation-v0.1",
                 sourceFacts: { receivedAt: message.receivedAt, senderDomain: message.senderDomain, threadId: message.threadId },
-                interpretation: { company, role, emailKind: "OTHER", summary: item.summary } } });
+                interpretation: { company, role, emailKind: "OTHER", summary: item.summary, category: item.category } } });
             if (!saved.deduplicated) newMessages++;
             summaries.push({ at: message.receivedAt, text: `${message.receivedAt.slice(0, 10)}：${item.summary}` });
           }

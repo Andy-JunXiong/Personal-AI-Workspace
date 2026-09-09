@@ -146,6 +146,7 @@ observed_facts:
     role: string
     emailKind: RECRUITER_CONTACT | OTHER
     summary: string
+    category: APPLICATION_CONFIRMATION | APPLICATION_UPDATE | INTERVIEW | OFFER | REJECTION | ACTION_REQUEST # optional
 ```
 
 This is a payload convention, not a new entity or migration. `sourceFacts`

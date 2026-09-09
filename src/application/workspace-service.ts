@@ -1,4 +1,5 @@
 import { MailScanLedger } from "./mail-scan-ledger.js";
+import { applicationMailCategorySchema, isApplicationMailCategory, isVacancyMarketing } from "../domain/application-mail-event.js";
 import { randomUUID } from "node:crypto";
 import { gmailCheckSchema } from "../domain/gmail-check.js";
 import { applicationProfileSchema } from "../domain/application-profile.js";
@@ -1904,8 +1905,9 @@ function normalizeCanonicalGmailObservedFacts(
     observedFacts.interpretation,
     "Canonical Gmail interpretation",
   );
-  assertExactKeys(
+  assertAllowedAndRequiredKeys(
     interpretation,
+    ["company", "role", "emailKind", "summary", "category"],
     ["company", "role", "emailKind", "summary"],
     "Canonical Gmail interpretation",
   );
@@ -1930,6 +1932,10 @@ function normalizeCanonicalGmailObservedFacts(
     interpretation.emailKind,
     "Canonical Gmail interpretation.emailKind",
   );
+  const category = interpretation.category === undefined ? null : applicationMailCategorySchema.safeParse(interpretation.category);
+  if ((category && (!category.success || !isApplicationMailCategory(category.data))) || isVacancyMarketing(summary)) {
+    throw new ValidationError("Gmail application evidence must describe actual application progress, not vacancy marketing or unrelated mail");
+  }
   if (emailKind !== "RECRUITER_CONTACT" && emailKind !== "OTHER") {
     throw new ValidationError(
       "Canonical Gmail interpretation.emailKind must be RECRUITER_CONTACT or OTHER",
@@ -1959,7 +1965,7 @@ function normalizeCanonicalGmailObservedFacts(
   return {
     contractVersion: "gmail-job-observation-v0.1",
     sourceFacts: normalizedSourceFacts,
-    interpretation: { company, role, emailKind, summary },
+    interpretation: { company, role, emailKind, summary, ...(category?.success ? { category: category.data } : {}) },
   };
 }
 

@@ -58,7 +58,10 @@ Workspace Agent。本文件准备与现有回填契约兼容的配置，供账�
    resourceType=EMAIL、provider=gmail、externalId=真实 message ID；observedFacts 使用
    gmail-job-observation-v0.1 契约。只存 receivedAt、可选 senderDomain/threadId，以及
    interpretation 的 company、role、emailKind、summary。emailKind 只允许 RECRUITER_CONTACT
-   或 OTHER；面试、拒绝等具体含义写入简短 summary。不要保存完整邮箱地址、邮件正文或令牌。
+   或 OTHER；面试、拒绝等具体含义写入简短 summary，并可用 category 保存分类：
+   APPLICATION_CONFIRMATION、APPLICATION_UPDATE、INTERVIEW、OFFER、REJECTION、ACTION_REQUEST。
+   只保存这份实际申请的进展或招聘方具体请求，不保存职位推荐、招聘广告或邀请投递。
+   不要保存完整邮箱地址、邮件正文或令牌。检查回执不属于申请时间线事件。
 5. 只根据明确证据与本次授权更新申请或创建明确待办，遵守版本检查与幂等机制。
    没有新进展就保持状态；不得因无邮件而推断拒绝。不要重复创建任务，也不要把一般建议变成待办。
    需要确认或写入失败时记录 PARTIAL，不得宣称已更新。不得发送、回复或修改邮件。
