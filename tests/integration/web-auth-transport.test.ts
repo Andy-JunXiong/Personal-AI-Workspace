@@ -13,6 +13,8 @@ import { join } from "node:path";
 
 const cleanups: Array<() => void | Promise<void>> = [];
 function gmailFixture(workspace: ReturnType<typeof createTestWorkspace>): GmailRuntime {
+  // Keep the same source timestamp across retries, inside the normal 24-hour window.
+  const receivedAt = new Date(Date.now() - 60 * 60 * 1000).toISOString();
   return {
     connections: new GmailConnections(join(workspace.directory, "mail"), Buffer.alloc(32, 9)),
     authorization: {
@@ -21,7 +23,7 @@ function gmailFixture(workspace: ReturnType<typeof createTestWorkspace>): GmailR
       async access(connection) { return connection.refreshToken; },
     },
     reader: { async search() { return { complete: true, scope: "synthetic", messages: [{ id: "abcd", threadId: "1234",
-      receivedAt: "2026-09-07T05:00:00Z", senderDomain: "example.test", subject: "Interview", text: "Interview invitation" }] }; } },
+      receivedAt, senderDomain: "example.test", subject: "Interview", text: "Interview invitation" }] }; } },
     interpreter: { async interpret(_company, _role, messages) { return { items: messages.map(m => ({ messageId: m.id,
       relevant: true, category: "INTERVIEW" as const, summary: "收到面试邀请", evidenceQuote: "Interview invitation", requiresAction: true })) }; } },
   };

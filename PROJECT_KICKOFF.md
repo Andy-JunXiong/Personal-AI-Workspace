@@ -2,6 +2,17 @@
 
 ## Current status — 2026-09-09
 
+### Local development follow-up
+
+[Resume event-conflict correction](docs/architecture/APPLICATION_RESUME_ASSOCIATIONS.md#local-event-conflict-correction--2026-09-09)
+now rejects changed observations reusing an existing event ID, avoiding silently
+skipped confirmation/correction writes. Exact retries preserve the historical
+result and current association. Local type checks, 368 tests in 44 files and
+build passed, including a repaired date-sensitive mail fixture. This follow-up
+is not deployed or published and changes no actual application or task state.
+First scheduled mail acceptance and actual submitted-version evidence remain
+the next operational gates; the deployed release below remains unchanged.
+
 ### End-of-day handoff
 
 Jun requested documentation reconciliation and commit/push to GitHub main at

@@ -22,6 +22,12 @@ See the [authoritative core workflow](docs/architecture/CORE_JOB_WORKFLOW.md).
 
 ## Current state — 2026-09-09
 
+Local follow-up: [resume event-conflict correction](docs/architecture/APPLICATION_RESUME_ASSOCIATIONS.md#local-event-conflict-correction--2026-09-09)
+rejects changed content under a reused resume event ID, preserving safe retries
+and explicit confirmation failures. Type checks, 368 tests and build passed;
+this correction is not deployed. The next operational gate remains the first
+actual September 10 scheduled execution described below.
+
 The latest release is [Drive resume association](docs/architecture/APPLICATION_RESUME_ASSOCIATIONS.md),
 `resume-20260909-r2`, retaining migration 014 and the mail-search workflow below.
 367 tests passed. Production backup/recovery, source checks, health and data

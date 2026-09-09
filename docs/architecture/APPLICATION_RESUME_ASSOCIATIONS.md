@@ -70,6 +70,10 @@ No migration or extra MCP tool is required. Use `workspace_record_observation`:
 - `externalId`: a unique observation/event ID, **not just the Drive file ID**.
   Reuse the same event ID and idempotency key when retrying that exact write.
   A later confirmation/correction needs a new event ID and idempotency key.
+  The local follow-up below rejects reuse of an event ID with different content
+  as `IDEMPOTENCY_CONFLICT`, even with a fresh idempotency key. An identical
+  event with a fresh key still returns the saved historical Resource; it does
+  not undo a subsequent correction. Read `resumeAssociations` for current state.
 - `externalUri`: observed HTTPS Drive file or Docs document URL matching `fileId`.
 - `observedAt`: the actual observation time; not the application date.
 - `observedFacts` follows the strict schema below; extra fields are rejected.
@@ -110,6 +114,34 @@ legacy resume notes with unspecified confirmation provenance. JD/skill-match
 profiles and resume associations do not overwrite one another.
 
 ## Validation and release evidence
+
+### Local event-conflict correction — 2026-09-09
+
+**Status:** Implemented and verified locally; not deployed or published.
+
+**Continuity and benefits:** The existing immutable-event and attributable
+confirmation contract requires later corrections to use new event IDs. Review
+found that a changed payload with an existing `externalId` and a new idempotency
+key returned the old Resource as a successful deduplication, silently skipping
+the intended confirmation. The service now compares normalized event content
+before resume deduplication and rejects conflicting reuse. This preserves exact
+retries and append-only correction history, immediately making failed confirmation
+writes explicit. It supports trustworthy submitted-material provenance for later
+JD comparison and interview preparation. Actual file/version evidence and the
+first scheduled mail execution remain separate gates. This is a routine fix
+within the existing Workspace domain-state boundary; no new tool, migration,
+connector access, deployment, task change or real-data write is included.
+
+The new regression failed before the fix and passes afterward. It covers changed
+confirmation/revision/title/time/URL, unchanged current state after rejection,
+retry-key reuse after rollback, valid corrections, and replay of an old event
+without reverting the current association. Full verification also exposed a
+pre-existing web-mail fixture dated September 7 falling outside the normal
+24-hour window; it now captures a recent timestamp once per fixture, preserving
+source identity across retries. `npm.cmd run verify` passed server/browser type
+checks, **368 tests in 44 files**, and the production build. Locked dependencies
+were restored locally with `npm ci`; the manifest and lockfile are unchanged.
+The deployed release evidence below still describes `resume-20260909-r2`.
 
 Local type checking/build and the full LF-normalized release-copy suite passed:
 367 tests in 44 files. Four new integration scenarios cover candidate vs actual

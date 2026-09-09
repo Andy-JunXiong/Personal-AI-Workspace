@@ -4,6 +4,7 @@ import { createTestWorkspace } from "../helpers/test-workspace.js";
 import { applicationView } from "../../src/web/views.js";
 import { WorkspaceService } from "../../src/application/workspace-service.js";
 import type { ApplicationResume } from "../../src/domain/application-resume.js";
+import { IdempotencyConflictError } from "../../src/domain/errors.js";
 
 const cleanups: (() => void)[] = [];
 function setup() { const w = createTestWorkspace(); cleanups.push(w.cleanup); return w; }
@@ -81,4 +82,40 @@ it("isolates resume reads and writes by owning Workspace", () => {
   other.ensureDevelopmentIdentity();
   expect(() => other.jobSearchQueryService.applicationResumes(w.projectId)).toThrow("not found");
   expect(() => other.recordObservation(input(w))).toThrow("not found");
+});
+
+it("rejects changed resume events instead of silently deduplicating a confirmation or correction", () => {
+  const w = setup();
+  const request = input(w);
+  const first = w.service.recordObservation(request);
+  const confirmation: ApplicationResume = { ...candidate(), supersedesResourceId: first.resource.id,
+    interpretation: { status: "CONFIRMED_VERSION", reason: "User identified the submitted revision" },
+    confirmation: { kind: "USER_STATEMENT", reference: "User message", statement: "I submitted revision1" } };
+  const retryKey = randomUUID();
+  const before = w.service.getProject(w.projectId);
+  for (const changes of [
+    { observedFacts: confirmation },
+    { title: "Changed event title" },
+    { observedAt: "2026-09-09T06:00:00Z" },
+    { externalUri: "https://drive.google.com/open?id=resumeFile" },
+    { observedFacts: { ...candidate(), sourceFacts: { ...candidate().sourceFacts, revisionId: "revision2" } } },
+  ]) {
+    expect(() => w.service.recordObservation({ ...request, ...changes, idempotencyKey: retryKey }))
+      .toThrow(IdempotencyConflictError);
+  }
+  expect(w.service.getProject(w.projectId).resumeAssociations).toEqual(before.resumeAssociations);
+  expect(w.service.getProject(w.projectId).totalCounts).toEqual(before.totalCounts);
+  // A rejected conflict must not consume the retry key; identical event retries remain safe.
+  expect(w.service.recordObservation({ ...request, idempotencyKey: retryKey })).toMatchObject({
+    deduplicated: true, replayed: false, resource: { id: first.resource.id },
+  });
+  const saved = w.service.recordObservation(input(w, confirmation));
+  expect(w.service.getProject(w.projectId).resumeAssociations).toMatchObject([
+    { id: saved.resource.id, facts: { interpretation: { status: "CONFIRMED_VERSION" } } },
+  ]);
+  // Retrying the original event after correction returns its historical result, without reverting current state.
+  expect(w.service.recordObservation({ ...request, idempotencyKey: randomUUID() })).toMatchObject({
+    deduplicated: true, resource: { id: first.resource.id },
+  });
+  expect(w.service.getProject(w.projectId).resumeAssociations[0]?.id).toBe(saved.resource.id);
 });

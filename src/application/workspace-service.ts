@@ -951,6 +951,22 @@ export class WorkspaceService {
         }
 
         if (existing) {
+          // A resume externalId identifies one immutable event, not the Drive file.
+          // Do not report a later confirmation/correction as a successful retry.
+          if (normalizedInput.provider === "google-drive-resume" && canonicalHash({
+            projectId: existing.project_id,
+            resourceType: existing.resource_type,
+            provider: existing.provider,
+            externalId: existing.external_id,
+            externalUri: existing.external_uri,
+            title: existing.title,
+            observedFacts: JSON.parse(existing.observed_facts_json),
+            observedAt: existing.observed_at,
+          }) !== exactHash) {
+            throw new IdempotencyConflictError(
+              "Resume observation externalId already exists with different content; use a new event ID and idempotency key for a correction",
+            );
+          }
           return {
             resource: this.mapResource(existing),
             projectStateChanged: false,
