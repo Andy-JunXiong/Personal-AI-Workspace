@@ -40,4 +40,19 @@ introduced, and this release does not claim scheduled mail-run acceptance.
   submission deduplication, pagination after filtering, exact application matching,
   meaningful recruiter requests, classification persistence, future marketing
   rejection and unchanged records after timeline reads.
-- Production: pending; prior release is `calendar-20260909-r1`.
+- Deployed `progress-20260909-r1` at 2026-09-09 07:15:48 UTC (17:15 Sydney),
+  source commit `8ebed382bf450059c72bfee1aa2289ee1dbe3181`, published to main.
+- Source archive SHA-256:
+  `e5006e521e5b6a464c49f7b5483364c40d422ec3350fd675e8acd462a0de362f`.
+- Image SHA-256:
+  `4788f29efd3867585afedeae59347922c0e49915e0a32af93944182570e82a4a`.
+- Backup, recovery rehearsal with new and previous images, health and public
+  website checks passed. Migrations remain 001–014. Pre/post fingerprint identical:
+  `e52dc4489d4433d085cd68699568dbd28caa2e63024f171f3260a9e4d30031ab`
+  (38 tables, 1,533 rows). Immediate rollback: `calendar-20260909-r1`.
+- Read-only live projection checks passed for all 24 applications. The two
+  reported timelines retain respectively three and two actual milestones,
+  including their real receipt confirmations and existing progress mail.
+  No check/task events or recognized vacancy marketing appear in timelines.
+  Rendered timeline sections were checked separately from retained mail-check
+  panels and resources; no business records were changed.

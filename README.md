@@ -22,7 +22,13 @@ See the [authoritative core workflow](docs/architecture/CORE_JOB_WORKFLOW.md).
 
 ## Current state — 2026-09-09
 
-Latest website release: [application calendar and ongoing default](docs/mvp/APPLICATION_CALENDAR_2026-09-09.md),
+Latest correction: [application progress timeline](docs/mvp/APPLICATION_PROGRESS_TIMELINE_2026-09-09.md),
+`progress-20260909-r1`. Timelines show submission, actual progress and relevant
+mail milestones; check receipts, vacancy marketing and task administration are
+excluded. New mail retains its application category. All 374 tests and read-only
+production checks across 24 applications passed; existing evidence is preserved.
+
+Retained website capability: [application calendar and ongoing default](docs/mvp/APPLICATION_CALENDAR_2026-09-09.md),
 `calendar-20260909-r1`. My Applications defaults to ongoing; the previous/current
 month calendar shows daily submission counts and links, including closed history.
 371 tests, desktop/mobile browser checks, production backup/recovery, unchanged
@@ -44,10 +50,10 @@ Source commit `1451def` was pushed and independently verified on GitHub main.
 The next operational gate remains the first
 actual September 10 scheduled execution described below.
 
-The latest release is `calendar-20260909-r1`, retaining
+The latest release is `progress-20260909-r1`, retaining
 [Drive resume association](docs/architecture/APPLICATION_RESUME_ASSOCIATIONS.md),
 migration 014 and the mail-search workflow below.
-371 tests passed. Production backup/recovery, source checks, health and data
+374 tests passed. Production backup/recovery, source checks, health and data
 preservation passed. Sixteen candidate file/revision associations across nine
 existing applications were saved through MCP and read back; RSM's website matches.
 Candidates are explicitly separate from actual submitted-file/version confirmation.
@@ -71,7 +77,7 @@ September 10. Actual scheduled acceptance remains pending.
 
 | Area | Delivered and verified | Remaining gate |
 | --- | --- | --- |
-| Production | `calendar-20260909-r1`, migrations 001–014, 30 MCP tools; 371 tests, build, backup/recovery, health and pre/post-cutover data preservation passed; source commit `256bdf9` published | Fresh full website keyword-check batch and first actual scheduled execution remain separate gates |
+| Production | `progress-20260909-r1`, migrations 001–014, 30 MCP tools; 374 tests, build, backup/recovery, health and pre/post-cutover data preservation passed; source commit `8ebed38` published | Fresh full website keyword-check batch and first actual scheduled execution remain separate gates |
 | Durable operations | Applications, attributable observations, lifecycle transitions, Tasks, candidates, recommendation runs and scan receipts share one Workspace database | Sustained daily use remains to be evaluated |
 | Website | [Job Search](https://workspace.ai-radar-lab.com/workspace/job-search/today): Today, inventory, timelines, JD/skill reports and resume file/version links | Historical JD and skill reports still need source-grounded backfill |
 | Mail search | Both mailboxes; subject keywords, stored companies and linked exact senders; normal 24-hour / maximum 72-hour recovery; matching-body review and deduplication | New applications require explicit submission-confirmation evidence; filtered completion does not cover every email |
