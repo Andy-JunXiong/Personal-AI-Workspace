@@ -31,7 +31,23 @@ Production rendering and user acceptance are separate from local verification.
 - Regression coverage: ongoing default, explicit All and pagination, closed and
   paused exclusion, independent historical counts, timezone/year/leap boundaries,
   missing dates, workspace isolation, HTML escaping and read-only rendering.
-- Deployment: pending; the previous live release is `ongoing-20260909-r1`.
+- Deployed `calendar-20260909-r1` at 2026-09-09 06:57:49 UTC (16:57 Sydney),
+  source commit `256bdf93e410284efc4412c3571e637c79efcfdd`, pushed to main.
+- Exact source archive SHA-256:
+  `cab7493e9979678783d13949c1c3aa0ef9c7ee35516b4bb2e139c908266f6d75`.
+- Image SHA-256:
+  `3f5706326c07aa8c1aac8a2f0ab8a7202077c331f98fa2f5b86c88c55468a4d8`.
+- Backup, new/previous image recovery rehearsal, public website checks and health
+  passed. Migrations remain 001–014. Pre/post-cutover fingerprint identical:
+  `e52dc4489d4433d085cd68699568dbd28caa2e63024f171f3260a9e4d30031ab`
+  (38 tables, 1,533 rows). Rollback image: `ongoing-20260909-r1`.
+- Read-only production rendering verified ONGOING selected, 12 ongoing rows,
+  12 ended applications excluded from the list, calendar above mail updates, and
+  daily counts matching stored submission dates independently of lifecycle.
+  Real monthly totals were reconciled privately; no application data was changed.
 - Synthetic browser checks: desktop screenshot at 1440px and mobile screenshot
   at 390px; all 17 populated date cells stay within the mobile viewport when
   expanded, clicking opens the day's links, and the default selection is ONGOING.
+- After the popup positioning correction, build and the 38 focused web/calendar
+  tests passed again. Device checks used desktop Chrome emulation, not a physical
+  phone. First user acceptance and the scheduled mail-run gate remain separate.

@@ -22,6 +22,12 @@ See the [authoritative core workflow](docs/architecture/CORE_JOB_WORKFLOW.md).
 
 ## Current state — 2026-09-09
 
+Latest website release: [application calendar and ongoing default](docs/mvp/APPLICATION_CALENDAR_2026-09-09.md),
+`calendar-20260909-r1`. My Applications defaults to ongoing; the previous/current
+month calendar shows daily submission counts and links, including closed history.
+371 tests, desktop/mobile browser checks, production backup/recovery, unchanged
+database fingerprints and read-only live rendering passed. Source `256bdf9` is published.
+
 Follow-up correction: [ongoing-only keyword checks](docs/architecture/MAIL_SCAN_BACKEND_LEDGER.md#ongoing-only-keyword-follow-up--2026-09-09)
 exclude rejected/ended applications and replace full-body website reads with
 keyword-search metadata and snippets. Deployed as `ongoing-20260909-r1`: 369 tests,
@@ -38,10 +44,10 @@ Source commit `1451def` was pushed and independently verified on GitHub main.
 The next operational gate remains the first
 actual September 10 scheduled execution described below.
 
-The latest release is `ongoing-20260909-r1`, retaining
+The latest release is `calendar-20260909-r1`, retaining
 [Drive resume association](docs/architecture/APPLICATION_RESUME_ASSOCIATIONS.md),
 migration 014 and the mail-search workflow below.
-369 tests passed. Production backup/recovery, source checks, health and data
+371 tests passed. Production backup/recovery, source checks, health and data
 preservation passed. Sixteen candidate file/revision associations across nine
 existing applications were saved through MCP and read back; RSM's website matches.
 Candidates are explicitly separate from actual submitted-file/version confirmation.
@@ -65,7 +71,7 @@ September 10. Actual scheduled acceptance remains pending.
 
 | Area | Delivered and verified | Remaining gate |
 | --- | --- | --- |
-| Production | `ongoing-20260909-r1`, migrations 001–014, 30 MCP tools; 369 tests, build, backup/recovery, health and pre/post-cutover data preservation passed; source commit `f85b9e6` published | Fresh full website keyword-check batch and first actual scheduled execution remain separate gates |
+| Production | `calendar-20260909-r1`, migrations 001–014, 30 MCP tools; 371 tests, build, backup/recovery, health and pre/post-cutover data preservation passed; source commit `256bdf9` published | Fresh full website keyword-check batch and first actual scheduled execution remain separate gates |
 | Durable operations | Applications, attributable observations, lifecycle transitions, Tasks, candidates, recommendation runs and scan receipts share one Workspace database | Sustained daily use remains to be evaluated |
 | Website | [Job Search](https://workspace.ai-radar-lab.com/workspace/job-search/today): Today, inventory, timelines, JD/skill reports and resume file/version links | Historical JD and skill reports still need source-grounded backfill |
 | Mail search | Both mailboxes; subject keywords, stored companies and linked exact senders; normal 24-hour / maximum 72-hour recovery; matching-body review and deduplication | New applications require explicit submission-confirmation evidence; filtered completion does not cover every email |
