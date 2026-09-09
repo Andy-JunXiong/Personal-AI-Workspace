@@ -6,11 +6,13 @@ import type { WorkspaceDatabase } from "../persistence/database.js";
 import type { IdentityContext } from "../domain/types.js";
 import { canonicalHash } from "../domain/canonical-json.js";
 import { AuthorizationError, IdempotencyConflictError, NotFoundError, ValidationError } from "../domain/errors.js";
+import { prepareJobMailPolicy, readJobMailPolicy } from "./job-mail-policy.js";
 
 const authority = { userConfirmed: z.literal(true), authorityReference: z.string().trim().min(1).max(1000) };
 export const startMailScanSchema = z.object({ runId: z.string().uuid(), ...authority,
   triggerType: z.enum(["SCHEDULED", "MANUAL", "UNKNOWN"]), executionReference: z.string().trim().max(2000),
   receiptMode: z.enum(["LEGACY", "BACKEND"]).default("LEGACY"),
+  searchMode: z.literal("JOB_METADATA").optional(),
 }).strict();
 const timestamp = z.iso.datetime({ offset: true }).transform(s => new Date(s).toISOString());
 const mailboxSchema = z.object({ mailbox: z.enum(["mailbox-1", "mailbox-2"]),
@@ -41,6 +43,7 @@ export class MailScanService {
   start(input: unknown, reader?: Pick<GmailMcpReader,"accountKey">) {
     const p = startMailScanSchema.safeParse(input);
     if (!p.success) throw new ValidationError("Invalid scan start");
+    if(p.data.searchMode && p.data.receiptMode!=="BACKEND") throw new ValidationError("Job search requires BACKEND receipts");
     const { workspaceId } = this.writeContext();
     if(p.data.receiptMode==="BACKEND") {
       if(!reader || !this.ledger || !this.batches) throw new ValidationError("Backend scan needs configured mailbox bindings");
@@ -54,11 +57,16 @@ export class MailScanService {
       if (old && (old.trigger_type !== p.data.triggerType || old.execution_reference !== p.data.executionReference)) throw new IdempotencyConflictError("Run origin cannot be changed");
       if(old && p.data.receiptMode==="BACKEND" && old.authority_reference!==p.data.authorityReference) throw new IdempotencyConflictError("Run authorization is immutable");
       if(old && (this.ledger?.managed(p.data.runId)??false)!==(p.data.receiptMode==="BACKEND")) throw new IdempotencyConflictError("Run receipt mode is immutable");
+      if(old && Boolean(readJobMailPolicy(this.db,p.data.runId))!==Boolean(p.data.searchMode)) throw new IdempotencyConflictError("Run search mode is immutable");
+      if(!old && !p.data.searchMode && this.db.prepare("SELECT 1 FROM sqlite_master WHERE name='job_mail_search_runs'").get()
+        && this.db.prepare("SELECT 1 FROM job_mail_search_runs WHERE workspace_id=?").get(workspaceId))
+        throw new ValidationError("Use searchMode JOB_METADATA; whole-mailbox scanning has been superseded");
       if (!old) this.db.prepare("INSERT INTO mail_scan_runs(id,workspace_id,authority_reference,trigger_type,execution_reference,started_at,status) VALUES(?,?,?,?,?,?,'RUNNING')")
         .run(p.data.runId, workspaceId, p.data.authorityReference, p.data.triggerType, p.data.executionReference, this.clock().toISOString());
       if(!old && p.data.receiptMode==="BACKEND") {
         const cutoff=this.get(p.data.runId).startedAt;
-        const scope=this.batches!.prepareManagedScope(cutoff,reader!);
+        const policy=p.data.searchMode?prepareJobMailPolicy(this.db,workspaceId,p.data.runId,cutoff):null;
+        const scope=this.batches!.prepareManagedScope(cutoff,reader!,policy);
         this.ledger!.initialize(p.data.runId,scope);
       }
       return { run: this.get(p.data.runId), checkpoints: this.overview().checkpoints, replayed: Boolean(old) };
@@ -95,7 +103,7 @@ export class MailScanService {
           }
           const cp = this.db.prepare("SELECT covered_through FROM mail_scan_checkpoints WHERE workspace_id=? AND mailbox=?").get(workspaceId,m.mailbox) as {covered_through:string}|undefined;
           const streams = this.db.prepare("SELECT lane,starts_at,covered_through,target_at FROM mail_scan_streams WHERE workspace_id=? AND mailbox=?").all(workspaceId,m.mailbox) as {lane:string;starts_at:string;covered_through:string;target_at:string|null}[];
-          const boundedRestart=streams.find(s=>s.lane==="BACKFILL" && s.starts_at===m.searchedFrom && s.starts_at>=new Date(Date.parse(row.started_at)-7*86400000).toISOString());
+          const boundedRestart=streams.find(s=>s.lane==="BACKFILL" && s.starts_at===m.searchedFrom && s.starts_at>=new Date(Date.parse(row.started_at)-(readJobMailPolicy(this.db,p.runId)?3:7)*86400000).toISOString());
           if (cp && m.searchedFrom > cp.covered_through && !boundedRestart) throw new ValidationError("Coverage gap: resume from the saved mailbox checkpoint");
           if (streams.length) {
             const history=streams.find(s=>s.lane==="BACKFILL"),recent=streams.find(s=>s.lane==="RECENT");
@@ -135,6 +143,8 @@ export class MailScanService {
   private map(row: Row) {
     const result = row.result_json ? JSON.parse(row.result_json) as Result : null;
     return { id: row.id, startedAt: row.started_at, finishedAt: row.finished_at, status: row.status,
+      searchPolicy: readJobMailPolicy(this.db,row.id),
+      screening: readJobMailPolicy(this.db,row.id) ? this.db.prepare("SELECT count(*) AS metadataChecked,coalesce(sum(CASE WHEN matched=0 THEN 1 ELSE 0 END),0) AS excludedWithoutBody FROM job_mail_screening WHERE run_id=?").get(row.id) as {metadataChecked:number;excludedWithoutBody:number} : null,
       receiptMode: this.ledger?.managed(row.id) ? "BACKEND" : "LEGACY",
       ledger: this.ledger?.managed(row.id) ? this.ledgerStatus(row.id,row.status) : null,
       triggerType: row.trigger_type, executionReference: row.execution_reference,

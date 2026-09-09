@@ -87,6 +87,8 @@ describe("SQLite-consistent cloud backup", () => {
         "010_mail_scan_batches.sql",
         "011_mail_ingestion_identity.sql",
         "012_mail_scan_backend_ledger.sql",
+        "013_mail_body_read_progress.sql",
+        "014_job_mail_search.sql",
       ],
     });
   });

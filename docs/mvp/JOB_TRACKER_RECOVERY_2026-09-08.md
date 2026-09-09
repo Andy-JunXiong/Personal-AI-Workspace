@@ -1,5 +1,15 @@
 ﻿# Job Tracker recovery — 2026-09-08
 
+Current successor status, September 9: filtered manual coverage and authenticated
+website readback passed. The retained task 6a9f456860248191b81d0361dd42cad3 now
+has the verified JOB_METADATA policy and is enabled for daily 08:00
+Australia/Sydney; original task 6a96859d64fc81918dda300e7262b74e remains paused.
+See [activation and next gate](../architecture/MAIL_SCAN_BACKEND_LEDGER.md#daily-task-activation---2026-09-09).
+The first actual scheduled result remains unverified. The September 8 status and
+block investigations below are retained historical evidence.
+
+## September 8 recovery evidence
+
 Status: production upgrade and plugin refresh passed. Manual acceptance did not execute; the ChatGPT conversation reported a platform safety block at scan creation. Actual scheduled-run acceptance remains pending; automation is not restored.
 
 Later bounded evidence trial succeeded in Codex; it is recorded at the end of

@@ -20,41 +20,60 @@ First domain: **Job Search**. Cross-conversation continuity is the original veri
 proof; reliable daily ingestion is the next operational acceptance gate.
 See the [authoritative core workflow](docs/architecture/CORE_JOB_WORKFLOW.md).
 
-## Current state — 2026-09-08
+## Current state — 2026-09-09
 
-The [release handoff](docs/mvp/RELEASE_HANDOFF_2026-09-08.md) is the current deployment
-record. The [documentation index](docs/INDEX.md) separates active contracts,
-historical evidence and unimplemented proposals. Versioned milestone records
-retain the scope and results of their own dates.
+The latest release is [Drive resume association](docs/architecture/APPLICATION_RESUME_ASSOCIATIONS.md),
+`resume-20260909-r2`, retaining migration 014 and the mail-search workflow below.
+367 tests passed. Production backup/recovery, source checks, health and data
+preservation passed. Sixteen candidate file/revision associations across nine
+existing applications were saved through MCP and read back; RSM's website matches.
+Candidates are explicitly separate from actual submitted-file/version confirmation.
+Interactive GPT can reuse these links; the daily task has not been extended to Drive.
 
-| Area | Documented state | Remaining gate |
+Jun approved subject/company/exact-sender job-mail search: normally 24 hours,
+recovery at most 72 hours, metadata screening before matching-body reads.
+The [new search release](docs/architecture/MAIL_SCAN_BACKEND_LEDGER.md#job-metadata-search---2026-09-09)
+passed 363 tests in `job-mail-20260909-r1`, migration 014, retained by the latest release.
+Production migration, 30-tool discovery and website checks passed. Its explicit search scope
+supersedes the old exhaustive seven-day acceptance gate. The retained Job Tracker
+is now enabled with the revised policy; the obsolete task remains paused.
+The third hosted JOB_METADATA run is verified COMPLETE/CLOSED for both matching
+scopes, with zero pending/blocked sources and unresolved actions. The website
+matches the stored receipt, and the next query reused the learned SEEK sender.
+The filtered manual coverage/readback gate is passed. The saved daily policy
+was verified and activated for 08:00 Australia/Sydney; next planned run is
+September 10. Actual scheduled acceptance remains pending.
+
+## Delivered capabilities and remaining gates
+
+| Area | Delivered and verified | Remaining gate |
 | --- | --- | --- |
-| Production | `mail-layout-20260908-r2`, migrations 001–011, 29 MCP tools; Lightsail Sydney, Caddy web ingress, private MCP tunnel and OIDC login | No new image inspection in this documentation review |
-| Durable operations | Applications, evidence, lifecycle transitions, Tasks, candidates, recommendation runs and scan receipts; shared SQLite database | Availability does not establish daily adoption or complete ingestion |
-| Website | [Job Search](https://workspace.ai-radar-lab.com/workspace/job-search/today): inventory, Today, timelines, saved dossiers, recommendation views and collapsed mail-status cards | Existing manual checks cover registered applications, not the full daily policy |
-| Mail ingestion | Gmail MCP reads, stable account-qualified source identities, bounded resumable batches and incremental manual checks deployed | Complete manual and actual scheduled scan acceptance pending |
-| Daily automation | Latest task evidence records both tasks paused after a reported host write block; fresh live ledger read still shows only one historical PARTIAL manual run and no checkpoints or processing streams | Resolve actual ChatGPT execution blocker, then pass [daily acceptance](docs/mvp/DAILY_WORKFLOW_ACCEPTANCE.md); task switches were not fetched in this review |
-| Latest local code | [Diagnostics and relevance filtering](docs/mvp/MAIL_CHECK_DIAGNOSTICS_2026-09-08.md): 40 files / 327 tests, type checks and build reported passing in an independent LF worktree | Not deployed; real-mail accuracy and historical mailbox failure cause remain unverified |
-| Backend-owned receipts | [Opt-in implementation and contract](docs/architecture/MAIL_SCAN_BACKEND_LEDGER.md): local migration 012, 30 tools, 41 files / 340 tests; type checks, build and synthetic migration/previous-code checks pass | Not deployed; actual deployment-copy migration and ChatGPT manual/scheduled acceptance pending |
-| Evaluation | [v0.2 retired; v0.3 adopted but not started](docs/dogfood/M4_REAL_USE_EVALUATION_v0.3.md) | Record a verified integrated baseline after manual and scheduled acceptance |
+| Production | `resume-20260909-r2`, migrations 001–014, 30 MCP tools; 367 tests, build, backup/recovery, health and pre/post-cutover data preservation passed | This source publication makes no further deployment |
+| Durable operations | Applications, attributable observations, lifecycle transitions, Tasks, candidates, recommendation runs and scan receipts share one Workspace database | Sustained daily use remains to be evaluated |
+| Website | [Job Search](https://workspace.ai-radar-lab.com/workspace/job-search/today): Today, inventory, timelines, JD/skill reports and resume file/version links | Historical JD and skill reports still need source-grounded backfill |
+| Mail search | Both mailboxes; subject keywords, stored companies and linked exact senders; normal 24-hour / maximum 72-hour recovery; matching-body review and deduplication | New applications require explicit submission-confirmation evidence; filtered completion does not cover every email |
+| Manual acceptance | Run `6933e727-e6c8-4f48-9fdd-5913724a7e60` COMPLETE/CLOSED; both matching scopes complete, empty queues, website matches | First actual scheduled execution is a separate gate |
+| Daily automation | Retained task enabled with verified policy for daily 08:00 Australia/Sydney; obsolete task paused | Verify the first scheduled receipt, next planned September 10; do not substitute a manual run |
+| Resume association | Sixteen Drive candidate files/revisions linked to nine existing applications and read back | Actual submitted-file/version confirmation remains pending; daily unattended Drive discovery is not integrated |
+| Evaluation | [M4 v0.3](docs/dogfood/M4_REAL_USE_EVALUATION_v0.3.md) adopted, not started | Establish the integrated baseline after scheduled acceptance |
 
-Production release evidence reports 291 passing tests and preservation of all
-28 tables / 239 rows at the layout cutover. These are release-time observations,
-not today's live counts or a test run performed by this documentation review.
-The local 327-test result belongs to the later, undeployed package.
+**Next session:** check the retained task's actual scheduled result against its
+Workspace run, matching scope, source progress and website. Then use confirmed
+application materials for JD/resume comparison and interview preparation.
+See [daily acceptance](docs/mvp/DAILY_WORKFLOW_ACCEPTANCE.md) and the
+[resume workflow](docs/architecture/APPLICATION_RESUME_ASSOCIATIONS.md).
 
-The last real website check saved four EMAIL records and one NOTE but was PARTIAL;
-only one mailbox advanced application-scoped coverage. Those messages were job
-recommendations, not confirmed application-state changes. A later authorized Codex
-trial saved and read back two observations without a receipt. Neither establishes
-complete daily coverage or successful ChatGPT scheduled writes.
+### Historical whole-mailbox recovery
 
-**Next engineering gate:** restore the daily flow and independently verify its
-receipt, actual source coverage, business writes and website readback. Scope stays
-within seven days, normally yesterday/today with a 24-hour overlap. Only the existing
-replacement task may eventually run at 08:00 Australia/Sydney after acceptance;
-the obsolete task stays paused. See [recovery evidence](docs/mvp/JOB_TRACKER_RECOVERY_2026-09-08.md)
-and the [ordered acceptance procedure](docs/mvp/DAILY_WORKFLOW_ACCEPTANCE.md).
+The earlier exhaustive seven-day approach and its PARTIAL runs are retained in
+[the mail ledger](docs/architecture/MAIL_SCAN_BACKEND_LEDGER.md).
+The `mail-body-20260909-r4` release verified multipart body recovery and additive
+migration 013; those capabilities remain deployed. Jun subsequently replaced
+whole-mailbox acquisition with filtered job-mail search. Old unrelated pending
+sources and old two-task pause instructions are historical, not today's backlog
+or task policy. Release-specific counts and test totals retain their original scope.
+The [documentation index](docs/INDEX.md) distinguishes those records from current
+contracts and unimplemented proposals.
 
 ## Evaluation and historical milestones
 

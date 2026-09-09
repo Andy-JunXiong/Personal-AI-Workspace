@@ -1,8 +1,9 @@
 # Manual mail diagnostics and relevance filtering — September 8
 
-Status: implemented and locally verified; not deployed. Production remains
-`mail-layout-20260908-r2`, migrations 001–011. Both ChatGPT Job Tracker tasks
-remain paused.
+Status: implemented and locally verified on September 8; included in the
+[September 9 release](../architecture/MAIL_SCAN_BACKEND_LEDGER.md#production-cutover-2026-09-09)
+`mail-ledger-20260909-r1`, migrations 001–012. Both ChatGPT Job Tracker tasks
+remain paused. Real-mail accuracy and the historical failure cause remain unverified.
 
 ## Continuity and benefits
 

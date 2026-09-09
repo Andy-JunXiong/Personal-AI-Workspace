@@ -1,7 +1,13 @@
 # Repository review follow-up
 
-**Decision date:** 2026-09-08. **Status:** Local documentation changes complete;
-daily recovery and remote repository metadata remain pending.
+**Decision date:** 2026-09-08. **Status:** Historical review follow-up.
+September 9 successor: filtered manual/website recovery passed, the retained
+daily task is enabled, and the first actual scheduled result remains pending.
+See [daily acceptance](mvp/DAILY_WORKFLOW_ACCEPTANCE.md) and the
+[current release](architecture/APPLICATION_RESUME_ASSOCIATIONS.md).
+The separate repository description/topics proposal below has not been applied
+or rechecked by the end-of-day source-publication task; Git fetch/push access is
+independent of that earlier GitHub CLI metadata-authentication result.
 
 ## Continuity and benefits
 

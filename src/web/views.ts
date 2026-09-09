@@ -1,6 +1,7 @@
 import type { WorkspaceService } from "../application/workspace-service.js";
 import { gmailCheckPrompt, gmailCheckSchema } from "../domain/gmail-check.js";
 import { applicationProfileSchema } from "../domain/application-profile.js";
+import { applicationResumeSchema, isResumeFileUrl, type ApplicationResume } from "../domain/application-resume.js";
 import type { ReadPage } from "../application/read-pagination.js";
 import type { ApplicationListItem } from "../application/job-search-query-service.js";
 import type { JobCandidateRecord, ResourceRecord, TaskRecord, TransitionRecord } from "../domain/types.js";
@@ -108,6 +109,7 @@ export function mailScanPanel(service: WorkspaceService, zone: string): string {
     <details class="mail-update-card"><summary><span class="mail-update-title">每日邮件扫描</span>${badge(latest ? names[latest.status]! : "尚无记录", !!latest && latest.status !== "COMPLETE", latest?.status === "COMPLETE")}<span class="mail-update-time">${latest ? `最近检查 ${stamp(latest.startedAt)}` : "尚无每日扫描回执"}</span><span class="mail-update-toggle"><span class="when-closed">查看详情</span><span class="when-open">收起详情</span><span aria-hidden="true">⌄</span></span></summary>
       <div class="mail-update-body">
         <p class="mail-update-note">${latest ? `${e(origins[latest.triggerType])} · ${latest.finishedAt ? `结束于 ${stamp(latest.finishedAt)}` : "尚未收到结束时间"}` : "尚无每日扫描回执，不能据此判断邮箱没有更新。"}</p>
+        ${latest?.searchPolicy ? `<p class="mail-update-note">仅检查主题关键词、申请公司或已关联发件人匹配的求职邮件；日常 24 小时，补查最多 72 小时。未命中邮件不计作全文审阅。</p>` : ""}
         ${latest?.executionReference ? `<p class="mail-update-note">执行来源：${e(latest.executionReference)}</p>` : ""}
         ${data.unfinishedCount ? `<p class="advisory">${data.unfinishedCount} 次扫描尚未提交完成回执，可能仍在运行或已中断。</p>` : ""}
         ${latest?.ledger?.liveness === "EXPIRED" ? `<p class="advisory">本次扫描已超过活动期限，处理尚未完成。下次获授权的扫描将保留旧回执并继续待处理邮件。</p>` : ""}
@@ -117,9 +119,9 @@ export function mailScanPanel(service: WorkspaceService, zone: string): string {
           const result = latest?.mailboxes.find(m => m.mailbox === key);
           return `<article class="mail-mailbox"><h3>邮箱 ${i + 1}</h3><p>${result ? e(mailboxNames[result.status]) : "尚无检查结果"}</p><p class="muted">最近成功覆盖至：${checkpoint ? stamp(checkpoint.coveredThrough) : "尚未记录"}</p>${result?.searchedFrom ? `<p class="muted">搜索起点：${stamp(result.searchedFrom)}</p>` : ""}${result?.failureReason ? `<details class="mail-technical"><summary>未完成原因</summary><p>${e(result.failureReason)}</p></details>` : ""}</article>`;
         }).join("")}</div>
-        ${processing.streams.length ? `<details class="mail-technical"><summary>可恢复的邮件处理进度</summary><p class="muted">以下数量仅包含当前批次，不代表邮箱全部剩余邮件。</p>${processing.streams.map(s => `<p>邮箱 ${s.mailbox === "mailbox-1" ? "1" : "2"} · ${s.lane === "RECENT" ? "近期检查" : "一周内补查"}：${s.coveredThrough === s.startedFrom ? "尚无完整批次" : `已处理至 ${stamp(s.coveredThrough)}`} · 本批待处理 ${s.pendingMessages} 封${s.blockedMessages ? ` · 读取受阻 ${s.blockedMessages} 封` : ""}${s.backfillComplete ? " · 一周内补查完成" : ""}${s.excludedBefore ? ` · ${stamp(s.excludedBefore)} 之前未完成部分已超出一周范围` : ""}</p>`).join("")}</details>` : ""}
+        ${processing.streams.length ? `<details class="mail-technical"><summary>可恢复的邮件处理进度</summary><p class="muted">以下数量仅包含当前批次，不代表邮箱全部剩余邮件。</p>${processing.streams.map(s => `<p>邮箱 ${s.mailbox === "mailbox-1" ? "1" : "2"} · ${s.lane === "RECENT" ? "近期检查" : latest?.searchPolicy ? "历史补查已停用" : "一周内补查"}：${s.coveredThrough === s.startedFrom ? "尚无完整批次" : `已处理至 ${stamp(s.coveredThrough)}`} · 本批待处理 ${s.pendingMessages} 封${s.blockedMessages ? ` · 读取受阻 ${s.blockedMessages} 封` : ""}${s.backfillComplete && !latest?.searchPolicy ? " · 一周内补查完成" : ""}${s.excludedBefore ? ` · ${stamp(s.excludedBefore)} 之前不在当前检查范围` : ""}</p>`).join("")}</details>` : ""}
         ${latest?.counts ? `<p class="mail-update-note">本次已核对写入：${latest.counts.applications} 条新申请 · ${latest.counts.evidence} 条邮件证据 · ${latest.counts.transitions} 次状态变化 · ${latest.counts.tasks} 项待办</p>` : ""}
-        ${data.runs.length > 1 ? `<details class="mail-technical"><summary>最近 ${data.runs.length} 次回执</summary>${data.runs.map(r => `<article class="mail-history-item"><p>${stamp(r.startedAt)} · ${e(names[r.status])} · ${e(origins[r.triggerType])}</p>${r.counts ? `<p>申请 ${r.counts.applications} · 证据 ${r.counts.evidence} · 状态变化 ${r.counts.transitions} · 待办 ${r.counts.tasks}</p>` : ""}${r.mailboxes.filter(m => m.failureReason).map(m => `<p>邮箱 ${m.mailbox === "mailbox-1" ? "1" : "2"}：${e(m.failureReason)}</p>`).join("")}</article>`).join("")}</details>` : ""}
+        ${data.runs.length > 1 ? `<details class="mail-technical"><summary>最近 ${data.runs.length} 次回执</summary>${data.runs.map(r => `<article class="mail-history-item"><p>${stamp(r.startedAt)} · ${e(names[r.status])} · ${e(origins[r.triggerType])}</p>${r.searchPolicy ? `<p>求职条件匹配范围</p>` : ""}${r.counts ? `<p>申请 ${r.counts.applications} · 证据 ${r.counts.evidence} · 状态变化 ${r.counts.transitions} · 待办 ${r.counts.tasks}</p>` : ""}${r.mailboxes.filter(m => m.failureReason).map(m => `<p>邮箱 ${m.mailbox === "mailbox-1" ? "1" : "2"}：${e(m.failureReason)}</p>`).join("")}</article>`).join("")}</details>` : ""}
         <p class="mail-update-note">失败邮箱保留上次成功进度；以上不代表已扫描全部历史邮件。</p>
       </div>
     </details>
@@ -148,6 +150,10 @@ function safeExternalUrl(value: string | null): string | null {
   try { const url = new URL(value ?? ""); return ["https:", "http:"].includes(url.protocol) && !url.username && !url.password ? url.href : null; } catch { return null; }
 }
 function resourceRow(resource: ResourceRecord, zone: string): string {
+  const resume = applicationResumeSchema.safeParse(resource.observedFacts);
+  if (resume.success && resource.provider === "google-drive-resume") {
+    return `<article class="evidence-row">${resumeAssociation(resume.data, resource.externalUri, zone)}<p class="muted">记录于 ${e(date(resource.createdAt, zone))} · 历史记录</p></article>`;
+  }
   const profile = applicationProfileSchema.safeParse(resource.observedFacts);
   if (profile.success) {
     const p = profile.data;
@@ -170,6 +176,19 @@ function resourceRow(resource: ResourceRecord, zone: string): string {
   return `<article class="evidence-row"><p class="overline">来源观察 · ${e(resource.provider)}</p><h3>${e(resource.title ?? "来源记录")}</h3>${provenance}${summary ? `<p>${e(summary)}</p>` : ""}${meaning ? `<p class="advisory">建议 / 推断：${e(meaning)}<br><small>解读摘要，不代表已确认的申请进展。</small></p>` : ""}<div class="evidence-foot"><span>观察于 ${e(date(resource.observedAt, zone))}</span>${url ? `<a class="text-link" href="${e(url)}" target="_blank" rel="noopener noreferrer">打开来源 ↗</a>` : "<span>来源链接不可用</span>"}</div></article>`;
 }
 
+function resumeAssociation(resume: ApplicationResume, uri: string | null, zone: string): string {
+  const labels = { CANDIDATE: "候选简历 · 待确认是否投递", CONFIRMED_FILE: "已确认投递文件 · 具体版本待确认",
+    CONFIRMED_VERSION: "已确认实际投递版本", DISMISSED: "已排除此关联" };
+  const source = resume.sourceFacts;
+  const url = isResumeFileUrl(uri, source.fileId) ? safeExternalUrl(uri) : null;
+  return `<div class="resume-association"><p class="overline">${labels[resume.interpretation.status]}</p><h3>${e(source.fileName)}</h3><p>${e(resume.interpretation.reason)}</p>
+    ${url ? `<a class="text-link" href="${e(url)}" target="_blank" rel="noopener noreferrer">打开 Drive 文件（当前内容） ↗</a>` : "<p>文件链接不可用</p>"}
+    <details><summary>版本与关联依据</summary><p class="muted">${source.revisionId ? `保存的 Drive 版本号：${e(source.revisionId)}` : "Drive 版本号尚未取得"}</p>
+    ${source.revisionModifiedTime ? `<p class="muted">该版本修改时间：${e(timelineDate(source.revisionModifiedTime, zone))}</p>` : ""}
+    ${resume.confirmation ? `<p>${e(resume.confirmation.statement)}</p><p class="muted">确认来源：${e(resume.confirmation.reference)}</p>` : "<p>文件名和修改时间用于寻找候选，尚不能确定实际投递版本。</p>"}
+    <p class="muted">Drive 链接打开当前文件；核对历史内容时按保存的版本号读取。</p></details></div>`;
+}
+
 export function applicationView(service: WorkspaceService, id: string, query: Record<string, string | number>, zone: string,
   gmail?: { slot: number; email: string | null }[]): string {
   const detail = service.jobSearchQueryService.getApplication(id);
@@ -184,7 +203,8 @@ export function applicationView(service: WorkspaceService, id: string, query: Re
     <section class="panel application-profile"><h2>我的技能匹配</h2>${data?.skillMatchText ? `<div class="saved-text">${e(data.skillMatchText)}</div>` : ""}${match ? `<p class="saved-text">${e(match.summary)}</p><div class="match-table"><table><thead><tr><th>岗位要求</th><th>我的经历 / 技能依据</th><th>匹配情况</th></tr></thead><tbody>${match.matches.map(m => `<tr><td>${e(m.requirement)}</td><td>${e(m.evidence)}</td><td>${e(matchLabels[m.assessment])}</td></tr>`).join("")}</tbody></table></div>${match.gaps.length ? `<h3>待补足</h3><ul>${match.gaps.map(g => `<li>${e(g)}</li>`).join("")}</ul>` : ""}`
     : data?.skillMatchText ? "" : profile.candidates.length ? profile.candidates.map(c => `<p class="saved-text">${e(c.fitReason)}</p><p class="muted">已关联候选岗位的匹配建议 · ${e(fitUncertaintyLabel(c.fitUncertainty))} · <a href="${candidateLink(c.id)}">查看来源</a></p>`).join("")
     : `<p>尚未保存此岗位的技能匹配报告。</p><p class="muted">若已在 GPT 中分析，请将原报告保存并关联到此申请，保存后这里即可展示。</p>`}${report.success && profile.saved ? `<p class="muted">报告来源：${e(profile.saved.provider)} · 保存记录时间 ${e(timelineDate(profile.saved.savedAt, zone))}</p>` : ""}</section>`;
-  const resumePanel = `<section class="panel application-profile"><h2>本次使用的简历</h2>${data?.resumeVersion ? `<p><strong>${e(data.resumeVersion)}</strong></p>` : "<p>尚未关联简历版本。</p>"}${data?.resumeText ? `<div class="saved-text">${e(data.resumeText)}</div>` : ""}${data?.sourceReference ? `<p class="saved-text muted">资料来源：${e(data.sourceReference)}</p>` : ""}
+  const resumes = service.jobSearchQueryService.applicationResumes(id).filter(r => r.facts.interpretation.status !== "DISMISSED");
+  const resumePanel = `<section class="panel application-profile"><h2>申请简历</h2>${resumes.map(r => resumeAssociation(r.facts, r.externalUri, zone)).join("")}${data?.resumeVersion ? `<p><strong>原有简历记录：${e(data.resumeVersion)}</strong></p><p class="muted">原记录未区分文件与实际投递版本的确认依据。</p>` : resumes.length ? "" : "<p>尚未关联简历版本。</p>"}${data?.resumeText ? `<div class="saved-text">${e(data.resumeText)}</div>` : ""}${data?.sourceReference ? `<p class="saved-text muted">资料来源：${e(data.sourceReference)}</p>` : ""}
     <p class="muted">资料由 GPT 保存到此申请后显示。更新或补充资料请在 GPT 中操作。</p></section>`;
   const check = detail.latestGmailCheck;
   const parsed = gmailCheckSchema.safeParse(check?.facts);

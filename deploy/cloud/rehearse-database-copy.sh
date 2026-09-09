@@ -10,8 +10,8 @@ backup_name="${1:-}"
 current_tag="${2:-}"
 previous_tag="${3:-}"
 mode="${4:-unchanged}"
-if [[ "${mode}" != unchanged && "${mode}" != --s2-upgrade && "${mode}" != --mail-batch-upgrade && "${mode}" != --mail-ingestion-upgrade ]]; then
-  echo "Optional fourth argument must be --s2-upgrade, --mail-batch-upgrade or --mail-ingestion-upgrade" >&2
+if [[ "${mode}" != unchanged && "${mode}" != --s2-upgrade && "${mode}" != --mail-batch-upgrade && "${mode}" != --mail-ingestion-upgrade && "${mode}" != --mail-scan-ledger-upgrade && "${mode}" != --mail-body-read-upgrade && "${mode}" != --job-mail-search-upgrade ]]; then
+  echo "Optional fourth argument must be a supported upgrade mode, including --job-mail-search-upgrade" >&2
   exit 1
 fi
 upgrade_verifier=dist/scripts/verify-s2-migration.js
@@ -20,6 +20,15 @@ if [[ "${mode}" == --mail-batch-upgrade ]]; then
 fi
 if [[ "${mode}" == --mail-ingestion-upgrade ]]; then
   upgrade_verifier=dist/scripts/verify-mail-ingestion-migration.js
+fi
+if [[ "${mode}" == --mail-scan-ledger-upgrade ]]; then
+  upgrade_verifier=dist/scripts/verify-mail-scan-ledger-migration.js
+fi
+if [[ "${mode}" == --mail-body-read-upgrade ]]; then
+  upgrade_verifier=dist/scripts/verify-mail-body-read-migration.js
+fi
+if [[ "${mode}" == --job-mail-search-upgrade ]]; then
+  upgrade_verifier=dist/scripts/verify-job-mail-search-migration.js
 fi
 if [[ ! "${backup_name}" =~ ^workspace-[0-9]{8}T[0-9]{6}Z\.db$ ]]; then
   echo "Usage: $0 workspace-YYYYMMDDTHHMMSSZ.db <current-tag> <previous-tag>" >&2

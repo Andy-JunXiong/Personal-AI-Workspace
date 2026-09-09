@@ -1,4 +1,5 @@
 import { verifyMailScanLedgerMigration } from "../../scripts/verify-mail-scan-ledger-migration.js";
+import { verifyMailBodyReadMigration } from "../../scripts/verify-mail-body-read-migration.js";
 import { afterEach, expect, it } from "vitest";
 import { randomUUID } from "node:crypto";
 import { copyFileSync, mkdirSync, readdirSync } from "node:fs";
@@ -7,7 +8,7 @@ import { createTestWorkspace, testPrincipal } from "../helpers/test-workspace.js
 import { WorkspaceService } from "../../src/application/workspace-service.js";
 import { openDatabase } from "../../src/persistence/database.js";
 import { gmailAccountKey, gmailSourceId } from "../../src/gmail/source-identity.js";
-import type { GmailMcpReader } from "../../src/gmail/mcp-reader.js";
+import { GmailMcpReader } from "../../src/gmail/mcp-reader.js";
 import { mailScanPanel } from "../../src/web/views.js";
 import { createWorkspaceMcpServer } from "../../src/mcp/create-server.js";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
@@ -48,6 +49,101 @@ function observation(projectId:string) {
       interpretation:{company:"Example Co",role:"Engineer",emailKind:"RECRUITER_CONTACT",summary:"Recruiter requested a conversation."}},
     observedAt:"2026-09-06T09:00:00.001Z",idempotencyKey:"synthetic-ledger-observation"};
 }
+
+function pagedFixture() {
+  const w=setup(); let body="x".repeat(50000)+" Final interview deadline: Friday.";
+  const reader=new GmailMcpReader({get:(_identity,slot)=>({subject:`paged-${slot}`,email:`box${slot}@example.test`,refreshToken:"synthetic"})},
+    {access:async()=>"synthetic"},async url=>String(url).includes("format=full")
+      ? Response.json({id:"a1",threadId:"t",internalDate:String(Date.parse("2026-09-06T10:00:00Z")),payload:{mimeType:"text/plain",body:{data:Buffer.from(body).toString("base64url")}}})
+      : Response.json({messages:[{id:"a1",threadId:"t"}]}));
+  const runId=randomUUID();
+  w.service.mailScanService.start({...auth,runId,receiptMode:"BACKEND",triggerType:"MANUAL",executionReference:"synthetic"},reader);
+  const args={...auth,runId,mailbox:"mailbox-1",lane:"RECENT",limit:1};
+  return {...w,reader,runId,args,change:()=>{body+=" changed";}};
+}
+
+it("persists contiguous same-version parts across service restart and gates business writes and ack until the tail",async()=>{
+  const w=pagedFixture();
+  const first=await w.service.mailBatchService.next(w.args,w.reader);
+  const message=first.messages[0] as {text:string;bodyContinuation:object};
+  const ack={...auth,runId:w.runId,batchId:first.batch!.id,items:[{messageId:"a1",outcome:"IRRELEVANT",verified:true,requiredActionKeys:[]}]};
+  const context={runId:w.runId,batchId:first.batch!.id,messageId:"a1",actionKey:"synthetic"};
+  expect(()=>w.service.mailScanLedger.source(context)).toThrow(/completely read/);
+  expect(()=>w.service.mailBatchService.ack(ack,w.reader)).toThrow(/complete source/);
+  await w.reader.read(w.service.resolveIdentity(),{mailbox:"mailbox-1",messageId:"a1",bodyOffset:24000,bodyVersion:(message.bodyContinuation as {bodyVersion:string}).bodyVersion});
+  expect(()=>w.service.mailBatchService.ack(ack,w.reader)).toThrow(/complete source/);
+  await expect(w.service.mailBatchService.next({...w.args,bodyContinuation:{...message.bodyContinuation,offset:48000}},w.reader)).rejects.toThrow(/skip parts/);
+  await expect(w.service.mailBatchService.next({...w.args,mailbox:"mailbox-2",bodyContinuation:message.bodyContinuation},w.reader)).rejects.toThrow(/owned/);
+  const resumed=new WorkspaceService(w.database,testPrincipal,{clock:w.clock});
+  const second=await resumed.mailBatchService.next({...w.args,bodyContinuation:message.bodyContinuation},w.reader);
+  const middle=second.messages[0] as {text:string;bodyContinuation:object;processable:boolean};
+  expect(middle.processable).toBe(false);
+  const replay=await resumed.mailBatchService.next({...w.args,bodyContinuation:message.bodyContinuation},w.reader);
+  expect(replay.messages[0]).toEqual(second.messages[0]);
+  expect(()=>resumed.mailBatchService.ack(ack,w.reader)).toThrow(/complete source/);
+  const final=await resumed.mailBatchService.next({...w.args,bodyContinuation:middle.bodyContinuation},w.reader);
+  expect(final.messages[0]).toMatchObject({bodyComplete:true,processable:true,bodyDiagnostics:{issues:[]},bodyContinuation:null});
+  expect((final.messages[0] as {text:string}).text).toContain("Final interview deadline: Friday.");
+  expect(message.text+middle.text+(final.messages[0] as {text:string}).text).toBe("x".repeat(50000)+" Final interview deadline: Friday.");
+  expect(resumed.mailScanLedger.source(context).mailbox).toBe("mailbox-1");
+  resumed.mailBatchService.ack(ack,w.reader);
+  expect(w.database.prepare("SELECT count(*) n FROM mail_scan_acknowledgements WHERE run_id=?").get(w.runId)).toEqual({n:1});
+  expect(w.database.prepare("SELECT count(*) n FROM mail_scan_actions WHERE run_id=?").get(w.runId)).toEqual({n:0});
+  expect(JSON.stringify(w.database.prepare("SELECT * FROM mail_body_read_progress").all())).not.toContain("interview");
+});
+
+it("invalidates a changed body and requires a new first-part read",async()=>{
+  const w=pagedFixture(),first=await w.service.mailBatchService.next(w.args,w.reader);
+  const c=(first.messages[0] as {bodyContinuation:object}).bodyContinuation;
+  w.change();
+  await expect(w.service.mailBatchService.next({...w.args,bodyContinuation:c},w.reader)).rejects.toThrow(/changed/);
+  expect(w.database.prepare("SELECT body_complete FROM mail_scan_batch_items WHERE batch_id=?").get(first.batch!.id)).toEqual({body_complete:0});
+  expect(w.database.prepare("SELECT count(*) n FROM mail_body_read_progress").get()).toEqual({n:0});
+  const fresh=await w.service.mailBatchService.next(w.args,w.reader);
+  expect((fresh.messages[0] as {bodyContinuation:object}).bodyContinuation).not.toEqual(c);
+});
+
+it("does not reuse body progress across closed runs or another workspace",async()=>{
+  const w=pagedFixture(),first=await w.service.mailBatchService.next(w.args,w.reader);
+  const c=(first.messages[0] as {bodyContinuation:object}).bodyContinuation;
+  w.service.mailScanLedger.settle(w.runId,"Synthetic interruption");
+  await expect(w.service.mailBatchService.next({...w.args,bodyContinuation:c},w.reader)).rejects.toThrow();
+  const newRun=randomUUID(); w.advance(1000);
+  w.service.mailScanService.start({...auth,runId:newRun,receiptMode:"BACKEND",triggerType:"MANUAL",executionReference:"new synthetic run"},w.reader);
+  await expect(w.service.mailBatchService.next({...w.args,runId:newRun,bodyContinuation:c},w.reader)).rejects.toThrow(/first part/);
+  const other=new WorkspaceService(w.database,{...testPrincipal,subject:"other"},{clock:w.clock});other.ensureDevelopmentIdentity();
+  await expect(other.mailBatchService.next({...w.args,runId:newRun,bodyContinuation:c},w.reader)).rejects.toThrow();
+  const restarted=await w.service.mailBatchService.next({...w.args,runId:newRun},w.reader);
+  expect(restarted.messages[0]).toMatchObject({bodyReadProgress:{readThrough:24000,complete:false}});
+  expect(w.database.prepare("SELECT run_id FROM mail_body_read_progress WHERE batch_id=?").get(first.batch!.id)).toEqual({run_id:newRun});
+});
+
+it("requires a fresh complete extracted body before a blocked backend source can be acknowledged", async () => {
+  const w=setup();
+  let body="x".repeat(24001);
+  const reader=new GmailMcpReader({get:(_identity,slot)=>({subject:`synthetic-${slot}`,email:`box${slot}@example.test`,refreshToken:"synthetic"})},
+    {access:async()=>"synthetic"},async url=>String(url).includes("format=full")
+      ? Response.json({id:"a1",threadId:"t",internalDate:String(Date.parse("2026-09-06T10:00:00Z")),payload:{mimeType:"text/html",body:{data:Buffer.from(body).toString("base64url")}}})
+      : Response.json({messages:[{id:"a1",threadId:"t"}]}));
+  const runId=randomUUID();
+  w.service.mailScanService.start({...auth,runId,receiptMode:"BACKEND",triggerType:"MANUAL",executionReference:"synthetic"},reader);
+  const args={...auth,runId,mailbox:"mailbox-1",lane:"RECENT",limit:1};
+  const first=await w.service.mailBatchService.next(args,reader);
+  const ack={...auth,runId,batchId:first.batch!.id,items:[{messageId:"a1",outcome:"IRRELEVANT",verified:true,requiredActionKeys:[]}]};
+  expect(first.messages[0]).toMatchObject({processable:false,bodyDiagnostics:{issues:["BODY_TOO_LONG"]}});
+  expect(w.database.prepare("SELECT last_error FROM mail_scan_batch_items WHERE batch_id=?").get(first.batch!.id))
+    .toEqual({last_error:"Message body is incomplete (BODY_TOO_LONG); source processing remains pending"});
+  expect(()=>w.service.mailBatchService.ack(ack,reader)).toThrow(/complete source/);
+  body=`<style>${".layout{color:red}".repeat(3000)}</style><p>Complete synthetic irrelevant message.</p>`;
+  // A standalone diagnostic read cannot clear the persisted batch obligation.
+  expect((await reader.read(w.service.resolveIdentity(),{mailbox:"mailbox-1",messageId:"a1"})).bodyComplete).toBe(true);
+  expect(()=>w.service.mailBatchService.ack(ack,reader)).toThrow(/complete source/);
+  expect((await w.service.mailBatchService.next(args,reader)).messages[0]).toMatchObject({processable:true,bodyComplete:true});
+  w.service.mailBatchService.ack(ack,reader);
+  expect(w.database.prepare("SELECT count(*) n FROM mail_scan_acknowledgements WHERE run_id=?").get(runId)).toEqual({n:1});
+  expect(w.database.prepare("SELECT count(*) n FROM mail_scan_actions WHERE run_id=?").get(runId)).toEqual({n:0});
+  expect(w.service.mailScanService.overview().checkpoints).toEqual([]);
+});
 
 it("atomically binds both mailboxes before acquisition, replays start and excludes concurrent legacy/backend runs",()=>{
   const w=setup(),f=fake(),run=begin(w.service,f);
@@ -198,11 +294,18 @@ it("upgrades a populated version-11 copy without rewriting rows and supports reo
   const tables=old.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name<>'schema_migrations'").all() as {name:string}[];
   const rows=tables.map(t=>({name:t.name,rows:old.prepare(`SELECT * FROM "${t.name}" ORDER BY rowid`).all()}));old.close();
   const before=resolve(w.directory,"before.db");copyFileSync(path,before);
-  const upgraded=openDatabase(path);
+  const v12=resolve(w.directory,"v12");mkdirSync(v12);
+  for(const file of readdirSync(resolve("db/migrations")).filter(f=>f.endsWith(".sql") && f<"013")) copyFileSync(resolve("db/migrations",file),resolve(v12,file));
+  const upgraded=openDatabase(path,v12);
   for(const t of rows)expect(upgraded.prepare(`SELECT * FROM "${t.name}" ORDER BY rowid`).all()).toEqual(t.rows);
   expect(upgraded.pragma("integrity_check",{simple:true})).toBe("ok");expect(upgraded.pragma("foreign_key_check")).toEqual([]);upgraded.close();
-  expect(verifyMailScanLedgerMigration(before,path)).toMatchObject({status:"PASS",migrations:["012_mail_scan_backend_ledger.sql"]});
-  openDatabase(path).close();const rollback=openDatabase(path,dir);expect(rollback.prepare("SELECT status FROM mail_scan_runs WHERE id=?").get(run)).toEqual({status:"RUNNING"});rollback.close();
+  expect(verifyMailScanLedgerMigration(before,path,v12)).toMatchObject({status:"PASS",migrations:["012_mail_scan_backend_ledger.sql"]});
+  openDatabase(path,v12).close();const rollback=openDatabase(path,dir);expect(rollback.prepare("SELECT status FROM mail_scan_runs WHERE id=?").get(run)).toEqual({status:"RUNNING"});rollback.close();
+  const before13=resolve(w.directory,"before13.db");copyFileSync(path,before13);
+  const v13=resolve(w.directory,"v13");mkdirSync(v13);
+  for(const file of readdirSync(resolve("db/migrations")).filter(f=>f.endsWith(".sql") && f<"014")) copyFileSync(resolve("db/migrations",file),resolve(v13,file));
+  openDatabase(path,v13).close();openDatabase(path,v13).close();openDatabase(path,v12).close();
+  expect(verifyMailBodyReadMigration(before13,path,v13)).toMatchObject({status:"PASS",migrations:["013_mail_body_read_progress.sql"],addedTables:["mail_body_read_progress"]});
 });
 
 it("publishes accurate write metadata and persists the optional mode through real MCP transport",async()=>{
@@ -214,6 +317,8 @@ it("publishes accurate write metadata and persists the optional mode through rea
     for(const name of ["workspace_start_mail_scan","workspace_close_mail_scan","workspace_ack_mail_batch","workspace_record_observation"])
       expect(list.tools.find(t=>t.name===name)?.annotations?.readOnlyHint).toBe(false);
     expect(list.tools.find(t=>t.name==="workspace_record_observation")?.inputSchema.properties).toHaveProperty("scanContext");
+    expect(list.tools.find(t=>t.name==="workspace_next_mail_batch")?.inputSchema.properties).toHaveProperty("bodyContinuation");
+    expect(list.tools.find(t=>t.name==="workspace_read_mail_message")?.inputSchema.properties).toHaveProperty("bodyOffset");
     const runId=randomUUID();
     expect((await client.callTool({name:"workspace_start_mail_scan",arguments:{...auth,runId,receiptMode:"BACKEND",triggerType:"MANUAL",executionReference:"transport"}})).isError).not.toBe(true);
     const fetched=await client.callTool({name:"workspace_next_mail_batch",arguments:{...auth,runId,mailbox:"mailbox-1",lane:"RECENT"}});

@@ -1,6 +1,71 @@
-# Project Kickoff ? Personal AI Workspace v0.1
+# Project Kickoff — Personal AI Workspace v0.1
 
-## Current status — 2026-09-08
+## Current status — 2026-09-09
+
+### End-of-day handoff
+
+Jun requested documentation reconciliation and commit/push to GitHub main at
+the end of today's work. This publication packages the deployed body continuation,
+filtered mail search and resume association changes with their release evidence;
+it is separate from deployment and scheduled acceptance. Publication is verified
+by comparing local HEAD with remote main after push, rather than recording an
+unverified success in this commit's own text.
+
+Next session, inspect the retained daily task's first actual September 10 08:00
+Australia/Sydney execution and its matching Workspace receipt. Preserve the normal
+24-hour / maximum 72-hour recovery policy and the obsolete task's paused state.
+Resume candidates remain unconfirmed: collect actual file/version evidence before
+using them as submitted materials for JD comparison or interview preparation.
+Unattended Drive discovery and M4 v0.3 remain future work. Today’s closing work
+does not start another scan, change a task or alter application state.
+
+The latest user-approved increment is [Google Drive resume association](docs/architecture/APPLICATION_RESUME_ASSOCIATIONS.md).
+`resume-20260909-r2` is deployed with 367 passing tests, retained migration 014,
+verified backup/recovery and unchanged pre/post-cutover database fingerprints.
+Sixteen candidate files/revisions across nine existing applications were saved
+and read back through MCP; the RSM website displays both links and version details.
+No actual submitted version was invented, and no application/lifecycle/task was
+created from filename matching. GPT can save attributable file/version confirmation
+and reuse it. Daily mail settings remain as below; unattended Drive discovery has
+not been integrated. Next product use is confirming actual materials and grounding
+JD/resume comparison or interview preparation in those sources.
+
+The preceding increment is subject/company/exact-sender job-mail search,
+normal 24-hour scope and maximum 72-hour recovery. Metadata screening precedes full
+matching-body reads. All 363 tests passed for `job-mail-20260909-r1` / migration 014,
+retained by the latest release. Live additive preservation, 30-tool discovery and website checks passed. See the
+[current release evidence](docs/architecture/MAIL_SCAN_BACKEND_LEDGER.md#job-metadata-search---2026-09-09).
+Run 6933e727-e6c8-4f48-9fdd-5913724a7e60 is independently verified
+COMPLETE/CLOSED for both JOB_METADATA matching scopes, with empty queues and
+zero unresolved actions. The authenticated website matches its scope/status/counts;
+the next query reused the learned SEEK sender. Filtered manual coverage/readback
+is passed. The retained task now has the verified revised policy and is enabled
+for daily 08:00 Australia/Sydney, next planned September 10; the obsolete task
+remains paused. The next gate is its first real scheduled receipt. No new live
+business creation scenario occurred in the final manual run.
+
+### Previous whole-mailbox release and acceptance
+
+The [body-part reading release](docs/architecture/MAIL_SCAN_BACKEND_LEDGER.md#body-part-reading-and-html-diagnostics---2026-09-09)
+is deployed as `mail-body-20260909-r4`, migration 013 and 30 tools. All 357 tests,
+type checks/build, production-copy migration/restart/rollback and actual live
+additive verification passed. Cutover at 10:41:03 Sydney preserved existing data,
+adding only an empty body-progress table and one migration-history row (35 tables /
+697 rows at cutover). Exact-source reads verified 24,000+3,337-character parts and
+10,453-character recovered HTML. The backend gates writes/ack on contiguous reads
+of the same source version in the same run; GPT still reviews and classifies.
+
+Six BACKEND attempts have closed PARTIAL; the sixth mailbox-2 receipt is COMPLETE.
+Fifty-two acknowledgements were verified through run five; run six reports ten more.
+The fifth verified hosted continuation/ack for a 25,323-character source and acked
+the HTML target; the original 27,337-character target remains queued.
+Both tasks remain paused. The [complete manual policy](docs/mvp/UPDATE_JOB_TRACKER_BACKEND_MANUAL_ACCEPTANCE.txt)
+requires actual bodyContinuation schema discovery, all-part review and current-run
+ack. This Codex context still exposes old schemas; further hosted processing uses
+the updated ChatGPT connection. Full manual/scheduled acceptance and M4 v0.3 remain
+pending. No commit/push is claimed for this release's working-tree source changes.
+
+## Previous handoff — 2026-09-08
 
 End-of-day handoff: implementation work is complete for the
 [backend receipt package](docs/architecture/MAIL_SCAN_BACKEND_LEDGER.md).

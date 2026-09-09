@@ -1,7 +1,24 @@
 # September 8 release handoff
 
-Current production: `mail-layout-20260908-r2`, migrations 001–011, 29 MCP tools.
+End-of-day September 9 successor:
+[`resume-20260909-r2`](../architecture/APPLICATION_RESUME_ASSOCIATIONS.md#validation-and-release-evidence),
+migrations 001–014 and 30 MCP tools. Filtered manual/website acceptance passed;
+the retained daily task is enabled and its first actual scheduled receipt remains
+pending. All statements below retain their original release-time scope.
+
+Historical production: `mail-layout-20260908-r2`, migrations 001–011, 29 MCP tools.
+Superseded by the [September 9 production cutover](../architecture/MAIL_SCAN_BACKEND_LEDGER.md#production-cutover-2026-09-09):
+`mail-ledger-20260909-r1`, migration 012 and 30 tools. Evidence below retains its
+original September 8 scope.
 Website: https://workspace.ai-radar-lab.com/workspace/job-search/today
+
+September 9 continuation: the [backend receipt release preflight](../architecture/MAIL_SCAN_BACKEND_LEDGER.md#september-9-release-preflight)
+prepared the migration 012 rehearsal entry and verified source candidate. Local
+340-test verification, cloud image build and actual backup migration/restart/
+previous-image rehearsal passed; live data stayed unchanged at 28 tables / 243 rows.
+The user subsequently confirmed both tasks paused and authorized the next step;
+production cutover and independent read-only release checks passed. Hosted manual
+and scheduled acceptance remain pending, as recorded in the current release above.
 
 Governance/navigation follow-up: [documentation index](../INDEX.md), [M4 retirement and v0.3](../dogfood/M4_REAL_USE_EVALUATION_v0.3.md), and [daily workflow acceptance](DAILY_WORKFLOW_ACCEPTANCE.md). The follow-up changes no deployment; live ledger reads still show no completed daily scan.
 

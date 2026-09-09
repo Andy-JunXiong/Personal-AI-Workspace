@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { applicationResumeSchema, type ApplicationResume } from "../domain/application-resume.js";
 import type { WorkspaceDatabase } from "../persistence/database.js";
 import type { CoverageStatus, DeliveryStatus, FitUncertainty, IdentityContext, JobCandidateRecord, ProjectRecord, RecommendationRunDetails, RecommendationRunItem, RecommendationRunRecord, ResourceRecord, SourceAvailability, TaskRecord, TransitionRecord } from "../domain/types.js";
 import { NotFoundError, ValidationError } from "../domain/errors.js";
@@ -111,6 +112,29 @@ export class JobSearchQueryService {
       json_extract(metadata_json, '$.role') AS role
       FROM projects WHERE workspace_id = ? AND project_type = 'job_application'
       ORDER BY updated_at DESC, id ASC`).all(identity.workspaceId) as { projectId: string; company: string; role: string }[];
+  }
+
+  applicationResumes(projectId: string) {
+    parse(idSchema, projectId);
+    const identity = this.resolveIdentity();
+    this.authorizedApplication(projectId, identity.workspaceId);
+    const rows = this.database.prepare(`SELECT id, external_uri AS externalUri,
+      observed_at AS observedAt, observed_facts_json AS facts FROM resources
+      WHERE project_id = ? AND provider = 'google-drive-resume' AND resource_type = 'DOCUMENT'
+      AND json_extract(observed_facts_json, '$.contractVersion') = 'job-application-resume-v0.1'
+      ORDER BY created_at DESC, rowid DESC`).all(projectId) as
+      { id: string; externalUri: string | null; observedAt: string; facts: string }[];
+    const seen = new Set<string>();
+    const results: { id: string; externalUri: string | null; observedAt: string; facts: ApplicationResume }[] = [];
+    for (const row of rows) {
+      const parsed = applicationResumeSchema.safeParse(JSON.parse(row.facts));
+      if (!parsed.success) continue;
+      const key = JSON.stringify([parsed.data.sourceFacts.fileId, parsed.data.sourceFacts.revisionId]);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      results.push({ ...row, facts: parsed.data });
+    }
+    return results;
   }
 
   applicationProfile(projectId: string) {

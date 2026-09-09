@@ -50,7 +50,7 @@ it("returns evidence provenance and explicit incomplete-body flags, skips attach
       { filename: "private.txt", mimeType: "text/plain", body: { data: Buffer.from("attachment secret").toString("base64url") } },
     ] } }));
   const read = () => reader.read(owner, { mailbox: "mailbox-1", messageId: "ab12" });
-  expect(await read()).toMatchObject({ bodyFormat: "HTML", bodyComplete: true, externalId: gmailSourceId(gmailAccountKey("s1"),"ab12"), senderDomain: "example.test", receivedAt: "2026-01-01T00:00:00.500Z", text: body });
+  expect(await read()).toMatchObject({ bodyFormat: "TEXT", bodyComplete: true, externalId: gmailSourceId(gmailAccountKey("s1"),"ab12"), senderDomain: "example.test", receivedAt: "2026-01-01T00:00:00.500Z", text: "Application received", bodyDiagnostics: { sourceFormat: "HTML", issues: [] } });
   body = "x".repeat(24001);
   const truncated = await read(); expect(truncated.bodyComplete).toBe(false); expect(truncated.text).toHaveLength(24000);
   body = ""; expect((await read()).bodyComplete).toBe(false);

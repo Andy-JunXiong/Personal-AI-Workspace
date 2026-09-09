@@ -2,6 +2,7 @@ import { MailScanLedger } from "./mail-scan-ledger.js";
 import { randomUUID } from "node:crypto";
 import { gmailCheckSchema } from "../domain/gmail-check.js";
 import { applicationProfileSchema } from "../domain/application-profile.js";
+import { applicationResumeSchema, isResumeFileUrl } from "../domain/application-resume.js";
 import type { WorkspaceDatabase } from "../persistence/database.js";
 import { TaskService, type Clock, mapTask } from "./task-service.js";
 import { TodayQueryService } from "./today-query-service.js";
@@ -121,6 +122,7 @@ interface IdempotencyRow {
 
 export interface ProjectDetails {
   project: ProjectRecord;
+  resumeAssociations: ReturnType<JobSearchQueryService["applicationResumes"]>;
   resources: ResourceRecord[];
   transitions: TransitionRecord[];
   openTasks: TaskRecord[];
@@ -775,6 +777,7 @@ export class WorkspaceService {
 
     return {
       project,
+      resumeAssociations: project.projectType === "job_application" ? this.jobSearchQueryService.applicationResumes(projectId) : [],
       resources: resources.map((row) => this.mapResource(row)),
       transitions: transitionRows.map((row) => this.mapTransition(row)),
       openTasks: tasks.map((row) => mapTask(row)),
@@ -954,6 +957,20 @@ export class WorkspaceService {
             deduplicated: true,
             replayed: false,
           };
+        }
+
+        if (normalizedInput.provider === "google-drive-resume") {
+          const facts = applicationResumeSchema.parse(normalizedInput.observedFacts);
+          // Reads authorize the application and recover associations beyond the latest ten Resources.
+          const current = this.jobSearchQueryService.applicationResumes(normalizedInput.projectId).find(r =>
+            r.facts.sourceFacts.fileId === facts.sourceFacts.fileId &&
+            r.facts.sourceFacts.revisionId === facts.sourceFacts.revisionId);
+          if ((current?.id ?? null) !== facts.supersedesResourceId) {
+            throw new ValidationError("Resume association changed; read the current association before appending a correction");
+          }
+          if (current?.facts.interpretation.status.startsWith("CONFIRMED_") && facts.interpretation.status === "CANDIDATE") {
+            throw new ValidationError("Discovery cannot downgrade an existing submission confirmation");
+          }
         }
 
         const id = randomUUID();
@@ -1792,6 +1809,15 @@ function normalizeRecordObservationInput(
   input: RecordObservationInput,
 ): RecordObservationInput {
   const provider = input.provider.trim();
+  if (provider.toLowerCase() === "google-drive-resume" ||
+      input.observedFacts.contractVersion === "job-application-resume-v0.1") {
+    const parsed = applicationResumeSchema.safeParse(input.observedFacts);
+    if (provider !== "google-drive-resume" || input.resourceType !== "DOCUMENT" || !input.externalId?.trim() ||
+        !parsed.success || !isResumeFileUrl(input.externalUri, parsed.data.sourceFacts.fileId)) {
+      throw new ValidationError("Resume association requires DOCUMENT, google-drive-resume, unique observation ID and matching Drive file URL");
+    }
+    return { ...input, observedFacts: parsed.data };
+  }
   if (input.observedFacts.contractVersion === "job-application-profile-v0.1") {
     const parsed = applicationProfileSchema.safeParse(input.observedFacts);
     if (input.resourceType !== "NOTE" || !parsed.success) throw new ValidationError("Invalid saved application profile");

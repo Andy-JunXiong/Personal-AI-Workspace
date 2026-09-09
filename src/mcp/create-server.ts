@@ -73,7 +73,8 @@ export function createWorkspaceMcpServer(
     async () => {
       try {
         const result = workspaceService.ping();
-        return successResult(webLinks ? { ...result, webUrl: webLinks.today() } : result);
+        return successResult({ ...result, ...(webLinks?{webUrl:webLinks.today()}:{}),
+          mailSearchContract:{version:"job-mail-search-v1",migration:"014_job_mail_search.sql",searchMode:"JOB_METADATA",normalHours:24,maxLookbackHours:72,metadataFirst:true} });
       } catch (error) {
         return errorResult(error);
       }
@@ -85,7 +86,7 @@ export function createWorkspaceMcpServer(
     {
       title: "Get a Workspace Project",
       description:
-        "Read one durable Project with current state, all open tasks, the latest 10 Resources and transitions, and total counts. History is bounded by default.",
+        "Read one durable Project with current state, all open tasks, the latest 10 Resources and transitions, and total counts. History is bounded by default. Job Applications additionally return current resumeAssociations for each Drive file/revision, including confirmed and dismissed associations, independently of the Resource history limit.",
       inputSchema: {
         projectId: z.string().uuid(),
       },
@@ -312,7 +313,7 @@ export function createWorkspaceMcpServer(
         observedFacts: z
           .record(z.string(), z.unknown())
           .describe(
-            "For Gmail EMAIL observations, use exactly contractVersion, sourceFacts {receivedAt, optional senderDomain, optional threadId}, and interpretation {company, role, emailKind, summary}. Never include a sender name or full email address.",
+            "For Gmail EMAIL observations, use exactly contractVersion, sourceFacts {receivedAt, optional senderDomain, optional threadId}, and interpretation {company, role, emailKind, summary}. Never include a sender name or full email address. For Drive resume associations use provider google-drive-resume, DOCUMENT, a unique observation externalId and matching Drive file externalUri. Facts: contractVersion job-application-resume-v0.1; supersedesResourceId null for a new file/revision or the current Resource ID for a correction; sourceFacts {fileId,fileName,mimeType,modifiedTime,revisionId,revisionModifiedTime} with unknown timestamps/revision null; interpretation {status:CANDIDATE|CONFIRMED_FILE|CONFIRMED_VERSION|DISMISSED,reason}; confirmation null for candidates/dismissals or {kind:USER_STATEMENT|SUBMISSION_RECORD,reference,statement}. Filename/time matches are candidates only. Confirmed version requires a specific revision and evidence identifying it. Read resumeAssociations first; reuse confirmed associations and never infer submission from file discovery.",
           ),
         observedAt: z.string().datetime({ offset: true }),
         idempotencyKey: z.string().trim().min(1).max(200),
@@ -921,7 +922,7 @@ export function createWorkspaceMcpServer(
 
   server.registerTool("workspace_start_mail_scan", {
     title: "Start application email scan",
-    description: "Before the authorized daily two-mailbox scan, create a durable RUNNING receipt with a stable UUID runId. Returns each mailbox's successful checkpoint. Same runId retries do not create duplicates. LEGACY preserves manual finish. Opt-in BACKEND binds both configured mailboxes and fixes scope before acquisition; next/ack automatically derive the receipt. Backend business writes must include scanContext and ack must include verified, requiredActionKeys, and projectId for relevant mail. This writes run/authorization/bindings/ledger only, not Gmail or a scheduler.",
+    description: "Before the authorized daily two-mailbox scan, create a durable RUNNING receipt with a stable UUID runId. Returns each mailbox's successful checkpoint. Same runId retries do not create duplicates. LEGACY preserves manual finish. For daily job tracking set receiptMode=BACKEND and searchMode=JOB_METADATA. This snapshots subject keywords, existing application companies and verified exact sender addresses, searches normally 24 hours with a hard 72-hour recovery limit, and screens metadata before reading matching bodies. Coverage means matching job mail only. Old query windows are superseded with records retained. BACKEND binds both configured mailboxes and fixes scope before acquisition; next/ack automatically derive the receipt. Backend business writes must include scanContext and ack must include verified, requiredActionKeys, and projectId for relevant mail. This writes run/authorization/bindings/ledger only, not Gmail or a scheduler.",
     inputSchema: startMailScanSchema.shape, outputSchema: resultOutputSchema,
     annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false, idempotentHint: true },
   }, async input => { try { return successResult(workspaceService.mailScanService.start(input,gmail)); } catch (error) { return errorResult(error); } });
@@ -959,10 +960,10 @@ export function createWorkspaceMcpServer(
     reader => reader.accounts(workspaceService.resolveIdentity()));
   mailTool("workspace_list_mail_messages", "List up to 50 Gmail message IDs for one mailbox and an exact time interval, at most 7 days. Includes spam/trash. Follow nextPageToken with unchanged mailbox and interval until null; read messages separately. No job filtering: GPT must classify actual evidence. Listing complete does not mean scan complete.", mailListSchema.shape,
     (reader, input) => reader.list(workspaceService.resolveIdentity(), mailListSchema.parse(input)));
-  mailTool("workspace_read_mail_message", "Read one Gmail message from an owned mailbox, with source timestamp, source URL and bounded untrusted text/HTML. No attachments or writes. Check bodyComplete and exact time bounds; save only minimized relevant facts through observation tools.", mailReadSchema.shape,
+  mailTool("workspace_read_mail_message", "Read one Gmail message from an owned mailbox, with source timestamp, source URL and bounded untrusted text (HTML extracted with link targets). No attachments, image pixels or writes. Use returned bodyPage.nextOffset with bodyOffset and bodyVersion for read-only continuation. Standalone parts never satisfy batch confirmation. Check bodyComplete, bodyDiagnostics (HTML reasons and unread images) and time bounds; save only minimized relevant facts through observation tools.", mailReadSchema.shape,
     (reader, input) => reader.read(workspaceService.resolveIdentity(), mailReadSchema.parse(input)));
   server.registerTool("workspace_next_mail_batch", {
-    description:"Resume one mailbox's RECENT or BACKFILL source processing within the last 7 days, with an owned RUNNING receipt. RECENT normally checks yesterday/today; BACKFILL is only the remaining part of the first week. Persists bounded page IDs/cursor and reads at most 5 messages (default 3). Requires standing scan authorization. No application writes. Process and read-back-verify relevant writes, then acknowledge each completed source. Call RECENT for both mailboxes before BACKFILL. Pending work survives partial receipts and restarts; empty messages do not necessarily mean complete.",
+    description:"Resume an owned RUNNING scan. In JOB_METADATA mode, RECENT searches fixed job criteria for normally 24 hours, at most 72 hours after interruption, then screens Subject/From metadata and reads only matching bodies. BACKFILL is a completed compatibility lane; do not poll it. Other historical runs retain their original scope. Persists bounded page IDs/cursor and reads at most 5 messages (default 3). Requires standing scan authorization. No application writes. Process and read-back-verify relevant writes, then acknowledge each completed source. Call RECENT for both mailboxes before BACKFILL. For long text, immediately return the exact bodyContinuation from a message to this same tool with unchanged runId/mailbox/lane. This reads one next part and persists same-version contiguous progress. Review every part; only bodyReadProgress.complete=true allows ack/business writes. Do not skip parts or use standalone reads as batch proof. Pending work survives partial receipts and restarts; a new run rereads the source from its first part.",
     inputSchema:nextMailBatchSchema.shape,outputSchema:resultOutputSchema,
     annotations:{readOnlyHint:false,destructiveHint:false,openWorldHint:true},
   },async input=>{try {if(!gmail) throw new Error("Workspace Gmail reader unavailable"); return successResult(await workspaceService.mailBatchService.next(input,gmail));}catch(error){return errorResult(error);}});

@@ -3,7 +3,66 @@
 Confirmed by Jun on 2026-09-07. This decision supersedes conflicting earlier
 proposals to make the website a parallel operational workspace.
 
+## Drive resume association approved by Jun — 2026-09-09
+
+Use the user's uploaded Google Drive resumes to supplement existing application
+dossiers. Save file identity, link and observed revision, with explicit separation
+between candidate discovery and confirmed actual submission. Reuse prior user
+confirmation. Filename/company/role matches alone do not prove submission or the
+historical version; never create an application from Drive discovery. The
+[resume association contract](APPLICATION_RESUME_ASSOCIATIONS.md) defines the
+interactive workflow and release evidence. The saved daily mail task is unchanged;
+unattended Drive discovery is not part of its current acceptance.
+
+## Daily mail scope clarified by Jun — 2026-09-09
+
+Jun explicitly replaced whole-mailbox seven-day ingestion with subject/company/
+sender job search. Metadata means the actual Subject, exact From address, company
+and corresponding existing application. Search both mailboxes normally over the
+latest 24 hours; interrupted recovery may extend to at most 72 hours. Reuse prior
+application and acknowledged-message records. Retain subject keyword discovery
+for new applications as well as company/exact-sender follow-up. Fetch full bodies
+only for metadata matches; GPT still interprets actual evidence and owns business
+decisions. Nonmatching query scope is excluded, not full-body reviewed. Completion
+means the fixed matching-job-mail scope, not all mailbox mail. Old receipts and
+unrelated pending-body errors remain history and do not force further acquisition.
+
+This uses native Gmail search and metadata reads through the existing Workspace
+connection; it adds no scheduler, model API or parallel system of record. The
+release evidence is maintained in the [mail ledger](MAIL_SCAN_BACKEND_LEDGER.md#job-metadata-search---2026-09-09).
+After the revised manual/website acceptance, Jun authorized the next step on
+September 9: the retained daily task is updated and enabled for 08:00
+Australia/Sydney; the obsolete task remains paused. See the
+[activation record](MAIL_SCAN_BACKEND_LEDGER.md#daily-task-activation---2026-09-09).
+Actual scheduled acceptance remains pending. Earlier pause arrangements and
+whole-mailbox lookback rules below are historical.
+
+## Application confirmation clarified by Jun — 2026-09-09
+
+Daily automatic registration of a new application requires an explicit
+employer/platform email confirming application submission or receipt. A recruiter
+reply, eligibility requirement or request to send a CV alone is pre-application
+contact. Without an existing application match, a fully reviewed such message
+is outside applied-application tracking and may be acknowledged IRRELEVANT;
+this does not label it spam or modify Gmail. Do not create an application, task,
+or application evidence from that contact alone, or repeatedly ask Jun whether
+a recruiter reply means he applied. Existing applications retain their saved
+history; later follow-up does not require finding the original confirmation
+again within the current daily window. Deduplicate individual reviewed messages,
+never suppress a later distinct confirmation from the same sender or thread.
+
+This resolves the first filtered run's two Senior Agent AI Engineer replies:
+Jun explicitly states he did not apply. Their next eligible current-run reads
+can be completed as outside scope under the existing acknowledgement contract.
+The closed PARTIAL receipt is retained; no new backend outcome is claimed here.
+The maintained manual and future daily prompts carry this clarification, enabling
+the remaining matching-mail work to continue without inventing applications or
+introducing another record type. Scheduled-task configuration remains unchanged.
+
 ## Product clarification — 2026-09-08
+
+The following historical product sections retain their original context; the
+September 9 daily scope and confirmation rule above take precedence.
 
 Jun reaffirmed that the website primarily displays stored results, with an
 occasional explicit manual email check between daily GPT runs. The website's
@@ -17,11 +76,14 @@ it is not yet equivalent to the complete daily policy. The
 [September 8 flow review](JOB_TRACKER_FLOW_REVIEW_2026-09-08.md) records these
 implementation gaps and proposed increments. It does not select a replacement
 scheduler or expand website write authority. Current deployment and platform
-status are in the [release handoff](../mvp/RELEASE_HANDOFF_2026-09-08.md) and
+status are in the [current release](MAIL_SCAN_BACKEND_LEDGER.md#production-cutover-2026-09-09) and
 [recovery record](../mvp/JOB_TRACKER_RECOVERY_2026-09-08.md). The current
-`mail-layout-20260908-r2` release includes shared mail identity, durable
-application-scoped manual checks and collapsed status cards; both daily tasks
-remain paused pending platform recovery and scheduled acceptance;
+`mail-body-20260909-r4` release includes versioned body parts, persistent same-run
+read coverage, specific HTML diagnostics, MIME alternatives and shared mail identity, durable
+application-scoped checks, diagnostics/filtering and opt-in backend receipts.
+Both daily tasks remain paused, confirmed by the user before September 9 cutover,
+pending complete manual and scheduled acceptance; a September 9 BACKEND run
+was independently verified PARTIAL after a batch-response timeout;
 the September 7 execution evidence below is historical.
 
 Current recovery and live ledger evidence are consolidated in [daily workflow acceptance](../mvp/DAILY_WORKFLOW_ACCEPTANCE.md). The frozen M4 evaluation is retired; [v0.3](../dogfood/M4_REAL_USE_EVALUATION_v0.3.md) evaluates this integrated boundary prospectively after acceptance.
@@ -31,10 +93,12 @@ Current recovery and live ledger evidence are consolidated in [daily workflow ac
 The [September 8 backend receipt requirements](MAIL_SCAN_BACKEND_LEDGER_REQUIREMENTS_2026-09-08.md)
 record a target responsibility change: GPT retains evidence interpretation and
 authorized business operations; the backend maintains run identity, processing
-progress and receipt aggregation in the [locally implemented opt-in mode](MAIL_SCAN_BACKEND_LEDGER.md).
+progress and receipt aggregation in the [deployed opt-in mode](MAIL_SCAN_BACKEND_LEDGER.md).
 It preserves this core flow and selects no API executor or replacement scheduler.
-Deployment and platform acceptance remain pending; existing saved task prompts
-continue to use the deployed contracts.
+Migration 013 and the 30-tool server contract (including bodyContinuation) are
+deployed and release-verified.
+Actual hosted manual/scheduled acceptance remains pending; existing saved task
+prompts still use compatible LEGACY commands until explicitly updated after discovery.
 
 Two Gmail accounts -> daily ChatGPT Update Job Tracker -> structured observations,
 applications, supported state changes and action tasks -> Workspace cloud database

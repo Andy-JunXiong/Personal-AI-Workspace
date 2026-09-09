@@ -17,6 +17,9 @@
 .email-check{padding:20px;margin:20px 0}.email-check h2{font-size:19px;margin:0 0 12px}.email-check p{line-height:1.6}.email-check .context-handoff{margin-top:8px}
 .saved-text { white-space: pre-wrap; overflow-wrap: anywhere; }
 .application-profile { padding: 24px; }
+.resume-association { display: grid; gap: 8px; min-width: 0; overflow-wrap: anywhere; margin-top: 12px; }
+.resume-association + .resume-association { border-top: 1px solid var(--line); margin-top: 20px; padding-top: 20px; }
+.resume-association details p { margin-top: 8px; }
 .application-date { font-size: 1rem; }
 .match-table { overflow-x: auto; }
 .match-table table { width: 100%; border-collapse: collapse; text-align: left; }

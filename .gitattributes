@@ -1,2 +1,4 @@
 # Skill packages compare canonical source bytes with Git; preserve LF on Windows.
 .agents/skills/** text eol=lf
+# Deployment scripts execute on Linux; do not convert them to CRLF on Windows.
+*.sh text eol=lf
