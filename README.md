@@ -74,7 +74,7 @@ Source commit `1451def` was pushed and independently verified on GitHub main.
 The next operational gate remains the first
 actual September 10 scheduled execution described below.
 
-The latest release is `dossier-20260909-r1`, retaining
+The earlier `dossier-20260909-r1` release retained
 [Drive resume association](docs/architecture/APPLICATION_RESUME_ASSOCIATIONS.md),
 migration 014 and the mail-search workflow below.
 375 tests passed. Production backup/recovery, source checks, health and data
@@ -101,7 +101,7 @@ September 10. Actual scheduled acceptance remains pending.
 
 | Area | Delivered and verified | Remaining gate |
 | --- | --- | --- |
-| Production | `dossier-20260909-r1`, migrations 001–014, 30 MCP tools; 375 tests, build, backup/recovery, health and pre/post-cutover data preservation passed; source commit `1f43448` published | Fresh full website keyword-check batch and first actual scheduled execution remain separate gates |
+| Production | `library-20260909-r4`, migrations 001?015; 384 tests, build, backup/recovery, health and data preservation passed; runtime source `b8da4bb` | Ten candidate JDs still missing; alert coverage incomplete; external matching disabled |
 | Durable operations | Applications, attributable observations, lifecycle transitions, Tasks, candidates, recommendation runs and scan receipts share one Workspace database | Sustained daily use remains to be evaluated |
 | Website | [Job Search](https://workspace.ai-radar-lab.com/workspace/job-search/today): Today, inventory, timelines, JD/skill reports and resume file/version links | Historical JD and skill reports still need source-grounded backfill |
 | Mail search | Both mailboxes; subject keywords, stored companies and linked exact senders; normal 24-hour / maximum 72-hour recovery; matching-body review and deduplication | New applications require explicit submission-confirmation evidence; filtered completion does not cover every email |
@@ -110,11 +110,13 @@ September 10. Actual scheduled acceptance remains pending.
 | Resume association | Sixteen Drive candidate files/revisions linked to nine existing applications and read back | Actual submitted-file/version confirmation remains pending; daily unattended Drive discovery is not integrated |
 | Evaluation | [M4 v0.3](docs/dogfood/M4_REAL_USE_EVALUATION_v0.3.md) adopted, not started | Establish the integrated baseline after scheduled acceptance |
 
-**Next session:** check the retained task's actual scheduled result against its
-Workspace run, matching scope, source progress and website. Then use confirmed
-application materials for JD/resume comparison and interview preparation.
-See [daily acceptance](docs/mvp/DAILY_WORKFLOW_ACCEPTANCE.md) and the
-[resume workflow](docs/architecture/APPLICATION_RESUME_ASSOCIATIONS.md).
+**Session closed for September 9.** Next session, follow the
+[library restart checklist](docs/architecture/JOB_LIBRARY_WORKFLOW.md#session-closeout-and-restart-point---2026-09-09):
+collect full candidate JDs, resolve alert coverage gaps and consolidate attributable
+experience sources. External matching remains disabled by user choice. Separately
+check the retained task's actual scheduled result against its Workspace receipt;
+see [daily acceptance](docs/mvp/DAILY_WORKFLOW_ACCEPTANCE.md). Today's closeout is
+documentation and GitHub publication only.
 
 ### Historical whole-mailbox recovery
 

@@ -2,6 +2,28 @@
 
 ## Current status — 2026-09-09
 
+### Final session closeout - source library and candidate storage
+
+The current release is `library-20260909-r4`, source `b8da4bb`, superseding
+current-release labels in the earlier same-day entries below. See the
+[active workflow and restart checklist](docs/architecture/JOB_LIBRARY_WORKFLOW.md#session-closeout-and-restart-point---2026-09-09)
+for the next session and [README](README.md) for the reconciled runtime inventory.
+
+Verified results: 85 private library records, ten SEEK alert candidates with
+original references, zero full candidate JDs and zero fit records. The 24 existing
+applications remain preserved. External model processing was declined and remains
+disabled; no library matching call ran. Alert coverage is incomplete, including an
+empty HTTP 204 response from the second mailbox. Native LinkedIn/SEEK sign-in is
+not implemented. All 384 implementation tests and release/readback checks passed.
+
+The user stopped work for today. This closeout updates documentation and publishes
+to main only. Next preparation work is full JD collection and attributable
+experience consolidation; keep external matching disabled. Actual September 10
+scheduled application-mail acceptance remains a separate operational gate.
+Publication will be checked against remote main after this documentation commit.
+
+### Earlier same-day evidence
+
 Latest correction: Jun requires ongoing-only follow-up and keyword-based mail
 checks. The two Amazon applications were already REJECTED/CLOSED; bulk target
 selection was wrong. The [correction ledger](docs/architecture/MAIL_SCAN_BACKEND_LEDGER.md#ongoing-only-keyword-follow-up--2026-09-09)

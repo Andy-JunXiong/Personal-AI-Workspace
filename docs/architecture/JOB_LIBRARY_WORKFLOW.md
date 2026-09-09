@@ -99,6 +99,38 @@ Migration 015 adds four empty tables and an active-run uniqueness index. The CLI
 optimistic versions, one transaction and source-by-source readback. Source documents
 and user-specific corrections must never be committed to this public repository.
 
+## Session closeout and restart point - 2026-09-09
+
+The user paused development for today and requested documentation, commit and
+push to GitHub main only. Production remains `library-20260909-r4`; this closeout
+does not deploy code, start another import or change application state.
+
+The verified library and candidate references preserve reusable source material
+and provide inputs for later requirement comparison and tailored resumes. Full JDs
+and reviewed experience evidence are the next preparation gap. The library is not
+yet a consolidated, independently verified interview fact base.
+
+Resume next session from these recorded gates:
+
+1. Obtain full JDs for the ten saved candidates through usable original posting
+   links or supplied text. Keep unavailable descriptions explicit; do not invent
+   job requirements or treat reminder marketing as application progress.
+2. Investigate the empty HTTP 204 alert-list response and bounded mailbox coverage.
+   No direct LinkedIn posting was extracted; native account integration remains
+   unavailable in the current tool setup.
+3. Review and consolidate sources into attributable experience/interview cases,
+   preserving original documents and confirmed corrections.
+4. Keep `PAW_JOB_LIBRARY_EXTERNAL_MATCHING` off. The user declined external model
+   processing; do not retry or enable it without new explicit authorization for
+   that destination and purpose.
+5. Separately inspect the retained September 10, 08:00 Australia/Sydney daily
+   application-mail task's actual receipt. A manual candidate import does not
+   satisfy scheduled application-mail acceptance.
+
+Private resumes, correction text, raw alert URLs and local import artifacts stay
+outside this public repository. This documentation-only closeout uses diff checks
+and remote-main verification. The prior 384-test result is retained, not rerun.
+
 ## Validation and release
 
 Current production release `library-20260909-r4` went live at 2026-09-09T11:16:09Z,
