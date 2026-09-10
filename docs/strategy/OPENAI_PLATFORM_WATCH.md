@@ -257,21 +257,16 @@ condition. API detail no longer occupies the main summary. Missing-source and
 no-material-change behavior remain explicit in the Skill. The new scheduled
 reasoning quality is NOT_TESTED until an actual revised run is reviewed.
 
-The revision is published as [draft PR #21](https://github.com/Andy-JunXiong/Personal-AI-Workspace/pull/21).
-The weekly task now explicitly loads procedure and editorial example commit
-`001bef2589aed8b4c877b95fbd450fcf688de951`, pending merge, while its reviewed
-scan cutoff remains unchanged. Local Skill content/reference checks and exact
-GitHub readback passed. No application suite was needed for these instructions.
+The revision originated in [PR #21](https://github.com/Andy-JunXiong/Personal-AI-Workspace/pull/21)
+and is included in the user-authorized September 10 main publication.
+The saved weekly task now explicitly loads procedure and editorial example commit
+`001bef2589aed8b4c877b95fbd450fcf688de951`, retained as a fixed procedure version. Reopening its editor
+confirmed the exact complete prompt and Tuesday 09:00 / September 15 schedule.
+The reviewed scan cutoff remains unchanged. Local Skill content/reference checks
+and exact GitHub readback passed. No application suite was needed for these
+instructions; revised scheduled reasoning quality remains NOT_TESTED.
 
 ## Execution layer v1 — 2026-09-10
-
-**Post-merge handoff (local follow-up):** The user merged PR #20, confirmed through
-GitHub main at `70c95857e2a3751cd9615c66e64825f23b2b0d4a`. Both Skill blob SHAs
-match the accepted trial. The weekly task's procedure and reviewed-record pins
-were updated to this merge commit, with fresh main still resolved each run.
-The weekly Tuesday 09:00 Australia/Sydney schedule and September 15 first run
-remain configured. References below to a draft or pending merge describe the
-pre-merge setup history. This local follow-up has not itself been published.
 
 ### Continuity and benefits
 

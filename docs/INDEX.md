@@ -13,8 +13,9 @@
 - [Application calendar and ongoing default](mvp/APPLICATION_CALENDAR_2026-09-09.md): two-month submission timeline and focused application list.
 
 Start with [README](../README.md) for current state, [core workflow](architecture/CORE_JOB_WORKFLOW.md)
-for product authority, and [current release](architecture/JOB_LIBRARY_WORKFLOW.md#validation-and-release) for deployment evidence.
+for product authority, and [current release](architecture/RESUME_EDITOR.md#gutter-navigation-correction--2026-09-10) for deployment evidence.
 [Project kickoff](../PROJECT_KICKOFF.md) retains the chronological project record.
+[Project history](HISTORY.md) preserves the dated release and milestone narrative relocated from README.
 The [September 9 restart checklist](architecture/JOB_LIBRARY_WORKFLOW.md#session-closeout-and-restart-point---2026-09-09) records remaining JD, alert coverage and authorization gates.
 
 This index covers all Markdown under docs/ (other than this index), the three
@@ -65,7 +66,7 @@ deployment, manual acceptance and scheduled acceptance separately.
 | [UPDATE JOB TRACKER — WORKSPACE WRITE MODE](mvp/UPDATE_JOB_TRACKER_WORKSPACE_PROMPT.txt) | Current saved and activated daily JOB_METADATA policy, exactly verified against retained task after reload. Normal 24 hours / maximum 72 hours, confirmation-based new applications, metadata follow-up and quiet complete/no-change reporting. |
 | [Workspace Skills Platform Acceptance Results](../tests/evaluations/workspace-skills-platform-acceptance-results-template.md) | Maintained platform acceptance procedure/template; completion requires separately recorded real evidence. |
 | [Workspace Skills Platform Acceptance Runbook](../tests/evaluations/workspace-skills-platform-acceptance-runbook.md) | Maintained platform acceptance procedure/template; completion requires separately recorded real evidence. |
-| [OpenAI Platform Watch](strategy/OPENAI_PLATFORM_WATCH.md) | Active governance contract and maintained strategy ledger; execution v1 adds a repo-local read-only Skill, the September 10 manual baseline and one actual scheduled run with scoped parity accepted. New findings await human disposition. Job Search Skill packaging is unchanged. |
+| [OpenAI Platform Watch](strategy/OPENAI_PLATFORM_WATCH.md) | Active governance contract and maintained strategy ledger; execution v1 adds a repo-local read-only Skill, the September 10 manual baseline and one actual scheduled run with scoped parity accepted. Reports now prioritize architectural comparisons and choices; revised scheduled reasoning quality awaits review. New findings await human disposition. Job Search Skill packaging is unchanged. |
 
 ## Historical evidence
 
