@@ -415,7 +415,27 @@ Execution-quality acceptance is scoped to the six gates above. The manual baseli
 and this comparison establish `2026-09-10T05:50:14Z` as the reviewed execution
 cutoff for subsequent delta scans; strategic decisions remain PENDING. No M4
 observation period or Job Tracker business-write acceptance is activated.
-Weekly scheduling status is recorded below after checking the saved task.
+### Weekly operation
+
+**OpenAI Platform Watch — 每周** is enabled in the existing ChatGPT Work
+[task conversation](https://chatgpt.com/c/6aa245c5-ccdc-83ec-b6bb-86d22bb88c47),
+every Tuesday at 09:00 Australia/Sydney, first run September 15. The saved task
+editor independently showed weekly / Tuesday / 09:00 / September 15, an enabled
+Pause control, and the complete six-part prompt. The completed one-off task and
+all unrelated tasks were retained.
+
+Each run resolves fresh main once and uses the fixed procedure commit above.
+Until a newer reviewed scan is available in main, it explicitly reads the
+reviewed execution record at `9a4e047e496e5f3b0d780536f9bfdb61e8bfebf8`; that
+development-branch record is never presented as main. It retains the reviewed
+cutoff, uses accessible task history only for deduplication, reports review
+backlog or missing history, and proposes a new cutoff without writing the ledger.
+This pins the usable procedure while PR #20 awaits merge. Updating that pin is
+foreground maintenance, not authority granted to a Watch run.
+
+The report is delivered to this ChatGPT task conversation as a one-minute Chinese
+summary with an evidence appendix. Scheduled recurrence is configured, but its
+first weekly result and longer-term reliability have not yet been observed.
 
 ## 2026-09-08 current boundary review
 
