@@ -1050,3 +1050,36 @@ it("previews an unsaved resume with scoped authority without persisting it",asyn
     expect((await w.request("/workspace/job-search/today",{headers:{cookie}})).headers.get("content-security-policy")).not.toContain("frame-src");
   }finally{exporter.mockRestore();}
 });
+it("creates and exports scoped job resume variants without modifying the base or accepting submission",async()=>{
+  const w=await setup(false);w.link();const content=resumeFixture();
+  w.service.resumeService.initialize(Buffer.from("PKsynthetic"),content,"https://drive.google.com/file/d/example/view");
+  const cookie=w.sessionCookie(await w.finish(await w.start()));
+  const {csrfToken}=await (await w.request("/api/v1/session",{headers:{cookie}})).json();
+  const headers={cookie,origin:webOrigin,"x-csrf-token":csrfToken,"content-type":"application/json"};
+  const input={name:"Nuix 中文",targetType:"APPLICATION",targetId:w.projectId,expectedBaseVersion:1,intentKey:randomUUID()},path="/api/v1/job-search/resume/variants";
+  expect((await w.request(path)).status).toBe(401);
+  expect((await w.request(path,{method:"POST",headers:{cookie},body:JSON.stringify(input)})).status).toBe(403);
+  expect((await w.request(path,{method:"POST",headers:{...headers,origin:"https://evil.test"},body:JSON.stringify(input)})).status).toBe(403);
+  const response=await w.request(path,{method:"POST",headers,body:JSON.stringify(input)});expect(response.status).toBe(200);
+  const saved=await response.json(),id=saved.variant.id,route=path+"/"+id;
+  expect(await (await w.request(path,{method:"POST",headers,body:JSON.stringify(input)})).json()).toEqual(saved);
+  const draft={...content,summary:"For Nuix only"};
+  expect((await w.request(route,{method:"POST",headers,body:JSON.stringify({expectedVersion:1,content:draft})})).status).toBe(200);
+  expect(w.service.resumeService.get()?.content).toEqual(content);
+  const page=await w.request("/workspace/job-search/resume/variants/"+id,{headers:{cookie}});
+  expect(page.status).toBe(200);expect(page.headers.get("content-security-policy")).toContain("frame-src blob:");
+  expect(await page.text()).toContain(`data-api-path="/variants/${id}"`);
+  const exporter=vi.spyOn(resumeExport,"exportResume").mockResolvedValue(Buffer.from("%PDF-1.4 synthetic"));
+  try{
+    expect((await w.request(route+"/export",{method:"POST",headers:{...headers,"x-csrf-token":"bad"},body:'{"version":2,"format":"pdf"}'})).status).toBe(403);
+    const file=await w.request(route+"/export",{method:"POST",headers,body:'{"version":2,"format":"pdf"}'});
+    expect(file.status).toBe(200);expect(file.headers.get("content-disposition")).toContain("Nuix%20%E4%B8%AD%E6%96%87-v2.pdf");
+    expect(exporter).toHaveBeenCalledWith(expect.objectContaining({content:draft}),"pdf");
+    const preview=await w.request(route+"/preview",{method:"POST",headers,body:JSON.stringify({version:2,content:{...draft,summary:"Unsaved"}})});
+    expect(preview.status).toBe(200);expect(w.service.resumeService.get(id)?.content.summary).toBe("For Nuix only");
+    exporter.mockImplementationOnce(async()=>{w.service.resumeService.save({expectedVersion:2,content:{...draft,summary:"Concurrent"}},id);return Buffer.from("%PDF-1.4 stale");});
+    expect((await w.request(route+"/export",{method:"POST",headers,body:'{"version":2,"format":"pdf"}'})).status).toBe(409);
+  }finally{exporter.mockRestore();}
+  expect((await w.request(path+"/"+randomUUID(),{headers:{cookie}})).status).toBe(404);
+  expect((await w.request("/api/v1/job-search/candidates",{method:"POST",headers,body:"{}"})).status).toBe(404);
+});

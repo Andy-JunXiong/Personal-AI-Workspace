@@ -1,3 +1,4 @@
+import {z} from "zod";
 import { Router, type Request } from "express";
 import { fileURLToPath } from "node:url";
 import type { WorkspaceService } from "../application/workspace-service.js";
@@ -38,7 +39,7 @@ export function createJobSearchPageRouter(serviceFor: (request: Request) => Work
     router.get(`${rootPath}${path}`, (request, response) => {
       let authenticated = false;
       // Keep login return paths object-only. Filters are intentionally discarded.
-      const returnTo = /^\/workspace\/job-search\/(?:today|library|resume|platform-watch(?:\/[a-f0-9-]{36})?|applications(?:\/[a-f0-9-]{36})?|tasks\/[a-f0-9-]{36}|jobs(?:\/[a-f0-9-]{36})?)$/u.test(request.path)
+      const returnTo = /^\/workspace\/job-search\/(?:today|library|resume(?:\/variants\/[a-f0-9-]{36})?|platform-watch(?:\/[a-f0-9-]{36})?|applications(?:\/[a-f0-9-]{36})?|tasks\/[a-f0-9-]{36}|jobs(?:\/[a-f0-9-]{36})?)$/u.test(request.path)
         ? request.path : `${rootPath}/applications`;
       try {
         const service = serviceFor(request);
@@ -74,7 +75,8 @@ export function createJobSearchPageRouter(serviceFor: (request: Request) => Work
     request.params.id as string, timeZone, new Date(now()).toISOString(), completionEnabled); });
   page("/jobs", (service, request) => candidateListView(service,
     query(request, ["q", "decision", "linked", "sort", "cursor", "pageSize"]), timeZone, matchingEnabled));
-  page("/resume", (service, request) => { query(request, []); return resumeView(service); });
+  page("/resume", (service, request) => { const q=query(request, ["candidateId","projectId"]); if(q.candidateId&&q.projectId)throw new ValidationError("Select one job target"); const id=q.candidateId??q.projectId; return resumeView(service,undefined,id?{type:q.candidateId?"CANDIDATE":"APPLICATION",id:z.uuid().parse(id)}:undefined); });
+  page("/resume/variants/:id", (service, request) => { query(request, []); return resumeView(service,z.uuid().parse(request.params.id)); });
   page("/library", (service, request) => libraryView(service, String(query(request, ["q"]).q ?? "")));
   page("/platform-watch", (service, request) => { query(request, []); return platformWatchView(service,
     timeZone, new Date(now()).toISOString(), true); });

@@ -2,11 +2,11 @@ import { execFileSync, spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import {
   appendFileSync,
-  cpSync,
   existsSync,
   mkdirSync,
   mkdtempSync,
   readFileSync,
+  readdirSync,
   rmSync,
   writeFileSync,
 } from "node:fs";
@@ -39,14 +39,24 @@ function packageSkills(outputDirectory: string) {
   return JSON.parse(readFileSync(join(outputDirectory, "release-manifest.json"), "utf8"));
 }
 
+// Node native cpSync aborts on this Windows OneDrive checkout. Copy fixture bytes
+// explicitly; the package still verifies exact content against its Git commit.
+function copyFixtureTree(source: string, destination: string): void {
+  mkdirSync(destination, { recursive: true });
+  for (const entry of readdirSync(source, { withFileTypes: true })) {
+    const from = join(source, entry.name), to = join(destination, entry.name);
+    if (entry.isDirectory()) copyFixtureTree(from, to);
+    else if (entry.isFile()) writeFileSync(to, readFileSync(from));
+    else throw new Error(`Unexpected fixture source: ${from}`);
+  }
+}
+
 function createRepositoryFixture(label: string) {
   const fixtureRoot = mkdtempSync(join(tmpdir(), `paw-skills-repository-${label}-`));
   temporaryRoots.push(fixtureRoot);
   mkdirSync(resolve(fixtureRoot, "scripts"), { recursive: true });
-  cpSync(packageScript, resolve(fixtureRoot, "scripts/package-workspace-skills.mjs"));
-  cpSync(resolve(repositoryRoot, ".agents"), resolve(fixtureRoot, ".agents"), {
-    recursive: true,
-  });
+  writeFileSync(resolve(fixtureRoot, "scripts/package-workspace-skills.mjs"), readFileSync(packageScript));
+  copyFixtureTree(resolve(repositoryRoot, ".agents"), resolve(fixtureRoot, ".agents"));
 
   const git = (argumentsList: string[]) =>
     execFileSync("git", argumentsList, { cwd: fixtureRoot, encoding: "utf8" }).trim();

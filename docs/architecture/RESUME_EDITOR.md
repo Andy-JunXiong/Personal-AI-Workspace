@@ -4,6 +4,9 @@ Status: deployed to AWS Lightsail as `resume-editor-20260909-r3` on
 2026-09-10 Sydney time (2026-09-09 UTC), with migration 016 and the private
 baseline initialized as version 1. Production verification is recorded below.
 
+**September 11 follow-up:** [named per-job versions](RESUME_VARIANTS.md) are implemented
+and locally verified; migration 018 and real-data acceptance are not deployed yet.
+
 ## Continuity and benefits
 
 ### Upstream requirement

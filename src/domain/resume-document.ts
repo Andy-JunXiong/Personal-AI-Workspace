@@ -21,3 +21,8 @@ export const resumeDocumentSchema=z.object({
 }).strict();
 export type ResumeDocument=z.infer<typeof resumeDocumentSchema>;
 export const resumeSaveSchema=z.object({expectedVersion:z.number().int().positive(),content:resumeDocumentSchema}).strict();
+export const resumeVariantCreateSchema=z.object({
+  name:short.transform(s=>s.trim()).pipe(z.string().min(1).max(120)),
+  targetType:z.enum(["CANDIDATE","APPLICATION"]),targetId:z.uuid(),
+  expectedBaseVersion:z.number().int().positive(),intentKey:z.uuid()
+}).strict();

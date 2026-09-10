@@ -1,5 +1,27 @@
 # Core job workflow — authoritative product boundary
 
+## Solution alignment — 2026-09-11
+
+The [current solution and roadmap](../strategy/PRODUCT_SOLUTION_ROADMAP.md) preserves
+this domain contract. ChatGPT remains the primary interaction host and the website
+retains its admitted reporting/editing operations. PAW owns attributable business
+records and domain admission; Gmail/Drive remain authoritative for their native
+records. User authority, platform invocation permission and domain admission are
+separate gates. Skills describe procedures rather than granting any of those gates.
+
+The next planned read capability composes a bounded single-application preparation
+context from existing records, including explicitly identified resume versions.
+It creates no second context store and does not turn suggested actions into grants.
+This capability and second-client acceptance remain future work, not current MCP
+features. See the roadmap for sequence and release/real-data gates.
+
+## Per-job resume copies — local source, September 11
+
+[Named resume versions](RESUME_VARIANTS.md) extend the accepted base editor with
+independent candidate/application working copies. Scoped Web authorization is
+retained; creation and editing do not confirm submission or mutate lifecycle/Tasks.
+Migration 018 and real-data acceptance remain pending deployment.
+
 ## Platform Watch report decisions — source P0, 2026-09-10
 
 The source now contains a bounded [report-to-decision contract](PLATFORM_WATCH_REPORT_DECISIONS.md)

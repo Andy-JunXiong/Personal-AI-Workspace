@@ -1,5 +1,9 @@
 # Project Kickoff — Personal AI Workspace v0.1
 
+**Current planning entry, September 11:** [solution and roadmap](docs/strategy/PRODUCT_SOLUTION_ROADMAP.md).
+Use [README](README.md) for the reconciled runtime status. The dated entries below
+retain their original release scope; they do not supersede the current plan.
+
 ## Current status — 2026-09-09
 
 ### Final session closeout - source library and candidate storage

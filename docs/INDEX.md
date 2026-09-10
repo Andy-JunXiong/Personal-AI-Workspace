@@ -1,6 +1,8 @@
 # Documentation index
 
-- [September 10 session handoff](mvp/SESSION_CLOSE_2026-09-10.md): UI/resume releases, Watch reading correction and latest source-based report; three verified snapshots, with weekly-prompt, human-decision and daily-run gates remaining.
+- [整体方案与项目路线图](strategy/PRODUCT_SOLUTION_ROADMAP.md): 当前规划入口；职位简历发布 → 单申请只读上下文 → 有依据的求职准备，独立跟进每日同步与 Watch 验收。规划与部署状态分别记录。
+
+- [September 10 session handoff](mvp/SESSION_CLOSE_2026-09-10.md): UI/resume releases, Watch reading correction and latest source-based report; three verified snapshots, with human-decision and daily-run gates remaining; September 11 weekly prompt synchronization is recorded in the Watch ledger.
 
 - [Today updates and candidate layout](mvp/TODAY_AND_JOBS_2026-09-10.md): deployed as today-jobs-20260910-r1; real Nine update, 10 candidate rows and detail layout accepted. Backup/recovery and unchanged database fingerprints passed; synthetic previews cleared.
 
@@ -35,9 +37,11 @@ deployment, manual acceptance and scheduled acceptance separately.
 
 | Document | Status / scope |
 | --- | --- |
+| [PAW solution and project roadmap](strategy/PRODUCT_SOLUTION_ROADMAP.md) | Active planning and ownership baseline, September 11; future stages explicitly unimplemented. Existing domain contracts and ADR gates remain authoritative for implementation. |
 | [Development Continuity and Benefits Standard v0.1](DEVELOPMENT_CONTINUITY_STANDARD.md) | Required development and document-index maintenance standard. |
 | [Risk-based verification](VERIFICATION.md) | Active local verification levels, test matrix, full-suite gate and stopping/reuse rules. Existing CI and release requirements retained; procedural repository Skill only. |
 | [Platform Watch report-to-decision contract](architecture/PLATFORM_WATCH_REPORT_DECISIONS.md) | P0 deployed with migration 017, preserved old data and scoped Web actions while general writes remain off. No MCP/task automation change; real-report and human-decision acceptance tracked separately in the release ledger. |
+| [Named per-job resume versions](architecture/RESUME_VARIANTS.md) | September 11 source and local verification complete; migration 018, independent candidate/application copies and scoped editor/export routes. Production and real-data acceptance pending. |
 | [Nine-region resume editor](architecture/RESUME_EDITOR.md) | Gutter navigation correction deployed as resume-rail-20260910-r1: nine sticky ticks beside resume cards, names on hover/focus and active-region highlighting; replaces the earlier sidebar placement. Preview remains at the right of save controls. Desktop/390px and mouse/keyboard navigation passed; version 5 content/order retained. Section/item ordering deployed as resume-order-20260910-r1: all nine regions and five entry lists have up/down controls; save, preview and export preserve order and reference spacing. All 396 tests have passing evidence, plus type checks, build, backup/recovery and public checks. Live two-page reordered preview inspected; latest saved version 3 and real content/order retained. Named per-job versions remain separate. |
 | [Application resume associations](architecture/APPLICATION_RESUME_ASSOCIATIONS.md) | Deployed resume-20260909-r3 event-conflict correction; 368 tests, type checks, build, backup/recovery, data preservation and web checks pass. Source commit 1451def pushed and verified on GitHub main. Sixteen candidate file/revision associations retained. One candidate-based preparation report saved/read back separately; actual submission confirmation remains pending. Daily Drive automation is not yet integrated. |
 | [Backend-managed mail scan receipts](architecture/MAIL_SCAN_BACKEND_LEDGER.md) | Ongoing-only keyword follow-up deployed as ongoing-20260909-r1 (369 tests): 12 ongoing targets, 12 ended applications excluded; metadata-only website reads, backup/recovery and representative live keyword probe pass. Migration 014 / 30 tools retained; new full-batch receipt pending. 363 tests and release verification passed. Third JOB_METADATA run COMPLETE/CLOSED for both matching scopes; website matches, queues empty and learned sender reused. Filtered manual coverage/readback passed; retained daily policy saved/verified and enabled at 08:00 Australia/Sydney, obsolete task paused. First actual scheduled execution pending. |

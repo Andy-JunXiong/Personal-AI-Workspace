@@ -93,11 +93,11 @@ function refreshOrderControls(form){
 }
 const initialForm=editor();if(initialForm)refreshOrderControls(initialForm);
 /** @param {string} path @param {unknown} body */
-async function request(path,body){
+async function request(path,body,basePath=editor()?.dataset.apiPath||''){
   const session=await fetch('/api/v1/session',{cache:'no-store',signal:AbortSignal.timeout(15000)});
   if(!session.ok)throw new Error('登录已失效。请保留当前输入，重新登录后再保存。');
   const {csrfToken}=await session.json();
-  const response=await fetch('/api/v1/job-search/resume'+path,{method:'POST',headers:{'content-type':'application/json','x-csrf-token':csrfToken},body:JSON.stringify(body),signal:AbortSignal.timeout(100000)});
+  const response=await fetch('/api/v1/job-search/resume'+basePath+path,{method:'POST',headers:{'content-type':'application/json','x-csrf-token':csrfToken},body:JSON.stringify(body),signal:AbortSignal.timeout(100000)});
   if(!response.ok)throw new Error(response.status===409?'简历已在其他窗口更新，或正在导出。当前输入已保留，请稍后重试；若版本冲突，请保留输入后重新打开页面。':response.status===422?'请检查链接、内容长度和必需区域。当前输入已保留。':'操作未完成，当前输入已保留，请稍后重试。');
   return response;
 }
@@ -114,7 +114,7 @@ document.addEventListener('submit',async event=>{
   const status=form.querySelector('[data-resume-status]');if(!status)return;
   const content=readContent(form);setBusy(form,true);status.textContent='正在保存…';
   try{const response=await request('',{content,expectedVersion:Number(form.dataset.version)});const saved=await response.json();
-    form.dataset.version=String(saved.recordVersion);form.dataset.content=JSON.stringify(saved.content);delete form.dataset.dirty;
+    form.dataset.version=String(saved.recordVersion);if(!form.dataset.apiPath){const create=document.querySelector('[data-resume-create]');if(create instanceof HTMLFormElement)create.dataset.baseVersion=String(saved.recordVersion);}form.dataset.content=JSON.stringify(saved.content);delete form.dataset.dirty;
     status.textContent=`已保存 · 版本 ${saved.recordVersion}`;
   }catch(error){status.textContent=error instanceof Error?error.message:'保存失败，输入已保留。';}
   finally{setBusy(form,false);}
@@ -166,15 +166,44 @@ document.addEventListener('click',async event=>{
     try{
       if(draft){
         const saved=await (await request('',{content:draft,expectedVersion:Number(form.dataset.version)})).json();
-        form.dataset.version=String(saved.recordVersion);form.dataset.content=JSON.stringify(saved.content);delete form.dataset.dirty;
+        form.dataset.version=String(saved.recordVersion);if(!form.dataset.apiPath){const create=document.querySelector('[data-resume-create]');if(create instanceof HTMLFormElement)create.dataset.baseVersion=String(saved.recordVersion);}form.dataset.content=JSON.stringify(saved.content);delete form.dataset.dirty;
         const savedStatus=form.querySelector('[data-resume-status]');if(savedStatus)savedStatus.textContent=`已保存 · 版本 ${saved.recordVersion}`;
       }
       const format=button.dataset.resumeExport||button.dataset.previewExport||'pdf',response=await request('/export',{format,version:Number(form.dataset.version)});
       const blob=await response.blob(),url=URL.createObjectURL(blob),a=document.createElement('a');
-      a.href=url;a.download=`Resume-v${form.dataset.version}.${format}`;a.click();setTimeout(()=>URL.revokeObjectURL(url),60000);
+      a.href=url;a.download=`${(form.dataset.filename||'Resume').replace(/[<>:"/\\|?*\x00-\x1f]/gu,'_')}-v${form.dataset.version}.${format}`;a.click();setTimeout(()=>URL.revokeObjectURL(url),60000);
       status.textContent=`已导出 ${format.toUpperCase()} · 版本 ${form.dataset.version}`;
     }catch(error){status.textContent=error instanceof Error?error.message:'导出失败，请稍后重试。';}
     finally{setBusy(form,false);}
   }
   refreshOrderControls(form);
+});
+document.addEventListener('change',event=>{
+  const select=event.target;
+  if(!(select instanceof HTMLSelectElement))return;
+  if(select.matches('[data-resume-switch]')){window.location.assign(select.value);return;}
+  const create=select.closest('[data-resume-create]');
+  if(create&&select.name==='target'){
+    const name=create.querySelector('input[name="name"]');
+    if(name instanceof HTMLInputElement)name.value=select.selectedOptions[0]?.dataset.copyName||'';
+  }
+});
+document.addEventListener('submit',async event=>{
+  const form=event.target;
+  if(!(form instanceof HTMLFormElement)||!form.matches('[data-resume-create]'))return;
+  event.preventDefault();if(form.dataset.busy==='true')return;
+  const status=form.querySelector('[data-resume-create-status]');if(!status)return;
+  if(editor()?.dataset.busy==='true'){status.textContent='请等待当前保存或导出完成。';return;}
+  if(editor()?.dataset.dirty==='true'){status.textContent='请先保存当前修改，再创建职位版本。';return;}
+  const fields=new FormData(form),[targetType,targetId]=String(fields.get('target')||'').split(':');
+  const payload={name:String(fields.get('name')||''),targetType,targetId,expectedBaseVersion:Number(form.dataset.baseVersion)};
+  const serialized=JSON.stringify(payload);
+  if(form.dataset.requestBody!==serialized){form.dataset.intent=crypto.randomUUID();form.dataset.requestBody=serialized;}
+  form.dataset.busy='true';const button=form.querySelector('button[type="submit"]');if(button instanceof HTMLButtonElement)button.disabled=true;
+  status.textContent='正在创建独立版本…';
+  try{
+    const response=await request('/variants',{...payload,intentKey:form.dataset.intent},'');
+    const saved=await response.json();window.location.assign('/workspace/job-search/resume/variants/'+encodeURIComponent(saved.variant.id));
+  }catch(error){status.textContent=error instanceof Error?error.message:'创建失败，输入已保留。';}
+  finally{delete form.dataset.busy;if(button instanceof HTMLButtonElement)button.disabled=false;}
 });

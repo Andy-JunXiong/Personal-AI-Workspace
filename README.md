@@ -2,6 +2,11 @@
 
 **A persistent, evidence-backed work-state layer for ChatGPT. Conversation is an interface, not the system of record.**
 
+Product direction: **The system of record behind your AI agents.** Today, Job
+Search through ChatGPT is the primary supported journey; a second client remains
+an acceptance milestone. See the [current solution and roadmap](docs/strategy/PRODUCT_SOLUTION_ROADMAP.md)
+for ownership boundaries, delivered capabilities and the next release gates.
+
 First domain: Job Search. ChatGPT remains the reasoning and interaction host;
 Workspace owns durable state, evidence, lifecycle admission and cross-conversation
 continuity. See the [authoritative core workflow](docs/architecture/CORE_JOB_WORKFLOW.md).
@@ -83,6 +88,13 @@ the [active contract](docs/architecture/PLATFORM_WATCH_REPORT_DECISIONS.md).
 
 ## What's next
 
+The [September 11 roadmap](docs/strategy/PRODUCT_SOLUTION_ROADMAP.md#5-project-roadmap)
+sets the development sequence: release the locally verified per-job resume copies,
+expose a bounded read-only application preparation context, then enable attributable
+job/interview preparation. Daily unattended-run acceptance and Watch decision
+quality remain separate operational tracks. Generic Spaces, agent runtimes and
+workflow engines are outside this plan.
+
 The next boundary is operational: prove the first unattended daily Job Tracker run
 through its Workspace-owned receipt; a manual success is not a substitute. Autonomous
 lifecycle admission, direct LinkedIn/SEEK account integration, generic workflow
@@ -96,9 +108,11 @@ and independently verified; deliberate human-decision readback is next. The
 rechecks official publications and compares Astra-assisted dossier work, WebMCP
 resume collaboration and Gmail event triggers with current PAW behavior. All
 three recommendations remain pending; the earlier narrative is historical.
-The repo's writing rules are updated, but the saved weekly task still pins
-`001bef2589aed8b4c877b95fbd450fcf688de951` and needs a separate prompt update. Per-job
-named resume versions remain a separate future increment. See the session handoff
+On September 11 the saved weekly task was synchronized to
+`a7d9006ad8f55bd5fa4c0038e5201bec10c038de` and verified after reopening; its
+Tuesday 09:00 schedule is unchanged. [Named per-job resume versions](docs/architecture/RESUME_VARIANTS.md)
+are now implemented and locally verified, with migration 018 prepared. Production
+release and real-data acceptance remain pending. See the session handoff
 and [P0 result](docs/mvp/PLATFORM_WATCH_REPORT_DECISION_P0_RESULTS_2026-09-10.md)
 for acceptance gaps and restart priorities.
 

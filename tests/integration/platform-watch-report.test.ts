@@ -64,6 +64,11 @@ describe("Platform Watch report-to-decision P0", () => {
       for (const file of readdirSync("db/migrations").filter((name) => name.endsWith(".sql") && name < "017_")) {
         copyFileSync(resolve("db/migrations", file), resolve(oldMigrations, file));
       }
+      const watchMigrations = resolve(w.directory, "migrations017");
+      mkdirSync(watchMigrations);
+      for (const file of readdirSync("db/migrations").filter(name => name.endsWith(".sql") && name < "018_")) {
+        copyFileSync(resolve("db/migrations", file), resolve(watchMigrations, file));
+      }
       const before = resolve(w.directory, "before.db");
       const after = resolve(w.directory, "after.db");
       const old = openDatabase(before, oldMigrations);
@@ -71,10 +76,10 @@ describe("Platform Watch report-to-decision P0", () => {
         .ensureDevelopmentIdentity();
       old.close();
       copyFileSync(before, after);
-      openDatabase(after).close();
-      openDatabase(after).close();
+      openDatabase(after, watchMigrations).close();
+      openDatabase(after, watchMigrations).close();
       openDatabase(after, oldMigrations).close();
-      expect(verifyPlatformWatchMigration(before, after)).toMatchObject({
+      expect(verifyPlatformWatchMigration(before, after, watchMigrations)).toMatchObject({
         status: "PASS",
         addedTables: ["platform_watch_decisions", "platform_watch_findings", "platform_watch_reports"],
       });

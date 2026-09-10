@@ -1,3 +1,5 @@
+import {createResumeRouter} from "../../src/auth/resume-router.js";
+import {resumeFixture} from "../helpers/resume-fixture.js";
 // Local UI fixture only. Not imported or emitted by the production build.
 // No database/account arguments: always starts with new synthetic in-memory data.
 import express from "express";
@@ -14,6 +16,7 @@ if (!process.argv.includes("--synthetic")) {
 }
 const now = Date.now();
 const w = createEmptyTestWorkspace({ timeZone: "Australia/Sydney", clock: () => new Date(now) });
+w.service.resumeService.initialize(Buffer.from("PKsynthetic"),resumeFixture(),"https://drive.google.com/file/d/example/view");
 const authority = { type: "EXPLICIT_USER_DEV" as const, confirmed: true as const, reference: "Local synthetic visual fixture" };
 const names = ["示例 · Northstar Studio", "示例 · Paperplane", "示例 · Common Ground", "示例 · Fieldwork", "示例 · Quiet Labs"];
 let firstProject = "";
@@ -59,7 +62,7 @@ for (const [i, role] of ["Senior Software Engineer, Android Site Reliability Eng
   if (i === 2) w.service.jobLibraryService.saveDescription(candidate.id, "Synthetic saved role requirements.", candidate.sourceUrl!);
 }
 const app = express();
-app.use(express.json({ limit: "4kb" }));
+app.use(express.json({ limit: "256kb" }));
 // Operator-only fault injection through this local process's stdin, never HTTP.
 let fault = "normal";
 process.stdin.setEncoding("utf8");
@@ -78,7 +81,7 @@ app.use((_request, response, next) => {
 });
 app.get("/auth/start", (_request, response) => response.type("html").send(loginView(`${rootPath}/today`)));
 // Same-origin fixture framing only; production keeps frame-ancestors 'none'.
-app.get("/preview/narrow", (request, response) => response.type("html").send(`<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><title>390px synthetic layout</title><link rel="stylesheet" href="/preview/narrow.css"></head><body><iframe title="390px 合成页面" src="${rootPath}/${request.query.page === "jobs" ? "jobs" : "today"}" width="390" height="1400"></iframe></body></html>`));
+app.get("/preview/narrow", (request, response) => response.type("html").send(`<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><title>390px synthetic layout</title><link rel="stylesheet" href="/preview/narrow.css"></head><body><iframe title="390px 合成页面" src="${rootPath}/${request.query.page === "resume" ? "resume" : request.query.page === "jobs" ? "jobs" : "today"}" width="390" height="1400"></iframe></body></html>`));
 app.get("/preview/narrow.css", (_request, response) => response.type("css").send("body{margin:20px;background:#e9ebe6}iframe{border:1px solid #cdd7cc;border-radius:12px;background:white}"));
 const previewCsrf = "synthetic-preview-csrf";
 app.get("/api/v1/session", (_request, response) => response.status(fault === "expired" ? 401 : 200)
@@ -105,6 +108,7 @@ app.use("/api/v1/job-search", (request, response, next) => {
   }
   next();
 }, createJobSearchWriteRouter(serviceFor, () => now));
+app.use("/api/v1/job-search", createResumeRouter(serviceFor,request=>{if(request.headers.origin!=="http://127.0.0.1:4173"||request.headers["x-csrf-token"]!==previewCsrf)throw new Error("Synthetic CSRF required");}));
 app.use(createWebAssetsRouter());
 app.use((request, response, next) => {
   if (fault === "normal") { next(); return; }

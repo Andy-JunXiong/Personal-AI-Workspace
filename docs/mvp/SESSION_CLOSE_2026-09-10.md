@@ -12,9 +12,11 @@ releases lead to concrete dossier, resume collaboration and mail-trigger choices
 including both time horizons. Three new recommendations remain pending.
 The source-only/no-entry-point statements below describe this earlier closeout.
 The remaining live report gate is a deliberate human finding disposition.
-The saved weekly task still pins `001bef2589aed8b4c877b95fbd450fcf688de951`;
-publishing the revised repo instructions does not update that task. Current next
-steps are to synchronize its writing instructions, review the next real weekly
+On September 11 the saved weekly task was synchronized and reopened to verify
+the exact prompt, pinned to `a7d9006ad8f55bd5fa4c0038e5201bec10c038de`; see the
+[Watch update](../strategy/OPENAI_PLATFORM_WATCH.md#weekly-task-synchronization--2026-09-11).
+The user selected [per-job resume copies](../architecture/RESUME_VARIANTS.md), now
+implemented locally with production acceptance pending. Review the next real weekly
 report and separately verify the unattended Job Tracker receipt/write/readback.
 The sections below retain the earlier session's historical scope.
 

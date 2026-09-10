@@ -6,6 +6,15 @@
 **Last completed weekly scan:** 2026-09-10 manual baseline, scoped evidence below; findings await human disposition.
 **Next review:** weekly delta scans after the September 10 scoped scheduled acceptance; revisit material events sooner.
 
+**September 11 planning follow-up:** the user requested adopting the architecture
+review into the [overall solution and roadmap](PRODUCT_SOLUTION_ROADMAP.md).
+It prioritizes the pending resume release, a bounded derived application context,
+and attributable preparation before generic abstractions or second-client work.
+External sources retain native-record authority; platform permission, user authority
+and PAW admission remain separate. This records the explicit planning request,
+not an automatic adoption of any stored report finding. Existing live finding
+dispositions and the reviewed scan cutoff are unchanged.
+
 ## Continuity and benefits
 
 **Latest report correction, September 10:** Jun requires development judgments
@@ -16,7 +25,8 @@ fresh retrieval through 22:06 Sydney and verified PAW import. It found no later
 dated entries than the earlier scan's latest logs; new analysis is distinguished
 from new releases. Its three recommendations remain pending. This is report
 evidence, not an accepted roadmap change or an advance of the reviewed scan
-frontier. The saved weekly task still pins its older procedure.
+frontier. The saved weekly task was subsequently synchronized on September 11;
+see the [task synchronization record](#weekly-task-synchronization--2026-09-11).
 
 The user-approved Topic A/B conclusion and [core workflow](../architecture/CORE_JOB_WORKFLOW.md)
 require an explicit current boundary and a maintained correction mechanism. This
@@ -685,3 +695,25 @@ version history, or durable coordination.
 The repository already delegates the affected generic capabilities to ChatGPT
 or keeps them outside the frozen MVP. M4 requires no runtime or architecture
 change.
+
+
+## Weekly task synchronization — 2026-09-11
+
+The existing **OpenAI Platform Watch — 每周** ChatGPT task was updated in place and
+reopened; its saved prompt exactly matched the submitted text. The existing Tuesday
+09:00 Australia/Sydney schedule (first September 15) remains unchanged. Procedure
+and example are now pinned to `a7d9006ad8f55bd5fa4c0038e5201bec10c038de`:
+Skill blob `f8868a3a93706a4cb5bc3337aead6b8c0dfb8693`, example blob
+`fc43a1270bb7a8893bfdc636956371c81b17c854`.
+
+The prompt now leads with freshly retrieved official changes and dates/links,
+then explains specific PAW keep/change choices, alternatives, both time horizons
+and reversal conditions in connected Chinese prose. It recognizes the delivered
+PAW report UI and three imported snapshots. The reviewed cutoff remains
+`2026-09-10T05:50:14Z`; the source-refresh retrieval at
+`2026-09-10T12:06:11.512Z` is not silently promoted to a reviewed baseline.
+
+The user selected per-job resume versions for development; this does not adopt
+any pending finding in PAW. Reports remain advisory/read-only, with no scheduled
+import, business mutation or automatic implementation. No task run was triggered
+in this synchronization; revised scheduled report quality remains pending.

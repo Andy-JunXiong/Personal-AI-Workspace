@@ -30,7 +30,7 @@ import { GmailMcpReader } from "../gmail/mcp-reader.js";
 const SESSION_COOKIE = "__Host-paw_session";
 const LOGIN_COOKIE = "__Host-paw_login";
 const cookieOptions = { secure: true, httpOnly: true, sameSite: "lax" as const, path: "/" };
-const objectRoute = /^\/workspace\/job-search\/(?:today|library|resume|platform-watch(?:\/[a-f0-9-]{36})?|applications(?:\/[a-f0-9-]{36})?|tasks\/[a-f0-9-]{36}|jobs(?:\/[a-f0-9-]{36})?)$/u;
+const objectRoute = /^\/workspace\/job-search\/(?:today|library|resume(?:\/variants\/[a-f0-9-]{36})?|platform-watch(?:\/[a-f0-9-]{36})?|applications(?:\/[a-f0-9-]{36})?|tasks\/[a-f0-9-]{36}|jobs(?:\/[a-f0-9-]{36})?)$/u;
 
 export function safeReturnTo(value: unknown): string {
   if (value === undefined) return "/workspace/job-search/today";
@@ -74,7 +74,7 @@ export function createWebAuthApp(options: {
     response.set({
       "Cache-Control": "private, no-store",
       "Referrer-Policy": "no-referrer",
-      "Content-Security-Policy": "default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'" + (request.path==="/workspace/job-search/resume"?"; frame-src blob:":""),
+      "Content-Security-Policy": "default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'" + (/^\/workspace\/job-search\/resume(?:\/variants\/[a-f0-9-]{36})?$/u.test(request.path)?"; frame-src blob:":""),
       "X-Content-Type-Options": "nosniff",
       "X-Frame-Options": "DENY",
     });
