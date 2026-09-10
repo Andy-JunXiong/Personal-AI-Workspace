@@ -61,7 +61,7 @@ deployment, manual acceptance and scheduled acceptance separately.
 | [UPDATE JOB TRACKER — WORKSPACE WRITE MODE](mvp/UPDATE_JOB_TRACKER_WORKSPACE_PROMPT.txt) | Current saved and activated daily JOB_METADATA policy, exactly verified against retained task after reload. Normal 24 hours / maximum 72 hours, confirmation-based new applications, metadata follow-up and quiet complete/no-change reporting. |
 | [Workspace Skills Platform Acceptance Results](../tests/evaluations/workspace-skills-platform-acceptance-results-template.md) | Maintained platform acceptance procedure/template; completion requires separately recorded real evidence. |
 | [Workspace Skills Platform Acceptance Runbook](../tests/evaluations/workspace-skills-platform-acceptance-runbook.md) | Maintained platform acceptance procedure/template; completion requires separately recorded real evidence. |
-| [OpenAI Platform Watch](strategy/OPENAI_PLATFORM_WATCH.md) | Active governance contract and maintained strategy ledger; execution v1 adds a repo-local read-only Skill and the September 10 manual baseline. New findings await human disposition; real scheduled parity remains pending. Job Search Skill packaging is unchanged. |
+| [OpenAI Platform Watch](strategy/OPENAI_PLATFORM_WATCH.md) | Active governance contract and maintained strategy ledger; execution v1 adds a repo-local read-only Skill, the September 10 manual baseline and one actual scheduled run with scoped parity accepted. New findings await human disposition. Job Search Skill packaging is unchanged. |
 
 ## Historical evidence
 
