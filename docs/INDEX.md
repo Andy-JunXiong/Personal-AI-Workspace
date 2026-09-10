@@ -1,6 +1,6 @@
 # Documentation index
 
-- [September 10 session handoff](mvp/SESSION_CLOSE_2026-09-10.md): completed UI/resume releases, directional Watch reporting, verified weekly configuration and explicit restart boundaries.
+- [September 10 session handoff](mvp/SESSION_CLOSE_2026-09-10.md): UI/resume releases and the later deployed Watch reading correction, two verified report snapshots, and remaining weekly-prompt, human-decision and daily-run gates.
 
 - [Today updates and candidate layout](mvp/TODAY_AND_JOBS_2026-09-10.md): deployed as today-jobs-20260910-r1; real Nine update, 10 candidate rows and detail layout accepted. Backup/recovery and unchanged database fingerprints passed; synthetic previews cleared.
 

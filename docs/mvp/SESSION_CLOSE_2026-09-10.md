@@ -2,9 +2,19 @@
 
 **Later session successor:** the [Platform Watch P0 release ledger](PLATFORM_WATCH_REPORT_DECISION_P0_RESULTS_2026-09-10.md)
 records the subsequently requested implementation and deployment of
-`platform-watch-20260910-r1`, migration 017 and one real report import/readback.
+`platform-watch-20260910-r1`, migration 017 and the later reading correction
+`watch-reading-20260910-r1` (21:33 Sydney). Two immutable report snapshots have
+been imported and independently verified. The latest version passed 414 tests,
+both type checks and build, plus desktop/mobile layout checks. Its
+[narrative report](PLATFORM_WATCH_STORY_2026-09-10.md) compares concrete mail-check,
+resume-editor and report-import choices, including both time horizons.
 The source-only/no-entry-point statements below describe this earlier closeout.
 The remaining live report gate is a deliberate human finding disposition.
+The saved weekly task still pins `001bef2589aed8b4c877b95fbd450fcf688de951`;
+publishing the revised repo instructions does not update that task. Current next
+steps are to synchronize its writing instructions, review the next real weekly
+report and separately verify the unattended Job Tracker receipt/write/readback.
+The sections below retain the earlier session's historical scope.
 
 ## Continuity and benefits
 

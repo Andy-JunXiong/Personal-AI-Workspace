@@ -264,3 +264,20 @@ PR action was attempted during this follow-up. The earlier GitHub approval reque
 remains separate. The repo-local writing instructions are updated, but the actual
 weekly task still pins its older procedure; no scheduled prompt update or new
 weekly reasoning-quality acceptance is claimed. Human choices remain pending.
+
+### Main publication follow-up
+
+Jun subsequently explicitly requested updating the related documents, committing
+and pushing the completed work to GitHub `main`. This supersedes the pending
+publication authorization above. The follow-up reconciles README, the index and
+session handoff with the deployed reading correction and two verified snapshots.
+Publishing the runtime source and evidence together lets the next session trace
+the running report UI to its implementation and avoid rebuilding completed work.
+Longer-term decision usefulness still depends on actual human choices and weekly
+report review. The saved task prompt and daily-run acceptance remain separate.
+
+This follow-up changes documentation only and reuses the unchanged runtime's
+414-test, type-check, build and production evidence above. Publication validation
+covers documentation references, whitespace, unchanged runtime files and a
+fast-forward relationship to remote main; remote SHA readback is the completion
+check after push. No additional deployment or production-data write is included.

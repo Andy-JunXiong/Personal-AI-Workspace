@@ -89,10 +89,13 @@ lifecycle admission, direct LinkedIn/SEEK account integration, generic workflow
 automation and optional external job matching remain outside the admitted boundary.
 The broader versioned job-intelligence ledger remains a proposed, evidence-first design.
 The bounded PAW report-to-decision P0 is deployed with recovery and data-preservation
-evidence. Its scoped-write release follow-up has passing 404-test verification;
-one real report is imported and independently verified; deliberate human-decision
-readback is next. The [narrative revision](docs/mvp/PLATFORM_WATCH_STORY_2026-09-10.md)
-is imported as a separate report; its three decisions remain pending. Per-job
+evidence. The latest reading correction passed 414 tests, both type checks and
+build, with desktop/mobile layout checks. Two real report snapshots are imported
+and independently verified; deliberate human-decision readback is next. The
+[narrative revision](docs/mvp/PLATFORM_WATCH_STORY_2026-09-10.md) compares mail
+checks, resume editing and report import; its three decisions remain pending.
+The repo's writing rules are updated, but the saved weekly task still pins
+`001bef2589aed8b4c877b95fbd450fcf688de951` and needs a separate prompt update. Per-job
 named resume versions remain a separate future increment. See the session handoff
 and [P0 result](docs/mvp/PLATFORM_WATCH_REPORT_DECISION_P0_RESULTS_2026-09-10.md)
 for acceptance gaps and restart priorities.
