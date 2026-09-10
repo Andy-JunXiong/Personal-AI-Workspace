@@ -3,8 +3,8 @@
 **Status:** ACTIVE GOVERNANCE CONTRACT AND MAINTAINED STRATEGY LEDGER; findings are advisory until human disposition.
 **Adopted:** 2026-09-04. **Current boundary review:** 2026-09-08.
 **Review owner:** repository maintainer.
-**Last completed weekly scan:** Not recorded; the targeted review below is not a complete weekly scan.
-**Next review:** first manual weekly scan by 2026-09-15, or a material event sooner.
+**Last completed weekly scan:** 2026-09-10 manual baseline, scoped evidence below; findings await human disposition.
+**Next review:** weekly delta scans after the September 10 scoped scheduled acceptance; revisit material events sooner.
 
 ## Continuity and benefits
 
@@ -158,10 +158,284 @@ No recurring scan has been created by this package.
 
 | Date | Scope | Result | Material candidates |
 | --- | --- | --- | --- |
+| 2026-09-10 | September 1–10 release summaries across ChatGPT/Codex, API and Plugin UI; five current boundary references; pinned GitHub main plus disclosed local production evidence | COMPLETE - MATERIAL FINDING (manual); recommendations PENDING | W20260910-01 through W20260910-04 |
 
-No completed weekly scans recorded. Allowed results: NO MATERIAL CHANGE,
+Allowed results: NO MATERIAL CHANGE,
 COMPLETE - MATERIAL FINDING, INCOMPLETE. Completion means the stated source scope
 was checked, not that every OpenAI change everywhere was discovered.
+
+## Execution layer v1 — 2026-09-10
+
+### Continuity and benefits
+
+Jun authorized operationalizing this existing contract after reviewing the proposed
+procedure and feedback. The new [repo-local Watch Skill](../../.agents/skills/openai-platform-watch/SKILL.md)
+and its [run reference](../../.agents/skills/openai-platform-watch/references/run.md)
+provide retrieval, baseline, delta and reporting steps. This foreground development
+session may prepare artifacts and a platform-task trial; that authorization does
+not turn later Watch runs into repository writers. Existing governance, taxonomy
+and the Job Search capability set remain intact.
+
+The immediate deliverable is the first source-grounded report below. It identifies
+actionable execution and compatibility questions, including repository/production
+drift. The next gate is genuine clock-triggered retrieval and report parity in
+ChatGPT; continuous operation is not established by a manual success. Expected
+long-term benefit is better build/adopt/reposition decisions from repeatable,
+bounded evidence. No service, database, MCP tool, scheduler, dashboard, application
+deployment or business-data mutation is introduced.
+
+### Manual weekly run 1
+
+- **Run type:** manual development trial; the new Skill was supplied locally.
+  Skill SHA-256: `ee8f9dc6ec4576324ccf99400e990ae39b1bc872495cfcb28473fc2b938c786f`;
+  run-reference SHA-256: `022fa0a133f5384f151bc881e149dbc34e34b1674eea75bd83ed05bca54f7266`.
+- **GitHub baseline:** `main` resolved through the GitHub connector to
+  [`40b1bf8d115c54951b2b27a0c809c285609304f3`](https://github.com/Andy-JunXiong/Personal-AI-Workspace/commit/40b1bf8d115c54951b2b27a0c809c285609304f3).
+  Watch, core workflow, resume architecture and Skill release manifest were read
+  at that exact SHA; relevant API-client code was read there too.
+- **Local baseline:** HEAD `2a9e1691feabeba8b2c9717c947fc3e2f2ec6442`, with existing
+  uncommitted application/document changes. These were not treated as GitHub main.
+- **Last confirmed production:** `resume-rail-20260910-r1` at `2026-09-10T04:56:34Z`,
+  from the preceding deployment/readback and user acceptance in this session;
+  not a new production probe by Watch. The supplement is the local
+  `docs/architecture/RESUME_EDITOR.md` gutter-navigation release record, absent
+  from the pinned GitHub version of that file.
+  Runtime manifest SHA-256: `a2540ec700a513f8f51f6e661cf833534531916dbdc93535dfc0ef8ed4397ffb`.
+  Local release-record SHA-256 at scan: `387060cf877a33347e73bdd2f4657eed9ea7dc93a4b8f6f1e7cb0f76407a64c7`.
+- **Known difference:** GitHub's resume record describes `resume-editor-20260909-r3`.
+  The later UI, spacing and ordering work is in the disclosed local/deployment
+  evidence. Cloud readers must report this limitation, not infer those features
+  are absent from production. The newer GitHub README restructuring was preserved.
+- **Previous completed weekly scan:** NONE. The September 8 targeted findings are
+  comparison history, not a completed weekly cutoff.
+- **Official scope:** September 1–10 dated release summaries, plus current boundary
+  pages listed below. This establishes a recent baseline, not an exhaustive history.
+- **Result:** COMPLETE - MATERIAL FINDING for this declared manual scope.
+- **Official-source retrieval cutoff:** `2026-09-10T05:50:14Z` (15:50 Sydney).
+  This is the next eligible delta cutoff after maintainer review; no prior
+  successful weekly cutoff existed.
+- **Strategy disposition:** PENDING for all new findings; no adoption or removal
+  decision is inferred from Jun's permission to implement the Watch procedure.
+
+### One-minute report
+
+1. **W20260910-01 — REVISIT_TRIGGERED / ADOPT:** Test a read-only cloud Watch using
+   GitHub plus official sources. Interactive pinned GitHub reads work here;
+   unattended access and report quality still require actual scheduled acceptance.
+2. **W20260910-02 — CHANGED / ADOPT:** Native plugin distribution and refresh are
+   progressing. Keep one Skill source and test the exact target surface before
+   adding a packaging adapter. CLI fixes do not establish a ChatGPT write fix.
+3. **W20260910-03 — NEW / ADOPT:** Review the API client's treatment of newly
+   differentiated rate/overload errors when improving manual-mail reliability.
+   Propose a mocked error/retry test before changing behavior.
+4. **W20260910-04 — REVISIT_TRIGGERED / DOUBLE-DOWN:** Preserve traceable repository
+   and production evidence. Reconcile the release documentation in its own
+   development change; a cloud Watch must disclose the current mismatch.
+
+**Boundary conclusion: NO DRIFT, advisory.** No verified replacement currently
+justifies removing an accepted PAW responsibility. Platform distribution remains
+an opportunity to validate. A future scenario may justify NARROW, EXPAND or
+REPOSITION; this run does not lock in the thesis.
+
+### Evidence and proposed next steps
+
+**W20260910-01 — Read-only Watch execution**
+
+- **Finding:** Current [Scheduled Tasks documentation](https://learn.chatgpt.com/docs/automations)
+  describes cloud tasks using accessible tools/context; local folders require a
+  different runtime. The user-requested Watch is a new read-only scenario that
+  reopens the September 8 deferred scheduling direction.
+- **Direction:** ADOPT.
+- **Verification:** UNRESOLVED for ChatGPT unattended Watch. GitHub connector reads
+  of the pinned repository passed in this interactive Codex session; the account's
+  Scheduled page was visible. Neither proves scheduled connector parity.
+- **Human decision:** PENDING for runtime acceptance; procedure development accepted.
+- **Outcome / next step:** Test a fixed-source, fixed-repository one-off scheduled
+  report, then a weekly prompt. Infer only a Watch execution benefit. The Job
+  Tracker's business-write acceptance remains a separate scenario and gate.
+
+**W20260910-02 — Plugin and host evolution**
+
+- **Finding:** The [ChatGPT/Codex changelog](https://learn.chatgpt.com/docs/changelog)
+  records remote-marketplace CLI management in 0.153.0 (September 3) and plugin
+  refresh improvements in 0.154.0 (September 9). Its OAuth-refresh fix explicitly
+  does not automatically replay rejected calls. Current
+  [plugin documentation](https://learn.chatgpt.com/docs/plugins) describes shared
+  distribution with surface-specific availability.
+- **Direction:** ADOPT, continuing the September 8 distribution direction with
+  changed platform evidence.
+- **Verification:** NOT_TESTED for this new governance Skill's target installation
+  and unattended loading. Existing Job Search packaging is a different capability.
+- **Human decision:** PENDING for an adapter; existing single-source direction retained.
+- **Outcome / next step:** Pin the Watch procedure for a cloud trial. Add only an
+  adapter required by demonstrated installation needs. No entitlement assumption,
+  platform upgrade, generic plugin manager or inference that Job Tracker is fixed.
+
+**W20260910-03 — API error fidelity**
+
+- **Finding:** The September 2 [API changelog](https://developers.openai.com/api/docs/changelog)
+  distinguishes `429/slow_down` and `503/server_is_overloaded`, with conditional
+  `Retry-After` guidance. PAW's
+  [pinned manual-mail client](https://github.com/Andy-JunXiong/Personal-AI-Workspace/blob/40b1bf8d115c54951b2b27a0c809c285609304f3/src/gmail/providers.ts#L143)
+  uses Responses and maps non-OK responses to coarse errors without inspecting
+  those codes or headers in this method.
+- **Direction:** ADOPT.
+- **Verification:** NOT_TESTED against those responses; code inspection only.
+- **Human decision:** PENDING.
+- **Outcome / next step:** PAW inference: distinguish the new provider failure
+  categories when a bounded reliability change is authorized. Check outer retry
+  ownership, cancellation and duplicate-write protection before implementing any
+  retry. Test with mocked 429/503 responses; do not send mail or paid model calls.
+
+**W20260910-04 — Repository and production evidence mismatch**
+
+- **Finding:** The pinned GitHub resume record predates the separately confirmed
+  production release described in the run header. This is a PAW change/revisit
+  trigger, not an OpenAI announcement or a proof that production is unhealthy.
+- **Direction:** DOUBLE-DOWN on attributable architectural and deployment evidence.
+- **Verification:** LIVE_VERIFIED only for the interactive pinned GitHub read;
+  production release evidence is reused from 04:56 UTC and user acceptance.
+- **Human decision:** PENDING for reconciliation work beyond this Watch package.
+- **Outcome / next step:** Keep both versions in every affected report. Reconcile
+  source and release records through the development workflow, preserving today's
+  user edits and GitHub's README changes. Revisit when those records are published.
+
+### Coverage and unchanged findings
+
+| Source actually read | Scope/result |
+| --- | --- |
+| [ChatGPT/Codex changelog](https://learn.chatgpt.com/docs/changelog) | September 1–9 release summaries through CLI 0.154.0; Codex changelog URL redirects here. Editing/mobile/model-picker changes do not by themselves change PAW ownership. |
+| [API changelog](https://developers.openai.com/api/docs/changelog) | September 1–8 entries. Cache diagnostics, Astra controls and image releases screened; no model migration, image workflow or cache instrumentation is currently accepted by this report. |
+| [Plugin UI changelog](https://developers.openai.com/plugins/changelog) | Latest entry August 21; CIMD remains PREVIOUSLY_REPORTED with issuer conditions, not a new September change. |
+| [Scheduled Tasks](https://learn.chatgpt.com/docs/automations) | Current cloud/local context and run-access conditions; feeds W20260910-01. |
+| [Plugins](https://learn.chatgpt.com/docs/plugins) | Current distribution/surface constraints; feeds W20260910-02. |
+| [Memories](https://learn.chatgpt.com/docs/customization/memories) | PREVIOUSLY_REPORTED recall/rules distinction; no verified domain-record replacement. |
+| [Optional MCP UI](https://developers.openai.com/plugins/build/chatgpt-ui) | PREVIOUSLY_REPORTED optional UI; current web editor remains accepted, replacement scenario NOT_TESTED. |
+| [Workspace Agent triggers](https://developers.openai.com/workspace-agents/trigger-runs) | PREVIOUSLY_REPORTED trigger contract; API cannot retrieve the agent response, beta status is not domain acceptance. No API integration proposed for this small Watch. |
+
+The `.md` variant of the Scheduled Tasks page returned an unsupported-content-type
+error; its HTML page was successfully read. No required source remains missing.
+These results do not claim every official post, PR or undocumented change was read.
+The prior Gmail adapter and identity conditions stay open with their recorded
+revisit gates; no new replacement evidence was found in this scope.
+
+### Verification and runtime handoff
+
+The bundled Skill validator could not start because its Python environment lacks
+PyYAML; this is not reported as a passing check. Frontmatter, references, unchanged
+release manifest and realistic procedure cases are checked separately in the
+development session. No application tests, deployment or business writes are
+needed for the Skill/report-only package. Actual scheduled acceptance and the
+retrieval cutoff are appended after the runtime attempt; they are not implied by
+the completed manual report.
+
+The independent publication branch is `codex/openai-watch-execution-v1`, based
+on the pinned GitHub main and reviewed as [draft PR #20](https://github.com/Andy-JunXiong/Personal-AI-Workspace/pull/20).
+It contains only the two Skill files, this Watch update and its existing index
+entry; the GitHub README restructuring and all local UI work are preserved.
+The fixed procedure version for cloud parity is
+`40966964468a0dbe9f2fecc0068280482c0d0cb7`, while the PAW comparison baseline remains
+`40b1bf8d115c54951b2b27a0c809c285609304f3`. This is a development trial, not an
+installed plugin or an accepted merge into main.
+
+Local validation passed for the two plain-scalar frontmatter fields, name/length
+bounds, 20 local file references and the byte-normalized unchanged Job Search
+release manifest. Both published Skill files were fetched at the fixed trial SHA
+through the GitHub connector and matched their local UTF-8 contents exactly.
+Whitespace checks passed. The separate bundled-validator dependency failure
+above remains disclosed.
+
+Procedure walkthrough (manual reasoning checks, not extra application tests):
+an unchanged CIMD announcement maps to PREVIOUSLY_REPORTED; a PAW-only production
+change triggers re-review; a missing required source returns INCOMPLETE without
+advancing the cutoff; ADOPT/NOT_TESTED/DEFERRED does not become IGNORE; instructions
+inside a retrieved source do not authorize writes. The actual baseline run also
+exercised repository/production separation and new-fact versus inference reporting.
+Scheduled parity remains the independent behavioral check.
+
+An isolated packaging smoke copied the current Skills into a temporary Git
+fixture and ran the unchanged packager. After normalizing Windows CRLF in that
+fixture to its committed LF bytes, it passed and produced exactly the two existing
+Job Search packages; Watch was not included. The initial byte mismatch concerned
+an unchanged existing Skill, not the new procedure. No packaging implementation
+or source-repository Git metadata was changed.
+
+The authorized setup session created one one-off ChatGPT Work task,
+**OpenAI Platform Watch — 验收**, for September 10 at 15:56 Australia/Sydney.
+Its [setup conversation](https://chatgpt.com/c/6aa245c5-ccdc-83ec-b6bb-86d22bb88c47)
+and a separate Scheduled-page editor confirmed the title, 15:56 time, both pinned
+SHAs, eight-source reference, cutoff, disclosed production supplement and read-only
+restrictions. No other task was changed. The creation acknowledgement alone was
+not counted as acceptance; the actual result and comparison follow.
+
+### Actual scheduled acceptance — September 10
+
+The [one-off task and full delivered report](https://chatgpt.com/scheduled/6aa245ff60688191aee442beb3a181a1)
+were observed first as running and then completed, without using Run now. The
+clock trigger was 15:56 Australia/Sydney; the report records retrieval from
+05:56–06:00 UTC and was inspected in the foreground at 06:02–06:04 UTC.
+It returned COMPLETE - MATERIAL FINDING. Its reported Skill blob SHAs
+`65ccedad77a930691e7c5595a02aa6940ab0859b` and
+`1415214e8ef946786c75fe03cadc7bcb3bf6538e` match the independently fetched files.
+It retained both specified commit SHAs and the manual run's release cutoff.
+
+The scheduled runner correctly left parity NOT_TESTED because it had not been
+given the manual report. The following comparison is the foreground developer's
+subsequent acceptance evidence, not a claim made by the scheduled runner itself.
+
+| Acceptance gate | Observed result and limit |
+| --- | --- |
+| Retrieval | Report delivered with all eight required official sources covered. Failed searches and Markdown fallback reads were disclosed; corresponding HTML reads completed the declared coverage. No mandatory source remained missing. |
+| Repository baseline | Full fixed PAW SHA and separate trial-Skill SHA retained; matching Skill blobs reported. Local production supplement remained separate from GitHub evidence. |
+| Delta | Existing Memory, CIMD and agent-trigger boundaries remained previously reported. Plugin/API changes and PAW-only revisit conditions were distinguished. |
+| Reasoning | Platform availability was not treated as PAW acceptance. All proposals remained PENDING; no REMOVE recommendation or automatic replacement followed. |
+| Governance | Delivered artifact is a read-only report; it reports no repository, Workspace, production or task mutations. This does not constitute an audit of every platform-internal action. |
+| Scheduled parity | PASS for core material conclusions at the same baseline/window, with the correspondence and additions below. This is one observed run, not a reliability history. |
+
+Manual W20260910-02 corresponds to scheduled F3 (native plugin/client changes),
+and W20260910-03 to F4 (API error classification). Both preserve target verification
+as outstanding. Manual W20260910-04 is explicitly preserved in the scheduled
+production-evidence appendix, although not promoted to a separate finding.
+For W20260910-01, the scheduled execution now supplies the missing evidence for
+this read-only Watch scenario; scheduled F2 explicitly refuses to extend that
+success to the unresolved Job Tracker write/receipt workflow. Both runs reach
+NO DRIFT as an advisory boundary conclusion and retain current domain authority.
+
+The scheduled report additionally proposes F1, revisiting MCP Apps for the now
+concrete resume scenario, and F2, reconciling September 9 manual-mail acceptance
+with older Watch wording. These are useful additional review candidates, not
+contradictory replacement decisions: existing Web remains and daily write
+acceptance remains unresolved. They remain PENDING; neither is accepted for
+implementation by this execution check. F3 calls the latest plugin change NEW
+where the manual report says CHANGED; the substantive recommendation agrees,
+but future reports should link this existing finding and use CHANGED for a
+material update to it, or PREVIOUSLY_REPORTED if unchanged.
+
+Execution-quality acceptance is scoped to the six gates above. The manual baseline
+and this comparison establish `2026-09-10T05:50:14Z` as the reviewed execution
+cutoff for subsequent delta scans; strategic decisions remain PENDING. No M4
+observation period or Job Tracker business-write acceptance is activated.
+### Weekly operation
+
+**OpenAI Platform Watch — 每周** is enabled in the existing ChatGPT Work
+[task conversation](https://chatgpt.com/c/6aa245c5-ccdc-83ec-b6bb-86d22bb88c47),
+every Tuesday at 09:00 Australia/Sydney, first run September 15. The saved task
+editor independently showed weekly / Tuesday / 09:00 / September 15, an enabled
+Pause control, and the complete six-part prompt. The completed one-off task and
+all unrelated tasks were retained.
+
+Each run resolves fresh main once and uses the fixed procedure commit above.
+Until a newer reviewed scan is available in main, it explicitly reads the
+reviewed execution record at `9a4e047e496e5f3b0d780536f9bfdb61e8bfebf8`; that
+development-branch record is never presented as main. It retains the reviewed
+cutoff, uses accessible task history only for deduplication, reports review
+backlog or missing history, and proposes a new cutoff without writing the ledger.
+This pins the usable procedure while PR #20 awaits merge. Updating that pin is
+foreground maintenance, not authority granted to a Watch run.
+
+The report is delivered to this ChatGPT task conversation as a one-minute Chinese
+summary with an evidence appendix. Scheduled recurrence is configured, but its
+first weekly result and longer-term reliability have not yet been observed.
 
 ## 2026-09-08 current boundary review
 
