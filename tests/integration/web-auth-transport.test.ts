@@ -237,6 +237,84 @@ it("allows only CSRF-authorized library and candidate decisions with general bro
   expect((await w.request(`/api/v1/job-search/library/candidates/${randomUUID()}/draft`,{method:"POST",headers,body:JSON.stringify({draft:"x",expectedUpdatedAt:new Date().toISOString()})})).status).toBe(404);
 });
 
+it("imports immutable Platform Watch reports and records CSRF-authorized finding decisions", async () => {
+  const w = await setup(true, "Australia/Sydney", true);
+  w.link();
+  const login = await w.start("/workspace/job-search/platform-watch");
+  const finished = await w.finish(login);
+  expect(finished.status).toBe(303);
+  expect(finished.headers.get("location")).toBe("/workspace/job-search/platform-watch");
+  const cookie = w.sessionCookie(finished);
+  expect((await w.request("/workspace/job-search/platform-watch")).status).toBe(401);
+  const listPage = await (await w.request("/workspace/job-search/platform-watch", { headers: { cookie } })).text();
+  expect(listPage).toContain("从报告走到明确决定");
+  expect(listPage).toContain("data-platform-watch-import");
+
+  const { csrfToken } = await (await w.request("/api/v1/session", { headers: { cookie } })).json();
+  const headers = { cookie, origin: webOrigin, "x-csrf-token": csrfToken, "content-type": "application/json" };
+  const payload = {
+    externalId: "openai-platform-watch:2026-09-15",
+    title: "OpenAI Platform Watch — 2026-09-15",
+    generatedAt: "2026-09-15T09:00:00+10:00",
+    sourceUrl: "https://chatgpt.com/c/platform-watch",
+    evidenceCutoff: "2026-09-15T08:59:00+10:00",
+    repositorySha: "b".repeat(40),
+    directionalJudgment: "NO_DRIFT",
+    summary: "Keep the decision boundary explicit.",
+    body: "Report <script>unsafe()</script>",
+    findings: [{
+      key: "W20260915-01",
+      title: "Use <textarea>unsafe</textarea>",
+      direction: "ADOPT",
+      verification: "NOT_TESTED",
+      recommendation: "Test the target environment.",
+      nextStep: "Review the first revised scheduled report.",
+      evidence: [{ label: "Official source", url: "https://learn.chatgpt.com/docs/automations" }],
+    }],
+    intentKey: randomUUID(),
+  };
+  expect((await w.request("/api/v1/job-search/platform-watch", {
+    method: "POST", headers: { cookie, "content-type": "application/json" }, body: JSON.stringify(payload),
+  })).status).toBe(403);
+  expect((await w.request("/api/v1/job-search/platform-watch", {
+    method: "POST", headers, body: JSON.stringify({ ...payload, workspaceId: randomUUID() }),
+  })).status).toBe(422);
+  const imported = await w.request("/api/v1/job-search/platform-watch", {
+    method: "POST", headers, body: JSON.stringify(payload),
+  });
+  expect(imported.status).toBe(200);
+  const result = await imported.json();
+  expect(result).toMatchObject({ created: true, report: { pendingFindingCount: 1 } });
+  const reportId = result.report.id as string;
+  const detailPage = await (await w.request(`/workspace/job-search/platform-watch/${reportId}`, { headers: { cookie } })).text();
+  expect(detailPage).toContain("data-decide-watch-finding");
+  expect(detailPage).toContain("&lt;script&gt;unsafe()&lt;/script&gt;");
+  expect(detailPage).toContain("Use &lt;textarea&gt;unsafe&lt;/textarea&gt;");
+  expect(detailPage).not.toContain("<script>unsafe()</script>");
+  const today = await (await w.request("/workspace/job-search/today", { headers: { cookie } })).text();
+  expect(today).toContain("1 项判断等待你的决定");
+
+  const decision = { action: "ACCEPT", expectedRecordVersion: 1,
+    note: "The target test supports this bounded choice.", intentKey: randomUUID() };
+  const endpoint = `/api/v1/job-search/platform-watch/${reportId}/findings/W20260915-01/decision`;
+  expect((await w.request(endpoint, { method: "POST", headers: { cookie, "content-type": "application/json" },
+    body: JSON.stringify(decision) })).status).toBe(403);
+  const accepted = await w.request(endpoint, { method: "POST", headers, body: JSON.stringify(decision) });
+  expect(accepted.status).toBe(200);
+  expect(await accepted.json()).toMatchObject({ changed: true, finding: { decision: "ACCEPTED", recordVersion: 2 } });
+  const replay = await w.request(endpoint, { method: "POST", headers, body: JSON.stringify(decision) });
+  expect(await replay.json()).toMatchObject({ replayed: true, finding: { decision: "ACCEPTED" } });
+  const decidedPage = await (await w.request(`/workspace/job-search/platform-watch/${reportId}`, { headers: { cookie } })).text();
+  expect(decidedPage).toContain("决定历史（1）");
+  expect(decidedPage).toContain("PENDING → ACCEPTED");
+  expect(decidedPage).toContain("EXPLICIT_USER_WEB");
+  const stale = await w.request(endpoint, { method: "POST", headers,
+    body: JSON.stringify({ ...decision, action: "DEFER", intentKey: randomUUID() }) });
+  expect(stale.status).toBe(409);
+  expect(await (await w.request("/workspace/job-search/today", { headers: { cookie } })).text())
+    .not.toContain("判断等待你的决定");
+});
+
 async function setup(bootstrapEnabled = true, timeZone = "Australia/Sydney", writesEnabled = false,
   gmailFactory?: (workspace: ReturnType<typeof createTestWorkspace>) => GmailRuntime) {
   const workspace = createTestWorkspace();

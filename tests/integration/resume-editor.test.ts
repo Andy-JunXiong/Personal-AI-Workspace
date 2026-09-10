@@ -46,8 +46,10 @@ it("adds resume storage while preserving all existing tables and survives repeat
     for(const file of readdirSync("db/migrations").filter(f=>f.endsWith(".sql")&&f<"016_"))copyFileSync(join("db/migrations",file),join(old,file));
     const before=join(w.directory,"before.db"),after=join(w.directory,"after.db");
     const db=openDatabase(before,old);new WorkspaceService(db,{issuer:"migration",subject:"retained",workspaceName:"Retained"}).ensureDevelopmentIdentity();db.close();
-    copyFileSync(before,after);openDatabase(after).close();openDatabase(after).close();openDatabase(after,old).close();
-    expect(verifyResumeMigration(before,after)).toMatchObject({status:"PASS",addedTables:["resume_documents"]});
+    const release=join(w.directory,"migrations016");mkdirSync(release);
+    for(const file of readdirSync("db/migrations").filter(f=>f.endsWith(".sql")&&f<"017_"))copyFileSync(join("db/migrations",file),join(release,file));
+    copyFileSync(before,after);openDatabase(after,release).close();openDatabase(after,release).close();openDatabase(after,old).close();
+    expect(verifyResumeMigration(before,after,release)).toMatchObject({status:"PASS",addedTables:["resume_documents"]});
   }finally{w.cleanup();}
 });
 

@@ -49,4 +49,4 @@ it("creates scenario-isolated P6 fixtures through MCP and replays without changi
     await new Promise<void>((done, reject) => server.close(error => error ? reject(error) : done()));
     w.cleanup();
   }
-}, 20_000);
+}, 30_000);

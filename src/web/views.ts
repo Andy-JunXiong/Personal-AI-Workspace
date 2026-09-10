@@ -5,6 +5,7 @@ import { applicationResumeSchema, isResumeFileUrl, type ApplicationResume } from
 import type { ReadPage } from "../application/read-pagination.js";
 import type { ApplicationListItem } from "../application/job-search-query-service.js";
 import type { JobCandidateRecord, ResourceRecord, TaskRecord, TransitionRecord } from "../domain/types.js";
+import type { PlatformWatchReport } from "../application/platform-watch-service.js";
 
 export const rootPath = "/workspace/job-search";
 export const escapeHtml = (value: unknown): string => String(value ?? "").replace(/[&<>"']/gu,
@@ -62,7 +63,7 @@ function pagination<T>(page: ReadPage<T>, path: string, query: Record<string, un
 }
 
 export function document(title: string, content: string, authenticated: boolean, active = "today"): string {
-  return `<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>${e(title)} · Workspace</title><link rel="stylesheet" href="/assets/workspace.css"><script type="module" src="/assets/workspace.js"></script><script type="module" src="/assets/job-library.js"></script><script type="module" src="/assets/resume.js"></script><link rel="stylesheet" href="/assets/resume.css"></head><body data-authenticated="${authenticated}"><a class="skip" href="#main">跳到主要内容</a><aside class="sidebar"><a class="brand" href="${rootPath}/today"><span class="brand-mark" aria-hidden="true">w.</span><span>Workspace<small>你的持续工作空间</small></span></a><p class="nav-label">JOB SEARCH / 求职</p><nav aria-label="主要导航"><a href="${rootPath}/today"${active === "today" ? ' aria-current="page"' : ""}><span aria-hidden="true">◷</span> 今天 <small>Today</small></a><a href="${rootPath}/jobs"${active === "jobs" ? ' aria-current="page"' : ""}><span aria-hidden="true">◇</span> 职位 <small>Jobs</small></a><a href="${rootPath}/applications"${active === "applications" ? ' aria-current="page"' : ""}><span aria-hidden="true">▤</span> 我的申请</a><a href="${rootPath}/library"${active === "library" ? ' aria-current="page"' : ""}>求职／面试资料库</a><a href="${rootPath}/resume"${active === "resume" ? ' aria-current="page"' : ""}>简历 <small>Resume</small></a></nav><div class="sidebar-foot"><span class="connection-dot" aria-hidden="true"></span>同一份工作状态<p>查看进展，然后继续下一步。</p>${authenticated ? '<button type="button" class="text-button" data-logout>退出登录</button>' : ""}</div></aside><div class="workspace"><div class="topbar"><span>个人工作空间 <span class="slash">/</span> 求职</span><span class="view-label">${active === "resume" ? "编辑简历" : "查看模式"}</span></div><div id="notice" class="notice" role="status" aria-live="polite" hidden></div><main id="main" tabindex="-1">${content}</main><footer>对话帮助你思考，Workspace 保存工作进度。</footer></div></body></html>`;
+  return `<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>${e(title)} · Workspace</title><link rel="stylesheet" href="/assets/workspace.css"><script type="module" src="/assets/workspace.js"></script><script type="module" src="/assets/job-library.js"></script><script type="module" src="/assets/resume.js"></script><link rel="stylesheet" href="/assets/resume.css"></head><body data-authenticated="${authenticated}"><a class="skip" href="#main">跳到主要内容</a><aside class="sidebar"><a class="brand" href="${rootPath}/today"><span class="brand-mark" aria-hidden="true">w.</span><span>Workspace<small>你的持续工作空间</small></span></a><p class="nav-label">JOB SEARCH / 求职</p><nav aria-label="主要导航"><a href="${rootPath}/today"${active === "today" ? ' aria-current="page"' : ""}><span aria-hidden="true">◷</span> 今天 <small>Today</small></a><a href="${rootPath}/jobs"${active === "jobs" ? ' aria-current="page"' : ""}><span aria-hidden="true">◇</span> 职位 <small>Jobs</small></a><a href="${rootPath}/applications"${active === "applications" ? ' aria-current="page"' : ""}><span aria-hidden="true">▤</span> 我的申请</a><a href="${rootPath}/library"${active === "library" ? ' aria-current="page"' : ""}>求职／面试资料库</a><a href="${rootPath}/resume"${active === "resume" ? ' aria-current="page"' : ""}>简历 <small>Resume</small></a><a href="${rootPath}/platform-watch"${active === "reports" ? ' aria-current="page"' : ""}>平台判断 <small>Reports</small></a></nav><div class="sidebar-foot"><span class="connection-dot" aria-hidden="true"></span>同一份工作状态<p>查看进展，然后继续下一步。</p>${authenticated ? '<button type="button" class="text-button" data-logout>退出登录</button>' : ""}</div></aside><div class="workspace"><div class="topbar"><span>个人工作空间 <span class="slash">/</span> ${active === "reports" ? "平台判断" : "求职"}</span><span class="view-label">${active === "resume" ? "编辑简历" : active === "reports" ? "报告与决定" : "查看模式"}</span></div><div id="notice" class="notice" role="status" aria-live="polite" hidden></div><main id="main" tabindex="-1">${content}</main><footer>对话帮助你思考，Workspace 保存工作进度。</footer></div></body></html>`;
 }
 
 export function loginView(returnTo: string): string {
@@ -85,10 +86,18 @@ export function loginFailureView(status: number, returnTo = `${rootPath}/today`,
 
 function dailyUpdatesPanel(service: WorkspaceService, zone: string): string {
   const updates = service.todayQueryService.getDailyUpdates();
-  return `<section class="panel daily-updates" aria-labelledby="daily-updates-title"><header class="section-heading"><div><p class="eyebrow">${e(updates.date)} · 今天记录</p><h2 id="daily-updates-title">${updates.totalCount ? `今天有 ${updates.totalCount} 个申请更新` : "今天暂无申请更新"}</h2><p class="daily-updates-intro">${updates.totalCount ? "最新进展已保存，点击申请查看详情和下一步。" : "有新的申请进展或招聘方消息时，会显示在这里。"}</p></div><a class="text-link" href="${rootPath}/applications?status=ALL&sort=UPDATED_DESC">所有申请 →</a></header>
+  const panel = `<section class="panel daily-updates" aria-labelledby="daily-updates-title"><header class="section-heading"><div><p class="eyebrow">${e(updates.date)} · 今天记录</p><h2 id="daily-updates-title">${updates.totalCount ? `今天有 ${updates.totalCount} 个申请更新` : "今天暂无申请更新"}</h2><p class="daily-updates-intro">${updates.totalCount ? "最新进展已保存，点击申请查看详情和下一步。" : "有新的申请进展或招聘方消息时，会显示在这里。"}</p></div><a class="text-link" href="${rootPath}/applications?status=ALL&sort=UPDATED_DESC">所有申请 →</a></header>
     ${updates.items.map(update => `<article class="daily-update-row"><div class="grow"><p class="overline">${e(update.company)}</p><h3><a href="${appLink(update.projectId)}">${e(update.role)}</a></h3><ul class="daily-update-events">${update.events.map(event => `<li><span>${event.kind === "STATE" ? `${event.fromState === "NONE" ? "新增申请" : e(label(event.fromState!))} → <strong>${e(label(event.toState!))}</strong>` : `<strong>${e(event.title)}</strong><span class="daily-update-summary">${e(event.summary)}</span>`}</span><time datetime="${e(event.recordedAt)}">${e(date(event.recordedAt, zone))} 记录</time></li>`).join("")}</ul></div><a class="button secondary" href="${appLink(update.projectId)}">查看申请 <span aria-hidden="true">→</span></a></article>`).join("")}
     ${updates.newCandidateCount ? `<p class="daily-candidates">今天新增 <strong>${updates.newCandidateCount}</strong> 个候选职位 <a class="text-link" href="${rootPath}/jobs?sort=UPDATED_DESC">去看看 →</a></p>` : ""}
     ${updates.totalCount > updates.items.length ? `<p class="section-intro">显示最近 ${updates.items.length} 个申请；其余 ${updates.totalCount - updates.items.length} 个可在<a href="${rootPath}/applications?status=ALL&sort=UPDATED_DESC">我的申请</a>中查看。</p>` : ""}</section>`;
+  return `${panel}${platformWatchAttentionPanel(service, zone)}`;
+}
+
+function platformWatchAttentionPanel(service: WorkspaceService, zone: string): string {
+  const reports = service.platformWatchService.pendingReports();
+  if (!reports.length) return "";
+  const pending = reports.reduce((count, report) => count + report.pendingFindingCount, 0);
+  return `<section class="panel watch-attention" aria-labelledby="watch-attention-title"><header class="section-heading"><div><p class="eyebrow">PLATFORM WATCH / 平台判断</p><h2 id="watch-attention-title">${pending} 项判断等待你的决定</h2><p class="daily-updates-intro">报告只提供建议；采纳、拒绝或暂缓必须由你明确决定。</p></div><a class="button secondary" href="${rootPath}/platform-watch">查看报告 →</a></header>${reports.map((report) => `<a class="watch-attention-row" href="${rootPath}/platform-watch/${encodeURIComponent(report.id)}"><span><strong>${e(report.title)}</strong><small>${e(date(report.generatedAt, zone))} · ${report.pendingFindingCount} 项待决定</small></span><span aria-hidden="true">↗</span></a>`).join("")}</section>`;
 }
 
 export function todayView(service: WorkspaceService, asOf: string, matchingEnabled = false): string {
@@ -322,4 +331,86 @@ export function candidateView(service: WorkspaceService, id: string, zone: strin
   const subtitle = candidate.title.trim().toLowerCase() === candidate.role.trim().toLowerCase() ? "" : candidate.title;
   const usefulReason = candidate.fitReason && !candidate.fitReason.startsWith("来自 Job Alert") ? candidate.fitReason : null;
   return document("职位详情", `<div class="candidate-detail"><a class="back-link" href="${rootPath}/jobs">← 职位列表</a>${heading(candidate.company, candidate.role, subtitle)}<div class="candidate-detail-meta">${chip(candidate.decision)}${candidate.location ? `<span>${e(candidate.location)}</span>` : ""}<span>更新于 ${e(date(candidate.updatedAt, zone))}</span></div><div class="candidate-detail-layout"><div class="candidate-detail-content">${fitPanel(service,id,candidate.sourceUrl,matchingEnabled)}</div><aside class="panel candidate-side"><h2>这个职位</h2><dl><div><dt>公司</dt><dd>${e(candidate.company)}</dd></div><div><dt>地点</dt><dd>${e(candidate.location || "暂未提供")}</dd></div><div><dt>来源</dt><dd>${e(candidate.provider)}${candidate.sourceAvailability === "UNKNOWN" ? "" : ` · ${e(sourceAvailabilityLabel(candidate.sourceAvailability))}`}</dd></div></dl>${source ? `<a class="button primary candidate-source" href="${e(source)}" target="_blank" rel="noopener noreferrer">查看原职位 ↗</a>` : ""}${actions}${usefulReason ? `<div class="candidate-note"><h3>职位备注</h3><p>${e(usefulReason)}</p>${candidate.fitUncertainty !== "UNKNOWN" ? `<small>${e(fitUncertaintyLabel(candidate.fitUncertainty))}</small>` : ""}</div>` : ""}${linked ? `<p class="candidate-linked">${linked}</p>` : ""}${linkControl}</aside></div>${contextCopy("Candidate", id)}</div>`, true, "jobs");
+}
+
+const watchDecisionLabels: Record<string, string> = {
+  PENDING: "待决定",
+  ACCEPTED: "已采纳",
+  REJECTED: "未采纳",
+  DEFERRED: "暂缓",
+};
+const watchDirectionLabels: Record<string, string> = {
+  IGNORE: "忽略",
+  ADOPT: "采用平台能力",
+  REMOVE: "移除 PAW 实现",
+  DOUBLE_DOWN: "加强 PAW 能力",
+};
+
+function reportLink(id: string): string {
+  return `${rootPath}/platform-watch/${encodeURIComponent(id)}`;
+}
+
+function reportStatus(report: PlatformWatchReport): string {
+  return report.pendingFindingCount ? `${report.pendingFindingCount} 项待决定` : "全部已处置";
+}
+
+function platformWatchImport(writesEnabled: boolean): string {
+  if (!writesEnabled) return "";
+  const example = JSON.stringify({
+    externalId: "openai-platform-watch:YYYY-MM-DD",
+    title: "OpenAI Platform Watch — YYYY-MM-DD",
+    generatedAt: "2026-09-15T09:00:00+10:00",
+    sourceUrl: "https://chatgpt.com/c/...",
+    evidenceCutoff: "2026-09-15T09:00:00+10:00",
+    repositorySha: "0123456789abcdef0123456789abcdef01234567",
+    directionalJudgment: "NO_DRIFT",
+    summary: "一分钟结论",
+    body: "完整报告正文",
+    findings: [{
+      key: "W20260915-01",
+      title: "判断标题",
+      direction: "ADOPT",
+      verification: "NOT_TESTED",
+      recommendation: "具体建议",
+      nextStep: "可验证的下一步",
+      evidence: [{ label: "证据", url: "https://example.com" }],
+    }],
+  }, null, 2);
+  return `<details class="panel watch-import"><summary>导入一份已生成的 Watch 报告</summary><form data-platform-watch-import><p>粘贴结构化报告。点击导入代表你明确要求保存这份不可变来源记录；不会自动采纳其中任何建议，也不会更改定时任务。</p><label>报告 JSON<textarea name="report" rows="18" required spellcheck="false" placeholder="${e(example)}"></textarea></label><button class="button primary" type="submit">导入报告</button></form></details>`;
+}
+
+export function platformWatchView(
+  service: WorkspaceService,
+  zone: string,
+  asOf: string,
+  writesEnabled = false,
+): string {
+  const reports = service.platformWatchService.listReports();
+  const rows = reports.map((report) => `<article class="watch-report-row"><div class="grow"><p class="overline">${e(report.generatedAt.slice(0, 10))} · ${e(report.directionalJudgment.replaceAll("_", " "))}</p><h2><a href="${reportLink(report.id)}">${e(report.title)}</a></h2><p>${e(report.summary)}</p></div><div class="row-status">${chip(report.pendingFindingCount ? "OPEN" : "DONE", reportStatus(report))}<time>${e(date(report.generatedAt, zone))}</time></div></article>`).join("");
+  const content = `${heading("PLATFORM WATCH / 平台判断", "从报告走到明确决定", "保留报告来源、逐项判断和人的处置记录；建议本身没有执行权。")}${freshness(asOf, zone)}${platformWatchImport(writesEnabled)}<section class="panel"><header class="section-heading"><h2>报告记录 <span class="count">${reports.length}</span></h2><span class="muted">最近 50 份</span></header>${rows || empty("尚未导入 Watch 报告", "定时报告仍在 ChatGPT 对话中；需要时可由登录用户明确导入。")}</section>`;
+  return document("平台判断", content, true, "reports");
+}
+
+function findingDecisionControls(report: PlatformWatchReport, writesEnabled: boolean): string {
+  return report.findings.map((finding) => {
+    const actions = finding.decision === "PENDING"
+      ? [["ACCEPT", "采纳"], ["REJECT", "不采纳"], ["DEFER", "暂缓"]]
+      : [["REOPEN", "重新打开"]];
+    const controls = writesEnabled ? `<label>决定依据<textarea rows="3" maxlength="2000" data-watch-decision-note placeholder="写下为什么做这个决定" required>${e(finding.decisionNote ?? "")}</textarea></label><div class="watch-decision-actions">${actions.map(([action, text]) => `<button type="button" class="button ${action === "ACCEPT" ? "primary" : "secondary"}" data-decide-watch-finding data-report-id="${e(report.id)}" data-finding-key="${e(finding.key)}" data-action="${action}" data-record-version="${finding.recordVersion}">${text}</button>`).join("")}</div>` : "";
+    const history = finding.decisionHistory.length ? `<details class="watch-decision-history"><summary>决定历史（${finding.decisionHistory.length}）</summary>${finding.decisionHistory.map((entry) => `<article><p><strong>${e(entry.fromDecision)} → ${e(entry.toDecision)}</strong><time datetime="${e(entry.createdAt)}">${e(entry.createdAt)}</time></p><p>${e(entry.note)}</p><small>WEB · ${e(entry.authorityType)} · version ${entry.recordVersion}</small></article>`).join("")}</details>` : "";
+    return `<article class="panel watch-finding" data-watch-finding><header><div><p class="overline">${e(finding.key)}</p><h2>${e(finding.title)}</h2></div><div class="chips">${chip(finding.decision, watchDecisionLabels[finding.decision])}${chip(finding.direction, watchDirectionLabels[finding.direction])}</div></header><dl><div><dt>验证状态</dt><dd>${e(finding.verification.replaceAll("_", " "))}</dd></div><div><dt>建议</dt><dd>${e(finding.recommendation)}</dd></div><div><dt>下一步</dt><dd>${e(finding.nextStep)}</dd></div></dl>${finding.evidence.length ? `<div class="watch-evidence"><h3>证据</h3>${finding.evidence.map((item) => { const url = safeExternalUrl(item.url); return url ? `<a class="text-link" href="${e(url)}" target="_blank" rel="noopener noreferrer">${e(item.label)} ↗</a>` : ""; }).join("")}</div>` : ""}${finding.decisionNote ? `<p class="watch-decision-note"><strong>决定依据：</strong>${e(finding.decisionNote)}</p>` : ""}${history}${controls}</article>`;
+  }).join("");
+}
+
+export function platformWatchReportView(
+  service: WorkspaceService,
+  id: string,
+  zone: string,
+  asOf: string,
+  writesEnabled = false,
+): string {
+  const report = service.platformWatchService.getReport(id);
+  const source = safeExternalUrl(report.sourceUrl);
+  const content = `<a class="back-link" href="${rootPath}/platform-watch">← 平台判断</a>${heading("OPENAI PLATFORM WATCH", report.title, report.summary)}${freshness(asOf, zone)}<section class="panel watch-report-meta"><dl><div><dt>方向判断</dt><dd>${e(report.directionalJudgment.replaceAll("_", " "))}</dd></div><div><dt>生成时间</dt><dd>${e(timelineDate(report.generatedAt, zone))}</dd></div><div><dt>证据截止</dt><dd>${report.evidenceCutoff ? e(timelineDate(report.evidenceCutoff, zone)) : "未提供"}</dd></div><div><dt>PAW 基线</dt><dd>${report.repositorySha ? `<code>${e(report.repositorySha)}</code>` : "未提供"}</dd></div><div><dt>导入主体</dt><dd><code>${e(report.createdByPrincipalId)}</code></dd></div></dl>${source ? `<a class="button secondary" href="${e(source)}" target="_blank" rel="noopener noreferrer">打开原报告 ↗</a>` : ""}</section><section class="panel watch-report-body"><h2>报告正文</h2><pre>${e(report.body)}</pre></section><header class="watch-findings-heading"><div><p class="eyebrow">HUMAN DISPOSITION / 人工处置</p><h2>${report.pendingFindingCount ? `${report.pendingFindingCount} 项仍待决定` : "全部判断已有处置"}</h2></div><span class="muted">每项独立记录，可保留修订历史</span></header>${findingDecisionControls(report, writesEnabled)}`;
+  return document("Watch 报告", content, true, "reports");
 }

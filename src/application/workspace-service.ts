@@ -16,6 +16,7 @@ import { JobLibraryService } from "./job-library-service.js";
 import { MailScanService } from "./mail-scan-service.js";
 import { MailBatchService } from "./mail-batch-service.js";
 import { ManualMailService } from "./manual-mail-service.js";
+import { PlatformWatchService } from "./platform-watch-service.js";
 import {
   AuthorizationError,
   ConcurrencyConflictError,
@@ -255,6 +256,7 @@ export class WorkspaceService {
   readonly mailScanService: MailScanService;
   readonly mailBatchService: MailBatchService;
   readonly manualMailService: ManualMailService;
+  readonly platformWatchService: PlatformWatchService;
 
   constructor(
     private readonly database: WorkspaceDatabase,
@@ -277,6 +279,7 @@ export class WorkspaceService {
     this.mailScanService.batches=this.mailBatchService;
     this.mailBatchService.ledger=this.mailScanLedger;
     this.manualMailService = new ManualMailService(database, resolveTaskContext, options.clock);
+    this.platformWatchService = new PlatformWatchService(database, resolveTaskContext, options.clock);
     const assertProjectVisible = (projectId: string, workspaceId: string) => {
       this.getAuthorizedProject(projectId, workspaceId);
     };

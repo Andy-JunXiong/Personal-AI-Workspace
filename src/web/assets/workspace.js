@@ -6,9 +6,12 @@ let loggingOut = false;
 let completing = false;
 let deciding = false;
 let linking = false;
+let importingWatch = false;
+let decidingWatch = false;
 const completionIntents = new Map();
 const decisionIntents = new Map();
 const linkIntents = new Map();
+const watchDecisionIntents = new Map();
 /** @type {AbortController | undefined} */
 let pending;
 
@@ -183,6 +186,100 @@ async function linkCandidate(control) {
     }
   }
 }
+
+/** @param {HTMLFormElement} form */
+async function importPlatformWatch(form) {
+  if (importingWatch || !navigator.onLine) {
+    if (!navigator.onLine) announce('网络已断开，联网后再导入报告。');
+    return;
+  }
+  const textarea = /** @type {HTMLTextAreaElement | null} */ (form.querySelector('textarea[name="report"]'));
+  const button = /** @type {HTMLButtonElement | null} */ (form.querySelector('button[type="submit"]'));
+  if (!textarea || !button) return;
+  let payload;
+  try { payload = JSON.parse(textarea.value); }
+  catch { announce('报告 JSON 无法解析，请检查格式。'); return; }
+  payload.intentKey = crypto.randomUUID();
+  importingWatch = true;
+  button.disabled = true;
+  announce('正在导入报告…');
+  try {
+    const session = await fetch('/api/v1/session', { cache: 'no-store', signal: AbortSignal.timeout(15000) });
+    if (session.status === 401) { main.replaceChildren(); location.replace(location.pathname); return; }
+    if (!session.ok) throw new Error('session unavailable');
+    const { csrfToken } = await session.json();
+    const response = await fetch('/api/v1/job-search/platform-watch', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'x-csrf-token': csrfToken },
+      body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(20000),
+    });
+    if (response.status === 401) { main.replaceChildren(); location.replace(location.pathname); return; }
+    if (response.status === 409) { announce('同一报告标识已保存了不同内容；请核对来源，不要覆盖。'); return; }
+    if (response.status === 422) { announce('报告字段不符合导入合同，请核对时间、SHA、判断和证据格式。'); return; }
+    if (!response.ok) throw new Error('watch import unavailable');
+    const result = await response.json();
+    textarea.value = '';
+    await readPage(new URL(`/workspace/job-search/platform-watch/${encodeURIComponent(result.report.id)}`, location.origin));
+    history.replaceState(null, '', `/workspace/job-search/platform-watch/${encodeURIComponent(result.report.id)}`);
+    announce(result.created ? '报告已导入；所有建议仍等待你的决定。' : '这份报告已经存在，已打开原记录。');
+  } catch {
+    announce('尚未确认导入结果。请刷新记录后再决定是否重试。');
+  } finally {
+    importingWatch = false;
+    if (button.isConnected) button.disabled = !navigator.onLine;
+  }
+}
+
+/** @param {HTMLButtonElement} control */
+async function decideWatchFinding(control) {
+  if (decidingWatch || !navigator.onLine) {
+    if (!navigator.onLine) announce('网络已断开，联网后再保存决定。');
+    return;
+  }
+  const finding = control.closest('[data-watch-finding]');
+  const note = /** @type {HTMLTextAreaElement | null} */ (finding?.querySelector('[data-watch-decision-note]'));
+  const reportId = control.dataset.reportId;
+  const findingKey = control.dataset.findingKey;
+  const action = control.dataset.action;
+  const expectedRecordVersion = Number(control.dataset.recordVersion);
+  if (!reportId || !findingKey || !action || !Number.isInteger(expectedRecordVersion) || !note?.value.trim()) {
+    announce('请先写下决定依据。'); return;
+  }
+  const slot = `${reportId}:${findingKey}:${action}:${expectedRecordVersion}:${note.value.trim()}`;
+  const intentKey = watchDecisionIntents.get(slot) ?? crypto.randomUUID();
+  watchDecisionIntents.set(slot, intentKey);
+  decidingWatch = true;
+  control.disabled = true;
+  announce('正在保存判断…');
+  try {
+    const session = await fetch('/api/v1/session', { cache: 'no-store', signal: AbortSignal.timeout(15000) });
+    if (session.status === 401) { main.replaceChildren(); location.replace(location.pathname); return; }
+    if (!session.ok) throw new Error('session unavailable');
+    const { csrfToken } = await session.json();
+    const response = await fetch(`/api/v1/job-search/platform-watch/${encodeURIComponent(reportId)}/findings/${encodeURIComponent(findingKey)}/decision`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'x-csrf-token': csrfToken },
+      body: JSON.stringify({ action, expectedRecordVersion, note: note.value.trim(), intentKey }),
+      signal: AbortSignal.timeout(15000),
+    });
+    if (response.status === 401) { main.replaceChildren(); location.replace(location.pathname); return; }
+    if (response.status === 409 || response.status === 422) {
+      watchDecisionIntents.delete(slot);
+      announce('判断已变化或输入无效，正在读取最新记录。');
+      await readPage(firstPageUrl()); return;
+    }
+    if (!response.ok) throw new Error('watch decision unavailable');
+    watchDecisionIntents.delete(slot);
+    await readPage(firstPageUrl());
+    announce('判断已保存，并保留了可追溯记录。');
+  } catch {
+    announce('尚未确认保存结果。请重试同一操作，或刷新查看最新记录。');
+  } finally {
+    decidingWatch = false;
+    if (control.isConnected) control.disabled = !navigator.onLine;
+  }
+}
 /** @param {URL} url @param {boolean} [append] */
 async function readPage(url, append = false) {
   if (loggingOut || document.body.dataset.authenticated !== 'true') return;
@@ -349,7 +446,13 @@ document.addEventListener('input', (event) => {
 });
 document.addEventListener('submit', (event) => {
   const form = event.target;
-  if (!(form instanceof HTMLFormElement) || !form.matches('[data-filter-form]')) return;
+  if (!(form instanceof HTMLFormElement)) return;
+  if (form.matches('[data-platform-watch-import]')) {
+    event.preventDefault();
+    void importPlatformWatch(form);
+    return;
+  }
+  if (!form.matches('[data-filter-form]')) return;
   event.preventDefault();
   const url = new URL(location.pathname, location.origin);
   for (const [key, value] of new FormData(form)) if (typeof value === 'string' && value) url.searchParams.set(key, value);
@@ -370,6 +473,8 @@ document.addEventListener('click', async (event) => {
     await decideCandidate(control);
   } else if (control instanceof HTMLButtonElement && control.matches('[data-link-candidate]')) {
     await linkCandidate(control);
+  } else if (control instanceof HTMLButtonElement && control.matches('[data-decide-watch-finding]')) {
+    await decideWatchFinding(control);
   } else if (control.matches('[data-refresh]')) {
     if (dirty) { announce('请先应用筛选条件，再刷新状态。'); return; }
     void readPage(firstPageUrl());
@@ -415,13 +520,13 @@ document.addEventListener('visibilitychange', () => {
   }
 });
 window.addEventListener('offline', () => {
-  for (const control of document.querySelectorAll('[data-complete-task], [data-decide-candidate], [data-link-candidate]')) {
+  for (const control of document.querySelectorAll('[data-complete-task], [data-decide-candidate], [data-link-candidate], [data-decide-watch-finding], [data-platform-watch-import] button')) {
     if (control instanceof HTMLButtonElement) control.disabled = true;
   }
   announce('网络已断开，当前内容可能已过时。联网后可刷新。');
 });
 window.addEventListener('online', () => {
-  for (const control of document.querySelectorAll('[data-complete-task], [data-decide-candidate], [data-link-candidate]')) {
+  for (const control of document.querySelectorAll('[data-complete-task], [data-decide-candidate], [data-link-candidate], [data-decide-watch-finding], [data-platform-watch-import] button')) {
     if (control instanceof HTMLButtonElement) control.disabled = false;
   }
   void resume();

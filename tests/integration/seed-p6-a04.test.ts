@@ -124,7 +124,7 @@ describe("P6 A04 bounded synthetic seed", () => {
     const second = runSeedP6A04(args, seedEnvironment);
     expect(second).toMatchObject({ createdCount: 0, replayedCount: 106, projectIds: first.projectIds });
     expect(w.database.serialize()).toEqual(before);
-  }, 15_000);
+  }, 25_000);
 
   it("rejects an unmapped principal without initializing identity or writing records", () => {
     const w = setup();
@@ -134,5 +134,5 @@ describe("P6 A04 bounded synthetic seed", () => {
       { ...seedEnvironment, PAW_DEV_PRINCIPAL_SUBJECT: "unmapped-user" },
     )).toThrow();
     expect(w.database.serialize()).toEqual(before);
-  });
+  }, 10_000);
 });

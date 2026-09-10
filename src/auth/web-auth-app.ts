@@ -30,7 +30,7 @@ import { GmailMcpReader } from "../gmail/mcp-reader.js";
 const SESSION_COOKIE = "__Host-paw_session";
 const LOGIN_COOKIE = "__Host-paw_login";
 const cookieOptions = { secure: true, httpOnly: true, sameSite: "lax" as const, path: "/" };
-const objectRoute = /^\/workspace\/job-search\/(?:today|library|resume|applications(?:\/[a-f0-9-]{36})?|tasks\/[a-f0-9-]{36}|jobs(?:\/[a-f0-9-]{36})?)$/u;
+const objectRoute = /^\/workspace\/job-search\/(?:today|library|resume|platform-watch(?:\/[a-f0-9-]{36})?|applications(?:\/[a-f0-9-]{36})?|tasks\/[a-f0-9-]{36}|jobs(?:\/[a-f0-9-]{36})?)$/u;
 
 export function safeReturnTo(value: unknown): string {
   if (value === undefined) return "/workspace/job-search/today";
@@ -86,6 +86,7 @@ export function createWebAuthApp(options: {
   });
   app.use("/api/v1/job-search/library", express.json({ limit: "256kb" }));
   app.use("/api/v1/job-search/resume", express.json({ limit: "256kb" }));
+  app.use("/api/v1/job-search/platform-watch", express.json({ limit: "256kb" }));
   app.use(express.json({ limit: "4kb" }));
 
   // Bounded aggregate limit: do not trust spoofable forwarding headers as an
