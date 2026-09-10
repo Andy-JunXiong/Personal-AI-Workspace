@@ -237,8 +237,8 @@ it("allows only CSRF-authorized library and candidate decisions with general bro
   expect((await w.request(`/api/v1/job-search/library/candidates/${randomUUID()}/draft`,{method:"POST",headers,body:JSON.stringify({draft:"x",expectedUpdatedAt:new Date().toISOString()})})).status).toBe(404);
 });
 
-it("imports immutable Platform Watch reports and records CSRF-authorized finding decisions", async () => {
-  const w = await setup(true, "Australia/Sydney", true);
+it.each([false, true])("imports scoped Platform Watch reports with general writes enabled=%s", async (writesEnabled) => {
+  const w = await setup(true, "Australia/Sydney", writesEnabled);
   w.link();
   const login = await w.start("/workspace/job-search/platform-watch");
   const finished = await w.finish(login);
@@ -252,6 +252,17 @@ it("imports immutable Platform Watch reports and records CSRF-authorized finding
 
   const { csrfToken } = await (await w.request("/api/v1/session", { headers: { cookie } })).json();
   const headers = { cookie, origin: webOrigin, "x-csrf-token": csrfToken, "content-type": "application/json" };
+  if (!writesEnabled) {
+    for (const endpoint of [
+      `/tasks/${randomUUID()}/complete`,
+      `/candidates/${randomUUID()}/decide`,
+      `/candidates/${randomUUID()}/link`,
+    ]) {
+      expect((await w.request(`/api/v1/job-search${endpoint}`, {
+        method: "POST", headers, body: "{}",
+      })).status).toBe(404);
+    }
+  }
   const payload = {
     externalId: "openai-platform-watch:2026-09-15",
     title: "OpenAI Platform Watch — 2026-09-15",
@@ -276,6 +287,12 @@ it("imports immutable Platform Watch reports and records CSRF-authorized finding
   expect((await w.request("/api/v1/job-search/platform-watch", {
     method: "POST", headers: { cookie, "content-type": "application/json" }, body: JSON.stringify(payload),
   })).status).toBe(403);
+  expect((await w.request("/api/v1/job-search/platform-watch", {
+    method: "POST", headers: { ...headers, origin: "https://evil.test" }, body: JSON.stringify(payload),
+  })).status).toBe(403);
+  expect((await w.request("/api/v1/job-search/platform-watch", {
+    method: "POST", headers: { ...headers, cookie: "" }, body: JSON.stringify(payload),
+  })).status).toBe(401);
   expect((await w.request("/api/v1/job-search/platform-watch", {
     method: "POST", headers, body: JSON.stringify({ ...payload, workspaceId: randomUUID() }),
   })).status).toBe(422);

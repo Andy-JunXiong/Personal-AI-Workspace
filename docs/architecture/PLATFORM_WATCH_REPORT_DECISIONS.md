@@ -4,6 +4,13 @@
 
 **Accepted scope:** authenticated website import, readback and explicit per-finding disposition.
 
+Report import and finding decisions are scoped Web actions, like the existing
+resume and library controls. They require a linked session, same-origin request
+and CSRF token even when `PAW_WEB_WRITES_ENABLED=false`. They do not enable the
+separate task-completion or generic candidate-write routes. The September 10
+deployment preflight identified and corrected the original P0's accidental
+dependency on the general-write switch.
+
 **Not included:** scheduled-task changes, report generation, MCP tools, automatic roadmap/ADR/code changes, deployment or production data writes.
 
 ## Continuity and benefits
@@ -103,3 +110,61 @@ recovery, apply migration 017, verify business-data fingerprints and route healt
 then import one real revised Watch report and read back one explicit disposition.
 No scheduled report should write directly into this endpoint until a separate
 authority and end-to-end retry contract is accepted.
+
+## Release procedure
+
+Source P0 is merged through PR #22 at
+`6e4eda80077d9f4144bac0c11e57c492d2f1b57f`, with successful main CI.
+The recovery-mode follow-up must be included in the reviewed release source.
+The last recorded production image is `resume-rail-20260910-r1`; confirm the
+actual active image and migration 016 before proceeding. A different baseline
+requires reconciliation, not substitution of a different verifier.
+
+1. Build a uniquely tagged candidate from the reviewed source, retain its exact
+   commit/image ID and verification evidence, and preserve the active image ID.
+   Reuse the existing Compose Web/Gmail overlays and environment settings.
+2. Use the running service's backup command and retain the exact returned backup
+   filename. Verify that named backup; do not select an arbitrary latest file.
+3. On the deployment host, run the following from the candidate source directory,
+   substituting the actual backup filename and immutable local image tags:
+
+   ```bash
+   sudo bash deploy/cloud/rehearse-database-copy.sh \
+     workspace-YYYYMMDDTHHMMSSZ.db <candidate-tag> <active-tag> \
+     --platform-watch-upgrade
+   ```
+
+   This validates migration 016 to 017, unchanged old rows/history, exactly three
+   empty new tables, candidate restart and old-image startup on the upgraded copy.
+   It uses isolated containers without network access or published ports.
+4. Before cutover, stop the service and retain a fresh consistent pre-migration
+   snapshot. Keep ingress unavailable to writes until the candidate starts healthy
+   and a stopped, post-migration snapshot has been checked against that exact
+   pre-migration snapshot using the candidate's built verifier:
+
+   ```bash
+   node dist/scripts/verify-platform-watch-migration.js <before.db> <after.db>
+   ```
+
+   Run against copies in the candidate environment. A full-schema fingerprint
+   must change for this migration; do not reuse an unchanged-schema `cmp` gate.
+   The additive verifier checks the expected schema and every pre-existing table.
+   No report import may occur before this check, which requires empty new tables.
+5. Restore the existing ingress after successful migration validation. Run the
+   standard five public release checks with the actual write-mode setting. Verify
+   authenticated Today, Jobs, resume and the empty platform report page; confirm
+   the MCP inventory remains 30 tools and existing scheduled tasks are unchanged.
+6. On failure, keep ingress contained. Roll back the image only after its startup
+   on the upgraded copy passed rehearsal. Retain migration 017 and any new records;
+   restoring a database backup is a separate incident decision requiring
+   reconciliation of intervening writes.
+7. For real-use acceptance, prepare a faithful JSON snapshot of a real revised
+   report and review its source URL, cutoff, repository SHA and finding keys.
+   Import through the authenticated website, reload and compare the immutable
+   content. Record a user-selected finding action and rationale, then reload to
+   verify version 2, principal attribution and exactly one decision-history row.
+   An operator must not invent an ACCEPT/REJECT/DEFER choice for acceptance.
+
+The weekly September 15 run is still future evidence. An earlier real revised
+report can validate this storage flow, but cannot validate unattended weekly
+execution or the revised weekly report's quality.

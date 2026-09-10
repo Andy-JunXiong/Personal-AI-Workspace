@@ -17,7 +17,7 @@ import { verifiedRequestContext } from "../application/request-context.js";
 import { WorkspaceService } from "../application/workspace-service.js";
 import { CursorError } from "../application/read-pagination.js";
 import { createJobSearchReadRouter } from "./job-search-read-router.js";
-import { createJobSearchWriteRouter } from "./job-search-write-router.js";
+import { createJobSearchWriteRouter, createPlatformWatchWriteRouter } from "./job-search-write-router.js";
 import { createJobSearchPageRouter, createWebAssetsRouter } from "../web/page-router.js";
 import { loginFailureView } from "../web/views.js";
 import type { GmailRuntime } from "../gmail/checks.js";
@@ -193,6 +193,10 @@ export function createWebAuthApp(options: {
   app.use("/api/v1/job-search", createJobLibraryRouter(serviceFor,
     (request) => gmailIdentityFor(request, true), options.jobFitAnalyzer,
     options.gmail ? new GmailMcpReader(options.gmail.connections,options.gmail.authorization) : undefined));
+  app.use("/api/v1/job-search", createPlatformWatchWriteRouter((request) => {
+    gmailIdentityFor(request, true);
+    return serviceFor(request);
+  }, now));
   if (options.writesEnabled) {
     const writeServiceFor = (request: Request) => {
       const session = sessions.getSession(cookie(request, SESSION_COOKIE));

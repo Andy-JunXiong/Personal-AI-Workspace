@@ -10,11 +10,14 @@ backup_name="${1:-}"
 current_tag="${2:-}"
 previous_tag="${3:-}"
 mode="${4:-unchanged}"
-if [[ "${mode}" != unchanged && "${mode}" != --s2-upgrade && "${mode}" != --mail-batch-upgrade && "${mode}" != --mail-ingestion-upgrade && "${mode}" != --mail-scan-ledger-upgrade && "${mode}" != --mail-body-read-upgrade && "${mode}" != --job-mail-search-upgrade && "${mode}" != --job-library-upgrade && "${mode}" != --resume-editor-upgrade ]]; then
+if [[ "${mode}" != unchanged && "${mode}" != --s2-upgrade && "${mode}" != --mail-batch-upgrade && "${mode}" != --mail-ingestion-upgrade && "${mode}" != --mail-scan-ledger-upgrade && "${mode}" != --mail-body-read-upgrade && "${mode}" != --job-mail-search-upgrade && "${mode}" != --job-library-upgrade && "${mode}" != --resume-editor-upgrade && "${mode}" != --platform-watch-upgrade ]]; then
   echo "Optional fourth argument must be a supported upgrade mode, including --job-mail-search-upgrade" >&2
   exit 1
 fi
 upgrade_verifier=dist/scripts/verify-s2-migration.js
+if [[ "${mode}" == --platform-watch-upgrade ]]; then
+  upgrade_verifier=dist/scripts/verify-platform-watch-migration.js
+fi
 if [[ "${mode}" == --resume-editor-upgrade ]]; then
   upgrade_verifier=dist/scripts/verify-resume-migration.js
 fi

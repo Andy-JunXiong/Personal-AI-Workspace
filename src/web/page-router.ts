@@ -77,9 +77,9 @@ export function createJobSearchPageRouter(serviceFor: (request: Request) => Work
   page("/resume", (service, request) => { query(request, []); return resumeView(service); });
   page("/library", (service, request) => libraryView(service, String(query(request, ["q"]).q ?? "")));
   page("/platform-watch", (service, request) => { query(request, []); return platformWatchView(service,
-    timeZone, new Date(now()).toISOString(), completionEnabled); });
+    timeZone, new Date(now()).toISOString(), true); });
   page("/platform-watch/:id", (service, request) => { query(request, []); return platformWatchReportView(service,
-    request.params.id as string, timeZone, new Date(now()).toISOString(), completionEnabled); });
+    request.params.id as string, timeZone, new Date(now()).toISOString(), true); });
   page("/jobs/:id", (service, request) => { query(request, []); return candidateView(service,
     request.params.id as string, timeZone, new Date(now()).toISOString(), completionEnabled, matchingEnabled); });
   return router;

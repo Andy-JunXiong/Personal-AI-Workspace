@@ -86,8 +86,8 @@ through its Workspace-owned receipt; a manual success is not a substitute. Auton
 lifecycle admission, direct LinkedIn/SEEK account integration, generic workflow
 automation and optional external job matching remain outside the admitted boundary.
 The broader versioned job-intelligence ledger remains a proposed, evidence-first design.
-The next product acceptance is the bounded PAW report-to-decision P0: review/merge,
-then gated migration 017 deployment and one real report/decision readback. Per-job
+The bounded PAW report-to-decision P0 is merged through PR #22 with passing main CI.
+Next are the recovery-mode follow-up, gated migration 017 deployment and one real report/decision readback. Per-job
 named resume versions remain a separate future increment. See the session handoff
 and [P0 result](docs/mvp/PLATFORM_WATCH_REPORT_DECISION_P0_RESULTS_2026-09-10.md)
 for acceptance gaps and restart priorities.

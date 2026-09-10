@@ -58,6 +58,15 @@ export function createJobSearchWriteRouter(
     });
     response.json({ ...result, asOf: new Date(now()).toISOString() });
   });
+  return router;
+}
+
+/** Scoped report actions; the caller must verify the session, origin and CSRF token. */
+export function createPlatformWatchWriteRouter(
+  serviceFor: (request: Request) => WorkspaceService,
+  now: () => number = Date.now,
+) {
+  const router = Router();
   router.post("/platform-watch", (request, response) => {
     const service = serviceFor(request);
     const result = service.platformWatchService.recordReportFromWeb(request.body);
