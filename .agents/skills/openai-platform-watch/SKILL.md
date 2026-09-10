@@ -50,9 +50,42 @@ It is repo-local governance and is outside `paw-job-search-skills-s0-s2-v1`.
   announcement, interactive connector read, tool discovery, trigger acknowledgement,
   or local test cannot establish unattended acceptance or authorize removal.
 
+## Synthesize directional and architectural insight
+
+The report's purpose is to improve PAW decisions, not to retell release notes.
+Before writing, compare three things explicitly: the evidenced OpenAI trajectory,
+PAW's implemented or approved/planned capability, and the previous Watch judgment.
+A trajectory is an inference supported by dated evidence, not a claim that one
+release proves a trend. Read relevant code or decision records for the PAW side;
+do not invent roadmap commitments or infer production from repository files.
+
+For each material insight:
+- Name the changed assumption and the exact responsibility, user workflow or
+  investment affected. Explain why it matters now, compared with the prior view.
+- Compare retaining/building PAW capability with adopting a platform primitive.
+  Include dependency, migration, usability and recovery tradeoffs where material.
+- Recommend a concrete priority: what to do next, postpone, avoid building, or
+  retain for a stated reason. Distinguish an accepted implementation from a proposed
+  experiment. Split recommendations with different contract Directions.
+- Give the strongest relevant counterevidence or uncertainty, a bounded test,
+  and the result that would reverse the recommendation. "Monitor developments"
+  alone is not a next step. Confidence is scoped prose, not a new status taxonomy.
+
+Lead with an advisory boundary conclusion and at most three prioritized insights
+unless additional urgent architectural impacts require space. Put release lists,
+routine fixes, source coverage and technical metadata in the evidence appendix.
+A technical fix belongs in the main report only when its demonstrated consequence
+changes a boundary, dependency choice, major risk or investment priority.
+Do not force an insight when evidence shows no material change; say which prior
+judgment still holds and its revisit condition. With incomplete evidence, limit
+the conclusion and expose the gap at the top, rather than inventing strategic certainty.
+Do not repeatedly recommend "keep domain state" as a default. Consider narrowing,
+expanding or repositioning PAW if evidence supports it, including replacement of
+an existing responsibility subject to the contract's REMOVE gate.
+
 ## Report and stop
 
-Use the compact report in the run reference. Aim for at most five main findings;
+Use the decision-first report in the run reference. Aim for at most three main insights;
 do not hide additional urgent impacts to meet a presentation limit. Complete means
 the declared source scope was checked, not comprehensive knowledge of OpenAI.
 Use the contract's exact scan results and finding fields. New recommendations
