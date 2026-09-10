@@ -257,6 +257,14 @@ condition. API detail no longer occupies the main summary. Missing-source and
 no-material-change behavior remain explicit in the Skill. The new scheduled
 reasoning quality is NOT_TESTED until an actual revised run is reviewed.
 
+The revision is published as [draft PR #21](https://github.com/Andy-JunXiong/Personal-AI-Workspace/pull/21).
+The saved weekly task now explicitly loads procedure and editorial example commit
+`001bef2589aed8b4c877b95fbd450fcf688de951`, pending merge. Reopening its editor
+confirmed the exact complete prompt and Tuesday 09:00 / September 15 schedule.
+The reviewed scan cutoff remains unchanged. Local Skill content/reference checks
+and exact GitHub readback passed. No application suite was needed for these
+instructions; revised scheduled reasoning quality remains NOT_TESTED.
+
 ## Execution layer v1 — 2026-09-10
 
 ### Continuity and benefits
