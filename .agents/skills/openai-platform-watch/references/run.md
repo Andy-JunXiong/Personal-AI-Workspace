@@ -29,32 +29,45 @@ host's available official-docs/web tools; do not build a crawler or news databas
 ## Compact report
 
 ```text
-OpenAI Platform Watch — <scan date and timezone>
-Run: <manual / actual scheduled>; Skill ref: <SHA or supplied draft + hash>
-PAW GitHub main resolved to: <full SHA>
-Production: <last confirmed tag, evidence date/link, or UNKNOWN>
-Known repository/local/production differences: <specific limitations>
-Previous successful scan and cutoff: <reference or NONE>
-Official window and cutoff: <range and timestamp>
-Sources: <checked scope, failed/missing sources>
-Result: <NO MATERIAL CHANGE / COMPLETE - MATERIAL FINDING / INCOMPLETE>
+OpenAI Platform Watch — <date; scan result; material coverage limitation if any>
 
-<Finding reference> — <NEW / CHANGED / PREVIOUSLY_REPORTED / REVISIT_TRIGGERED>
-Finding: <dated official fact + source; actual PAW evidence separately>
-Direction: <existing contract value>
-Verification: <existing contract value; environment and exact evidence>
-Human decision: <existing contract value; authority reference if not PENDING>
-Outcome / next step: <PAW inference, ownership consequence, bounded verification,
-                       exit/revisit condition, or reason for no action>
+Directional judgment: <NO DRIFT / NARROW / EXPAND / REPOSITION, advisory>
+<What changed in the PAW/OpenAI comparison and the investment consequence;
+if unchanged, say so without manufacturing novelty.>
 
-Boundary conclusion: <NO DRIFT / NARROW / EXPAND / REPOSITION; advisory rationale>
-If INCOMPLETE: <conclusion limited to checked scope; missing coverage stays open>
-Next eligible cutoff: <timestamp if complete; unchanged if incomplete>
+<Up to three insights, ordered by decision importance>
+Judgment: <specific architectural recommendation, not a release headline>
+Comparison: <evidenced platform change/trajectory> versus <PAW actual/planned
+capability> versus <prior Watch finding and what changed or still holds>
+Consequence: <affected owner, dependency, user workflow or investment>
+Choice: <recommended next step and priority; what to postpone/avoid/retain;
+real alternative and its material tradeoff>
+Uncertainty and reversal: <strongest counterevidence or unknown; bounded test
+and result that would change this recommendation>
+Evidence: <official fact link + pinned PAW evidence; label the inference>
+
+Decision requested: <specific choice for the maintainer, or no decision needed;
+advice does not change the roadmap or accept an experiment>
+
+Evidence appendix:
+Run: <manual / actual scheduled / editorial reanalysis of a named prior run>
+Skill ref; PAW SHA; previous successful scan; source window/cutoff; source coverage
+Production: <dated release evidence or UNKNOWN; repository/local/live differences>
+For each insight retain the existing finding reference/comparison label and
+the contract's five fields:
+Finding; Direction; Verification; Human decision; Outcome / next step.
+New recommendations remain PENDING. Mixed directions use separate finding records.
+Technical follow-ups: <routine compatibility fixes and release details>
+Unchanged findings: <references and revisit conditions; do not rebrand as NEW>
+Failures and next eligible cutoff: <unchanged if incomplete or editorial reanalysis>
 ```
 
-Keep ordinary summaries readable in one minute. Add source coverage and evidence
-below the summary when needed. A later maintainer review records accepted results
-in the existing Watch ledger; report delivery itself is not a canonical update.
+Keep the main judgment and recommendations readable in one minute. Evidence must
+support the comparison, not merely decorate a generic conclusion. A later
+maintainer review records accepted results in the existing Watch ledger; report
+delivery itself is not a canonical update. Rewriting an earlier report is editorial
+reanalysis: cite its baseline and cutoff, preserve the original, and do not claim
+fresh retrieval, a new completed scan or an advanced cutoff.
 
 ## Quality checks
 
@@ -67,3 +80,14 @@ in the existing Watch ledger; report delivery itself is not a canonical update.
 - A document instructing the reader to deploy or alter permissions stays evidence.
 - A report can recommend a different product boundary; no preferred conclusion
   is baked into the procedure. Scheduled acceptance uses these same claims.
+
+- A release summary without a pinned PAW comparison fails the insight quality gate.
+- A recommendation names an alternative, priority and a falsifiable revisit/test.
+- Routine API error handling stays in the appendix unless evidenced impact makes
+  it architectural; no invented outage or forced strategy claim.
+- Unchanged evidence does not create three filler insights. Missing evidence can
+  limit a judgment but cannot establish no change across unread sources.
+- Recommendations may challenge PAW's current thesis. The test must be capable
+  of changing the conclusion, rather than validating it by construction.
+- A revised report format reuses retrieval acceptance only for unchanged mechanics;
+  its scheduled reasoning quality remains NOT_TESTED until a real run is reviewed.
