@@ -164,6 +164,99 @@ Allowed results: NO MATERIAL CHANGE,
 COMPLETE - MATERIAL FINDING, INCOMPLETE. Completion means the stated source scope
 was checked, not that every OpenAI change everywhere was discovered.
 
+## Directional reporting update — 2026-09-10
+
+### Continuity and benefits
+
+Jun requested architectural comparison and directional insight instead of a
+release-note digest. This update changes the existing Skill, report reference and
+weekly prompt: compare OpenAI evidence, PAW implementation/plans and prior
+judgments; lead with choices, tradeoffs and falsifiable next steps. It adds no
+new taxonomy or automatic decision authority. The immediate benefit is a
+decision-oriented rewrite below; the next gate is reasoning-quality review of
+the first scheduled report under this revision. The earlier execution/retrieval
+acceptance still applies to unchanged mechanics, not to the revised report quality.
+Longer-term value is better investment and ownership decisions, including changing
+PAW's thesis when contrary evidence warrants it. PAW report ingestion/display
+remains a separate unimplemented product increment.
+
+### 首份报告：方向与架构判断（重写）
+
+这是对 9 月 10 日既有扫描的重新分析，**不是一次新的扫描**。
+平台事实仍使用原报告的来源和 `2026-09-10T05:50:14Z` cutoff；
+PAW 扫描基线仍为 `40b1bf8d115c54951b2b27a0c809c285609304f3`，
+生产补充仍为此前人工确认的发布记录。PR #20 后续合并只说明 Watch
+执行层已进入仓库，不构成其他产品能力的新验收。下列判断均为建议。
+
+**方向判断：NO DRIFT，但开发投入应优先连接分析与实际决策。**
+这次材料支持继续使用平台的通用执行能力，并保留有场景证据支撑的
+PAW 领域责任；不足以证明 PAW 所有现有实现都应该保留。
+
+1. **把平台执行作为默认选择，把 PAW 的投入落在可靠的工作结果上。**
+   对比：官方调度/插件能力与本次真实只读 Watch 成功，说明这个场景
+   已能借助平台运行；PAW 原有的申请、证据、覆盖和准入要求则不能由
+   “任务完成”状态证明。相比此前只知道工具可用，现在多了实际执行证据。
+   建议：Watch 继续使用平台调度，暂不自建通用调度或插件管理；
+   下一步验证真实 Job Tracker 的写入、回执与回读，之后再判断可替代范围。
+   代价与反证：依赖平台会受权限、可观测性和恢复能力约束；
+   若目标工作流反复无法无交互完成，或无法核对结果，应重新比较一个
+   有限的自有执行适配方案。反过来，平台若能证明相同领域契约与恢复能力，
+   PAW 的保留范围也应缩小。不能把“保留领域状态”当永久答案。
+   依据：[实际定时对照](#actual-scheduled-acceptance--september-10)、
+   [原发现 W01](#one-minute-report)和[官方调度边界](https://learn.chatgpt.com/docs/automations)。
+   此处的投资优先级是 PAW 推断，不是官方结论。
+
+2. **交互架构按工作场景划分，暂不开展整套简历 UI 迁移。**
+   对比：MCP Apps 提供会话内 UI，但用户已经在简历网页中验证了排版、
+   区域排序和快速定位。原来“等一个具体场景”的复核条件已出现，
+   并不等于替代 UI 已经更好。建议继续保留当前编辑器，把会话内 UI
+   的试验限定在职位比较或建议确认等独立场景；该试验仍需单独决定。
+   替代方案是将简历完整搬入会话，收益可能是少切换页面，代价是重做
+   精细编辑、版本/顺序保持和预览导出验收。
+   推翻条件：用同一简历和同一组编辑任务验证，如果会话 UI 能保留这些
+   能力，并在实际操作中减少步骤和返工，才考虑逐步迁移；当前尚未测过。
+   依据：原定时报告 F1、[简历合同](../architecture/RESUME_EDITOR.md)、
+   [官方 UI 边界](https://developers.openai.com/plugins/build/chatgpt-ui)。
+   简历合同的仓库版本与后续人工生产补充须按原报告分开理解。
+
+3. **下一项产品增量建议是 PAW 中的“报告到决策”，而非更多扫描。**
+   对比：扫描与报告送达已在 ChatGPT 跑通，但本次用户反馈表明，
+   用户预期在 PAW 查看影响和做决定；当前 PAW 尚无报告展示入口。
+   这暴露的是交付与决策连接缺口，不是缺少另一套分析或调度系统。
+   建议优先准备一个小范围方案：在“今天”提示新报告，查看架构判断、
+   来源及待决定事项，并保留人工决定与原证据的关联。
+   替代方案是只在 ChatGPT 阅读，开发成本更低，但跨会话回看决定更依赖
+   对话历史。数据如何进入 PAW、谁能写入及如何去重仍需先定义；
+   本次没有实现页面、存储、写工具或新的批准流程。
+   验证条件：用一份真实报告走通查看、理解建议和回看决定；
+   如果用户在 ChatGPT 已能稳定完成且不再需要 PAW 入口，应缩减这一增量。
+   依据：本次用户关于展示位置和 insight 的反馈，以及现有
+   [任务报告](https://chatgpt.com/scheduled/6aa245ff60688191aee442beb3a181a1)。
+   这是产品建议，不是已采纳的路线图。
+
+**本轮待决定：** 是否优先进入“报告到决策”的方案设计。
+通用调度开发和整体 UI 迁移目前没有足够证据成为优先项；没有 REMOVE 建议。
+
+### Evidence and disposition appendix
+
+| Finding | Direction | Verification | Human decision | Outcome / next step |
+| --- | --- | --- | --- | --- |
+| Insight 1, W20260910-01 revisited after the actual Watch trial; PAW domain-contract judgment linked to W04 | ADOPT for platform execution; retain the separately recorded DOUBLE-DOWN recommendation for attributable PAW evidence | LIVE_VERIFIED only for the read-only Watch run; Job Tracker business writes UNRESOLVED | PENDING for broader adoption or implementation | Bound the next Job Tracker acceptance; keep the distinct owners and their reversal conditions above |
+| Insight 2, scheduled F1; concrete resume scenario versus optional conversational UI | ADOPT only as the previously proposed bounded UI evaluation | NOT_TESTED for replacement UI; historical user acceptance belongs to the existing Web | PENDING | Compare the same editing task before any migration; preserve current Web meanwhile |
+| W20260910-05, user feedback on report location and decision usefulness; NEW product follow-up | DOUBLE-DOWN on traceable domain decisions, with a small PAW entry point proposed | NOT_TESTED for report ingestion/display and decision-history workflow | PENDING; permission to improve report requirements does not approve this product increment | Define the smallest report/decision flow and its access/provenance contract before implementation; reconsider if ChatGPT alone meets the user need |
+
+W20260910-03 (API error classification) remains a technical follow-up in this
+appendix. No production outage, strategic urgency or accepted retry change is
+inferred. Plugin version details, all eight sources, failed Markdown reads and
+the repository/production evidence remain in the original scan below. Rewriting
+this summary does not advance a cutoff or create another COMPLETE scan.
+
+Editorial checks: every main insight compares platform or delivery evidence with
+PAW, names a concrete choice and alternative, and includes a bounded reversal
+condition. API detail no longer occupies the main summary. Missing-source and
+no-material-change behavior remain explicit in the Skill. The new scheduled
+reasoning quality is NOT_TESTED until an actual revised run is reviewed.
+
 ## Execution layer v1 — 2026-09-10
 
 ### Continuity and benefits
