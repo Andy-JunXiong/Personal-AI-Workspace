@@ -85,6 +85,17 @@ an existing responsibility subject to the contract's REMOVE gate.
 
 ## Report and stop
 
+Jun's reading preference is a plain-Chinese narrative tied to actual PAW use.
+Follow the [feature-choice writing contract](references/run.md#feature-choice-writing-contract):
+start with a concrete workflow, explain what changed and why it matters, then
+compare a named PAW function/architecture with a specific alternative. Every
+decision must explain the short- and long-term effects of both changing and
+retaining it. No invented time savings, generic "improve efficiency", staged
+dialogue or technical status dump in the opening. Put source/version/status
+fields in the evidence appendix. An ACCEPT records the explicitly recommended
+option; a REJECT does not authorize the alternative. Do not request approval for
+work the user already requested or that has already shipped.
+
 Use the decision-first report in the run reference. Aim for at most three main insights;
 do not hide additional urgent impacts to meet a presentation limit. Complete means
 the declared source scope was checked, not comprehensive knowledge of OpenAI.

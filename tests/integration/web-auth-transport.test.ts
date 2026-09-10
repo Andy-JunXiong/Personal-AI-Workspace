@@ -247,7 +247,7 @@ it.each([false, true])("imports scoped Platform Watch reports with general write
   const cookie = w.sessionCookie(finished);
   expect((await w.request("/workspace/job-search/platform-watch")).status).toBe(401);
   const listPage = await (await w.request("/workspace/job-search/platform-watch", { headers: { cookie } })).text();
-  expect(listPage).toContain("从报告走到明确决定");
+  expect(listPage).toContain("PAW 下一步，哪些值得改？");
   expect(listPage).toContain("data-platform-watch-import");
 
   const { csrfToken } = await (await w.request("/api/v1/session", { headers: { cookie } })).json();

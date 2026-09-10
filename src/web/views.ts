@@ -6,6 +6,7 @@ import type { ReadPage } from "../application/read-pagination.js";
 import type { ApplicationListItem } from "../application/job-search-query-service.js";
 import type { JobCandidateRecord, ResourceRecord, TaskRecord, TransitionRecord } from "../domain/types.js";
 import type { PlatformWatchReport } from "../application/platform-watch-service.js";
+import { renderReportMarkdown } from "./report-markdown.js";
 
 export const rootPath = "/workspace/job-search";
 export const escapeHtml = (value: unknown): string => String(value ?? "").replace(/[&<>"']/gu,
@@ -351,8 +352,16 @@ function reportLink(id: string): string {
 }
 
 function reportStatus(report: PlatformWatchReport): string {
-  return report.pendingFindingCount ? `${report.pendingFindingCount} 项待决定` : "全部已处置";
+  return report.pendingFindingCount ? `${report.pendingFindingCount} 项待决定` : "已记录你的选择";
 }
+
+const watchJudgmentLabels: Record<PlatformWatchReport["directionalJudgment"], string> = {
+  NO_DRIFT: "大方向不变", NARROW: "减少自建范围", EXPAND: "扩大 PAW 的作用", REPOSITION: "重新考虑产品方向",
+};
+const watchVerificationLabels: Record<string, string> = {
+  NOT_TESTED: "尚未实际验证", LIVE_VERIFIED: "已有实际验证，具体范围见分析",
+  BLOCKED: "验证遇到阻碍", UNRESOLVED: "还有问题没确认", NOT_APPLICABLE: "此项无需运行验证",
+};
 
 function platformWatchImport(writesEnabled: boolean): string {
   if (!writesEnabled) return "";
@@ -386,19 +395,20 @@ export function platformWatchView(
   writesEnabled = false,
 ): string {
   const reports = service.platformWatchService.listReports();
-  const rows = reports.map((report) => `<article class="watch-report-row"><div class="grow"><p class="overline">${e(report.generatedAt.slice(0, 10))} · ${e(report.directionalJudgment.replaceAll("_", " "))}</p><h2><a href="${reportLink(report.id)}">${e(report.title)}</a></h2><p>${e(report.summary)}</p></div><div class="row-status">${chip(report.pendingFindingCount ? "OPEN" : "DONE", reportStatus(report))}<time>${e(date(report.generatedAt, zone))}</time></div></article>`).join("");
-  const content = `${heading("PLATFORM WATCH / 平台判断", "从报告走到明确决定", "保留报告来源、逐项判断和人的处置记录；建议本身没有执行权。")}${freshness(asOf, zone)}${platformWatchImport(writesEnabled)}<section class="panel"><header class="section-heading"><h2>报告记录 <span class="count">${reports.length}</span></h2><span class="muted">最近 50 份</span></header>${rows || empty("尚未导入 Watch 报告", "定时报告仍在 ChatGPT 对话中；需要时可由登录用户明确导入。")}</section>`;
+  const rows = reports.map((report) => `<article class="watch-report-row"><div class="grow"><p class="overline">${e(date(report.generatedAt, zone))} · ${e(watchJudgmentLabels[report.directionalJudgment])}</p><h2><a href="${reportLink(report.id)}">${e(report.title)}</a></h2><p>${e(report.summary)}</p></div><div class="row-status">${chip(report.pendingFindingCount ? "OPEN" : "DONE", reportStatus(report))}</div></article>`).join("");
+  const content = `${heading("PAW / 平台观察", "PAW 下一步，哪些值得改？", "从你的使用场景出发，比较现有做法和新选择，再决定投入在哪里。")}${freshness(asOf, zone)}${platformWatchImport(writesEnabled)}<section class="panel"><header class="section-heading"><h2>报告记录 <span class="count">${reports.length}</span></h2><span class="muted">最近 50 份</span></header>${rows || empty("尚未导入 Watch 报告", "定时报告仍在 ChatGPT 对话中；需要时可由登录用户明确导入。")}</section>`;
   return document("平台判断", content, true, "reports");
 }
 
 function findingDecisionControls(report: PlatformWatchReport, writesEnabled: boolean): string {
-  return report.findings.map((finding) => {
+  return report.findings.map((finding, index) => {
     const actions = finding.decision === "PENDING"
-      ? [["ACCEPT", "采纳"], ["REJECT", "不采纳"], ["DEFER", "暂缓"]]
-      : [["REOPEN", "重新打开"]];
-    const controls = writesEnabled ? `<label>决定依据<textarea rows="3" maxlength="2000" data-watch-decision-note placeholder="写下为什么做这个决定" required>${e(finding.decisionNote ?? "")}</textarea></label><div class="watch-decision-actions">${actions.map(([action, text]) => `<button type="button" class="button ${action === "ACCEPT" ? "primary" : "secondary"}" data-decide-watch-finding data-report-id="${e(report.id)}" data-finding-key="${e(finding.key)}" data-action="${action}" data-record-version="${finding.recordVersion}">${text}</button>`).join("")}</div>` : "";
-    const history = finding.decisionHistory.length ? `<details class="watch-decision-history"><summary>决定历史（${finding.decisionHistory.length}）</summary>${finding.decisionHistory.map((entry) => `<article><p><strong>${e(entry.fromDecision)} → ${e(entry.toDecision)}</strong><time datetime="${e(entry.createdAt)}">${e(entry.createdAt)}</time></p><p>${e(entry.note)}</p><small>WEB · ${e(entry.authorityType)} · version ${entry.recordVersion}</small></article>`).join("")}</details>` : "";
-    return `<article class="panel watch-finding" data-watch-finding><header><div><p class="overline">${e(finding.key)}</p><h2>${e(finding.title)}</h2></div><div class="chips">${chip(finding.decision, watchDecisionLabels[finding.decision])}${chip(finding.direction, watchDirectionLabels[finding.direction])}</div></header><dl><div><dt>验证状态</dt><dd>${e(finding.verification.replaceAll("_", " "))}</dd></div><div><dt>建议</dt><dd>${e(finding.recommendation)}</dd></div><div><dt>下一步</dt><dd>${e(finding.nextStep)}</dd></div></dl>${finding.evidence.length ? `<div class="watch-evidence"><h3>证据</h3>${finding.evidence.map((item) => { const url = safeExternalUrl(item.url); return url ? `<a class="text-link" href="${e(url)}" target="_blank" rel="noopener noreferrer">${e(item.label)} ↗</a>` : ""; }).join("")}</div>` : ""}${finding.decisionNote ? `<p class="watch-decision-note"><strong>决定依据：</strong>${e(finding.decisionNote)}</p>` : ""}${history}${controls}</article>`;
+      ? [["ACCEPT", "按这个建议做"], ["REJECT", "不按这个建议做"], ["DEFER", "稍后再决定"]]
+      : [["REOPEN", "重新考虑"]];
+    const controls = writesEnabled ? `<label>你的考虑<textarea rows="3" maxlength="2000" data-watch-decision-note placeholder="你希望采用哪种做法？哪些影响让你这样选？" required>${e(finding.decisionNote ?? "")}</textarea></label><div class="watch-decision-actions">${actions.map(([action, text]) => `<button type="button" class="button ${action === "ACCEPT" ? "primary" : "secondary"}" data-decide-watch-finding data-report-id="${e(report.id)}" data-finding-key="${e(finding.key)}" data-action="${action}" data-record-version="${finding.recordVersion}">${text}</button>`).join("")}</div><p class="watch-choice-help">这里记录你对本项建议的选择；不会直接修改功能或启动开发。</p>` : "";
+    const history = finding.decisionHistory.length ? `<details class="watch-decision-history"><summary>决定历史（${finding.decisionHistory.length}）</summary>${finding.decisionHistory.map((entry) => `<article><p><strong>${e(watchDecisionLabels[entry.fromDecision])} → ${e(watchDecisionLabels[entry.toDecision])}</strong><time datetime="${e(entry.createdAt)}">${e(entry.createdAt)}</time></p><p>${e(entry.note)}</p><details><summary>记录详情</summary><small>${e(entry.fromDecision)} → ${e(entry.toDecision)} · WEB · ${e(entry.authorityType)} · version ${entry.recordVersion}</small></details></article>`).join("")}</details>` : "";
+    const sources = finding.evidence.map((item) => { const url = safeExternalUrl(item.url); return url ? `<a class="text-link" href="${e(url)}" target="_blank" rel="noopener noreferrer">${e(item.label)} ↗</a>` : ""; }).join("");
+    return `<article id="watch-choice-${index + 1}" class="panel watch-finding" data-watch-finding><header><div><p class="overline">选择 ${index + 1}</p><h2>${e(finding.title)}</h2></div>${chip(finding.decision, watchDecisionLabels[finding.decision])}</header>${renderReportMarkdown(finding.recommendation)}<div class="watch-next-step"><h3>建议先做哪一步</h3>${renderReportMarkdown(finding.nextStep)}</div><details class="watch-evidence"><summary>这项分析的依据</summary><p>${e(watchVerificationLabels[finding.verification])}</p>${sources}<p class="muted">参考编号 ${e(finding.key)} · ${e(watchDirectionLabels[finding.direction])}</p></details>${finding.decisionNote ? `<p class="watch-decision-note"><strong>你的考虑：</strong>${e(finding.decisionNote)}</p>` : ""}${history}${controls}</article>`;
   }).join("");
 }
 
@@ -411,6 +421,8 @@ export function platformWatchReportView(
 ): string {
   const report = service.platformWatchService.getReport(id);
   const source = safeExternalUrl(report.sourceUrl);
-  const content = `<a class="back-link" href="${rootPath}/platform-watch">← 平台判断</a>${heading("OPENAI PLATFORM WATCH", report.title, report.summary)}${freshness(asOf, zone)}<section class="panel watch-report-meta"><dl><div><dt>方向判断</dt><dd>${e(report.directionalJudgment.replaceAll("_", " "))}</dd></div><div><dt>生成时间</dt><dd>${e(timelineDate(report.generatedAt, zone))}</dd></div><div><dt>证据截止</dt><dd>${report.evidenceCutoff ? e(timelineDate(report.evidenceCutoff, zone)) : "未提供"}</dd></div><div><dt>PAW 基线</dt><dd>${report.repositorySha ? `<code>${e(report.repositorySha)}</code>` : "未提供"}</dd></div><div><dt>导入主体</dt><dd><code>${e(report.createdByPrincipalId)}</code></dd></div></dl>${source ? `<a class="button secondary" href="${e(source)}" target="_blank" rel="noopener noreferrer">打开原报告 ↗</a>` : ""}</section><section class="panel watch-report-body"><h2>报告正文</h2><pre>${e(report.body)}</pre></section><header class="watch-findings-heading"><div><p class="eyebrow">HUMAN DISPOSITION / 人工处置</p><h2>${report.pendingFindingCount ? `${report.pendingFindingCount} 项仍待决定` : "全部判断已有处置"}</h2></div><span class="muted">每项独立记录，可保留修订历史</span></header>${findingDecisionControls(report, writesEnabled)}`;
+  const choices = report.findings.map((finding, index) => `<a href="#watch-choice-${index + 1}">${e(finding.title)}</a>`).join("");
+  const provenance = `<details class="panel watch-report-meta"><summary>报告来源与时间</summary><div class="watch-meta-content"><dl><div><dt>整体建议</dt><dd>${e(watchJudgmentLabels[report.directionalJudgment])}</dd></div><div><dt>整理时间</dt><dd>${e(timelineDate(report.generatedAt, zone))}</dd></div><div><dt>资料查阅截止</dt><dd>${report.evidenceCutoff ? e(timelineDate(report.evidenceCutoff, zone)) : "未提供"}</dd></div><div><dt>参考代码版本</dt><dd>${report.repositorySha ? `<code>${e(report.repositorySha)}</code>` : "未提供"}</dd></div><div><dt>保存者编号</dt><dd><code>${e(report.createdByPrincipalId)}</code></dd></div></dl>${source ? `<a class="button secondary" href="${e(source)}" target="_blank" rel="noopener noreferrer">查看来源 ↗</a>` : ""}</div></details>`;
+  const content = `<div class="watch-reading"><a class="back-link" href="${rootPath}/platform-watch">← 平台判断</a>${heading("PAW / 平台观察", report.title, report.summary)}${freshness(asOf, zone)}${provenance}<article class="panel watch-report-body">${renderReportMarkdown(report.body)}</article><header class="watch-findings-heading"><div><h2>具体到 PAW，你想怎么做？</h2><p>${report.pendingFindingCount ? `${report.pendingFindingCount} 项仍待决定` : "已记录你的选择"}。每项对应下方写明的建议。</p></div></header><nav class="watch-choice-nav" aria-label="本报告的功能选择">${choices}</nav>${findingDecisionControls(report, writesEnabled)}</div>`;
   return document("Watch 报告", content, true, "reports");
 }

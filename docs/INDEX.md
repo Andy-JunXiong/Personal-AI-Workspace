@@ -73,6 +73,7 @@ deployment, manual acceptance and scheduled acceptance separately.
 
 | Document | Status / scope |
 | --- | --- |
+| [September 10 report: narrative and concrete PAW choices](mvp/PLATFORM_WATCH_STORY_2026-09-10.md) | Editorial revision after Jun's reading feedback: everyday workflow narrative plus current/alternative short- and long-term comparisons for mail checks, resume editing and report import. Original scan cutoff retained; recommendations remain pending. |
 | [Platform Watch report-to-decision P0 results — September 10](mvp/PLATFORM_WATCH_REPORT_DECISION_P0_RESULTS_2026-09-10.md) | platform-watch-20260910-r1: 404 tests, type checks/build, three recovery starts, migration 017, 42 preserved old tables and five public checks passed. One real report imported and hash-verified; deliberate human disposition pending. Records the recovered cutover attempt. |
 | [Today updates and candidate layout — September 10](mvp/TODAY_AND_JOBS_2026-09-10.md) | Deployed today-jobs-20260910-r1 using existing browser SSH. Final 395-test passing evidence, type checks, build, backup/recovery, data preservation and five public checks passed. Authenticated real Today/Jobs/detail and retained resume version 1 verified. |
 | [September 8 release handoff](mvp/RELEASE_HANDOFF_2026-09-08.md) | Historical image mail-layout-20260908-r2, migration 011, 29 tools; superseded by the September 9 release in the backend receipt record. |

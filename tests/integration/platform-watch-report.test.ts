@@ -204,6 +204,10 @@ describe("Platform Watch report-to-decision P0", () => {
     );
     expect(html).toContain("&lt;script&gt;unsafe()&lt;/script&gt;");
     expect(html).not.toContain("<script>unsafe()</script>");
+    expect(html).toContain('<details class="panel watch-report-meta"><summary>报告来源与时间</summary>');
+    expect(html).not.toContain("<pre>Decision-first report body");
+    expect(html).toContain("具体到 PAW，你想怎么做？");
+    expect(html).toContain('href="#watch-choice-1"');
     w.web.platformWatchService.decideFindingFromWeb(created.id, "W20260915-01", {
       action: "REJECT",
       expectedRecordVersion: 1,

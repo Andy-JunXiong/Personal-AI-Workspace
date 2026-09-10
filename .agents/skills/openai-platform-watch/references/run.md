@@ -28,6 +28,10 @@ host's available official-docs/web tools; do not build a crawler or news databas
 
 ## Compact report
 
+Use the feature-choice writing contract below for the user-facing prose. The
+technical fields in this older outline belong in the evidence appendix, not as
+literal headings or jargon repeated in the opening.
+
 ```text
 OpenAI Platform Watch — <date; scan result; material coverage limitation if any>
 
@@ -71,6 +75,15 @@ fresh retrieval, a new completed scan or an advanced cutoff.
 
 ## Quality checks
 
+- A finding names a real PAW function and its current behavior, cites that
+  baseline, compares a concrete alternative and gives both short- and long-term
+  consequences for change AND no change. It fails if the same recommendation
+  could be pasted into any project by replacing the name PAW.
+- Narrative describes a supported workflow or clearly marked scenario, never
+  invented events or quoted user experiences. Explain terms in ordinary language.
+- An already delivered feature is context, not a new adoption request. A finding
+  asks about a remaining choice; ACCEPT/REJECT applies to its stated advice.
+
 - An unchanged previously reported feature produces no new material claim.
 - A PAW change satisfying an old revisit condition reopens that finding even
   without an OpenAI release. A changed platform claim links its predecessor.
@@ -91,3 +104,48 @@ fresh retrieval, a new completed scan or an advanced cutoff.
   of changing the conclusion, rather than validating it by construction.
 - A revised report format reuses retrieval acceptance only for unchanged mechanics;
   its scheduled reasoning quality remains NOT_TESTED until a real run is reviewed.
+
+## Feature-choice writing contract
+
+Jun's September 10 feedback asks for a story he can follow and a concrete basis
+for decisions. Write in plain Chinese, as a colleague explaining what matters
+after watching him use PAW. Do not pretend to have observed an event not in the
+records. Start from a real task, such as reading application replies or exporting
+a resume, connect the platform evidence to a current PAW feature, then explain
+the investment choice. A narrative is connected reasoning, not fiction or a
+series of "Judgment / Consequence / Boundary" labels.
+
+Main report: a few connected paragraphs explaining what happened or remains
+unproved, which daily work is affected, and which two or three choices deserve
+attention. Do not repeat the entire choice cards in this opening. Keep dates,
+commit hashes, taxonomy and scan mechanics in a separate source appendix.
+
+For each remaining decision, use a title that names the PAW feature and choice:
+"简历编辑：保留网页，还是整体搬进聊天？" is concrete; "坚持领域价值" is not.
+Explain the existing behavior and actual alternative in prose, followed by a
+compact comparison:
+
+| 做法 | 短期：下一次实际使用 | 长期：持续使用与维护 |
+| --- | --- | --- |
+| 保留现有做法 | What works now, and what inconvenience remains | What maintenance/dependency remains, and what opportunity may be missed |
+| Change the named function in a specific way | Implementation/relearning/retest cost and realistic immediate benefit | Durable benefit, added maintenance/permissions/dependencies and failure recovery |
+
+Then recommend one option, explain why it deserves priority now, and name the
+evidence that would change the recommendation. Distinguish expected effects from
+measured outcomes; do not fabricate hours saved, money saved, outages or future
+task success. An inability to measure an effect is a visible limitation, not a
+reason to fill the cell with generic praise. A bounded experiment can be the
+recommended option, but needs a concrete task, observation and stopping condition.
+
+For PAW import, use the existing `body` for narrative, `recommendation` for the
+feature explanation and comparison table, and `nextStep` for the bounded proposed
+action. No schema extension is needed. Keep evidence links and stable finding keys.
+Changing the advice creates a new immutable report snapshot with a reference to
+its predecessor; it does not overwrite the old text or transfer human decisions.
+Do not invent a third decision when only two material choices remain.
+
+An example is the [September 10 narrative revision](../../../../docs/mvp/PLATFORM_WATCH_STORY_2026-09-10.md).
+Its concrete facts and recommendations are historical examples, not defaults for
+future reports. Resolve current PAW evidence on every new scan. A saved scheduled
+task pinned to an older procedure does not automatically inherit this revision;
+record that gap until its exact saved prompt is separately updated and read back.

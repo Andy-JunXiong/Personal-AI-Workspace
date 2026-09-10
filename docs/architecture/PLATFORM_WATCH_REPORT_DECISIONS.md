@@ -32,6 +32,23 @@ deferred or reopened one instead of inferring intent from conversation history.
 
 ## Responsibility boundary
 
+### Reading and concrete choices — September 10 follow-up
+
+Jun requests a plain-language narrative and decisions comparing named PAW
+functions/architecture choices, including the short- and long-term effects of
+change and no change. The [editorial example](../mvp/PLATFORM_WATCH_STORY_2026-09-10.md)
+and Watch writing reference define this content shape. Existing `body`,
+`recommendation` and `nextStep` fields carry prose and small comparison tables;
+the persistence schema and decision transitions are unchanged.
+
+The website renders an inert Markdown subset (paragraphs, headings, emphasis,
+lists, code, bounded tables and HTTP(S)/fragment links), escaping raw HTML and
+omitting image/embed behavior. Provenance is folded under source details. Finding
+buttons refer to the stated recommendation; rejecting it does not authorize its
+alternative. Edited advice is imported as a new snapshot referencing the original,
+without rewriting or silently deciding the original findings. A revised repository
+Skill alone does not update a weekly task pinned to an older version.
+
 ChatGPT and its scheduled task remain responsible for running the Watch and
 delivering the report. PAW stores only an explicitly imported snapshot and the
 user's later dispositions. The website is the initial interaction surface; the

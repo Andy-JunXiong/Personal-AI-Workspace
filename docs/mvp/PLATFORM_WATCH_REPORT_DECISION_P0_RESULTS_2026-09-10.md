@@ -198,3 +198,28 @@ by authenticated submission and independent version/history readback. Deployment
 authorization is not treated as an ACCEPT of all imported recommendations. Narrow
 mobile report usability and future weekly reasoning quality are not claimed as
 verified by this desktop release acceptance.
+
+## Reading and decision-quality correction — September 10
+
+Jun found the raw Markdown and technical opening hard to read, and required each
+decision to compare a specific PAW feature with an alternative and explain the
+short- and long-term consequences of both. The immediate correction renders inert
+Markdown, folds provenance and provides readable per-feature comparisons. It
+enables a meaningful human choice instead of accepting generic strategy language;
+longer-term decision usefulness still needs observation, not just a nicer page.
+
+The [narrative revision](PLATFORM_WATCH_STORY_2026-09-10.md) uses the existing scan
+and dated production evidence. It compares mail-check execution, the current
+resume editor and report import, without inventing new platform research or
+measured savings. The original immutable report and its decisions are retained.
+The repo-local Watch Skill/reference now carry this writing preference; the
+weekly task remains pinned to its earlier saved procedure until separately updated.
+
+Local validation: both type checks and 57 focused Markdown/report/transport tests
+passed. Tests cover escaped HTML/attributes, inert images, unsafe URLs, malformed
+input bounds, readable tables and existing decision/CSRF/immutability contracts.
+Desktop 1440px and phone-width 390px Chrome previews passed: folded metadata,
+three comparison tables, functional section links and no horizontal overflow;
+mobile rows show named short-/long-term labels. Screenshots were inspected.
+The final release runs the full suite because this is an actual deployment;
+the local results do not by themselves prove updated production rendering.
