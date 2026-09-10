@@ -234,8 +234,9 @@ PAW 领域责任；不足以证明 PAW 所有现有实现都应该保留。
    [任务报告](https://chatgpt.com/scheduled/6aa245ff60688191aee442beb3a181a1)。
    这是产品建议，不是已采纳的路线图。
 
-**本轮待决定：** 是否优先进入“报告到决策”的方案设计。
-通用调度开发和整体 UI 迁移目前没有足够证据成为优先项；没有 REMOVE 建议。
+**本轮决定：** 进入有界的“报告到决策”P0 源码实现；生产启用和每项报告建议
+仍需独立决定。通用调度开发和整体 UI 迁移目前没有足够证据成为优先项；
+没有 REMOVE 建议。
 
 ### Evidence and disposition appendix
 
@@ -243,13 +244,26 @@ PAW 领域责任；不足以证明 PAW 所有现有实现都应该保留。
 | --- | --- | --- | --- | --- |
 | Insight 1, W20260910-01 revisited after the actual Watch trial; PAW domain-contract judgment linked to W04 | ADOPT for platform execution; retain the separately recorded DOUBLE-DOWN recommendation for attributable PAW evidence | LIVE_VERIFIED only for the read-only Watch run; Job Tracker business writes UNRESOLVED | PENDING for broader adoption or implementation | Bound the next Job Tracker acceptance; keep the distinct owners and their reversal conditions above |
 | Insight 2, scheduled F1; concrete resume scenario versus optional conversational UI | ADOPT only as the previously proposed bounded UI evaluation | NOT_TESTED for replacement UI; historical user acceptance belongs to the existing Web | PENDING | Compare the same editing task before any migration; preserve current Web meanwhile |
-| W20260910-05, user feedback on report location and decision usefulness; NEW product follow-up | DOUBLE-DOWN on traceable domain decisions, with a small PAW entry point proposed | NOT_TESTED for report ingestion/display and decision-history workflow | PENDING; permission to improve report requirements does not approve this product increment | Define the smallest report/decision flow and its access/provenance contract before implementation; reconsider if ChatGPT alone meets the user need |
+| W20260910-05, user feedback on report location and decision usefulness; product follow-up | DOUBLE-DOWN on traceable domain decisions through a small PAW entry point | NOT_TESTED for production and real use; local source ingestion/display/decision-history tests passed | ACCEPTED only for the bounded P0 source implementation by the user's request to continue development; no production activation or recommendation disposition implied | [P0 source result](../mvp/PLATFORM_WATCH_REPORT_DECISION_P0_RESULTS_2026-09-10.md) complete; review/merge, then gated deployment and one-real-report acceptance |
 
 W20260910-03 (API error classification) remains a technical follow-up in this
 appendix. No production outage, strategic urgency or accepted retry change is
 inferred. Plugin version details, all eight sources, failed Markdown reads and
 the repository/production evidence remain in the original scan below. Rewriting
 this summary does not advance a cutoff or create another COMPLETE scan.
+
+### Report-to-decision P0 source implementation — 2026-09-10
+
+W20260910-05 now has a bounded source implementation under the
+[report/decision contract](../architecture/PLATFORM_WATCH_REPORT_DECISIONS.md).
+This accepts only the smallest Web-based provenance and human-disposition bridge.
+It does not accept any other Watch finding, alter the weekly task, create an MCP
+write surface, deploy migration 017 or authorize a recommendation to execute.
+
+The short-term benefit is locally verified traceability from an imported report to
+an explicit decision history. The expected long-term benefit is reliable continuity
+between Watch cycles and development sessions. Production operability and real-use
+usefulness remain separate evidence gates.
 
 Editorial checks: every main insight compares platform or delivery evidence with
 PAW, names a concrete choice and alternative, and includes a bounded reversal

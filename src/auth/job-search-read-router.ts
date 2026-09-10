@@ -53,5 +53,13 @@ export function createJobSearchReadRouter(serviceFor: (request: Request) => Work
     noQuery(request);
     return service.jobSearchQueryService.getCandidate(request.params.id as string);
   });
+  read("/platform-watch", (service, request) => {
+    noQuery(request);
+    return { reports: service.platformWatchService.listReports(), asOf: new Date(now()).toISOString() };
+  });
+  read("/platform-watch/:id", (service, request) => {
+    noQuery(request);
+    return { report: service.platformWatchService.getReport(request.params.id as string), asOf: new Date(now()).toISOString() };
+  });
   return router;
 }

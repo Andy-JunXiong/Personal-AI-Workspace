@@ -72,8 +72,12 @@ introduces no new deployment or data change.
 now has a read-only procedure, one actual scheduled execution check, and a revised
 architecture-first report. The weekly ChatGPT task is enabled for Tuesdays at
 09:00 Australia/Sydney, first September 15. Revised scheduled insight quality is
-still awaiting review. Reports currently appear in ChatGPT; a PAW report/decision
-entry point is proposed and not implemented. Recommendations remain advisory.
+still awaiting review. Reports still originate in ChatGPT. Current source now
+includes a bounded P0 report/decision entry point: authenticated Web import,
+immutable provenance, per-finding human disposition and decision-history readback.
+It adds no MCP tool or scheduled-task write path. Production migration and
+one-real-report acceptance remain pending; recommendations remain advisory. See
+the [active contract](docs/architecture/PLATFORM_WATCH_REPORT_DECISIONS.md).
 
 ## What's next
 
@@ -82,9 +86,11 @@ through its Workspace-owned receipt; a manual success is not a substitute. Auton
 lifecycle admission, direct LinkedIn/SEEK account integration, generic workflow
 automation and optional external job matching remain outside the admitted boundary.
 The broader versioned job-intelligence ledger remains a proposed, evidence-first design.
-The next product discussion is a bounded PAW report-to-decision flow; per-job named
-resume versions remain a separate future increment. See the session handoff for
-acceptance gaps and restart priorities.
+The next product acceptance is the bounded PAW report-to-decision P0: review/merge,
+then gated migration 017 deployment and one real report/decision readback. Per-job
+named resume versions remain a separate future increment. See the session handoff
+and [P0 result](docs/mvp/PLATFORM_WATCH_REPORT_DECISION_P0_RESULTS_2026-09-10.md)
+for acceptance gaps and restart priorities.
 
 ## Local setup
 

@@ -5,7 +5,7 @@ import { AuthorizationError, NotFoundError, ValidationError } from "../domain/er
 import { CursorError } from "../application/read-pagination.js";
 import { resumeView } from "./resume-view.js";
 import { libraryView } from "./job-library-views.js";
-import { applicationListView, applicationView, candidateListView, candidateView, errorView, loginView, rootPath, taskView, todayView } from "./views.js";
+import { applicationListView, applicationView, candidateListView, candidateView, errorView, loginView, platformWatchReportView, platformWatchView, rootPath, taskView, todayView } from "./views.js";
 
 export function createWebAssetsRouter() {
   const router = Router();
@@ -38,7 +38,7 @@ export function createJobSearchPageRouter(serviceFor: (request: Request) => Work
     router.get(`${rootPath}${path}`, (request, response) => {
       let authenticated = false;
       // Keep login return paths object-only. Filters are intentionally discarded.
-      const returnTo = /^\/workspace\/job-search\/(?:today|library|resume|applications(?:\/[a-f0-9-]{36})?|tasks\/[a-f0-9-]{36}|jobs(?:\/[a-f0-9-]{36})?)$/u.test(request.path)
+      const returnTo = /^\/workspace\/job-search\/(?:today|library|resume|platform-watch(?:\/[a-f0-9-]{36})?|applications(?:\/[a-f0-9-]{36})?|tasks\/[a-f0-9-]{36}|jobs(?:\/[a-f0-9-]{36})?)$/u.test(request.path)
         ? request.path : `${rootPath}/applications`;
       try {
         const service = serviceFor(request);
@@ -76,6 +76,10 @@ export function createJobSearchPageRouter(serviceFor: (request: Request) => Work
     query(request, ["q", "decision", "linked", "sort", "cursor", "pageSize"]), timeZone, matchingEnabled));
   page("/resume", (service, request) => { query(request, []); return resumeView(service); });
   page("/library", (service, request) => libraryView(service, String(query(request, ["q"]).q ?? "")));
+  page("/platform-watch", (service, request) => { query(request, []); return platformWatchView(service,
+    timeZone, new Date(now()).toISOString(), completionEnabled); });
+  page("/platform-watch/:id", (service, request) => { query(request, []); return platformWatchReportView(service,
+    request.params.id as string, timeZone, new Date(now()).toISOString(), completionEnabled); });
   page("/jobs/:id", (service, request) => { query(request, []); return candidateView(service,
     request.params.id as string, timeZone, new Date(now()).toISOString(), completionEnabled, matchingEnabled); });
   return router;

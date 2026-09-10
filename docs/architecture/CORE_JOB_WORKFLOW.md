@@ -1,5 +1,19 @@
 # Core job workflow — authoritative product boundary
 
+## Platform Watch report decisions — source P0, 2026-09-10
+
+The source now contains a bounded [report-to-decision contract](PLATFORM_WATCH_REPORT_DECISIONS.md)
+for the existing OpenAI Platform Watch. ChatGPT still generates and schedules the
+report. PAW accepts only an authenticated, explicit Web import, preserves the
+report as an immutable source record and records each human finding disposition
+with versions and attribution. No recommendation can change code, roadmap, ADRs,
+Tasks or lifecycle state by itself. No MCP tools were added.
+
+This P0 does not change the Job Search core flow or the priority of daily
+application updates. Its pending reminder appears after those updates on Today.
+Production migration 017 and one real report/decision readback remain unverified;
+source-local passing tests must not be cited as deployment or real-use acceptance.
+
 ## Storage and analysis responsibilities clarified — 2026-09-10
 
 The deployed system stores Workspace records in SQLite on the existing AWS

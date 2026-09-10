@@ -91,6 +91,7 @@ describe("SQLite-consistent cloud backup", () => {
         "014_job_mail_search.sql",
         "015_job_library.sql",
         "016_resume_editor.sql",
+        "017_platform_watch_reports.sql",
       ],
     });
   });

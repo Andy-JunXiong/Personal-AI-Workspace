@@ -167,3 +167,47 @@
   .candidate-links{justify-content:flex-start;gap:18px}
   .candidate-links .button{min-height:44px}
 }
+
+/* Platform Watch stays advisory: reports lead to explicit, attributable decisions. */
+.watch-attention{border-color:#d6c99f;background:#fbf8ec}
+.watch-attention>.section-heading{align-items:flex-start;flex-wrap:wrap;background:#f5efd9}
+.watch-attention-row{display:flex;justify-content:space-between;align-items:center;gap:18px;padding:18px 24px;border-top:1px solid #e6ddbf}
+.watch-attention-row strong,.watch-attention-row small{display:block}
+.watch-attention-row small{color:var(--muted);font-size:13px;margin-top:4px}
+.watch-import>summary{cursor:pointer;padding:20px 24px;font-weight:600;min-height:56px}
+.watch-import form{display:grid;gap:16px;padding:0 24px 24px}
+.watch-import form>p{color:var(--muted);font-size:14px;line-height:1.8}
+.watch-import textarea{width:100%;font:14px/1.65 ui-monospace,SFMono-Regular,Consolas,monospace;resize:vertical}
+.watch-import .button{justify-self:start}
+.watch-report-row{display:flex;align-items:flex-start;gap:28px;padding:24px;border-top:1px solid var(--line)}
+.watch-report-row:first-of-type{border-top:0}
+.watch-report-row h2{font-size:18px}
+.watch-report-row p:not(.overline){color:var(--muted);font-size:14px;line-height:1.8;margin-top:8px;max-width:78ch}
+.watch-report-row .row-status{min-width:130px}
+.watch-report-row time{font-size:13px;color:var(--muted)}
+.watch-report-meta{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:24px;padding:24px;align-items:end}
+.watch-report-meta dl{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:20px;margin:0}
+.watch-report-meta dt{font-size:13px;color:var(--muted);margin-bottom:5px}
+.watch-report-meta dd{margin:0;font-size:14px;overflow-wrap:anywhere}
+.watch-report-meta code{font-size:12px}
+.watch-report-body,.watch-finding{padding:26px}
+.watch-report-body pre{white-space:pre-wrap;overflow-wrap:anywhere;margin:18px 0 0;font:14px/1.85 Inter,"Segoe UI","Microsoft YaHei",system-ui,sans-serif}
+.watch-findings-heading{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;margin:34px 0 18px}
+.watch-finding>header{display:flex;justify-content:space-between;align-items:flex-start;gap:20px}
+.watch-finding>header .chips{justify-content:flex-end;margin:0}
+.watch-finding dl{display:grid;gap:20px;margin:24px 0}
+.watch-finding dt{font-size:13px;color:var(--muted);margin-bottom:5px}
+.watch-finding dd{margin:0;white-space:pre-wrap;overflow-wrap:anywhere}
+.watch-evidence{border-top:1px solid var(--line);padding-top:18px;display:flex;flex-wrap:wrap;gap:10px 20px}
+.watch-evidence h3{flex-basis:100%;font-size:14px}
+.watch-decision-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+.watch-finding>label{border-top:1px solid var(--line);padding-top:18px;margin-top:20px}
+.watch-finding>label textarea{width:100%;resize:vertical}
+.watch-decision-note{background:#f0f3eb;border-radius:7px;padding:14px;margin-top:20px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px}
+.watch-decision-history{border-top:1px solid var(--line);margin-top:18px;padding-top:12px}
+.watch-decision-history>summary{cursor:pointer;color:var(--green);font-size:14px;min-height:44px;padding:10px 0}
+.watch-decision-history article{border-top:1px solid var(--line);padding:14px 0;display:grid;gap:6px}
+.watch-decision-history article>p:first-child{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.watch-decision-history time,.watch-decision-history small{color:var(--muted);font-size:12px}
+@media(max-width:1000px){.watch-report-meta{grid-template-columns:minmax(0,1fr)}.watch-report-meta dl{grid-template-columns:repeat(2,minmax(0,1fr))}.watch-report-meta .button{justify-self:start}}
+@media(max-width:700px){.sidebar nav{overflow-x:auto}.sidebar nav a{flex:0 0 auto}.watch-attention-row,.watch-report-row{padding:18px;align-items:flex-start}.watch-report-row{flex-direction:column;gap:12px}.watch-report-row .row-status{align-items:flex-start;min-width:0}.watch-import>summary{padding:18px}.watch-import form{padding:0 18px 18px}.watch-report-meta,.watch-report-body,.watch-finding{padding:20px}.watch-report-meta dl{grid-template-columns:minmax(0,1fr)}.watch-findings-heading,.watch-finding>header{align-items:flex-start;flex-direction:column}.watch-finding>header .chips{justify-content:flex-start}.watch-decision-actions .button{flex:1}}

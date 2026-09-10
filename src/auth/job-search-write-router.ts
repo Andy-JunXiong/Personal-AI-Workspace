@@ -1,6 +1,7 @@
 import { Router, type Request } from "express";
 import { z } from "zod";
 import type { WorkspaceService } from "../application/workspace-service.js";
+import { platformWatchFindingKeySchema } from "../application/platform-watch-service.js";
 
 const completionSchema = z.object({
   expectedRecordVersion: z.number().int().min(1),
@@ -55,6 +56,18 @@ export function createJobSearchWriteRouter(
       projectId: input.projectId,
       intentKey: input.intentKey,
     });
+    response.json({ ...result, asOf: new Date(now()).toISOString() });
+  });
+  router.post("/platform-watch", (request, response) => {
+    const service = serviceFor(request);
+    const result = service.platformWatchService.recordReportFromWeb(request.body);
+    response.json({ ...result, asOf: new Date(now()).toISOString() });
+  });
+  router.post("/platform-watch/:id/findings/:key/decision", (request, response) => {
+    const service = serviceFor(request);
+    const reportId = z.string().uuid().parse(request.params.id);
+    const findingKey = platformWatchFindingKeySchema.parse(request.params.key);
+    const result = service.platformWatchService.decideFindingFromWeb(reportId, findingKey, request.body);
     response.json({ ...result, asOf: new Date(now()).toISOString() });
   });
   return router;
