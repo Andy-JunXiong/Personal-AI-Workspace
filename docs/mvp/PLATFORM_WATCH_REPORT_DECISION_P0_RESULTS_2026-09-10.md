@@ -281,3 +281,37 @@ This follow-up changes documentation only and reuses the unchanged runtime's
 covers documentation references, whitespace, unchanged runtime files and a
 fast-forward relationship to remote main; remote SHA readback is the completion
 check after push. No additional deployment or production-data write is included.
+
+## Official-source correction and publication follow-up
+
+Jun clarified that readable prose must still derive PAW development choices from
+the latest OpenAI publications. The [source-based revision](PLATFORM_WATCH_SOURCE_REFRESH_2026-09-10.md)
+supersedes story-v2 for current reading and records actual source coverage, pinned
+PAW evidence and the distinction between new retrieval and new releases. Its
+comparisons cover Astra-assisted dossier work, collaboration on the existing
+resume webpage and Gmail event triggers. Benefits and stopping conditions are
+expectations to test, not completed implementations or measured savings.
+
+The authenticated Web import saved report `ab0f5c52-40fc-440b-a960-df2936a5e77f`,
+external ID `openai-platform-watch:2026-09-10:official-refresh-v3`, with cutoff
+`2026-09-10T12:06:11.512Z`. Independent read-only production verification matched
+canonical hash `775f23a2e2abc5e77be7c85d14215cf8966f6ac604fa9188de457b8316530819`
+and body hash `9f7532643b2ba493f606c4ba24470edb2463df62cc0b6a09dd1671efb984ac1f`.
+All three findings are PENDING at version 1 with no decisions. Three reports now
+exist; earlier snapshots remain. Resume version 5 and ten candidates remain,
+service is healthy, and temporary SSH access was restored after verification.
+
+Schema/render checks and desktop/mobile previews passed as detailed in the
+report appendix; authenticated live readback confirmed the final text. No new
+runtime release or schedule change occurred. User subsequently authorized this
+documentation and Skill-reference follow-up for commit and push to GitHub main.
+It preserves an example future runs can follow and makes the earlier reasoning
+gap explicit. Verification covers source/payload consistency, Skill structure,
+local references and Git diff; unchanged runtime evidence is reused. The saved
+weekly task still needs a separate prompt update and actual output review.
+
+Documentation verification passed: all 343 local references resolved; report
+summary, body, finding titles, comparisons and next steps exactly match the
+imported payload. The Skill validator passed with Python UTF-8 mode (the first
+attempt used Windows GBK decoding and failed before validation). Git whitespace
+checks passed. No application tests were rerun for this documentation-only change.

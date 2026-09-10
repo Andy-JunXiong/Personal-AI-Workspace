@@ -110,15 +110,21 @@ fresh retrieval, a new completed scan or an advanced cutoff.
 Jun's September 10 feedback asks for a story he can follow and a concrete basis
 for decisions. Write in plain Chinese, as a colleague explaining what matters
 after watching him use PAW. Do not pretend to have observed an event not in the
-records. Start from a real task, such as reading application replies or exporting
-a resume, connect the platform evidence to a current PAW feature, then explain
-the investment choice. A narrative is connected reasoning, not fiction or a
+records. Start with a freshly checked official release and its publication date,
+explain the affected PAW task and current feature, then compare the investment
+choices. Keep the official link beside the claim so the reader can follow the
+reasoning from release to recommendation. PAW-only work is a separately labeled
+revisit condition, not a substitute for checking latest OpenAI publications.
+A narrative is connected reasoning, not fiction or a
 series of "Judgment / Consequence / Boundary" labels.
 
 Main report: a few connected paragraphs explaining what happened or remains
 unproved, which daily work is affected, and which two or three choices deserve
-attention. Do not repeat the entire choice cards in this opening. Keep dates,
-commit hashes, taxonomy and scan mechanics in a separate source appendix.
+attention. Do not repeat the entire choice cards in this opening. Keep release
+dates and supporting links in the prose; put retrieval timestamps, commit hashes,
+taxonomy and scan mechanics in the source appendix. Distinguish the newest
+publication actually found from the time of retrieval, and state when no newer
+release was found. Do not relabel earlier capabilities as newly released.
 
 For each remaining decision, use a title that names the PAW feature and choice:
 "简历编辑：保留网页，还是整体搬进聊天？" is concrete; "坚持领域价值" is not.
@@ -144,7 +150,9 @@ Changing the advice creates a new immutable report snapshot with a reference to
 its predecessor; it does not overwrite the old text or transfer human decisions.
 Do not invent a third decision when only two material choices remain.
 
-An example is the [September 10 narrative revision](../../../../docs/mvp/PLATFORM_WATCH_STORY_2026-09-10.md).
+Use the [September 10 source-based revision](../../../../docs/mvp/PLATFORM_WATCH_SOURCE_REFRESH_2026-09-10.md)
+as the example. The earlier story-v2 improved presentation but did not adequately
+connect official releases to its advice; it is retained as historical evidence.
 Its concrete facts and recommendations are historical examples, not defaults for
 future reports. Resolve current PAW evidence on every new scan. A saved scheduled
 task pinned to an older procedure does not automatically inherit this revision;

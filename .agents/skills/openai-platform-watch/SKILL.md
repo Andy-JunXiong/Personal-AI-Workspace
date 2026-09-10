@@ -86,8 +86,12 @@ an existing responsibility subject to the contract's REMOVE gate.
 ## Report and stop
 
 Jun's reading preference is a plain-Chinese narrative tied to actual PAW use.
+His subsequent clarification requires the narrative to start from freshly read
+official OpenAI releases and explain their consequences for PAW development.
+Name the release date and link beside the affected claim; PAW task lists alone
+do not satisfy this report, and fresh retrieval does not imply a new release.
 Follow the [feature-choice writing contract](references/run.md#feature-choice-writing-contract):
-start with a concrete workflow, explain what changed and why it matters, then
+connect the release to a concrete workflow, explain why it matters, then
 compare a named PAW function/architecture with a specific alternative. Every
 decision must explain the short- and long-term effects of both changing and
 retaining it. No invented time savings, generic "improve efficiency", staged

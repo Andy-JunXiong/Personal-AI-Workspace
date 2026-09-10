@@ -41,7 +41,10 @@ deferred or reopened one instead of inferring intent from conversation history.
 Jun requests a plain-language narrative and decisions comparing named PAW
 functions/architecture choices, including the short- and long-term effects of
 change and no change. The [editorial example](../mvp/PLATFORM_WATCH_STORY_2026-09-10.md)
-and Watch writing reference define this content shape. Existing `body`,
+is retained as presentation history. The later
+[source-based revision](../mvp/PLATFORM_WATCH_SOURCE_REFRESH_2026-09-10.md) and
+Watch writing reference require freshly checked official publications, release
+dates and adjacent source links before deriving PAW choices. Existing `body`,
 `recommendation` and `nextStep` fields carry prose and small comparison tables;
 the persistence schema and decision transitions are unchanged.
 

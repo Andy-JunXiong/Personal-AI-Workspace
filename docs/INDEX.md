@@ -1,6 +1,6 @@
 # Documentation index
 
-- [September 10 session handoff](mvp/SESSION_CLOSE_2026-09-10.md): UI/resume releases and the later deployed Watch reading correction, two verified report snapshots, and remaining weekly-prompt, human-decision and daily-run gates.
+- [September 10 session handoff](mvp/SESSION_CLOSE_2026-09-10.md): UI/resume releases, Watch reading correction and latest source-based report; three verified snapshots, with weekly-prompt, human-decision and daily-run gates remaining.
 
 - [Today updates and candidate layout](mvp/TODAY_AND_JOBS_2026-09-10.md): deployed as today-jobs-20260910-r1; real Nine update, 10 candidate rows and detail layout accepted. Backup/recovery and unchanged database fingerprints passed; synthetic previews cleared.
 
@@ -73,7 +73,8 @@ deployment, manual acceptance and scheduled acceptance separately.
 
 | Document | Status / scope |
 | --- | --- |
-| [September 10 report: narrative and concrete PAW choices](mvp/PLATFORM_WATCH_STORY_2026-09-10.md) | Deployed with watch-reading-20260910-r1 and imported as a separate, hash-verified report: narrative plus current/alternative short- and long-term comparisons for mail checks, resume editing and report import. Original cutoff and report retained; recommendations pending. |
+| [September 10 report: fresh official sources and PAW choices](mvp/PLATFORM_WATCH_SOURCE_REFRESH_2026-09-10.md) | Latest source-based report, imported and hash-verified at the existing runtime. Official release dates and links lead to dossier, resume collaboration and mail-trigger comparisons. Three recommendations pending; no implementation or schedule change. |
+| [September 10 report: narrative and concrete PAW choices](mvp/PLATFORM_WATCH_STORY_2026-09-10.md) | Historical story-v2: readable layout verified, but release-to-recommendation reasoning was insufficient. Superseded for current reading by the source-based revision above; original snapshot retained. |
 | [Platform Watch report-to-decision P0 results — September 10](mvp/PLATFORM_WATCH_REPORT_DECISION_P0_RESULTS_2026-09-10.md) | platform-watch-20260910-r1: 404 tests, type checks/build, three recovery starts, migration 017, 42 preserved old tables and five public checks passed. One real report imported and hash-verified; deliberate human disposition pending. Records the recovered cutover attempt. |
 | [Today updates and candidate layout — September 10](mvp/TODAY_AND_JOBS_2026-09-10.md) | Deployed today-jobs-20260910-r1 using existing browser SSH. Final 395-test passing evidence, type checks, build, backup/recovery, data preservation and five public checks passed. Authenticated real Today/Jobs/detail and retained resume version 1 verified. |
 | [September 8 release handoff](mvp/RELEASE_HANDOFF_2026-09-08.md) | Historical image mail-layout-20260908-r2, migration 011, 29 tools; superseded by the September 9 release in the backend receipt record. |

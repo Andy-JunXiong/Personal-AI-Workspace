@@ -8,6 +8,16 @@
 
 ## Continuity and benefits
 
+**Latest report correction, September 10:** Jun requires development judgments
+derived from current official OpenAI publications, written as plain Chinese
+with specific PAW alternatives and both time horizons. The
+[source-based report](../mvp/PLATFORM_WATCH_SOURCE_REFRESH_2026-09-10.md) records
+fresh retrieval through 22:06 Sydney and verified PAW import. It found no later
+dated entries than the earlier scan's latest logs; new analysis is distinguished
+from new releases. Its three recommendations remain pending. This is report
+evidence, not an accepted roadmap change or an advance of the reviewed scan
+frontier. The saved weekly task still pins its older procedure.
+
 The user-approved Topic A/B conclusion and [core workflow](../architecture/CORE_JOB_WORKFLOW.md)
 require an explicit current boundary and a maintained correction mechanism. This
 bounded documentation package replaces stale M4 constraints, separates platform

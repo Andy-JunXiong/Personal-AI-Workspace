@@ -2,6 +2,12 @@
 
 ## Continuity and benefits
 
+**Later correction:** Jun clarified that the report must derive PAW development
+choices from the latest official OpenAI publications. This story-v2 improved
+presentation but did not adequately establish that connection. Use the
+[fresh source-based revision](PLATFORM_WATCH_SOURCE_REFRESH_2026-09-10.md) for
+current reading; this document and its imported snapshot remain historical.
+
 Jun's September 10 feedback requires readable report prose and decisions tied to
 specific PAW functions, with the near- and long-term consequences of changing or
 retaining them. This is an editorial revision of the existing September 10 scan,
