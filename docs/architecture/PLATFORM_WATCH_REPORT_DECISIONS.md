@@ -4,6 +4,10 @@
 data preservation, public release checks and authenticated real-report import/readback
 passed. Deliberate human disposition remains pending in the [release ledger](../mvp/PLATFORM_WATCH_REPORT_DECISION_P0_RESULTS_2026-09-10.md).
 
+The later `watch-reading-20260910-r1` release adds the readable narrative and
+feature-comparison presentation below, with no schema/authority change. Its
+revised report was separately imported and hash-verified; the original remains.
+
 **Accepted scope:** authenticated website import, readback and explicit per-finding disposition.
 
 Report import and finding decisions are scoped Web actions, like the existing

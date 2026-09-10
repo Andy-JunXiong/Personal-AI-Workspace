@@ -65,8 +65,9 @@ acceptance evidence are in [Project history](docs/HISTORY.md).
 
 Today's accepted Today/Jobs layouts and resume spacing, ordering and gutter
 navigation are recorded in the [session handoff](docs/mvp/SESSION_CLOSE_2026-09-10.md).
-Latest production is `platform-watch-20260910-r1`, deployed September 10 at
-20:56 Sydney with migration 017 and preserved existing data.
+Latest production is `watch-reading-20260910-r1`, deployed September 10 at
+21:33 Sydney. Reports now use readable paragraphs and per-feature change/no-change
+comparisons. Migration 017 and all existing data were retained.
 
 [OpenAI Platform Watch](docs/strategy/OPENAI_PLATFORM_WATCH.md#directional-reporting-update--2026-09-10)
 now has a read-only procedure, one actual scheduled execution check, and a revised
@@ -90,7 +91,8 @@ The broader versioned job-intelligence ledger remains a proposed, evidence-first
 The bounded PAW report-to-decision P0 is deployed with recovery and data-preservation
 evidence. Its scoped-write release follow-up has passing 404-test verification;
 one real report is imported and independently verified; deliberate human-decision
-readback is next. Per-job
+readback is next. The [narrative revision](docs/mvp/PLATFORM_WATCH_STORY_2026-09-10.md)
+is imported as a separate report; its three decisions remain pending. Per-job
 named resume versions remain a separate future increment. See the session handoff
 and [P0 result](docs/mvp/PLATFORM_WATCH_REPORT_DECISION_P0_RESULTS_2026-09-10.md)
 for acceptance gaps and restart priorities.

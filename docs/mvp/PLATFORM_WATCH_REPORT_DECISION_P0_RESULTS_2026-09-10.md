@@ -223,3 +223,44 @@ three comparison tables, functional section links and no horizontal overflow;
 mobile rows show named short-/long-term labels. Screenshots were inspected.
 The final release runs the full suite because this is an actual deployment;
 the local results do not by themselves prove updated production rendering.
+
+### Reading correction: production acceptance
+
+- Release `watch-reading-20260910-r1`, source
+  `4ec6a4b0c9d7d75aecbfe34b6c92265d29bac777`, deployed at
+  **2026-09-10T11:33:58Z / 21:33:58 Australia/Sydney**.
+- Full release verification passed: **414 tests in 53 files**, both TypeScript
+  checks and build. Markdown presentation tests add input-safety and bounded
+  malformed-input checks. Application schema, write authority and dependencies
+  did not change; documentation follow-up reuses the passing runtime evidence.
+- Source archive SHA-256:
+  `175e4b2781353616e553e608fd4b602802ddab3c4c19c9645506d48d1673b91a`.
+  Image: `sha256:698e3746b8b7709fbb532553e31aa69eecfe52561947707d91fcae553f42ee5f`.
+- Backup `workspace-20260910T113251Z.db` and both candidate/previous image copy
+  startups passed. Cutover backup `workspace-20260910T113348Z.db` retained all
+  older backups. Before/after full logical fingerprints matched exactly:
+  `324312e69d6ee7d4cb97bb0c7f4ee12e6eaebaac17de2c544346ba8436c04109`,
+  46 tables / 1,759 rows. No migration ran.
+- All five public checks passed on the server and independent local client
+  after cutover. An earlier client probe overlapped the intentionally stopped
+  ingress and timed out; its result was not counted as passing. General writes
+  and bootstrap remain off, and the temporary SSH rule was restored.
+- Authenticated Chrome showed the new report list, normal narrative paragraphs,
+  folded source details, feature navigation and comparison-table headers. The
+  narrative revision was imported through that form as
+  `fca02d29-25a8-4704-ad67-d5c455bf22bc`, external ID
+  `openai-platform-watch:2026-09-10:story-v2`.
+- Independent database readback matched the complete canonical payload hash
+  `142551e3feb26de58a3db1de49430374ebd2cf725a06f3a86c07c554d4d7b116`
+  and body hash `51e82f2fa783a5d8ca81e313f59e21a271a7e1faa85137ab00ac97f376d583a5`.
+  All three new findings are PENDING at version 1, with zero decision rows.
+  Two reports now exist; the first report was not overwritten or silently resolved.
+- Resume version 5, its template hash and ten candidates remain intact. Original
+  scan cutoff remains `2026-09-10T05:50:14Z`. The narrative supplements that old
+  scan with separately dated PAW production facts; it is not fresh OpenAI research.
+
+The correction is locally committed and deployed; no new GitHub publication or
+PR action was attempted during this follow-up. The earlier GitHub approval request
+remains separate. The repo-local writing instructions are updated, but the actual
+weekly task still pins its older procedure; no scheduled prompt update or new
+weekly reasoning-quality acceptance is claimed. Human choices remain pending.
