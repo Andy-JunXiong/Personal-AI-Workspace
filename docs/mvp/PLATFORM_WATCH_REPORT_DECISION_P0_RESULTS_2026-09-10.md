@@ -1,6 +1,8 @@
 # Platform Watch report-to-decision P0 results — 2026-09-10
 
-**Result:** bounded source implementation complete; deployment and real-report acceptance pending.
+**Result:** deployed as `platform-watch-20260910-r1`; migration, recovery,
+data-preservation, public release and authenticated real-report import/readback
+passed. A deliberate human finding disposition remains pending below.
 
 ## Continuity and benefits
 
@@ -118,3 +120,81 @@ Both type checks and 47 focused transport/report tests passed. Because this
 changes runtime routing during an actual migration release, a full release
 verification is required before cutover; the prior 403-test result alone no
 longer covers the final candidate.
+
+### Production release evidence
+
+- Pinned release source: `8e1ff17dde29b3f93ca4576336a7710e16b5f8e8`.
+  Full verification in an isolated LF checkout on Node 24 passed: both TypeScript
+  checks, **404 tests in 52 files**, and build. Two workers and the explicit
+  existing Python interpreter avoid known Windows environment variability.
+- Source archive SHA-256:
+  `d075b4ff8361cfd9fb6898246784d305c3b09c8b95e3ba50909743bea503b43a`;
+  upload hash readback matched. Built image:
+  `sha256:90cb102041af3f6f4419e8ea4b8ff953dc3cc34a61a762d8088409fd581c6743`.
+- Named backup `workspace-20260910T105302Z.db` passed integrity verification at
+  migration 016; no older backups were removed. Migration rehearsal preserved
+  **42 pre-existing tables**, adding only three empty Watch tables and migration
+  history. Candidate upgrade, candidate repeat startup and previous-image startup
+  on the upgraded copy passed: 46 tables / 1,754 rows, approximately 37–39 MiB.
+- The first cutover applied 017 but its direct read-only WAL verification failed
+  with `SQLITE_CANTOPEN`. The trap restored the previous image and ingress to
+  healthy service while retaining the upgraded database. No database restore or
+  report write occurred. The rehearsal had already proved that old image compatible.
+- Resumption used the retained stopped pre-migration snapshot
+  `workspace-20260910T105503Z.db` and a new standalone post-migration snapshot.
+  The post-migration snapshot is `workspace-20260910T105629Z.db`.
+  The additive verifier passed against these copies, including every old table,
+  migration history and exactly three empty additions. This corrects the operational
+  snapshot procedure; it does not weaken the verifier or change application code.
+- Final cutover passed at **2026-09-10T10:56:37Z / 20:56:37 Australia/Sydney**.
+  Container healthy, database available. All five public release checks passed
+  both on the host and independently from the local client. General writes and
+  bootstrap remain disabled; Compose, Gmail and model settings were retained.
+- Actual connected `workspace_ping` readback returned the existing Workspace and
+  available database; connected MCP inventory remains **30 tools**. No mail scan,
+  model call, task edit or application lifecycle operation was triggered.
+- Temporary operator `/32` SSH access was restored after every remote operation.
+  Release source is `/opt/paw-platform-watch-20260910-r1`; durable image, backup,
+  rehearsal, migration, public-check and cutover records are under
+  `/srv/paw/deployments/platform-watch-20260910-r1-*`.
+
+The earlier source-only and local-follow-up paragraphs retain their historical
+scope; this explicit deployment and dated production evidence supersede their
+pending deployment statements. Immediate value is an operable report entry point
+with existing data preserved. Durable decision usefulness still requires actual
+human disposition and later reuse; the September 15 weekly run is future evidence.
+
+### Authenticated real-report acceptance
+
+Normal Chrome/Google sign-in reached the already-linked Workspace account;
+the other account was correctly rejected as unlinked. No identity mapping or
+bootstrap setting was changed. The empty report page showed the scoped import
+control with general writes disabled.
+
+The browser imported the real September 10 directional rewrite from fixed source
+`001bef2589aed8b4c877b95fbd450fcf688de951`. Its body is an exact snapshot of the
+report section and appendix; historical claims remain historical. The structured
+summary explicitly labels the rewrite as an existing scan, uses the editorial
+commit time for `generatedAt`, and retains the original PAW scan SHA and cutoff.
+It is not a new scan, the September 15 weekly run, or updated platform research.
+
+- Report ID: `da950bd7-2254-422a-9ff8-9749d5ca92c3`.
+- External ID: `openai-platform-watch:2026-09-10:editorial-001bef2`.
+- Canonical input hash, verified against the stored record:
+  `e8b18654b1c0a9f0deaa8ec21d72d9b74c6fde8eb261a6efef5fcab100cfc5e6`.
+- Exact body SHA-256:
+  `667356c57f94f5448d1444b13534cde95ac833f45793c9ce9dfbed99e4914557`.
+- Independent read-only database query found exactly one report, findings
+  `F1-UI-REVIEW`, `W20260910-01`, `W20260910-05`, all PENDING at version 1,
+  and zero decision rows. The original cutoff remains `2026-09-10T05:50:14Z`.
+- Authenticated report refresh preserved the content and displayed provenance,
+  source/evidence links and per-finding controls. Desktop rendering was inspected.
+  Today retained Nine's application update and showed three pending findings;
+  Jobs retained 10 candidates, and the resume page retained saved version 5 and
+  its preview/order controls. No resume save, candidate decision or mail check ran.
+
+Remaining gate: the user selects an actual finding action and rationale, followed
+by authenticated submission and independent version/history readback. Deployment
+authorization is not treated as an ACCEPT of all imported recommendations. Narrow
+mobile report usability and future weekly reasoning quality are not claimed as
+verified by this desktop release acceptance.

@@ -1,6 +1,8 @@
 # Platform Watch report-to-decision contract
 
-**Status:** P0 implemented in source; production migration and real-report acceptance pending.
+**Status:** Deployed as `platform-watch-20260910-r1` on September 10; migration 017,
+data preservation, public release checks and authenticated real-report import/readback
+passed. Deliberate human disposition remains pending in the [release ledger](../mvp/PLATFORM_WATCH_REPORT_DECISION_P0_RESULTS_2026-09-10.md).
 
 **Accepted scope:** authenticated website import, readback and explicit per-finding disposition.
 
@@ -11,7 +13,10 @@ separate task-completion or generic candidate-write routes. The September 10
 deployment preflight identified and corrected the original P0's accidental
 dependency on the general-write switch.
 
-**Not included:** scheduled-task changes, report generation, MCP tools, automatic roadmap/ADR/code changes, deployment or production data writes.
+**Not included:** scheduled-task changes, report generation, MCP tools or automatic
+roadmap/ADR/code changes. The later explicit deployment request authorizes the
+recorded migration release and real-report import; finding dispositions still
+require the user's actual choice and rationale.
 
 ## Continuity and benefits
 
@@ -116,8 +121,8 @@ authority and end-to-end retry contract is accepted.
 Source P0 is merged through PR #22 at
 `6e4eda80077d9f4144bac0c11e57c492d2f1b57f`, with successful main CI.
 The recovery-mode follow-up must be included in the reviewed release source.
-The last recorded production image is `resume-rail-20260910-r1`; confirm the
-actual active image and migration 016 before proceeding. A different baseline
+This release used previous image `resume-rail-20260910-r1`; confirm the
+actual active image and migration 016 before reusing this upgrade procedure. A different baseline
 requires reconciliation, not substitution of a different verifier.
 
 1. Build a uniquely tagged candidate from the reviewed source, retain its exact

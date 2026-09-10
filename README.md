@@ -65,8 +65,8 @@ acceptance evidence are in [Project history](docs/HISTORY.md).
 
 Today's accepted Today/Jobs layouts and resume spacing, ordering and gutter
 navigation are recorded in the [session handoff](docs/mvp/SESSION_CLOSE_2026-09-10.md).
-Latest production remains `resume-rail-20260910-r1`; this source publication
-introduces no new deployment or data change.
+Latest production is `platform-watch-20260910-r1`, deployed September 10 at
+20:56 Sydney with migration 017 and preserved existing data.
 
 [OpenAI Platform Watch](docs/strategy/OPENAI_PLATFORM_WATCH.md#directional-reporting-update--2026-09-10)
 now has a read-only procedure, one actual scheduled execution check, and a revised
@@ -75,8 +75,9 @@ architecture-first report. The weekly ChatGPT task is enabled for Tuesdays at
 still awaiting review. Reports still originate in ChatGPT. Current source now
 includes a bounded P0 report/decision entry point: authenticated Web import,
 immutable provenance, per-finding human disposition and decision-history readback.
-It adds no MCP tool or scheduled-task write path. Production migration and
-one-real-report acceptance remain pending; recommendations remain advisory. See
+It adds no MCP tool or scheduled-task write path. Production migration and public
+release checks and authenticated real-report import/readback passed. A deliberate
+human finding disposition remains pending. Recommendations remain advisory. See
 the [active contract](docs/architecture/PLATFORM_WATCH_REPORT_DECISIONS.md).
 
 ## What's next
@@ -86,8 +87,10 @@ through its Workspace-owned receipt; a manual success is not a substitute. Auton
 lifecycle admission, direct LinkedIn/SEEK account integration, generic workflow
 automation and optional external job matching remain outside the admitted boundary.
 The broader versioned job-intelligence ledger remains a proposed, evidence-first design.
-The bounded PAW report-to-decision P0 is merged through PR #22 with passing main CI.
-Next are the recovery-mode follow-up, gated migration 017 deployment and one real report/decision readback. Per-job
+The bounded PAW report-to-decision P0 is deployed with recovery and data-preservation
+evidence. Its scoped-write release follow-up has passing 404-test verification;
+one real report is imported and independently verified; deliberate human-decision
+readback is next. Per-job
 named resume versions remain a separate future increment. See the session handoff
 and [P0 result](docs/mvp/PLATFORM_WATCH_REPORT_DECISION_P0_RESULTS_2026-09-10.md)
 for acceptance gaps and restart priorities.

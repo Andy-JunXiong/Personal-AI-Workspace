@@ -11,8 +11,11 @@ Tasks or lifecycle state by itself. No MCP tools were added.
 
 This P0 does not change the Job Search core flow or the priority of daily
 application updates. Its pending reminder appears after those updates on Today.
-Production migration 017 and one real report/decision readback remain unverified;
-source-local passing tests must not be cited as deployment or real-use acceptance.
+Production migration 017, backup-copy recovery and old-data preservation passed
+in `platform-watch-20260910-r1`. The [release ledger](../mvp/PLATFORM_WATCH_REPORT_DECISION_P0_RESULTS_2026-09-10.md)
+separates those results from authenticated real-report and deliberate decision
+acceptance. General Web writes remain off; only the scoped Watch controls join
+the existing resume/library session-and-CSRF boundary.
 
 ## Storage and analysis responsibilities clarified — 2026-09-10
 

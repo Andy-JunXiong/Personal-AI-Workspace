@@ -1,5 +1,11 @@
 # September 10 session handoff
 
+**Later session successor:** the [Platform Watch P0 release ledger](PLATFORM_WATCH_REPORT_DECISION_P0_RESULTS_2026-09-10.md)
+records the subsequently requested implementation and deployment of
+`platform-watch-20260910-r1`, migration 017 and one real report import/readback.
+The source-only/no-entry-point statements below describe this earlier closeout.
+The remaining live report gate is a deliberate human finding disposition.
+
 ## Continuity and benefits
 
 Jun requested ending today's work, updating the relevant documents and committing

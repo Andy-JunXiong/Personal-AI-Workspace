@@ -254,6 +254,13 @@ this summary does not advance a cutoff or create another COMPLETE scan.
 
 ### Report-to-decision P0 source implementation — 2026-09-10
 
+**Later authorized release:** `platform-watch-20260910-r1` deployed migration 017
+on September 10 at 20:56 Sydney. One real fixed-version editorial report was
+imported through the authenticated website and independently hash-verified; all
+three findings remain PENDING. The [release ledger](../mvp/PLATFORM_WATCH_REPORT_DECISION_P0_RESULTS_2026-09-10.md)
+supersedes the source-only deployment status below. It does not advance the scan
+cutoff or prove the September 15 weekly run or human-decision acceptance.
+
 W20260910-05 now has a bounded source implementation under the
 [report/decision contract](../architecture/PLATFORM_WATCH_REPORT_DECISIONS.md).
 This accepts only the smallest Web-based provenance and human-disposition bridge.
