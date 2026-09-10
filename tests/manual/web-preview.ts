@@ -9,6 +9,9 @@ import { verifiedRequestContext } from "../../src/application/request-context.js
 import { WorkspaceService } from "../../src/application/workspace-service.js";
 import { errorView, loginView, rootPath } from "../../src/web/views.js";
 
+if (!process.argv.includes("--synthetic")) {
+  throw new Error("Synthetic QA only. Pass --synthetic explicitly; this preview never opens real user data.");
+}
 const now = Date.now();
 const w = createEmptyTestWorkspace({ timeZone: "Australia/Sydney", clock: () => new Date(now) });
 const authority = { type: "EXPLICIT_USER_DEV" as const, confirmed: true as const, reference: "Local synthetic visual fixture" };
@@ -42,6 +45,19 @@ for (let i = 0; i < 28; i++) {
   if (i === 3) w.service.taskService.updateTask({ taskId: task.id, expectedRecordVersion: 1,
     status: "BLOCKED", authority, idempotencyKey: randomUUID() });
 }
+// Only today's concrete change belongs at the top; the other applications are history.
+w.database.prepare("UPDATE state_transitions SET admitted_at=?").run(new Date(now - 2 * 86400000).toISOString());
+const rejected = w.service.proposeTransition({ projectId: firstProject, expectedLifecycleVersion: 1, toState: "REJECTED",
+  triggerType: "USER_ASSERTION", evidenceResourceIds: [], rationale: "Synthetic daily update", idempotencyKey: randomUUID() });
+w.service.admitTransition({ transitionId: rejected.transition.id, expectedLifecycleVersion: 1, authority, idempotencyKey: randomUUID() });
+w.database.prepare("UPDATE state_transitions SET admitted_at=? WHERE id=?").run(new Date(now - 600000).toISOString(), rejected.transition.id);
+for (const [i, role] of ["Senior Software Engineer, Android Site Reliability Engineering", "Senior Software Engineer, Mobile SDK development and C++", "Lead Microservices and AI Technical Architect", "Systems Engineer (Integration & Test)"].entries()) {
+  const candidate = w.service.candidateService.recordCandidate({ provider: "seek", postingId: `preview-${i}`, sourceUrl: `https://example.test/jobs/${i}`,
+    company: ["Example Technology", "Example Recruitment", "Example Public Sector", "Example Systems"][i]!, title: role, role, location: "Sydney · Hybrid",
+    fitReason: "来自 Job Alert；请打开原链接补充完整 JD。", authority, idempotencyKey: randomUUID() }).candidate;
+  w.database.prepare("UPDATE job_candidates SET created_at=? WHERE id=?").run(new Date(now - 600000).toISOString(), candidate.id);
+  if (i === 2) w.service.jobLibraryService.saveDescription(candidate.id, "Synthetic saved role requirements.", candidate.sourceUrl!);
+}
 const app = express();
 app.use(express.json({ limit: "4kb" }));
 // Operator-only fault injection through this local process's stdin, never HTTP.
@@ -62,7 +78,7 @@ app.use((_request, response, next) => {
 });
 app.get("/auth/start", (_request, response) => response.type("html").send(loginView(`${rootPath}/today`)));
 // Same-origin fixture framing only; production keeps frame-ancestors 'none'.
-app.get("/preview/narrow", (_request, response) => response.type("html").send(`<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><title>390px synthetic layout</title><link rel="stylesheet" href="/preview/narrow.css"></head><body><iframe title="390px 合成页面" src="${rootPath}/today" width="390" height="1100"></iframe></body></html>`));
+app.get("/preview/narrow", (request, response) => response.type("html").send(`<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><title>390px synthetic layout</title><link rel="stylesheet" href="/preview/narrow.css"></head><body><iframe title="390px 合成页面" src="${rootPath}/${request.query.page === "jobs" ? "jobs" : "today"}" width="390" height="1400"></iframe></body></html>`));
 app.get("/preview/narrow.css", (_request, response) => response.type("css").send("body{margin:20px;background:#e9ebe6}iframe{border:1px solid #cdd7cc;border-radius:12px;background:white}"));
 const previewCsrf = "synthetic-preview-csrf";
 app.get("/api/v1/session", (_request, response) => response.status(fault === "expired" ? 401 : 200)

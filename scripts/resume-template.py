@@ -13,6 +13,8 @@ from xml.dom import minidom as D
 W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main'
 R = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships'
 P = 'http://schemas.openxmlformats.org/package/2006/relationships'
+SECTIONS = dict(name=0, headline=1, contact=2, summary=5, skills=8,
+                projects=16, experience=32, certifications=51, education=57)
 
 
 def elements(node, tag):
@@ -152,18 +154,36 @@ class Template:
         return changed
 
     def normalize_body_spacing(self):
-        # The imported HTML paragraph style adds automatic 100-twip spacing.
-        # Match the zero leading gap of the GLAP and Ops/Data bodies. Retain
-        # trailing spacing so the following job/project still has its own gap.
-        changed = False
-        for index in (19, 37, 48):
+        # Match the user's Nuix reference: roomy project headings, the original
+        # project-body leading, and 14pt between entries. Explicit values avoid
+        # Word/LibreOffice differences in imported HTML automatic margins.
+        bullets = (*range(19, 22), *range(24, 27), 29, 30,
+                   *range(37, 40), *range(42, 45), 48, 49)
+        text_slots = (18, 23, 28, 34, 35, 36, 40, 41, 46, 47, *bullets)
+        for index in text_slots:
+            self.body_leading_gap(self.ps[index], 60 if index == 37 else 0)
             pr = elements(self.ps[index], 'w:pPr')[0]
-            styles = elements(pr, 'w:pStyle')
-            if not styles or styles[0].getAttribute('w:val') != 'pdq2pgselectionanchorcontainer':
-                continue
-            # A small 3pt gap separates the Program Manager overview from its list.
-            changed = self.body_leading_gap(self.ps[index], 60 if index == 37 else 0) or changed
-        return changed
+            spacing = elements(pr, 'w:spacing')[0]
+            leading = '276' if index in (18, 23, 28, 24, 25, 26) else '244' if index in (29, 30) else '240'
+            for key, value in [('after', '0'), ('afterAutospacing', '0'),
+                               ('line', leading), ('lineRule', 'auto')]:
+                spacing.setAttribute('w:'+key, value)
+            if index in bullets or index == 36:
+                for node in elements(pr, 'w:jc'): pr.removeChild(node)
+                alignment = self.doc.createElementNS(W, 'w:jc')
+                alignment.setAttribute('w:val', 'left'); pr.appendChild(alignment)
+                for node in elements(pr, 'w:keepLines'): pr.removeChild(node)
+                pr.appendChild(self.doc.createElementNS(W, 'w:keepLines'))
+        # One reference-sized separator; never stacked empty paragraphs.
+        for index in (17, 22, 27, 31, 33, 45, 50):
+            self.body_leading_gap(self.ps[index], 0)
+            spacing = elements(elements(self.ps[index], 'w:pPr')[0], 'w:spacing')[0]
+            for key, value in [('after', '0'), ('afterAutospacing', '0'),
+                               ('line', '280'), ('lineRule', 'exact')]:
+                spacing.setAttribute('w:'+key, value)
+        # The original first/second jobs have no separator paragraph.
+        self.body_leading_gap(self.ps[40], 280)
+        return True
 
     def normalize_pdf_list_spacing(self):
         # Word collapses imported HTML automatic margins between list items;
@@ -191,6 +211,16 @@ class Template:
     def export(self, content, output, for_pdf=False):
         old = self.initial()
         if content['name'] != old['name'] or content['contact'] != old['contact']: raise ValueError('Fixed header changed')
+        order = content.get('sectionOrder', list(SECTIONS))
+        if not isinstance(order, list) or len(order) != len(SECTIONS) or any(not isinstance(k, str) for k in order) or set(order) != set(SECTIONS):
+            raise ValueError('Each resume section must appear exactly once')
+        # Mark boundaries before replacing editable paragraphs. Markers are
+        # removed before serialization; the template and section/footer stay put.
+        markers = {}
+        if order != list(SECTIONS):
+            for key, index in SECTIONS.items():
+                marker = self.doc.createComment('resume-section-'+key)
+                self.body.insertBefore(marker, self.ps[index]); markers[marker] = key
         spacing_corrected = self.normalize_body_spacing()
         for key, index in [('headline', 1), ('summaryHeading', 5), ('summary', 6), ('skillsHeading', 8), ('projectsHeading', 16), ('experienceHeading', 32), ('certificationsHeading', 51), ('educationHeading', 57)]:
             if content[key] != old[key]: self.replace(index, index+1, [self.paragraph(index, content[key])])
@@ -208,11 +238,12 @@ class Template:
                 bullet = [19, 24, 29][min(i, 2)]
                 p = self.keep_next(self.paragraph(heading, item['name'], True))
                 self.link(p, 'GitHub', item['github']); self.link(p, item['demoLabel'] or 'Demo', item['demo'])
-                nodes.append(p); nodes.extend(self.paragraph(bullet, b, False) for b in item['bullets'] if b.strip()); nodes.append(self.ps[22].cloneNode(True))
+                nodes.append(p); nodes.extend(self.paragraph(bullet, b, False) for b in item['bullets'] if b.strip())
+                if i + 1 < len(content['projects']): nodes.append(self.ps[22].cloneNode(True))
             self.replace(18, 31, nodes)
         if content['experience'] != old['experience']:
             nodes = []
-            for item in content['experience']:
+            for i, item in enumerate(content['experience']):
                 nodes.append(self.keep_next(self.columns(34, item['title'], item['location'])))
                 dates = self.paragraph(35, item['dates'], True)
                 pr = elements(dates, 'w:pPr')[0]
@@ -224,7 +255,7 @@ class Template:
                     paragraph = self.paragraph(37, bullet, False)
                     self.body_leading_gap(paragraph, 60 if j == 0 and item['summary'].strip() else 0)
                     nodes.append(paragraph)
-                nodes.append(self.ps[45].cloneNode(True))
+                if i + 1 < len(content['experience']): nodes.append(self.ps[45].cloneNode(True))
             self.replace(34, 50, nodes)
         if content['certifications'] != old['certifications']:
             self.replace(54, 56, [self.paragraph(54, b, True) for b in content['certifications'] if b.strip()])
@@ -236,6 +267,18 @@ class Template:
                 nodes.extend([self.columns(59, item['school'], item['location']), self.columns(60, item['degree'], item['dates']), self.paragraph(61, item['detail']), self.ps[62].cloneNode(True)])
             self.replace(59, 66, nodes)
         if for_pdf: self.normalize_pdf_list_spacing()
+        if markers:
+            groups = {key: [] for key in SECTIONS}; current = None
+            for node in list(self.body.childNodes):
+                if node in markers:
+                    current = markers[node]; self.body.removeChild(node)
+                elif getattr(node, 'tagName', None) == 'w:sectPr':
+                    current = None
+                elif current is not None:
+                    groups[current].append(node); self.body.removeChild(node)
+            section_properties = next((n for n in self.body.childNodes if getattr(n, 'tagName', None) == 'w:sectPr'), None)
+            for key in order:
+                for node in groups[key]: self.body.insertBefore(node, section_properties)
         if content == old and not spacing_corrected and not for_pdf:
             with open(self.path, 'rb') as src, open(output, 'wb') as dst: dst.write(src.read())
             return

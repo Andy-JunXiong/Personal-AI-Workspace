@@ -95,6 +95,10 @@ This enables [next package/gate/journey]. [Remaining condition] is still pending
 
 ## Definition of done
 
+Choose sufficient verification using [VERIFICATION.md](VERIFICATION.md).
+This standard's evidence requirement does not require the full suite after every
+change; existing CI and actual release gates remain applicable.
+
 A development package is not complete until:
 
 - its continuity statement has been communicated before or at the start of work;

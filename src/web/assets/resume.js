@@ -18,6 +18,7 @@ window.addEventListener('beforeunload',event=>{if(editor()?.dataset.dirty==='tru
 function readContent(form){
   const content=JSON.parse(form.dataset.content||'{}');
   content.projects=[];
+  content.certifications=[];
   for(const field of form.querySelectorAll('[data-resume-field]')){
     if(!(field instanceof HTMLInputElement||field instanceof HTMLTextAreaElement)||field.matches(':disabled'))continue;
     const path=(field.dataset.resumeField||'').split('.');
@@ -25,7 +26,9 @@ function readContent(form){
     for(const key of path.slice(0,-1)){parent[key]??={};parent=parent[key];}
     const key=path.at(-1)||'';
     if(path[0]==='skills'&&path.length===2){
-      const previous=parent[key],combined=previous.name?`${previous.name}: ${previous.content}`:previous.content;
+      const block=field.closest('[data-original-skill]');
+      const previous=JSON.parse(block?.getAttribute('data-original-skill')||'{}'),combined=previous.name?`${previous.name}: ${previous.content}`:previous.content;
+      parent[key]=previous;
       // Preserve existing split fields exactly when the combined input is untouched.
       if(field.value!==combined){
         const value=field.value.trim(),separator=value.search(/[:：]/u);
@@ -35,10 +38,60 @@ function readContent(form){
     }
     parent[key]=key==='bullets'||key==='certifications'?field.value.split('\n').map(s=>s.trim()).filter(Boolean):field.value;
   }
-  // Removed blocks can leave index gaps; preserve the visible project order.
-  content.projects=content.projects.filter(Boolean);
+  for(const group of ['skills','projects','experience','education','certifications']){
+    const indexed=content[group];
+    content[group]=Array.from(form.querySelectorAll(`[data-resume-list="${group}"]:not([hidden])`))
+      .map(block=>indexed[Number(block.getAttribute('data-resume-index'))]);
+  }
+  const sections=Array.from(form.querySelectorAll('[data-resume-section]'));
+  if(content.sectionOrder||sections.some((block,index)=>block.id!==`region-${index+1}`)){
+    content.sectionOrder=sections.map(block=>block.getAttribute('data-resume-section'));
+  }
   return content;
 }
+
+function updateResumePosition(){
+  const form=editor();if(!form)return;
+  const sections=Array.from(form.querySelectorAll('[data-resume-section]'));
+  const threshold=Math.max(100,(form.querySelector('.resume-actions')?.getBoundingClientRect().bottom??0)+36);
+  let active=sections[0];
+  for(const section of sections){if(section.getBoundingClientRect().top<=threshold)active=section;else break;}
+ if(window.scrollY>0&&window.innerHeight+window.scrollY>=document.documentElement.scrollHeight-2)active=sections[sections.length-1];
+  for(const link of form.querySelectorAll('.resume-jump a')){
+    if(link.getAttribute('href')===`#${active?.id}`)link.setAttribute('aria-current','location');else link.removeAttribute('aria-current');
+  }
+}
+let resumePositionFrame=0;
+function scheduleResumePosition(){
+  if(resumePositionFrame)return;
+  resumePositionFrame=requestAnimationFrame(()=>{resumePositionFrame=0;updateResumePosition();});
+}
+window.addEventListener('scroll',scheduleResumePosition,{passive:true});
+window.addEventListener('resize',scheduleResumePosition);
+/** @param {HTMLFormElement} form */
+function refreshOrderControls(form){
+  const sections=Array.from(form.querySelectorAll('[data-resume-section]'));
+  const lists=[sections,...['skills','projects','experience','education','certifications'].map(group=>Array.from(form.querySelectorAll(`[data-resume-list="${group}"]:not([hidden])`)))];
+  for(const blocks of lists)blocks.forEach((block,index)=>{
+    const legend=block.hasAttribute('data-resume-list')?block.querySelector('legend'):null;
+    if(legend)legend.textContent=legend.textContent?.replace(/\d+$/,String(index+1))||'';
+    for(const control of block.querySelectorAll('[data-resume-move]')){
+      if(!(control instanceof HTMLButtonElement)||control.closest('[data-resume-list], [data-resume-section]')!==block)continue;
+      control.disabled=control.dataset.resumeMove==='up'?index===0:index===blocks.length-1;
+    }
+  });
+  const nav=document.querySelector('.resume-jump');
+  sections.forEach((block,index)=>{
+    const number=block.querySelector('.resume-number');if(number)number.textContent=String(index+1).padStart(2,'0');
+    const link=nav?.querySelector(`a[href="#${block.id}"]`);
+    if(link){const area=link.querySelector('[data-resume-area]');if(area)area.textContent=`Area ${index+1}`;nav?.appendChild(link);}
+  });
+  for(const [selector,group] of [['[data-add-project]','projects'],['[data-add-certification]','certifications']]){
+    const add=form.querySelector(selector);if(add instanceof HTMLButtonElement)add.disabled=!form.querySelector(`[data-resume-list="${group}"][hidden]`);
+  }
+  updateResumePosition();
+}
+const initialForm=editor();if(initialForm)refreshOrderControls(initialForm);
 /** @param {string} path @param {unknown} body */
 async function request(path,body){
   const session=await fetch('/api/v1/session',{cache:'no-store',signal:AbortSignal.timeout(15000)});
@@ -72,6 +125,15 @@ document.addEventListener('click',async event=>{
     const dialog=button.closest('dialog');if(dialog instanceof HTMLDialogElement)dialog.close();return;
   }
   if(!(button instanceof HTMLButtonElement)||!form||button.disabled||form.dataset.busy==='true')return;
+  if(button.matches('[data-resume-move]')){
+    const block=button.closest('[data-resume-list], [data-resume-section]');if(!block?.parentElement)return;
+    const siblings=Array.from(block.parentElement.children).filter(el=>!el.hasAttribute('hidden')&&el.matches(block.hasAttribute('data-resume-list')?'[data-resume-list]':'[data-resume-section]'));
+    const direction=button.dataset.resumeMove==='up'?-1:1,neighbor=siblings[siblings.indexOf(block)+direction];if(!neighbor)return;
+    if(direction<0)block.parentElement.insertBefore(block,neighbor);else block.parentElement.insertBefore(neighbor,block);
+    refreshOrderControls(form);changed();
+    if(block instanceof HTMLElement){block.tabIndex=-1;block.focus({preventScroll:true});block.scrollIntoView({block:'nearest'});}
+    return;
+  }
   if(button.matches('[data-resume-preview]')){
     if(!form.reportValidity())return;
     const dialog=document.querySelector('[data-resume-dialog]'),frame=dialog?.querySelector('[data-preview-frame]'),status=dialog?.querySelector('[data-preview-status]');
@@ -90,6 +152,12 @@ document.addEventListener('click',async event=>{
     if(block instanceof HTMLFieldSetElement){block.hidden=false;block.disabled=false;block.querySelector('input')?.focus();changed();}
   }else if(button.matches('[data-remove-project]')){
     const block=button.closest('[data-project]');if(block instanceof HTMLFieldSetElement){block.hidden=true;block.disabled=true;changed();}
+  }else if(button.matches('[data-add-certification]')){
+    const block=form.querySelector('[data-resume-list="certifications"][hidden]');
+    if(block instanceof HTMLFieldSetElement){block.hidden=false;block.disabled=false;block.querySelector('textarea')?.focus();changed();}
+  }else if(button.matches('[data-remove-certification]')){
+    const block=button.closest('[data-resume-list="certifications"]');
+    if(block instanceof HTMLFieldSetElement){block.hidden=true;block.disabled=true;changed();}
   }else if(button.dataset.resumeExport||button.dataset.previewExport){
     if(form.dataset.dirty==='true'&&!button.dataset.previewExport)return;
     const draft=button.dataset.previewExport&&form.dataset.dirty==='true'?readContent(form):null;
@@ -108,5 +176,5 @@ document.addEventListener('click',async event=>{
     }catch(error){status.textContent=error instanceof Error?error.message:'导出失败，请稍后重试。';}
     finally{setBusy(form,false);}
   }
-  const add=form.querySelector('[data-add-project]');if(add instanceof HTMLButtonElement)add.disabled=!form.querySelector('[data-project][hidden]');
+  refreshOrderControls(form);
 });

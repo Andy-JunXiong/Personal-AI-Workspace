@@ -19,6 +19,7 @@ export class JobLibraryService {
    .all(this.workspaceId()) as {source_url:string|null}[]).flatMap(r=>r.source_url?[r.source_url]:[]));}
  applicationPostingUrls(){return (this.db.prepare("SELECT json_extract(metadata_json,'$.postingReference') AS url FROM projects WHERE workspace_id=? AND project_type='job_application'")
    .all(this.workspaceId()) as {url:string|null}[]).flatMap(r=>typeof r.url==="string"?[r.url]:[]);}
+ describedCandidateIds(){return (this.db.prepare("SELECT candidate_id FROM job_candidate_descriptions WHERE workspace_id=? AND length(trim(jd_text)) > 0").all(this.workspaceId()) as {candidate_id:string}[]).map(row=>row.candidate_id);}
  description(id:string){this.candidate(id);return this.db.prepare("SELECT jd_text,source_url FROM job_candidate_descriptions WHERE candidate_id=? AND workspace_id=?").get(id,this.workspaceId()) as {jd_text:string;source_url:string}|undefined;}
  saveDescription(id:string,jd:string,url:string){this.candidate(id);
    this.db.prepare("INSERT INTO job_candidate_descriptions VALUES(?,?,?,?,?) ON CONFLICT(candidate_id) DO UPDATE SET jd_text=excluded.jd_text,source_url=excluded.source_url,updated_at=excluded.updated_at")

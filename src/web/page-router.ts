@@ -59,7 +59,7 @@ export function createJobSearchPageRouter(serviceFor: (request: Request) => Work
       }
     });
   };
-  page("/today", (service, request) => { query(request, []); return todayView(service, new Date(now()).toISOString()); });
+  page("/today", (service, request) => { query(request, []); return todayView(service, new Date(now()).toISOString(), matchingEnabled); });
   page("/applications", (service, request) => applicationListView(service,
     query(request, ["q", "status", "lifecycle", "sort", "cursor", "pageSize"]), timeZone, Boolean(gmailFor)));
   page("/applications/:id", (service, request) => {

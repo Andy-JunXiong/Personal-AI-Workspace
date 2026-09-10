@@ -28,9 +28,55 @@ See the [authoritative core workflow](docs/architecture/CORE_JOB_WORKFLOW.md).
 
 ## Current state — 2026-09-10
 
-Current development priority: [nine-region resume editor](docs/architecture/RESUME_EDITOR.md),
+OpenAI [Watch execution v1](docs/strategy/OPENAI_PLATFORM_WATCH.md#execution-layer-v1--2026-09-10)
+now has a repo-local procedure, a completed manual baseline and one actual cloud
+scheduled run with scoped parity accepted. Findings remain advisory. The isolated
+[PR #20](https://github.com/Andy-JunXiong/Personal-AI-Workspace/pull/20)
+is merged at `70c95857e2a3751cd9615c66e64825f23b2b0d4a`; the weekly task now
+pins that merged procedure and reviewed baseline. It preserves GitHub's newer
+README and excludes the local UI changes below.
+
+Latest UI correction: [resume gutter navigation](docs/architecture/RESUME_EDITOR.md#gutter-navigation-correction--2026-09-10)
+is deployed as `resume-rail-20260910-r1` at 14:56 Sydney. Nine sticky ticks sit
+immediately beside the resume cards, show names on hover/focus, and highlight the
+current region. This supersedes the earlier left-sidebar placement. Preview
+remains at the right of the save toolbar. Desktop/390px layouts, mouse/keyboard
+navigation, three editor tests, type checks, build, backup/recovery and five
+public checks passed; unchanged full-suite evidence was reused. Live version 5
+and all saved content/order were retained.
+
+Latest resume capability: [section and item ordering](docs/architecture/RESUME_EDITOR.md#section-and-item-ordering--2026-09-10)
+is deployed as `resume-order-20260910-r1` at 12:40 Sydney. Up/down controls move all
+nine regions and entries within skills, projects, experience, certifications and
+education. Save/reload, preview and Word/PDF export preserve the selected order
+and reference spacing. All 396 tests have passing evidence; type checks, build,
+backup/recovery and five public checks passed. Live PDF preview confirmed
+experience before projects and swapped project entries; the user's latest saved
+version 3 and its original order/content were retained. Named per-job versions
+remain the next separate increment.
+
+Latest export correction: [reference-led resume spacing](docs/architecture/RESUME_EDITOR.md#reference-led-spacing-correction--2026-09-10)
+is deployed as `resume-reference-20260910-r1` at 12:16 Sydney. Jun's supplied Nuix
+PDF supersedes the compact layout: 14pt separators and the reference's project
+leading restore comfortable spacing, with GLAP starting on page 2. Both local Word
+pages and actual cloud PDF pages were inspected. Saved version 2, its content and
+all database records were retained. Focused export tests, cloud build,
+backup/recovery and public checks passed.
+
+Retained UI correction: [Today updates and candidate layout](docs/mvp/TODAY_AND_JOBS_2026-09-10.md)
+is deployed as `today-jobs-20260910-r1` (September 10, 11:39 Sydney). Today leads
+with saved progress and new-candidate prompts;
+operational imports move into folded Today tools and Jobs uses compact rows.
+The detail page adds readable JD and a separate actions panel. Authenticated live
+acceptance confirmed today's Nine rejection, all 10 real candidates, the corrected
+detail layout and resume version 1. Backup/recovery, identical database fingerprints
+(43 tables/1,753 rows), five public web checks, type checks and build passed. All
+395 tests have passing evidence for the final source. Synthetic previews were
+stopped and cleared; real local and cloud data were retained.
+
+Retained deployed capability: [nine-region resume editor](docs/architecture/RESUME_EDITOR.md),
 following Jun's instruction to finish the reusable resume before further external
-job updates. The editor is deployed to AWS as `resume-editor-20260909-r3`, with
+job updates. The editor was introduced by `resume-editor-20260909-r3`, with
 migration 016 and the base resume saved as version 1. Real save, PDF preview and
 Word/PDF downloads passed; both cloud PDF pages were inspected, including spacing
 and education-date fixes. [Open Resume](https://workspace.ai-radar-lab.com/workspace/job-search/resume).
@@ -201,6 +247,14 @@ are in the repository; earlier acceptance results remain indexed as history.
 ## Verification
 
 Node.js 24 or later is required by package.json.
+
+For ordinary changes, follow [risk-based verification](docs/VERIFICATION.md):
+inspect the impact, run only sufficient relevant checks, and stop once the changed
+claims are covered. Documentation-only edits do not require application tests.
+The [repository agent guide](AGENTS.md) and
+[targeted-verification Skill](.agents/skills/targeted-verification/SKILL.md) make
+this the development default. CI and actual release validation retain the full
+command below; it is not the default after every edit.
 
 ```text
 npm run verify

@@ -21,6 +21,8 @@ export class ResumeService {
   save(input:unknown){const {expectedVersion,content}=resumeSaveSchema.parse(input);
     return this.db.transaction(()=>{
       const current=this.get();if(!current)throw new NotFoundError("Resume template not configured");
+      // An editor opened before section ordering was released must not erase it.
+      if(content.sectionOrder===undefined&&current.content.sectionOrder)content.sectionOrder=current.content.sectionOrder;
       if(content.name!==current.content.name||content.contact!==current.content.contact)throw new ValidationError("Name and contact are fixed template fields");
       if(expectedVersion!==current.recordVersion)throw new ConcurrencyConflictError("Resume changed in another window");
       if(JSON.stringify(content)===JSON.stringify(current.content))return current;

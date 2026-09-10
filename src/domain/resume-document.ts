@@ -4,7 +4,11 @@ const text=z.string().max(12000).refine(s=>!/[\x00-\x08\x0b\x0c\x0e-\x1f]/u.test
 const short=text.pipe(z.string().max(500));
 const url=z.union([z.literal(""),z.url().max(2000).refine(s=>/^https?:\/\//u.test(s),"Use an HTTP(S) link")]);
 const bullets=z.array(text).max(20);
+export const resumeSections=["name","headline","contact","summary","skills","projects","experience","certifications","education"] as const;
+const sectionOrder=z.array(z.enum(resumeSections)).length(resumeSections.length)
+  .refine(order=>new Set(order).size===resumeSections.length,"Each resume section must appear exactly once");
 export const resumeDocumentSchema=z.object({
+  sectionOrder:sectionOrder.optional(),
   name:short,contact:text,headline:short,
   summaryHeading:short,summary:text,skillsHeading:short,
   skills:z.array(z.object({name:short,content:text}).strict()).length(6),

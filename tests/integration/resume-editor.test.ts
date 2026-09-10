@@ -1,12 +1,43 @@
 import {expect,it} from "vitest";
 import {WorkspaceService} from "../../src/application/workspace-service.js";
-import {createEmptyTestWorkspace} from "../helpers/test-workspace.js";
+import {createEmptyTestWorkspace,testPrincipal} from "../helpers/test-workspace.js";
 import {resumeFixture} from "../helpers/resume-fixture.js";
 import {resumeView} from "../../src/web/resume-view.js";
 import {copyFileSync,mkdirSync,readdirSync} from "node:fs";
 import {join} from "node:path";
 import {openDatabase} from "../../src/persistence/database.js";
 import {verifyResumeMigration} from "../../scripts/verify-resume-migration.js";
+import {resumeSections} from "../../src/domain/resume-document.js";
+
+it("retains section and item order across saves, reload and export while previews stay read-only",()=>{
+  const w=createEmptyTestWorkspace({fileBacked:true});
+  try{
+    const s=w.service.resumeService,c=resumeFixture();
+    s.initialize(Buffer.from("PKsynthetic"),c,"https://drive.google.com/file/d/example/view");
+    expect(s.get()?.content.sectionOrder).toBeUndefined();
+    const reordered={...c,sectionOrder:[...resumeSections].reverse(),skills:[...c.skills].reverse(),projects:[...c.projects].reverse(),
+      experience:[{...c.experience[0]!,title:"Second"},...c.experience],certifications:["Second certification",...c.certifications],
+      education:[{...c.education[0]!,school:"Second school"},...c.education]};
+    expect(s.previewSnapshot(1,reordered).content).toEqual(reordered);
+    expect(s.get()?.recordVersion).toBe(1);
+    expect(s.get()?.content).toEqual(c);
+    expect(s.save({expectedVersion:1,content:reordered}).recordVersion).toBe(2);
+    const reloaded=new WorkspaceService(w.database,testPrincipal).resumeService;
+    expect(reloaded.get()?.content).toEqual(reordered);
+    expect(reloaded.exportSnapshot(2).content).toEqual(reordered);
+    expect(reloaded.save({expectedVersion:2,content:reordered}).recordVersion).toBe(2);
+    const html=resumeView(w.service);
+    expect([...html.matchAll(/data-resume-section="([^"]+)"/gu)].map(m=>m[1])).toEqual(reordered.sectionOrder);
+    for(const bad of [resumeSections.slice(1),[...resumeSections,"name"],[...resumeSections.slice(1),"headline"],[...resumeSections.slice(1),"unknown"]]){
+      expect(()=>s.save({expectedVersion:2,content:{...reordered,sectionOrder:bad}})).toThrow();
+    }
+    expect(s.get()?.recordVersion).toBe(2);
+    const restored={...reordered,sectionOrder:[...resumeSections],projects:c.projects};
+    expect(s.save({expectedVersion:2,content:restored}).content).toEqual(restored);
+    expect(s.get()?.recordVersion).toBe(3);
+    expect(s.save({expectedVersion:3,content:{...c,summary:"Older editor tab"}}).content.sectionOrder).toEqual(resumeSections);
+  }finally{w.cleanup();}
+});
 
 it("adds resume storage while preserving all existing tables and survives repeat/older starts",()=>{
   const w=createEmptyTestWorkspace();

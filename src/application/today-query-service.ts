@@ -1,4 +1,5 @@
 import { ValidationError } from "../domain/errors.js";
+import { applicationMailEvent } from "../domain/application-mail-event.js";
 import type {
   IdentityContext,
   JsonValue,
@@ -64,6 +65,15 @@ export interface TodayResult {
   recentLifecycleChanges: RecentLifecycleChange[];
 }
 
+export interface DailyApplicationUpdate {
+  projectId: string;
+  company: string;
+  role: string;
+  lifecycleState: string;
+  events: Array<{ id: string; kind: "STATE" | "EMAIL"; recordedAt: string;
+    fromState?: string; toState?: string; title?: string; summary?: string; receivedAt?: string | null }>;
+}
+
 interface TaskContextRow {
   task_id: string;
   title: string;
@@ -115,6 +125,59 @@ export class TodayQueryService {
     } catch {
       throw new ValidationError(`Invalid Workspace timeZone: ${timeZone}`);
     }
+  }
+
+  /** Website notification projection; a saved update is not an unread flag or a Task. */
+  getDailyUpdates(): { date: string; totalCount: number; newCandidateCount: number; items: DailyApplicationUpdate[] } {
+    const identity = this.resolveIdentity();
+    const now = this.clock();
+    if (Number.isNaN(now.getTime())) throw new ValidationError("Injected clock returned an invalid date");
+    const date = localDate(now, this.timeZone);
+    // Broad UTC bound, then exact local-date filtering: safe across DST and UTC offsets.
+    const floor = new Date(now.valueOf() - 48 * 60 * 60 * 1000).toISOString();
+    const ceiling = now.toISOString();
+    const rows = this.database.prepare(`
+      SELECT st.id AS id, st.project_id, p.metadata_json, p.lifecycle_state, 'STATE' AS kind,
+        st.admitted_at AS recorded_at, st.from_state, st.to_state, NULL AS facts
+      FROM state_transitions st JOIN projects p ON p.id = st.project_id
+      WHERE p.workspace_id = ? AND p.project_type = 'job_application'
+        AND st.status = 'ADMITTED' AND st.admitted_at >= ? AND st.admitted_at <= ?
+      UNION ALL
+      SELECT r.id, r.project_id, p.metadata_json, p.lifecycle_state, 'EMAIL' AS kind,
+        r.created_at AS recorded_at, NULL AS from_state, NULL AS to_state, r.observed_facts_json AS facts
+      FROM resources r JOIN projects p ON p.id = r.project_id
+      WHERE p.workspace_id = ? AND p.project_type = 'job_application'
+        AND r.resource_type = 'EMAIL' AND r.created_at >= ? AND r.created_at <= ?
+      ORDER BY recorded_at DESC, id ASC
+    `).all(identity.workspaceId, floor, ceiling, identity.workspaceId, floor, ceiling) as {
+      id: string; project_id: string; metadata_json: string; lifecycle_state: string;
+      kind: "STATE" | "EMAIL"; recorded_at: string; from_state: string; to_state: string; facts: string | null;
+    }[];
+    const todaysRows = rows.filter(row => localDate(new Date(row.recorded_at), this.timeZone) === date);
+    const admittedIds = new Set(todaysRows.filter(row => row.kind === "STATE").map(row => row.id));
+    const linkedEvidence = this.database.prepare(`SELECT te.transition_id, te.resource_id
+      FROM transition_evidence te JOIN state_transitions st ON st.id = te.transition_id
+      JOIN projects p ON p.id = st.project_id
+      WHERE p.workspace_id = ? AND st.status = 'ADMITTED' AND st.admitted_at >= ? AND st.admitted_at <= ?
+    `).all(identity.workspaceId, floor, ceiling) as { transition_id: string; resource_id: string }[];
+    const representedEvidence = new Set(linkedEvidence.filter(row => admittedIds.has(row.transition_id)).map(row => row.resource_id));
+    const groups = new Map<string, DailyApplicationUpdate>();
+    for (const row of todaysRows) {
+      const context = metadataContext(row.metadata_json);
+      const mail = row.kind === "EMAIL" ? applicationMailEvent(JSON.parse(row.facts!), context.company, context.role) : null;
+      if (row.kind === "EMAIL" && (!mail || representedEvidence.has(row.id))) continue;
+      const update = groups.get(row.project_id) ?? { projectId: row.project_id, ...context,
+        lifecycleState: row.lifecycle_state, events: [] };
+      update.events.push(row.kind === "STATE"
+        ? { id: row.id, kind: "STATE", recordedAt: row.recorded_at, fromState: row.from_state, toState: row.to_state }
+        : { id: row.id, kind: "EMAIL", recordedAt: row.recorded_at, ...mail! });
+      groups.set(row.project_id, update);
+    }
+    const candidates = this.database.prepare(`SELECT created_at FROM job_candidates
+      WHERE workspace_id = ? AND created_at >= ? AND created_at <= ?`)
+      .all(identity.workspaceId, floor, ceiling) as { created_at: string }[];
+    const newCandidateCount = candidates.filter(row => localDate(new Date(row.created_at), this.timeZone) === date).length;
+    return { date, totalCount: groups.size, newCandidateCount, items: [...groups.values()].slice(0, 20) };
   }
 
   getToday(): TodayResult {

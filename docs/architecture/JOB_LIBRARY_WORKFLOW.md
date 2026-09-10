@@ -31,9 +31,12 @@ application-status processing is independent of this setting.
 1. Open **求职／面试资料库**. Add, search, review or exclude resume versions, project
    descriptions and interview cases. Historical documents start as `SOURCE`;
    explicit user corrections are `CONFIRMED`. Preserve original Drive links.
-2. Open **职位**, then sync Job Alerts from connected Gmail accounts. This is an
+2. The [deployed September 10 UI correction](../mvp/TODAY_AND_JOBS_2026-09-10.md)
+   places Job Alert import under **今天 → 邮件检查与职位导入**. This remains an
    email-alert integration, not a native LinkedIn/SEEK account login.
-3. Inspect candidates, sorted by current match score by default. Save or ignore.
+3. Inspect candidates, then save or ignore. The deployed UI defaults to
+   recent updates when model matching is disabled; matching-enabled mode retains
+   match-score ordering.
    Missing JD remains visibly missing; paste the full description on the detail page.
 4. Only after separate authorization and configuration, compare the JD with the library. Inspect each requirement, evidence passage,
    source, gap and unresolved conflict. Update facts and rerun when necessary.

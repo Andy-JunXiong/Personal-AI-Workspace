@@ -1,5 +1,9 @@
 # Documentation index
 
+- [September 10 session handoff](mvp/SESSION_CLOSE_2026-09-10.md): completed UI/resume releases, directional Watch reporting, verified weekly configuration and explicit restart boundaries.
+
+- [Today updates and candidate layout](mvp/TODAY_AND_JOBS_2026-09-10.md): deployed as today-jobs-20260910-r1; real Nine update, 10 candidate rows and detail layout accepted. Backup/recovery and unchanged database fingerprints passed; synthetic previews cleared.
+
 - [Proactive job discovery and interview library](architecture/JOB_LIBRARY_WORKFLOW.md): deployed storage-only library and alert candidates; external-model matching and tailored drafts remain disabled by user choice.
 
 - [Application dossier workflow](architecture/APPLICATION_DOSSIER_WORKFLOW.md): posting URL, JD snapshot, submitted resume version and requirement-to-skill comparison.
@@ -31,7 +35,8 @@ deployment, manual acceptance and scheduled acceptance separately.
 | Document | Status / scope |
 | --- | --- |
 | [Development Continuity and Benefits Standard v0.1](DEVELOPMENT_CONTINUITY_STANDARD.md) | Required development and document-index maintenance standard. |
-| [Nine-region resume editor](architecture/RESUME_EDITOR.md) | Deployed to AWS as resume-editor-20260909-r3, migration 016. Private baseline version 1; save, Preview and Word/PDF verified, both cloud PDF pages inspected. Backup/recovery and data preservation passed. September 10 source handoff includes storage/model-API clarification; external jobs deferred by user priority. |
+| [Risk-based verification](VERIFICATION.md) | Active local verification levels, test matrix, full-suite gate and stopping/reuse rules. Existing CI and release requirements retained; procedural repository Skill only. |
+| [Nine-region resume editor](architecture/RESUME_EDITOR.md) | Gutter navigation correction deployed as resume-rail-20260910-r1: nine sticky ticks beside resume cards, names on hover/focus and active-region highlighting; replaces the earlier sidebar placement. Preview remains at the right of save controls. Desktop/390px and mouse/keyboard navigation passed; version 5 content/order retained. Section/item ordering deployed as resume-order-20260910-r1: all nine regions and five entry lists have up/down controls; save, preview and export preserve order and reference spacing. All 396 tests have passing evidence, plus type checks, build, backup/recovery and public checks. Live two-page reordered preview inspected; latest saved version 3 and real content/order retained. Named per-job versions remain separate. |
 | [Application resume associations](architecture/APPLICATION_RESUME_ASSOCIATIONS.md) | Deployed resume-20260909-r3 event-conflict correction; 368 tests, type checks, build, backup/recovery, data preservation and web checks pass. Source commit 1451def pushed and verified on GitHub main. Sixteen candidate file/revision associations retained. One candidate-based preparation report saved/read back separately; actual submission confirmation remains pending. Daily Drive automation is not yet integrated. |
 | [Backend-managed mail scan receipts](architecture/MAIL_SCAN_BACKEND_LEDGER.md) | Ongoing-only keyword follow-up deployed as ongoing-20260909-r1 (369 tests): 12 ongoing targets, 12 ended applications excluded; metadata-only website reads, backup/recovery and representative live keyword probe pass. Migration 014 / 30 tools retained; new full-batch receipt pending. 363 tests and release verification passed. Third JOB_METADATA run COMPLETE/CLOSED for both matching scopes; website matches, queues empty and learned sender reused. Filtered manual coverage/readback passed; retained daily policy saved/verified and enabled at 08:00 Australia/Sydney, obsolete task paused. First actual scheduled execution pending. |
 | [ADR-001 — Conversation is not the system of record](adr/ADR-001-conversation-not-system-of-record.md) | Accepted design/domain contract within its recorded scope; current runtime inventory is in the release handoff. |
@@ -60,12 +65,13 @@ deployment, manual acceptance and scheduled acceptance separately.
 | [UPDATE JOB TRACKER — WORKSPACE WRITE MODE](mvp/UPDATE_JOB_TRACKER_WORKSPACE_PROMPT.txt) | Current saved and activated daily JOB_METADATA policy, exactly verified against retained task after reload. Normal 24 hours / maximum 72 hours, confirmation-based new applications, metadata follow-up and quiet complete/no-change reporting. |
 | [Workspace Skills Platform Acceptance Results](../tests/evaluations/workspace-skills-platform-acceptance-results-template.md) | Maintained platform acceptance procedure/template; completion requires separately recorded real evidence. |
 | [Workspace Skills Platform Acceptance Runbook](../tests/evaluations/workspace-skills-platform-acceptance-runbook.md) | Maintained platform acceptance procedure/template; completion requires separately recorded real evidence. |
-| [OpenAI Platform Watch](strategy/OPENAI_PLATFORM_WATCH.md) | Active governance contract and maintained strategy ledger; historical observations retained, platform adoption requires scoped verification and human disposition. |
+| [OpenAI Platform Watch](strategy/OPENAI_PLATFORM_WATCH.md) | Active governance contract and maintained strategy ledger; execution v1 adds a repo-local read-only Skill, the September 10 manual baseline and one actual scheduled run with scoped parity accepted. New findings await human disposition. Job Search Skill packaging is unchanged. |
 
 ## Historical evidence
 
 | Document | Status / scope |
 | --- | --- |
+| [Today updates and candidate layout — September 10](mvp/TODAY_AND_JOBS_2026-09-10.md) | Deployed today-jobs-20260910-r1 using existing browser SSH. Final 395-test passing evidence, type checks, build, backup/recovery, data preservation and five public checks passed. Authenticated real Today/Jobs/detail and retained resume version 1 verified. |
 | [September 8 release handoff](mvp/RELEASE_HANDOFF_2026-09-08.md) | Historical image mail-layout-20260908-r2, migration 011, 29 tools; superseded by the September 9 release in the backend receipt record. |
 | [后台维护邮件扫描回执：需求与验收](architecture/MAIL_SCAN_BACKEND_LEDGER_REQUIREMENTS_2026-09-08.md) | Historical requirements. Current successor retains migration 014 and 30 tools, filtered manual/website acceptance passed, retained daily task enabled; first actual scheduled acceptance pending. |
 | [Repository review follow-up](REVIEW_FOLLOWUP.md) | Historical September 8 review. September 9 manual recovery passed and retained task enabled; scheduled acceptance and separately proposed repository metadata remain pending. |
