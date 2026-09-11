@@ -72,8 +72,9 @@ acceptance evidence are in [Project history](docs/HISTORY.md).
 
 The accepted Today/Jobs layouts and resume spacing, ordering and gutter
 navigation are recorded in the [session handoff](docs/mvp/SESSION_CLOSE_2026-09-10.md).
-Latest production is `calendar-library-20260911-r1`, deployed September 11 at
-10:32 Sydney with migration 018 unchanged. Missing submission dates now use
+Latest production is `application-preparation-20260911-r1`, deployed September 11 at
+16:05 Sydney with migration 018 unchanged. The preceding calendar/library release's
+missing submission dates use
 matching confirmation-mail dates with an explicit label in the
 [calendar](docs/mvp/APPLICATION_CALENDAR_2026-09-09.md#confirmation-date-display--september-11).
 The [library](docs/architecture/JOB_LIBRARY_WORKFLOW.md#current-operating-choice)
@@ -86,12 +87,15 @@ acceptance preserved saved base version 8. The final education separator was
 corrected; the real base PDF has two pages with unchanged body text. See the
 [release and acceptance record](docs/architecture/RESUME_VARIANTS.md).
 R2's [single-application preparation context](docs/architecture/APPLICATION_PREPARATION_CONTEXT.md)
-is implemented and locally verified through the existing `workspace_get_project`
-read. It adds explicit working-resume selection, material gaps and history bounds
-without another tool or migration. Production and real-application acceptance are pending.
+is deployed through the existing `workspace_get_project` read. Real Nuix v3
+readback and a qualified preparation example passed; complete-dossier real use
+and refreshed connector explicit-selection acceptance remain pending. It adds
+working-resume selection, material gaps and history bounds without another tool
+or migration.
 The [repeatable MCP read check](docs/architecture/APPLICATION_PREPARATION_CONTEXT.md#repeatable-mcp-read-check--september-11-follow-up)
-is locally verified and records call count, response size, material gaps and exact
-resume selection for that pending acceptance; real-data usefulness still needs review.
+records call count, response size, material gaps and exact resume selection;
+the [release ledger](docs/architecture/APPLICATION_PREPARATION_CONTEXT.md#production-release-and-bounded-real-use-acceptance--september-11)
+records production evidence and the remaining material/client gaps.
 The preceding Watch reading release retains readable paragraphs and per-feature
 change/no-change comparisons.
 
@@ -132,8 +136,8 @@ three recommendations remain pending; the earlier narrative is historical.
 On September 11 the saved weekly task was synchronized to
 `a7d9006ad8f55bd5fa4c0038e5201bec10c038de` and verified after reopening; its
 Tuesday 09:00 schedule is unchanged. [Named per-job resume versions](docs/architecture/RESUME_VARIANTS.md)
-are deployed and real-copy accepted. R2 preparation-context deployment and
-real-application acceptance remain pending. See the session handoff
+are deployed and real-copy accepted. R2 is deployed with bounded real Nuix
+acceptance; complete-dossier and refreshed connector checks remain pending. See the session handoff
 and [P0 result](docs/mvp/PLATFORM_WATCH_REPORT_DECISION_P0_RESULTS_2026-09-10.md)
 for acceptance gaps and restart priorities.
 

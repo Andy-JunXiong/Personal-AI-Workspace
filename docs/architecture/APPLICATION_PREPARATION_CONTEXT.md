@@ -1,7 +1,9 @@
 # Single-application preparation context
 
-Status: implemented and locally verified on September 11, 2026. Production
-deployment and real-application acceptance remain pending.
+Status: deployed September 11, 2026 as `application-preparation-20260911-r1`.
+Real Nuix readback and a source-grounded preparation example passed within the
+material gaps recorded below. Complete-dossier and refreshed connector explicit-
+selection acceptance remain pending; R3 is not declared implemented.
 
 ## Continuity and benefits
 
@@ -155,3 +157,78 @@ of a pre-R2 response. Initial checker typing and a test-template URL were correc
 before the passing results. No runtime service, schema, permission or dependency
 changed, so full-suite/build/release checks were not repeated. Live authentication,
 production deployment, real-application omissions and usefulness remain pending.
+
+## Production release and bounded real-use acceptance — September 11
+
+### Continuity and benefits
+
+The user authorized the proposed R2 deployment, real-application read and one
+preparation example. This closes the source-only release gap and demonstrates
+that an actual saved working resume can support a qualified preparation answer.
+It enables R3 result/provenance design, while a complete saved dossier and the
+client's refreshed explicit-selection input remain acceptance gaps. The verified
+short-term benefit is access to the real v3 working content in one project read;
+long-term cross-client consistency remains an expectation, not R4 acceptance.
+
+### Release evidence
+
+- Exact runtime source: `e1b69374a48bc80daba75934657d9044fc94879d`, [PR 24](https://github.com/Andy-JunXiong/Personal-AI-Workspace/pull/24).
+- Local Node 24: both TypeScript checks, **425 tests in 56 files**, production
+  build and pinned Skill packaging passed. Packaging initially rejected the
+  literal `HEAD`; rerunning with the exact SHA passed. [CI run 34568376205](https://github.com/Andy-JunXiong/Personal-AI-Workspace/actions/runs/34568376205)
+  independently passed the PR checks. Earlier main CI also passed on `f1647a9`.
+- Source archive SHA-256: `71755d5b1ce0b34d174226382e94382bcc5ad96214222283470d7a13ffb6ed56`.
+- Image: `sha256:2857c69d3723f69ec30985bab94547b01e6611e198a2b900bcb616eee94dacab`.
+- Candidate/repeated-open/previous-image backup-copy recovery passed with schema
+  018 unchanged. Fresh cutover backup: `workspace-20260911T060510Z.db`, integrity
+  `ok`. No backup was restored over the live database.
+- Cutover completed `2026-09-11T06:05:19Z` (**16:05 Sydney**). Before/after logical
+  fingerprint: `209a426859d130302de7f6fad7a1922dffbf436e1ee5dc24053b0b67e1722c7c`,
+  **47 tables / 1,971 rows**. Previous image `calendar-library-20260911-r1` remains
+  the application rollback target.
+- Service health and all five public boundary checks passed before/after release.
+  General Web writes and bootstrap remain off; external matching remains disabled.
+  Temporary operator-IP SSH access was restored after each remote action.
+  A pre-existing systemd unit-change warning was observed; ingress restarted and
+  public checks passed, but unit-file reconciliation was not part of this release.
+
+### Real read and preparation result
+
+The existing Nuix application was read before and after deployment through the
+connected Workspace. Project versions, two Resources, one transition and zero
+open Tasks agreed. The new result additionally returned its sole working copy at
+recordVersion **3**, sourced from base version **8**; no resume was created or
+edited for acceptance. Five gaps were correctly exposed: posting reference,
+saved JD, structured comparison, submitted file and submitted version.
+
+The deployed CLI's automatic single-copy read measured **1 business-tool call,
+26,158 serialized response bytes and 74 ms**. A separate explicit-ID read measured
+**1 call, 26,128 bytes and 48 ms**, returning the same v3 copy with `EXPLICIT_ID`.
+These are VM-loopback measurements, not remote user latency. Selecting that copy
+under the existing Wake in Cloud application returned `NOT_FOUND`. Live discovery
+retained 30 tools and exposed `resumeVariantId`. Base v8 and Nuix copy v3 remained
+unchanged. Multiple-copy ambiguity was tested synthetically; no extra real copy
+was created just for testing.
+
+This conversation's installed connector still exposed its older input schema,
+without `resumeVariantId`; its ordinary project read returned the new projection
+successfully. Explicit selection therefore has live SDK/loopback evidence, but
+still needs a refreshed connector/client acceptance. It must not be reported as
+already proven through the cached client schema.
+
+A private Nuix preparation example was delivered outside Git. It cites the exact
+working-copy version and a separately read current official same-title vacancy,
+distinguishes self-reported career evidence from verified deployment facts, and
+flags unproven enterprise-AI scale, engineering tenure and scheduled-run claims.
+It does not imply the current vacancy is the historical posting used to apply.
+No profile, posting reference, lifecycle, Task or submission confirmation was
+written. Private reports are not indexed or copied into this repository.
+
+Observed usefulness: R2 supplied the working resume missing from the old project
+response, permitting a qualified example without another resume lookup. No
+quantified old/new call-count reduction was measured. The saved JD/profile path
+was absent in this real application; its full-dossier usefulness remains covered
+only by synthetic checks. The CLI retains `NOT_ASSESSED` because human/content
+review is recorded here rather than inferred by the checker. The next gates are
+complete-dossier real use, refreshed connector selection and R3's saved-result/
+correction contract. This release is not unattended daily-run or R4 acceptance.
