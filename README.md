@@ -70,13 +70,14 @@ acceptance evidence are in [Project history](docs/HISTORY.md).
 
 ## Current state — 2026-09-11
 
-Local follow-up: [resume creation belongs in Jobs](docs/architecture/RESUME_VARIANTS.md#september-11-application-page-correction).
+Deployed follow-up: [resume creation belongs in Jobs](docs/architecture/RESUME_VARIANTS.md#september-11-application-page-correction).
 Application details retain submitted-material records and omit working-copy
-preparation controls. Focused rendering checks and type checks pass; deployment pending.
+preparation controls. Release `application-resume-ui-20260911-r1` deployed at
+17:52 Sydney; 426 tests and production rendering readback passed.
 
 The accepted Today/Jobs layouts and resume spacing, ordering and gutter
 navigation are recorded in the [session handoff](docs/mvp/SESSION_CLOSE_2026-09-10.md).
-Latest production is `application-list-20260911-r1`, deployed September 11 at
+Preceding production was `application-list-20260911-r1`, deployed September 11 at
 16:34 Sydney with migration 018 unchanged. The [application list](docs/mvp/APPLICATION_CALENDAR_2026-09-09.md#september-11-application-list-follow-up)
 now defaults to recent application/email updates, so undated new applications are
 visible near the top; real readback verified One51, Nuix and Coates first.

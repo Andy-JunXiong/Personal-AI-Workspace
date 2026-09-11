@@ -32,16 +32,28 @@ tool or platform integration is added here.
 ### September 11 application-page correction
 
 Jun clarified that resume preparation belongs in Jobs, before submission.
-The local application detail now omits working-copy creation/listing while
+The application detail now omits working-copy creation/listing while
 retaining saved resume evidence and associations. Candidate detail retains its
 preselected create link. Existing copies and editor/API contracts are preserved.
 This removes the post-submission preparation prompt and keeps preparation distinct
-from submitted records for later review. The next gate is deployment and live
-page acceptance; production has not changed in this correction.
+from submitted records for later review. Production deployment is complete;
+interactive user visual acceptance remains separate from server rendering readback.
 Two focused web transport cases passed (candidate link and saved application
 materials, including absence of the creation block); both TypeScript checks passed.
 Full-suite and visual viewport checks were not run for this block removal with no
-CSS, persistence or authority changes.
+CSS, persistence or authority changes. These were the local implementation checks;
+the subsequent user-authorized release ran full verification as recorded below.
+
+Deployment completed at `2026-09-11T07:52:12Z` (17:52 Sydney), image
+`application-resume-ui-20260911-r1`, source `6ca9b114a75470b87441c9f104ebe591f442dde2`.
+The release updated the old variant-display assertion to the new product boundary;
+all 426 tests, both TypeScript checks and build passed. Consistent backup and
+new/previous-image copy recovery passed; migration 018 retained. Cutover logical
+fingerprints matched across 47 tables / 2,096 rows. Public release checks passed.
+Read-only production rendering checked 25 application pages: preparation controls
+absent and submitted-material sections retained. Candidate creation link remained;
+the existing one resume variant remained. Service healthy; temporary operator SSH
+access restored. No mail scan or scheduled-task change was performed.
 
 - In Resume, choose the base or a named version using the current-resume selector.
 - Expand the create-version control, choose an existing candidate/application and name it.
