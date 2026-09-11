@@ -77,8 +77,8 @@ became healthy at 20:32 Sydney. The [production record](docs/architecture/CANDID
 confirms migration 019, backup/recovery rehearsal, preservation of all 46 prior
 business tables, five public checks and running-server discovery of 31 MCP tools.
 The release reuses 444 passing tests, both type checks/build and desktop/390px
-browser evidence for the same runtime source. Authenticated page acceptance awaits
-website sign-in; real grade saving and refreshed ChatGPT connector use remain
+browser evidence for the same runtime source. Authenticated Jobs list/detail checks passed;
+real grade saving and refreshed ChatGPT connector use remain
 separate acceptance gates. Backend model matching remains off.
 
 Deployed follow-up: [resume creation belongs in Jobs](docs/architecture/RESUME_VARIANTS.md#september-11-application-page-correction).
@@ -136,7 +136,7 @@ The [September 11 roadmap](docs/strategy/PRODUCT_SOLUTION_ROADMAP.md#5-project-r
 records R1's accepted per-job resume copies and R2's deployed read-only
 application preparation context with bounded real Nuix acceptance. Complete-dossier
 and refreshed connector selection checks remain pending. R3 candidate-grade storage,
-reads and Jobs display are deployed. Authenticated page and real-use acceptance are next.
+reads and Jobs display are deployed and authenticated pages verified. Real-grade and connector acceptance are next.
 Daily unattended-run acceptance and Watch decision
 quality remain separate operational tracks. Generic Spaces, agent runtimes and
 workflow engines are outside this plan.
