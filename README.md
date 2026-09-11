@@ -70,6 +70,10 @@ acceptance evidence are in [Project history](docs/HISTORY.md).
 
 ## Current state — 2026-09-11
 
+Backlog: [candidate JD match grades](docs/strategy/PRODUCT_SOLUTION_ROADMAP.md#candidate-match-grades)
+will use ChatGPT assessments (A+ through B−) with evidence, source versions and
+stale-result indicators. Planned only; backend model matching remains off.
+
 Deployed follow-up: [resume creation belongs in Jobs](docs/architecture/RESUME_VARIANTS.md#september-11-application-page-correction).
 Application details retain submitted-material records and omit working-copy
 preparation controls. Release `application-resume-ui-20260911-r1` deployed at

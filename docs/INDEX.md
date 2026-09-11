@@ -1,6 +1,6 @@
 # Documentation index
 
-- [整体方案与项目路线图](strategy/PRODUCT_SOLUTION_ROADMAP.md): 当前规划入口；职位简历发布 → 单申请只读上下文 → 有依据的求职准备，独立跟进每日同步与 Watch 验收。规划与部署状态分别记录。
+- [整体方案与项目路线图](strategy/PRODUCT_SOLUTION_ROADMAP.md): 当前规划入口；新增待办“职位 JD 匹配评级”：ChatGPT 评估 A+ 至 B−，Workspace 保存展示，尚未实现。职位简历 → 单申请上下文 → 有依据的求职准备，独立跟进每日同步与 Watch 验收。
 
 - [September 10 session handoff](mvp/SESSION_CLOSE_2026-09-10.md): UI/resume releases, Watch reading correction and latest source-based report; three verified snapshots, with human-decision and daily-run gates remaining; September 11 weekly prompt synchronization is recorded in the Watch ledger.
 

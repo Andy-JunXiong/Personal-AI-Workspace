@@ -48,6 +48,20 @@ application-status processing is independent of this setting.
 
 ## User workflow
 
+### Planned ChatGPT match grades
+
+September 11: Jun requested a backlog item for candidate JD matching using
+ChatGPT and the A+, A, A−, B+, B, B− rubric. The
+[roadmap backlog](../strategy/PRODUCT_SOLUTION_ROADMAP.md#candidate-match-grades)
+owns the proposed rubric and acceptance checklist. This is not implemented:
+ChatGPT will assess complete JD/resume evidence; Workspace will persist and show
+the grade, reason, requirement evidence and source versions. Missing evidence
+must remain explicit, and changed inputs will require reassessment. Existing
+numeric matching does not establish support for this letter-grade workflow.
+No background model provider, paid API call or scheduled scan is enabled by this
+documentation change. The value is comparable pre-application decisions with
+traceable evidence; implementation and real-use acceptance remain next steps.
+
 1. Open **求职／面试资料库**. Add, search, review or exclude resume versions, project
    descriptions and interview cases. Historical documents start as `SOURCE`;
    explicit user corrections are `CONFIRMED`. Preserve original Drive links.
