@@ -70,6 +70,9 @@ acceptance evidence are in [Project history](docs/HISTORY.md).
 
 ## Current state — 2026-09-11
 
+Today's [session closeout and next steps](docs/HISTORY.md#september-11-session-closeout)
+consolidate the accepted release and remaining real-use gates.
+
 Deployed follow-up: [candidate JD match grades](docs/strategy/PRODUCT_SOLUTION_ROADMAP.md#candidate-match-grades)
 now have versioned evidence storage, immutable history, preparation reads, an
 interactive MCP save command and Jobs display. Release `candidate-grades-20260911-r1`

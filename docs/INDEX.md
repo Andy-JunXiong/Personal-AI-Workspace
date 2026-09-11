@@ -1,8 +1,9 @@
 # Documentation index
 
-- [整体方案与项目路线图](strategy/PRODUCT_SOLUTION_ROADMAP.md): 当前规划入口；职位 JD 匹配评级已本地完成存储/接口及展示，发布和真实验收待完成。职位简历 → 单申请上下文 → 有依据的求职准备，独立跟进每日同步与 Watch 验收。
+- [整体方案与项目路线图](strategy/PRODUCT_SOLUTION_ROADMAP.md): 当前规划入口；职位 JD 匹配评级已上线并通过登录后页面验收，真实评级保存及刷新连接器验收待完成。职位简历 → 单申请上下文 → 有依据的求职准备，独立跟进每日同步与 Watch 验收。
 
-- [September 10 session handoff](mvp/SESSION_CLOSE_2026-09-10.md): UI/resume releases, Watch reading correction and latest source-based report; three verified snapshots, with human-decision and daily-run gates remaining; September 11 weekly prompt synchronization is recorded in the Watch ledger.
+- [September 11 session closeout](HISTORY.md#september-11-session-closeout): candidate-grade production release and authenticated Jobs acceptance completed; next are real assessment and refreshed connector acceptance, with R2/daily-run/Watch gates retained separately.
+- [September 10 session handoff](mvp/SESSION_CLOSE_2026-09-10.md): historical UI/resume and Watch handoff; the September 11 closeout above records the current release and next steps.
 
 - [Today updates and candidate layout](mvp/TODAY_AND_JOBS_2026-09-10.md): deployed as today-jobs-20260910-r1; real Nine update, 10 candidate rows and detail layout accepted. Backup/recovery and unchanged database fingerprints passed; synthetic previews cleared.
 

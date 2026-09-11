@@ -8,6 +8,62 @@ Current product positioning and the next active boundary remain in README; the
 [documentation index](INDEX.md) identifies authoritative current contracts and
 historical evidence.
 
+## September 11 session closeout
+
+### Continuity and benefits
+
+Jun requested ending today's work, updating the relevant documentation, and
+committing and pushing to GitHub main. This closeout publishes the completed
+candidate-grade implementation and production acceptance with a single current
+handoff. It enables the next session to begin with real-grade and connector
+acceptance, without repeating the release. The immediate benefit is a recorded
+deployment baseline and explicit remaining gates; the longer-term benefit is
+traceable job-selection evidence across conversations, whose actual usefulness
+still requires real assessment use. This documentation closeout adds no runtime,
+business-data, scheduler, model-provider or deployment change.
+
+### Final production state
+
+- Current release: `candidate-grades-20260911-r1`, deployed September 11 at
+  20:32 Sydney from runtime source `6fef9b7710fa4c3be6122d094d0af5afe74fc503`.
+  See the [production and authenticated-page ledger](architecture/CANDIDATE_MATCH_GRADES.md#september-11-production-release).
+- Migration 019 and 31 MCP tools are deployed. Consistent backups, isolated
+  candidate/repeat/old-image recovery checks, preservation of the 46 prior business
+  tables, five public checks and actual MCP reads passed.
+- After the user restored website sign-in, the real Jobs list and two candidate
+  details passed: 10 candidates, saved-JD “待评估” and missing-JD “JD 待补充” states
+  agree with MCP. No production grade was created for testing.
+- [Per-job resume copies](architecture/RESUME_VARIANTS.md) and the
+  [single-application preparation context](architecture/APPLICATION_PREPARATION_CONTEXT.md)
+  remain deployed. The application-page correction keeps resume preparation in
+  Jobs. Base resume version 8 was retained in the release readback.
+- Backend external matching remains off. Candidate decisions, applications,
+  Tasks, submitted-material confirmations and scheduled-task configuration were
+  not changed by this release or closeout.
+
+### Next session
+
+1. Refresh the ChatGPT Workspace connector and verify discovery/use of the new
+   candidate-assessment command. Running-server tool discovery is already passed;
+   refreshed hosted-client acceptance is still separate.
+2. With a real complete JD and explicitly selected current resume/experience
+   sources, complete a grounded assessment save and cross-conversation readback.
+   Verify real evidence/history, correction and staleness behavior without
+   treating synthetic tests as production-use acceptance.
+3. Retain the separate R2 complete-dossier and explicit resume-selection gates.
+   Actual unattended Job Tracker receipt/write/readback and Watch report quality
+   and deliberate human decisions remain independent operational acceptance work.
+
+### Verification and publication scope
+
+The same runtime source already passed 444 tests, both type checks and build;
+desktop/390px synthetic evidence and the production gates above remain valid.
+This closeout checks documentation diffs, references and Git main synchronization;
+it does not repeat the runtime suite or deployment. Existing GitHub push CI remains
+enabled; its result must be reported separately from local and production evidence.
+The four pre-existing Skill paths marked modified by Git have filtered content
+hashes equal to HEAD and no textual diff; this closeout does not rewrite them.
+
 ## R2 local package — 2026-09-11
 
 The [single-application preparation context](architecture/APPLICATION_PREPARATION_CONTEXT.md)
