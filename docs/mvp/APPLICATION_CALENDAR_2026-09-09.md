@@ -6,6 +6,21 @@ the original September 9 gate and release evidence retain their historical scope
 
 ## Continuity and benefits
 
+### September 11 application-list follow-up
+
+The user reported that today's applications were missing from the list below the
+calendar. The list defaulted to submission-date order, pushing undated new
+applications to the end; its update sort ignored newly stored email evidence.
+The Web list now defaults to `UPDATED_DESC`, ordered by the later of project
+update time and the latest linked EMAIL Resource's recording time, with project
+ID as a deterministic tie-breaker. Each row shows that recent-update timestamp
+separately from its unchanged application date. NOTE check receipts, including
+no-update checks, do not promote a row. Explicit date/company/task sorting remains
+available. This makes actual saved updates discoverable and supports continued
+follow-up without fabricating submission dates or changing calendar, lifecycle,
+Task or persistence rules. Local sorting/pagination/default-rendering regression
+passed; release and live readback evidence will follow below.
+
 The user requested that My Applications default to ongoing applications, hide
 rejections, and show submission counts for the previous and current month above
 mail updates. This follows the [ongoing-only mail correction](../architecture/MAIL_SCAN_BACKEND_LEDGER.md#ongoing-only-keyword-follow-up--2026-09-09)
