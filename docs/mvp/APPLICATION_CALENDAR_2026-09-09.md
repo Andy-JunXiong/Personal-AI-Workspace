@@ -1,5 +1,9 @@
 # Application calendar and ongoing default — 2026-09-09
 
+**September 11 follow-up:** the user approved showing existing application
+confirmation emails when a submission date is missing. See the follow-up below;
+the original September 9 gate and release evidence retain their historical scope.
+
 ## Continuity and benefits
 
 The user requested that My Applications default to ongoing applications, hide
@@ -24,6 +28,57 @@ while keeping current follow-up focused. The durable benefit is a historical
 view grounded in the same application records. No mail scans, lifecycle writes,
 new external service, database migration or infrastructure is introduced.
 Production rendering and user acceptance are separate from local verification.
+
+## Confirmation-date display — September 11
+
+The user found Nuix and Coates in today's updates but absent from the calendar.
+Live reads confirmed both applications were APPLIED with `appliedDate: null`;
+their matching confirmation emails arrived September 10, while registration was
+September 11. This follow-up composes a read-only date projection from those
+existing records, enabling visible activity without inventing submission dates.
+It supports the roadmap's next preparation-context package by retaining the
+distinction between a fact, its source and its interpretation.
+
+- Valid recorded submission dates take priority. Otherwise the earliest matching
+  application-confirmation email's received timestamp is converted to the Workspace
+  timezone. Registration/scan timestamps never substitute for submission dates.
+- Existing milestone classification is reused, with legacy English
+  `confirmed/acknowledged receipt of the application` recognition added.
+  Company and role must match. Explicit unrelated categories, recruitment
+  marketing, interviews, offers and rejections are not confirmation fallbacks.
+- Each application appears once. Date cells label the fallback
+  **确认邮件，投递日期待确认**; totals describe applications rather than asserting
+  that every included date is a known submission date.
+- No metadata, lifecycle, Task or evidence is rewritten. The confirmation Resource
+  ID is retained in the query projection for provenance.
+
+Local verification: the new calendar regression exercises earliest receipt,
+Sydney date rollover, recorded-date priority, unrelated/wrong-role exclusions,
+non-confirmation milestones and zero writes. Calendar, timeline and library
+checks passed, followed by the actual release gate: **420 tests / 54 files**,
+both TypeScript checks and build. Source: `696e692`.
+
+Production `calendar-library-20260911-r1` became healthy at
+`2026-09-11T00:32:57Z` (10:32 Sydney), retaining migration 018. Consistent backup,
+candidate/previous-image recovery rehearsal and matching cutover fingerprints
+passed: 47 tables, 1,971 rows. All five public boundary checks passed. The private
+temporary source-transfer object was removed by exact object version.
+
+Authenticated UI acceptance confirmed September 10 expands to Nuix and Coates,
+each with the confirmation-date label; September totals are four applications
+across two dates, and three applications remain without a usable date. Desktop
+inspection verified the expanded popover and both links/labels. The companion
+library correction displays 37 sources: 36 distinct Word bodies and one confirmed
+fact correction, zero PDF entries. Two same-title/different-content pairs show
+variant labels. The original library form values were checked unchanged before
+refresh; no real application/library content was edited for acceptance.
+
+The source archive SHA-256 is
+`f2c1b93c579e402900bcfa26f7cf6724a7172a33084479f036a4a0d794ffe9e7`.
+Backup/rehearsal and cutover logs are retained privately in
+`/srv/paw/deployments/` under the release prefix. Rollback image is
+`resume-variants-20260911-r2`. No new scheduled-run or mobile viewport acceptance
+is claimed by this follow-up.
 
 ## Validation and release
 

@@ -19,6 +19,26 @@ the library currently stores documents/cases, not an independently verified fact
 
 ## Current operating choice
 
+**September 11 curation:** the user requested Word sources without PDFs or
+duplicates. The library page, search, counts and matching snapshot now use the
+same curated source selection. PDF imports are omitted; NFKC/whitespace-equivalent
+content is represented once, preferring an explicitly confirmed source. Excluded
+records are not merged with active records. Different content remains separate,
+and same-title variants display a content-variant label. Authored facts and
+interview cases remain usable, including the user's confirmed employment-date
+correction. Raw source records and Drive originals remain retained for provenance;
+this is not a Drive-file deletion. Source selection changes invalidate old fit
+hashes through the existing mechanism.
+
+Read-only inspection found 85 stored entries: 39 PDFs, 45 Word records representing
+36 distinct bodies, and one confirmed fact correction. The intended curated view
+therefore contains 37 entries, confirmed in the authenticated production page
+after release `calendar-library-20260911-r1`. This closes duplicate-selection friction
+before R2 preparation-context work, and keeps downstream evidence selection aligned
+with what the user sees. Source `696e692` passed the 420-case release gate and
+both type checks/build; production count and visual acceptance are recorded with the
+[calendar follow-up](../mvp/APPLICATION_CALENDAR_2026-09-09.md#confirmation-date-display--september-11).
+
 External model matching is disabled by default. The current user selection is to
 save library material, candidate postings and JDs only. The server supplies no
 comparison provider unless `PAW_JOB_LIBRARY_EXTERNAL_MATCHING=true` is explicitly

@@ -6,16 +6,16 @@
 
 - [Today updates and candidate layout](mvp/TODAY_AND_JOBS_2026-09-10.md): deployed as today-jobs-20260910-r1; real Nine update, 10 candidate rows and detail layout accepted. Backup/recovery and unchanged database fingerprints passed; synthetic previews cleared.
 
-- [Proactive job discovery and interview library](architecture/JOB_LIBRARY_WORKFLOW.md): deployed storage-only library and alert candidates; external-model matching and tailored drafts remain disabled by user choice.
+- [Proactive job discovery and interview library](architecture/JOB_LIBRARY_WORKFLOW.md): deployed Word/content-deduplicated library and alert candidates; authored corrections retained, external-model matching and tailored drafts remain disabled by user choice.
 
 - [Application dossier workflow](architecture/APPLICATION_DOSSIER_WORKFLOW.md): posting URL, JD snapshot, submitted resume version and requirement-to-skill comparison.
 
 - [Application progress timeline](mvp/APPLICATION_PROGRESS_TIMELINE_2026-09-09.md): meaningful application milestones, excluding check receipts and vacancy marketing.
 
-- [Application calendar and ongoing default](mvp/APPLICATION_CALENDAR_2026-09-09.md): two-month submission timeline and focused application list.
+- [Application calendar and ongoing default](mvp/APPLICATION_CALENDAR_2026-09-09.md): two-month timeline with labeled confirmation-mail fallback when submission dates are missing; focused application list.
 
 Start with [README](../README.md) for current state, [core workflow](architecture/CORE_JOB_WORKFLOW.md)
-for product authority, and [current release](architecture/RESUME_EDITOR.md#gutter-navigation-correction--2026-09-10) for deployment evidence.
+for product authority, and [current release](mvp/APPLICATION_CALENDAR_2026-09-09.md#confirmation-date-display--september-11) for deployment evidence.
 [Project kickoff](../PROJECT_KICKOFF.md) retains the chronological project record.
 [Project history](HISTORY.md) preserves the dated release and milestone narrative relocated from README.
 The [September 9 restart checklist](architecture/JOB_LIBRARY_WORKFLOW.md#session-closeout-and-restart-point---2026-09-09) records remaining JD, alert coverage and authorization gates.

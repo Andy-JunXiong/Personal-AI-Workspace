@@ -72,8 +72,15 @@ acceptance evidence are in [Project history](docs/HISTORY.md).
 
 The accepted Today/Jobs layouts and resume spacing, ordering and gutter
 navigation are recorded in the [session handoff](docs/mvp/SESSION_CLOSE_2026-09-10.md).
-Latest production is `resume-variants-20260911-r2`, deployed September 11 at
-10:09 Sydney with migration 018. Named per-job working copies now support
+Latest production is `calendar-library-20260911-r1`, deployed September 11 at
+10:32 Sydney with migration 018 unchanged. Missing submission dates now use
+matching confirmation-mail dates with an explicit label in the
+[calendar](docs/mvp/APPLICATION_CALENDAR_2026-09-09.md#confirmation-date-display--september-11).
+The [library](docs/architecture/JOB_LIBRARY_WORKFLOW.md#current-operating-choice)
+shows distinct Word content and authored corrections, omitting PDF imports and
+duplicate bodies from display/search/matching snapshots.
+
+Named per-job working copies, delivered earlier the same day, support
 independent editing, save/reopen, preview and Word/PDF export. Real Nuix-copy
 acceptance preserved saved base version 8. The final education separator was
 corrected; the real base PDF has two pages with unchanged body text. See the
