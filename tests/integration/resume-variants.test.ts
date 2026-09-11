@@ -80,7 +80,9 @@ it("migration 018 preserves all prior data including the private base resume and
     const before=join(w.directory,"before.db"),after=join(w.directory,"after.db");
     const db=openDatabase(before,old),service=new WorkspaceService(db,testPrincipal);service.ensureDevelopmentIdentity();
     service.resumeService.initialize(Buffer.from("PKretained"),resumeFixture(),"https://drive.google.com/file/d/example/view");db.close();
-    copyFileSync(before,after);openDatabase(after).close();openDatabase(after).close();openDatabase(after,old).close();
-    expect(verifyResumeVariantsMigration(before,after)).toMatchObject({status:"PASS",addedTables:["resume_variants"]});
+    const release=join(w.directory,"release018");mkdirSync(release);
+    for(const f of readdirSync("db/migrations").filter(f=>f.endsWith(".sql")&&f<"019_"))copyFileSync(join("db/migrations",f),join(release,f));
+    copyFileSync(before,after);openDatabase(after,release).close();openDatabase(after,release).close();openDatabase(after,old).close();
+    expect(verifyResumeVariantsMigration(before,after,release)).toMatchObject({status:"PASS",addedTables:["resume_variants"]});
   }finally{w.cleanup();}
 });

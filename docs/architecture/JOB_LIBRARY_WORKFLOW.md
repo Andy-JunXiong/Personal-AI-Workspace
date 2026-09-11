@@ -53,14 +53,25 @@ application-status processing is independent of this setting.
 September 11: Jun requested a backlog item for candidate JD matching using
 ChatGPT and the A+, A, A−, B+, B, B− rubric. The
 [roadmap backlog](../strategy/PRODUCT_SOLUTION_ROADMAP.md#candidate-match-grades)
-owns the proposed rubric and acceptance checklist. This is not implemented:
-ChatGPT will assess complete JD/resume evidence; Workspace will persist and show
-the grade, reason, requirement evidence and source versions. Missing evidence
-must remain explicit, and changed inputs will require reassessment. Existing
+owns the rubric and acceptance checklist. Storage and interfaces are now locally
+implemented, including Jobs display; deployment and real-use acceptance remain pending.
+ChatGPT assesses complete JD/resume evidence; Workspace preserves the grade,
+reason, requirement evidence and source versions. Missing evidence remains
+explicit, and changed inputs require reassessment. Existing
 numeric matching does not establish support for this letter-grade workflow.
 No background model provider, paid API call or scheduled scan is enabled by this
-documentation change. The value is comparable pre-application decisions with
-traceable evidence; implementation and real-use acceptance remain next steps.
+implementation. The intended value is comparable pre-application decisions with
+traceable evidence; release and real-use acceptance remain next steps.
+
+The [September 11 persistence/read contract](CANDIDATE_MATCH_GRADES.md) records
+local migration 019, the interactive assessment command, exact input versions,
+immutable history, idempotency and shared stale-state queries. MCP and authenticated
+Web reads share the assessment service. The 440-test passing evidence includes
+targeted retests after correcting two outdated test assumptions and selecting an
+existing Python interpreter. Production migration and connector refresh have not run.
+The subsequent Jobs list/detail integration passed 72 affected tests and
+desktop/390px browser checks. Current grades, stale reasons, source snapshots,
+user corrections and paginated historical reports are visible in the local build.
 
 1. Open **求职／面试资料库**. Add, search, review or exclude resume versions, project
    descriptions and interview cases. Historical documents start as `SOURCE`;

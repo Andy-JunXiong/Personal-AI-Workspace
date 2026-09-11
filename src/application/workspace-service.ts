@@ -12,6 +12,7 @@ import { canonicalHash, canonicalJson } from "../domain/canonical-json.js";
 import { verifiedRequestContext, type RequestContext } from "./request-context.js";
 import { JobSearchQueryService } from "./job-search-query-service.js";
 import { CandidateService } from "./candidate-service.js";
+import { CandidateAssessmentService } from "./candidate-assessment-service.js";
 import { ResumeService } from "./resume-service.js";
 import { JobLibraryService } from "./job-library-service.js";
 import { MailScanService } from "./mail-scan-service.js";
@@ -316,6 +317,7 @@ export class WorkspaceService {
   readonly todayQueryService: TodayQueryService;
   readonly jobSearchQueryService: JobSearchQueryService;
   readonly candidateService: CandidateService;
+  readonly candidateAssessmentService: CandidateAssessmentService;
   readonly resumeService: ResumeService;
   readonly jobLibraryService: JobLibraryService;
   readonly mailScanLedger: MailScanLedger;
@@ -339,6 +341,8 @@ export class WorkspaceService {
       channel: "channel" in this.identitySource ? this.identitySource.channel : "MCP" as const,
     });
     this.jobSearchQueryService = new JobSearchQueryService(database, resolveIdentity, options.clock);
+    this.candidateAssessmentService = new CandidateAssessmentService(database, resolveTaskContext,
+      this.jobSearchQueryService, this.jobLibraryService, this.resumeService, options.clock);
     this.mailScanService = new MailScanService(database, resolveTaskContext, options.clock);
     this.mailBatchService = new MailBatchService(database, resolveTaskContext, options.clock);
     this.mailScanLedger = new MailScanLedger(database,resolveTaskContext,this.mailScanService,options.clock);

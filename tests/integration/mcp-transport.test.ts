@@ -67,6 +67,7 @@ describe("Streamable HTTP MCP transport", () => {
         "workspace_ping",
         "workspace_propose_transition",
         "workspace_record_candidate",
+        "workspace_record_candidate_match_assessment",
         "workspace_record_observation",
         "workspace_record_recommendation_run",
         "workspace_update_job_application",

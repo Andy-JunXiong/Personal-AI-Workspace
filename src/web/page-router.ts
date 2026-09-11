@@ -82,7 +82,8 @@ export function createJobSearchPageRouter(serviceFor: (request: Request) => Work
     timeZone, new Date(now()).toISOString(), true); });
   page("/platform-watch/:id", (service, request) => { query(request, []); return platformWatchReportView(service,
     request.params.id as string, timeZone, new Date(now()).toISOString(), true); });
-  page("/jobs/:id", (service, request) => { query(request, []); return candidateView(service,
-    request.params.id as string, timeZone, new Date(now()).toISOString(), completionEnabled, matchingEnabled); });
+  page("/jobs/:id", (service, request) => candidateView(service,
+    request.params.id as string, timeZone, new Date(now()).toISOString(), completionEnabled, matchingEnabled,
+    query(request, ["assessmentVersion", "historyBeforeVersion"])));
   return router;
 }

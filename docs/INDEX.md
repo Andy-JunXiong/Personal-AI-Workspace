@@ -1,6 +1,6 @@
 # Documentation index
 
-- [整体方案与项目路线图](strategy/PRODUCT_SOLUTION_ROADMAP.md): 当前规划入口；新增待办“职位 JD 匹配评级”：ChatGPT 评估 A+ 至 B−，Workspace 保存展示，尚未实现。职位简历 → 单申请上下文 → 有依据的求职准备，独立跟进每日同步与 Watch 验收。
+- [整体方案与项目路线图](strategy/PRODUCT_SOLUTION_ROADMAP.md): 当前规划入口；职位 JD 匹配评级已本地完成存储/接口及展示，发布和真实验收待完成。职位简历 → 单申请上下文 → 有依据的求职准备，独立跟进每日同步与 Watch 验收。
 
 - [September 10 session handoff](mvp/SESSION_CLOSE_2026-09-10.md): UI/resume releases, Watch reading correction and latest source-based report; three verified snapshots, with human-decision and daily-run gates remaining; September 11 weekly prompt synchronization is recorded in the Watch ledger.
 
@@ -42,6 +42,7 @@ deployment, manual acceptance and scheduled acceptance separately.
 | [PAW solution and project roadmap](strategy/PRODUCT_SOLUTION_ROADMAP.md) | Active planning and ownership baseline, September 11; future stages explicitly unimplemented. Existing domain contracts and ADR gates remain authoritative for implementation. |
 | [Development Continuity and Benefits Standard v0.1](DEVELOPMENT_CONTINUITY_STANDARD.md) | Required development and document-index maintenance standard. |
 | [Risk-based verification](VERIFICATION.md) | Active local verification levels, test matrix, full-suite gate and stopping/reuse rules. Existing CI and release requirements retained; procedural repository Skill only. |
+| [Candidate JD match grades](architecture/CANDIDATE_MATCH_GRADES.md) | Storage/read APIs and Jobs display locally verified (migration 019, 31 MCP tools). Authorized release gate passed 444 tests, types/build; desktop/390px browser evidence retained. Server access blocks deployment; production recovery and real-use acceptance remain pending. |
 | [Platform Watch report-to-decision contract](architecture/PLATFORM_WATCH_REPORT_DECISIONS.md) | P0 deployed with migration 017, preserved old data and scoped Web actions while general writes remain off. No MCP/task automation change; real-report and human-decision acceptance tracked separately in the release ledger. |
 | [Named per-job resume versions](architecture/RESUME_VARIANTS.md) | September 11 production release and real-copy acceptance; migration 018. UI correction deployed as application-resume-ui-20260911-r1 at 17:52 Sydney: creation stays in Jobs; 426 tests, recovery rehearsal and production rendering readback pass. |
 | [Single-application preparation context](architecture/APPLICATION_PREPARATION_CONTEXT.md) | R2 deployed as application-preparation-20260911-r1; 425 tests, CI, copy recovery and unchanged-data cutover passed. Real Nuix v3 reads and a qualified private preparation example passed; complete-dossier real use and refreshed connector explicit selection remain pending. |

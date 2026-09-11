@@ -10,11 +10,14 @@ backup_name="${1:-}"
 current_tag="${2:-}"
 previous_tag="${3:-}"
 mode="${4:-unchanged}"
-if [[ "${mode}" != unchanged && "${mode}" != --s2-upgrade && "${mode}" != --mail-batch-upgrade && "${mode}" != --mail-ingestion-upgrade && "${mode}" != --mail-scan-ledger-upgrade && "${mode}" != --mail-body-read-upgrade && "${mode}" != --job-mail-search-upgrade && "${mode}" != --job-library-upgrade && "${mode}" != --resume-editor-upgrade && "${mode}" != --platform-watch-upgrade && "${mode}" != --resume-variants-upgrade ]]; then
+if [[ "${mode}" != unchanged && "${mode}" != --s2-upgrade && "${mode}" != --mail-batch-upgrade && "${mode}" != --mail-ingestion-upgrade && "${mode}" != --mail-scan-ledger-upgrade && "${mode}" != --mail-body-read-upgrade && "${mode}" != --job-mail-search-upgrade && "${mode}" != --job-library-upgrade && "${mode}" != --resume-editor-upgrade && "${mode}" != --platform-watch-upgrade && "${mode}" != --resume-variants-upgrade && "${mode}" != --candidate-assessments-upgrade ]]; then
   echo "Optional fourth argument must be a supported upgrade mode, including --job-mail-search-upgrade" >&2
   exit 1
 fi
 upgrade_verifier=dist/scripts/verify-s2-migration.js
+if [[ "${mode}" == --candidate-assessments-upgrade ]]; then
+  upgrade_verifier=dist/scripts/verify-candidate-assessments-migration.js
+fi
 if [[ "${mode}" == --resume-variants-upgrade ]]; then
   upgrade_verifier=dist/scripts/verify-resume-variants-migration.js
 fi
@@ -187,12 +190,17 @@ run_image() {
   after_fingerprint="$(fingerprint "${image_tag}" "${data_dir}")"
   IFS=$'\t' read -r after_hash after_tables after_rows <<<"${after_fingerprint}"
   if [[ "${check}" == upgrade ]]; then
+    # SQLite may need WAL sidecars even for read-only queries. Mount isolated
+    # writable directories, never the source backup or a lone read-only file.
+    local before_dir="${run_dir}/before-${sequence}"
+    install -d -o 1000 -g 1000 -m 0700 "${before_dir}"
+    install -o 1000 -g 1000 -m 0600 "${backup_path}" "${before_dir}/workspace.db"
     docker run --rm --network none --read-only --cap-drop ALL \
       --security-opt no-new-privileges:true \
-      --mount "type=bind,source=${backup_path},target=/app/before.db,readonly" \
-      --mount "type=bind,source=${data_dir},target=/app/data,readonly" \
+      --mount "type=bind,source=${before_dir},target=/app/before" \
+      --mount "type=bind,source=${data_dir},target=/app/data" \
       --entrypoint node "paw:${image_tag}" \
-      "${upgrade_verifier}" /app/before.db /app/data/workspace.db
+      "${upgrade_verifier}" /app/before/workspace.db /app/data/workspace.db
   elif [[ "${before_hash}" != "${after_hash}" ||
         "${before_tables}" != "${after_tables}" ||
         "${before_rows}" != "${after_rows}" ]]; then

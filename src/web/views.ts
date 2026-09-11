@@ -1,4 +1,5 @@
 import { fitPanel, discoveryPanel } from "./job-library-views.js";
+import { assessmentListSummary, assessmentPageOptions, candidateAssessmentPanel } from "./candidate-assessment-view.js";
 import type { WorkspaceService } from "../application/workspace-service.js";
 import { applicationProfileSchema } from "../domain/application-profile.js";
 import { applicationResumeSchema, isResumeFileUrl, type ApplicationResume } from "../domain/application-resume.js";
@@ -179,7 +180,7 @@ function taskRow(task: TaskRecord, zone: string): string {
 function historyRow(event: TransitionRecord, zone: string): string {
   return `<article class="history-row"><div class="timeline-dot" aria-hidden="true"></div><div class="grow"><span class="overline">${event.status === "ADMITTED" ? "已确认变更" : event.status === "PROPOSED" ? "建议 · 尚未确认" : "未采纳建议"}</span><h3>${e(label(event.fromState))} → ${e(label(event.toState))}</h3>${event.proposalRationale ? `<p>${e(event.proposalRationale)}</p>` : ""}<small class="muted">${event.evidenceResourceIds.length} 条关联证据</small></div><time>${e(date(event.admittedAt ?? event.proposedAt, zone))}</time></article>`;
 }
-function safeExternalUrl(value: string | null): string | null {
+export function safeExternalUrl(value: string | null): string | null {
   try { const url = new URL(value ?? ""); return ["https:", "http:"].includes(url.protocol) && !url.username && !url.password ? url.href : null; } catch { return null; }
 }
 function resourceRow(resource: ResourceRecord, zone: string): string {
@@ -289,12 +290,12 @@ export function taskView(service: WorkspaceService, id: string, zone: string, as
 
 export function candidateListView(service: WorkspaceService, query: Record<string, string | number>, zone: string, matchingEnabled=false): string {
   query = { sort: matchingEnabled ? "FIT_DESC" : "UPDATED_DESC", ...query };
-  const page = service.jobSearchQueryService.listCandidates(query);
+  const page = service.candidateAssessmentService.listCandidates(query);
   const decision = String(query.decision ?? "ALL"), linked = String(query.linked ?? "ALL");
   const fits = new Map(service.jobLibraryService.fits().map(f => [f.candidate_id,f]));
   const described = new Set(service.jobLibraryService.describedCandidateIds());
   const libraryHash = service.jobLibraryService.snapshot().hash;
-  const rows = page.items.map((candidate: JobCandidateRecord) => {
+  const rows = page.items.map((candidate) => {
     const fit = fits.get(candidate.id);
     const fitLabel = !fit ? "尚未评估" : fit.library_hash !== libraryHash ? "资料已更新 · 待重评" : fit.score === null ? "待核对" : `${fit.score}% 匹配`;
     const source = safeExternalUrl(candidate.sourceUrl);
@@ -302,14 +303,18 @@ export function candidateListView(service: WorkspaceService, query: Record<strin
     const duplicateTitle = candidate.title.trim().toLowerCase() === candidate.role.trim().toLowerCase();
     const importNotes = ["来自 Job Alert；请打开原链接补充完整 JD。", "来自 Job Alert；原网站未返回可用 JD，请打开原链接补充。", "来自 Job Alert，已获取职位描述。"];
     const reason = candidate.fitReason && !importNotes.includes(candidate.fitReason) ? candidate.fitReason : null;
-    return `<article class="candidate-row"><div class="candidate-main"><p class="overline">${e(candidate.company)}</p><h3><a href="${candidateLink(candidate.id)}">${e(candidate.role)}</a></h3>${!duplicateTitle ? `<p class="candidate-subtitle">${e(candidate.title)}</p>` : ""}<div class="candidate-meta">${candidate.location ? `<span>${e(candidate.location)}</span>` : ""}<span class="candidate-jd ${hasJd ? "" : "missing"}">${hasJd ? "JD 已保存" : "JD 待补充"}</span>${fit || matchingEnabled ? `<span>${e(fitLabel)}</span>` : ""}</div>${reason ? `<p class="candidate-reason">${e(reason)}</p>` : ""}</div><div class="candidate-status">${chip(candidate.decision)}${candidate.linkedProjectId ? `<a class="text-link" href="${appLink(candidate.linkedProjectId)}">已关联申请 ↗</a>` : ""}</div><div class="candidate-links">${source ? `<a class="text-link" href="${e(source)}" target="_blank" rel="noopener noreferrer">职位原文 ↗</a>` : ""}<a class="button secondary" href="${candidateLink(candidate.id)}">查看职位 <span aria-hidden="true">→</span></a></div></article>`;
+    return `<article class="candidate-row"><div class="candidate-main"><p class="overline">${e(candidate.company)}</p><h3><a href="${candidateLink(candidate.id)}">${e(candidate.role)}</a></h3>${!duplicateTitle ? `<p class="candidate-subtitle">${e(candidate.title)}</p>` : ""}<div class="candidate-meta">${candidate.location ? `<span>${e(candidate.location)}</span>` : ""}${candidate.matchAssessment.status !== "MISSING_JD" ? `<span class="candidate-jd ${hasJd ? "" : "missing"}">${hasJd ? "JD 已保存" : "JD 待补充"}</span>` : ""}${fit || matchingEnabled ? `<span>${e(fitLabel)}</span>` : ""}</div>${assessmentListSummary(candidate.matchAssessment)}${reason ? `<p class="candidate-reason">${e(reason)}</p>` : ""}</div><div class="candidate-status">${chip(candidate.decision)}${candidate.linkedProjectId ? `<a class="text-link" href="${appLink(candidate.linkedProjectId)}">已关联申请 ↗</a>` : ""}</div><div class="candidate-links">${source ? `<a class="text-link" href="${e(source)}" target="_blank" rel="noopener noreferrer">职位原文 ↗</a>` : ""}<a class="button secondary" href="${candidateLink(candidate.id)}">查看职位 <span aria-hidden="true">→</span></a></div></article>`;
   }).join("");
   return document("职位", `${heading("JOBS / 职位", "候选职位，逐条决定", "查看岗位要求，收藏感兴趣的职位，再决定是否投递。")}${freshness(page.asOf, zone)}<form class="filters" method="get" data-filter-form><label class="search-label">搜索公司、职位或标题<input type="search" name="q" value="${e(query.q ?? "")}" placeholder="公司、职位、标题关键词" maxlength="500"></label><label>决策<select name="decision">${["UNREVIEWED", "SAVED", "DISMISSED", "ALL"].map((x) => option(x, x === "ALL" ? "全部决策" : label(x), decision)).join("")}</select></label><label>关联<select name="linked">${option("ALL", "全部", linked)}${option("UNLINKED", "未关联", linked)}${option("LINKED", "已关联", linked)}</select></label><label>排序<select name="sort">${option("FIT_DESC", "匹配度优先", String(query.sort))}${option("UPDATED_DESC", "最近更新", String(query.sort))}</select></label><button class="button primary" type="submit">应用筛选</button></form><section class="panel candidate-list"><header class="section-heading"><h2>候选职位 <span class="count">${page.totalCount}</span></h2></header><div data-page-items>${rows || empty("当前范围没有候选职位", "调整筛选，或在 ChatGPT 中记录新的候选职位。")}</div>${pagination(page, `${rootPath}/jobs`, query)}</section>`, true, "jobs");
 }
 
 export function candidateView(service: WorkspaceService, id: string, zone: string, asOf: string,
-  writesEnabled = false, matchingEnabled=false): string {
-  const candidate = service.jobSearchQueryService.getCandidate(id);
+  writesEnabled = false, matchingEnabled=false, query: Record<string, string | number> = {}): string {
+  const options = assessmentPageOptions(query);
+  let candidate = service.candidateAssessmentService.getCandidate(id, options);
+  if (options.assessmentVersion === undefined && candidate.matchAssessment.recordVersion) {
+    candidate = service.candidateAssessmentService.getCandidate(id, { ...options, assessmentVersion: candidate.matchAssessment.recordVersion });
+  }
   const source = safeExternalUrl(candidate.sourceUrl);
   const decisionActions: Array<{ action: "SAVE" | "DISMISS" | "RESTORE"; label: string }> = [];
   if (candidate.decision !== "SAVED") decisionActions.push({ action: "SAVE", label: "收藏" });
@@ -336,7 +341,7 @@ export function candidateView(service: WorkspaceService, id: string, zone: strin
 
   const subtitle = candidate.title.trim().toLowerCase() === candidate.role.trim().toLowerCase() ? "" : candidate.title;
   const usefulReason = candidate.fitReason && !candidate.fitReason.startsWith("来自 Job Alert") ? candidate.fitReason : null;
-  return document("职位详情", `<div class="candidate-detail"><a class="back-link" href="${rootPath}/jobs">← 职位列表</a>${heading(candidate.company, candidate.role, subtitle)}<div class="candidate-detail-meta">${chip(candidate.decision)}${candidate.location ? `<span>${e(candidate.location)}</span>` : ""}<span>更新于 ${e(date(candidate.updatedAt, zone))}</span></div><div class="candidate-detail-layout"><div class="candidate-detail-content">${fitPanel(service,id,candidate.sourceUrl,matchingEnabled)}</div><aside class="panel candidate-side"><h2>这个职位</h2><dl><div><dt>公司</dt><dd>${e(candidate.company)}</dd></div><div><dt>地点</dt><dd>${e(candidate.location || "暂未提供")}</dd></div><div><dt>来源</dt><dd>${e(candidate.provider)}${candidate.sourceAvailability === "UNKNOWN" ? "" : ` · ${e(sourceAvailabilityLabel(candidate.sourceAvailability))}`}</dd></div></dl>${source ? `<a class="button primary candidate-source" href="${e(source)}" target="_blank" rel="noopener noreferrer">查看原职位 ↗</a>` : ""}${actions}${usefulReason ? `<div class="candidate-note"><h3>职位备注</h3><p>${e(usefulReason)}</p>${candidate.fitUncertainty !== "UNKNOWN" ? `<small>${e(fitUncertaintyLabel(candidate.fitUncertainty))}</small>` : ""}</div>` : ""}${linked ? `<p class="candidate-linked">${linked}</p>` : ""}${linkControl}${candidateResumeLinks(service,id)}</aside></div>${contextCopy("Candidate", id)}</div>`, true, "jobs");
+  return document("职位详情", `<div class="candidate-detail"><a class="back-link" href="${rootPath}/jobs">← 职位列表</a>${heading(candidate.company, candidate.role, subtitle)}<div class="candidate-detail-meta">${chip(candidate.decision)}${candidate.location ? `<span>${e(candidate.location)}</span>` : ""}<span>更新于 ${e(date(candidate.updatedAt, zone))}</span></div><div class="candidate-detail-layout"><div class="candidate-detail-content">${candidateAssessmentPanel(candidate,zone,options.historyBeforeVersion)}${fitPanel(service,id,candidate.sourceUrl,matchingEnabled)}</div><aside class="panel candidate-side"><h2>这个职位</h2><dl><div><dt>公司</dt><dd>${e(candidate.company)}</dd></div><div><dt>地点</dt><dd>${e(candidate.location || "暂未提供")}</dd></div><div><dt>来源</dt><dd>${e(candidate.provider)}${candidate.sourceAvailability === "UNKNOWN" ? "" : ` · ${e(sourceAvailabilityLabel(candidate.sourceAvailability))}`}</dd></div></dl>${source ? `<a class="button primary candidate-source" href="${e(source)}" target="_blank" rel="noopener noreferrer">查看原职位 ↗</a>` : ""}${actions}${usefulReason ? `<div class="candidate-note"><h3>职位备注</h3><p>${e(usefulReason)}</p>${candidate.fitUncertainty !== "UNKNOWN" ? `<small>${e(fitUncertaintyLabel(candidate.fitUncertainty))}</small>` : ""}</div>` : ""}${linked ? `<p class="candidate-linked">${linked}</p>` : ""}${linkControl}${candidateResumeLinks(service,id)}</aside></div>${contextCopy("Candidate", id)}</div>`, true, "jobs");
 }
 
 const watchDecisionLabels: Record<string, string> = {

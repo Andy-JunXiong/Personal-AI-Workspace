@@ -5,8 +5,10 @@
 Jun also requested [candidate JD match grades](../strategy/PRODUCT_SOLUTION_ROADMAP.md#candidate-match-grades)
 as a development backlog item: ChatGPT assesses JD/resume/experience evidence;
 Workspace saves and displays A+ through B− with provenance and missing/stale
-indicators. This remains planned, not deployed; it does not enable backend model
-matching or create submitted applications from candidate assessments.
+indicators. [Storage, MCP and Jobs display](CANDIDATE_MATCH_GRADES.md) are locally
+implemented; the authorized release gate passed 444 tests, both type checks and
+build. Server access currently blocks deployment. This does not enable backend
+model matching or create submitted applications from candidate assessments.
 
 Jun confirmed the [submission calendar](../mvp/APPLICATION_CALENDAR_2026-09-09.md#september-11-user-clarification-submission-records-only)
 contains only application submission records, once per application. A labelled

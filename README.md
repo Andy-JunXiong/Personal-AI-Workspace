@@ -70,9 +70,18 @@ acceptance evidence are in [Project history](docs/HISTORY.md).
 
 ## Current state — 2026-09-11
 
-Backlog: [candidate JD match grades](docs/strategy/PRODUCT_SOLUTION_ROADMAP.md#candidate-match-grades)
-will use ChatGPT assessments (A+ through B−) with evidence, source versions and
-stale-result indicators. Planned only; backend model matching remains off.
+Local follow-up: [candidate JD match grades](docs/strategy/PRODUCT_SOLUTION_ROADMAP.md#candidate-match-grades)
+now have versioned evidence storage, immutable history, preparation reads and an
+interactive MCP save command. [Local verification](docs/architecture/CANDIDATE_MATCH_GRADES.md#september-11-local-implementation-evidence)
+covers 440 tests across full regression and focused failure retests, both type
+checks and build. Migration 019 and 31-tool discovery are local only; production
+remains unchanged. The [Jobs display follow-up](docs/architecture/CANDIDATE_MATCH_GRADES.md#september-11-jobs-display-follow-up)
+now shows grades, evidence and historical versions; 72 affected tests, type checks,
+build and desktop/390px browser checks passed. The user then authorized release;
+the [release gate](docs/architecture/CANDIDATE_MATCH_GRADES.md#september-11-authorized-release-preparation)
+passed all 444 tests, both type checks and build. Deployment awaits restored
+server access; production migration and real-use acceptance remain pending.
+Backend model matching remains off.
 
 Deployed follow-up: [resume creation belongs in Jobs](docs/architecture/RESUME_VARIANTS.md#september-11-application-page-correction).
 Application details retain submitted-material records and omit working-copy
@@ -126,9 +135,11 @@ the [active contract](docs/architecture/PLATFORM_WATCH_REPORT_DECISIONS.md).
 ## What's next
 
 The [September 11 roadmap](docs/strategy/PRODUCT_SOLUTION_ROADMAP.md#5-project-roadmap)
-records R1's deployed per-job resume copies and R2's locally verified read-only
-application preparation context. Next, release R2 and validate one real application,
-then enable attributable job/interview preparation. Daily unattended-run acceptance and Watch decision
+records R1's accepted per-job resume copies and R2's deployed read-only
+application preparation context with bounded real Nuix acceptance. Complete-dossier
+and refreshed connector selection checks remain pending. R3 candidate-grade storage,
+reads and Jobs display are locally verified. Release and real-use acceptance are next.
+Daily unattended-run acceptance and Watch decision
 quality remain separate operational tracks. Generic Spaces, agent runtimes and
 workflow engines are outside this plan.
 
