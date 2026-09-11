@@ -72,8 +72,11 @@ acceptance evidence are in [Project history](docs/HISTORY.md).
 
 The accepted Today/Jobs layouts and resume spacing, ordering and gutter
 navigation are recorded in the [session handoff](docs/mvp/SESSION_CLOSE_2026-09-10.md).
-Latest production is `application-preparation-20260911-r1`, deployed September 11 at
-16:05 Sydney with migration 018 unchanged. The preceding calendar/library release's
+Latest production is `application-list-20260911-r1`, deployed September 11 at
+16:34 Sydney with migration 018 unchanged. The [application list](docs/mvp/APPLICATION_CALENDAR_2026-09-09.md#september-11-application-list-follow-up)
+now defaults to recent application/email updates, so undated new applications are
+visible near the top; real readback verified One51, Nuix and Coates first.
+The preceding calendar/library release's
 missing submission dates use
 matching confirmation-mail dates with an explicit label in the
 [calendar](docs/mvp/APPLICATION_CALENDAR_2026-09-09.md#confirmation-date-display--september-11).

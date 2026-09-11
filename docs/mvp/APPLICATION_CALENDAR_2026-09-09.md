@@ -19,7 +19,35 @@ no-update checks, do not promote a row. Explicit date/company/task sorting remai
 available. This makes actual saved updates discoverable and supports continued
 follow-up without fabricating submission dates or changing calendar, lifecycle,
 Task or persistence rules. Local sorting/pagination/default-rendering regression
-passed; release and live readback evidence will follow below.
+passed. This unblocks the user's current list check; it does not claim additional
+applications or change the distinction between recording and submission dates.
+
+Released as `application-list-20260911-r1` at `2026-09-11T06:34:33Z` (16:34 Sydney),
+runtime source `ce9668bd9df1d9462af3f45cf06e1822345dbc08`, [PR 25](https://github.com/Andy-JunXiong/Personal-AI-Workspace/pull/25).
+Both type checks, **426 tests / 56 files**, build, pinned Skill packaging and
+[runtime-source CI](https://github.com/Andy-JunXiong/Personal-AI-Workspace/actions/runs/34570327082)
+passed. Desktop 1440px and narrow 390px synthetic rendered checks showed the
+selected update sort and readable timestamp rows without horizontal overflow.
+Sandbox Chrome closed before rendering; the same headless check outside the
+sandbox passed. No application change was required for that environment issue.
+
+Backup-copy candidate/previous-image recovery passed; schema remains 018. Fresh
+cutover backup `workspace-20260911T063423Z.db` passed integrity. Before/after logical
+fingerprints matched `209a426859d130302de7f6fad7a1922dffbf436e1ee5dc24053b0b67e1722c7c`
+across 47 tables / 1,971 rows. All five public checks and health passed. Source
+archive SHA-256: `822dbfb7e9eaec2ab53c4f5a1e3d1fdd138e8c1419aed099bcfc58bc6665e5a0`;
+image `sha256:6eaec20e73471507d36f449890d5331e7882d15a7221dcab1de173b88221b720`.
+Rollback target is `application-preparation-20260911-r1`. Temporary operator-IP
+access was restored after remote checks.
+
+Read-only production service/view execution verified 13 ongoing applications,
+with **One51, Nuix, Coates** first in that order. Their displayed recent-update
+times are September 11 10:22, 08:00 and 07:59 Sydney respectively. Calendar totals
+remain August 11 / September 4. This check rendered from the live database through
+the deployed view function; it did not claim an authenticated browser-session
+readback. Existing URLs with explicit `sort=APPLIED_DESC` retain that choice; a
+fresh My Applications navigation uses the new default. User-visible acceptance
+after reopening remains separate from the read-only production check.
 
 The user requested that My Applications default to ongoing applications, hide
 rejections, and show submission counts for the previous and current month above
