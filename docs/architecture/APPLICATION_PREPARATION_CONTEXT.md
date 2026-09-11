@@ -107,3 +107,51 @@ Migration/recovery, deployment and live-data checks were not run. No schema,
 permission, dependency or build configuration changed. Production acceptance must
 still verify one real application, payload usefulness and the number of tool calls/
 material omissions before R2 is marked accepted.
+
+## Repeatable MCP read check — September 11 follow-up
+
+### Continuity and benefits
+
+The pending R2 real-application gate above requires measured tool calls and
+visible omissions. The new [read-check script](../../scripts/check-application-preparation.ts)
+performs one `workspace_get_project` invocation against a supplied MCP endpoint
+and exact application ID. This enables the release operator to capture the same
+read evidence locally and after deployment. It does not deploy, write application
+data, fetch sources or assess the quality of a preparation answer. Reusing one
+check makes version selection and missing-material evidence repeatable across
+clients; production usefulness and second-client acceptance remain unproven.
+
+```text
+node --import tsx scripts/check-application-preparation.ts --endpoint https://host/mcp --project-id UUID
+node --import tsx scripts/check-application-preparation.ts --endpoint https://host/mcp --project-id UUID --resume-variant-id UUID
+```
+
+Use an already authorized bearer token in `PAW_MCP_BEARER_TOKEN` when the endpoint
+requires it. The script does not acquire or refresh credentials. HTTPS is required
+except on loopback; credentials in URLs and redirects are rejected. It can also
+run as `node dist/scripts/check-application-preparation.js` after a normal build.
+
+The JSON report includes the read time, elapsed milliseconds, serialized MCP
+result size in UTF-8 bytes, missing items, working-copy IDs/versions, submitted
+resume status and returned/total/truncated history counts. It omits resume/JD
+bodies, file names and source text. `toolCalls: 1` counts the business-tool
+invocation, not MCP initialization or transport requests. Two separate invocations
+to resolve a choice cost two tool calls; comparisons across runs must retain both
+reports and account for intervening data changes.
+
+`readContractPassed` means the measured response fields satisfy the expected R2
+shape and requested identity/explicit selection. It is not a full payload audit
+or a completeness claim. Missing materials and unresolved choices remain visible
+successful reads. `realApplicationUsefulness: NOT_ASSESSED` requires a separate
+human review against the real application's known materials before acceptance.
+An old server without R2 or an invalid selection fails rather than recording a
+pass. Failure output omits potentially private transport error content.
+
+Validation: `npm run typecheck` passed. The three existing preparation-context
+integration tests passed; the two new read-check integration tests passed against
+a local HTTP MCP server, exercising unresolved/explicit selection, report content
+minimization, invalid-ID failure, unchanged SQLite `total_changes()` and rejection
+of a pre-R2 response. Initial checker typing and a test-template URL were corrected
+before the passing results. No runtime service, schema, permission or dependency
+changed, so full-suite/build/release checks were not repeated. Live authentication,
+production deployment, real-application omissions and usefulness remain pending.

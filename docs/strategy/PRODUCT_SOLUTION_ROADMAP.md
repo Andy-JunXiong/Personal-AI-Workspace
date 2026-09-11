@@ -107,6 +107,10 @@ September 11 implementation follows this boundary through the existing
 require an exact `resumeVariantId`; Drive submission confirmations remain separate.
 See the [active R2 contract](../architecture/APPLICATION_PREPARATION_CONTEXT.md).
 No deployment or real-application acceptance is claimed by the local result.
+The locally verified [MCP read-check entry point](../architecture/APPLICATION_PREPARATION_CONTEXT.md#repeatable-mcp-read-check--september-11-follow-up)
+now captures one-call response size, omissions and selected resume IDs/versions.
+Next, use it after R2 deployment and review real-application usefulness; the
+checker itself does not complete that gate.
 
 ### R3：准备稿与投递证据分开
 

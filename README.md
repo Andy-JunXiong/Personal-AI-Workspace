@@ -89,6 +89,9 @@ R2's [single-application preparation context](docs/architecture/APPLICATION_PREP
 is implemented and locally verified through the existing `workspace_get_project`
 read. It adds explicit working-resume selection, material gaps and history bounds
 without another tool or migration. Production and real-application acceptance are pending.
+The [repeatable MCP read check](docs/architecture/APPLICATION_PREPARATION_CONTEXT.md#repeatable-mcp-read-check--september-11-follow-up)
+is locally verified and records call count, response size, material gaps and exact
+resume selection for that pending acceptance; real-data usefulness still needs review.
 The preceding Watch reading release retains readable paragraphs and per-feature
 change/no-change comparisons.
 
