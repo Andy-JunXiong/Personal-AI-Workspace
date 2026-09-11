@@ -96,9 +96,14 @@ queries. Coverage includes a complete dossier, history truncation, zero-write
 readback, single and multiple working copies, explicit selection, cross-target
 rejection and fully missing materials.
 
-The full suite, production build, migration/recovery, deployment and live data
-checks were not run. No schema, permission, dependency, build configuration or
-release input changed, so no full-suite gate was opened. Release preparation must
-still run the repository's existing full gate; production acceptance must verify
-one real application, payload usefulness and the number of tool calls/material
-omissions before R2 is marked accepted.
+The full suite and production build were not run locally. After publication,
+GitHub `Verify` run 61 passed on Node 24 against exact runtime source commit
+`2b15664b34eebd4cd6aa4a3cbf315304633ab82c`: both TypeScript checks, 423 tests
+in 55 files, the production build, pinned Workspace Skill packaging and artifact
+upload succeeded. This documentation-only follow-up reuses that evidence because
+the runtime source is unchanged.
+
+Migration/recovery, deployment and live-data checks were not run. No schema,
+permission, dependency or build configuration changed. Production acceptance must
+still verify one real application, payload usefulness and the number of tool calls/
+material omissions before R2 is marked accepted.
