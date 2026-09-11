@@ -256,3 +256,13 @@ kernel-assets 路径不存在，无法建立用于 AWS 浏览器 SSH 的控制�
    连接器使用体验单独验收，不能用伪造生产评级完成发布测试。
 
 截至本记录，尚未上传源码、构建云端镜像、执行生产备份/迁移或切换容器。
+
+### Pinned release input
+
+- 源码提交：`6fef9b7710fa4c3be6122d094d0af5afe74fc503`。
+- `git archive --format=tar` 的 SHA-256：
+  `651777c935094782d34557c29c7256110757fb9944d63b0f4bb122ff30768a70`。
+- 本地暂存：`%TEMP%/paw-candidate-grades-20260911-r1/source.tar`；
+  可从固定提交重新生成，不包含未提交的 `.agents` 编辑。
+- 恢复脚本以 LF 输入通过 `bash -n`；提交差异空白检查通过。
+  发布记录后续仅文档变更不改变上述已验证的运行输入。
