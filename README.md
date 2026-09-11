@@ -85,6 +85,10 @@ independent editing, save/reopen, preview and Word/PDF export. Real Nuix-copy
 acceptance preserved saved base version 8. The final education separator was
 corrected; the real base PDF has two pages with unchanged body text. See the
 [release and acceptance record](docs/architecture/RESUME_VARIANTS.md).
+R2's [single-application preparation context](docs/architecture/APPLICATION_PREPARATION_CONTEXT.md)
+is implemented and locally verified through the existing `workspace_get_project`
+read. It adds explicit working-resume selection, material gaps and history bounds
+without another tool or migration. Production and real-application acceptance are pending.
 The preceding Watch reading release retains readable paragraphs and per-feature
 change/no-change comparisons.
 
@@ -103,9 +107,9 @@ the [active contract](docs/architecture/PLATFORM_WATCH_REPORT_DECISIONS.md).
 ## What's next
 
 The [September 11 roadmap](docs/strategy/PRODUCT_SOLUTION_ROADMAP.md#5-project-roadmap)
-records R1's deployed per-job resume copies. Next, expose a bounded read-only
-application preparation context, then enable attributable
-job/interview preparation. Daily unattended-run acceptance and Watch decision
+records R1's deployed per-job resume copies and R2's locally verified read-only
+application preparation context. Next, release R2 and validate one real application,
+then enable attributable job/interview preparation. Daily unattended-run acceptance and Watch decision
 quality remain separate operational tracks. Generic Spaces, agent runtimes and
 workflow engines are outside this plan.
 
@@ -125,8 +129,8 @@ three recommendations remain pending; the earlier narrative is historical.
 On September 11 the saved weekly task was synchronized to
 `a7d9006ad8f55bd5fa4c0038e5201bec10c038de` and verified after reopening; its
 Tuesday 09:00 schedule is unchanged. [Named per-job resume versions](docs/architecture/RESUME_VARIANTS.md)
-are now implemented and locally verified, with migration 018 prepared. Production
-release and real-data acceptance remain pending. See the session handoff
+are deployed and real-copy accepted. R2 preparation-context deployment and
+real-application acceptance remain pending. See the session handoff
 and [P0 result](docs/mvp/PLATFORM_WATCH_REPORT_DECISION_P0_RESULTS_2026-09-10.md)
 for acceptance gaps and restart priorities.
 

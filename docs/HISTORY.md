@@ -8,6 +8,18 @@ Current product positioning and the next active boundary remain in README; the
 [documentation index](INDEX.md) identifies authoritative current contracts and
 historical evidence.
 
+## R2 local package — 2026-09-11
+
+The [single-application preparation context](architecture/APPLICATION_PREPARATION_CONTEXT.md)
+extends `workspace_get_project` without adding a tool or migration. It reports
+material gaps and history limits, lists application-linked working resumes, includes
+one unambiguous copy or requires an exact selection, and keeps mutable working
+content separate from Drive-backed submission evidence. Both TypeScript checks and
+38 focused local tests passed. GitHub Node 24 `Verify` run 61 then passed both type
+checks, all 423 tests in 55 files, the production build and pinned Skill packaging
+against exact runtime source `2b15664`. Deployment and real-application acceptance
+remain pending.
+
 ## Current state — 2026-09-10
 
 Current development priority: [nine-region resume editor](architecture/RESUME_EDITOR.md),

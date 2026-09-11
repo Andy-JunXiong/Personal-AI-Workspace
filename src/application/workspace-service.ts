@@ -4,6 +4,7 @@ import { randomUUID } from "node:crypto";
 import { gmailCheckSchema } from "../domain/gmail-check.js";
 import { applicationProfileSchema } from "../domain/application-profile.js";
 import { applicationResumeSchema, isResumeFileUrl } from "../domain/application-resume.js";
+import type { ResumeDocument } from "../domain/resume-document.js";
 import type { WorkspaceDatabase } from "../persistence/database.js";
 import { TaskService, type Clock, mapTask } from "./task-service.js";
 import { TodayQueryService } from "./today-query-service.js";
@@ -126,6 +127,7 @@ interface IdempotencyRow {
 
 export interface ProjectDetails {
   applicationProfile: ReturnType<JobSearchQueryService["applicationProfile"]> | null;
+  preparationContext: ApplicationPreparationContext | null;
   project: ProjectRecord;
   resumeAssociations: ReturnType<JobSearchQueryService["applicationResumes"]>;
   resources: ResourceRecord[];
@@ -135,6 +137,69 @@ export interface ProjectDetails {
     resources: number;
     transitions: number;
     openTasks: number;
+  };
+}
+
+export interface GetProjectOptions {
+  resumeVariantId?: string;
+}
+
+export interface ApplicationPreparationContext {
+  contractVersion: "job-application-preparation-context-v0.1";
+  readAt: string;
+  dossier: {
+    profileResourceId: string | null;
+    profileProvider: string | null;
+    profileSavedAt: string | null;
+    jobDescriptionStatus: "AVAILABLE" | "MISSING";
+    skillMatchStatus: "AVAILABLE" | "MISSING";
+  };
+  workingResume: {
+    status: "SELECTED" | "MISSING" | "SELECTION_REQUIRED";
+    options: Array<{
+      id: string;
+      name: string;
+      company: string;
+      role: string;
+      sourceBaseVersion: number;
+      recordVersion: number;
+      updatedAt: string;
+    }>;
+    selected: {
+      selectionBasis: "EXPLICIT_ID" | "SINGLE_APPLICATION_VARIANT";
+      id: string;
+      name: string;
+      company: string;
+      role: string;
+      sourceBaseVersion: number;
+      recordVersion: number;
+      updatedAt: string;
+      content: ResumeDocument;
+    } | null;
+  };
+  submittedResume: {
+    status: "MISSING" | "FILE_CONFIRMED" | "VERSION_CONFIRMED" | "MULTIPLE_CONFIRMATIONS";
+    options: Array<{
+      resourceId: string;
+      confirmationStatus: "CONFIRMED_FILE" | "CONFIRMED_VERSION";
+      fileName: string;
+      revisionId: string | null;
+      observedAt: string;
+    }>;
+  };
+  missingItems: Array<
+    | "POSTING_REFERENCE"
+    | "JOB_DESCRIPTION"
+    | "SKILL_MATCH"
+    | "SUBMITTED_RESUME_FILE"
+    | "SUBMITTED_RESUME_VERSION"
+    | "WORKING_RESUME"
+    | "WORKING_RESUME_SELECTION"
+  >;
+  history: {
+    resources: { returned: number; total: number; limit: number; truncated: boolean };
+    transitions: { returned: number; total: number; limit: number; truncated: boolean };
+    openTasks: { returned: number; total: number; truncated: false };
   };
 }
 
@@ -246,6 +311,7 @@ class PossibleDuplicateDetected extends Error {
 }
 
 export class WorkspaceService {
+  private readonly clock: Clock;
   readonly taskService: TaskService;
   readonly todayQueryService: TodayQueryService;
   readonly jobSearchQueryService: JobSearchQueryService;
@@ -264,6 +330,7 @@ export class WorkspaceService {
     options: { timeZone?: string; clock?: Clock } = {},
   ) {
     this.identitySource = Object.freeze({ ...identitySource });
+    this.clock = options.clock ?? (() => new Date());
     const resolveIdentity = () => this.resolveIdentity();
     this.resumeService = new ResumeService(database, resolveIdentity, options.clock);
     this.jobLibraryService = new JobLibraryService(database, resolveIdentity, options.clock);
@@ -736,69 +803,91 @@ export class WorkspaceService {
     );
   }
 
-  getProject(projectId: string): ProjectDetails {
-    const identity = this.resolveIdentity();
-    const project = this.getAuthorizedProject(projectId, identity.workspaceId);
+  getProject(projectId: string, options: GetProjectOptions = {}): ProjectDetails {
+    return this.database.transaction(() => {
+      const identity = this.resolveIdentity();
+      const project = this.getAuthorizedProject(projectId, identity.workspaceId);
 
-    const resources = this.database
-      .prepare(
-        `SELECT id, project_id, resource_type, provider, external_id,
-                external_uri, title, observed_facts_json, observed_at, created_at
-         FROM resources WHERE project_id = ? ORDER BY created_at DESC, id ASC
-         LIMIT ?`,
-      )
-      .all(projectId, PROJECT_HISTORY_LIMIT) as unknown as ResourceRow[];
+      const resources = this.database
+        .prepare(
+          `SELECT id, project_id, resource_type, provider, external_id,
+                  external_uri, title, observed_facts_json, observed_at, created_at
+           FROM resources WHERE project_id = ? ORDER BY created_at DESC, id ASC
+           LIMIT ?`,
+        )
+        .all(projectId, PROJECT_HISTORY_LIMIT) as unknown as ResourceRow[];
 
-    const transitionRows = this.database
-      .prepare(
-        `SELECT id, project_id, from_state, to_state, from_version, to_version,
-                trigger_type, status, proposed_by, proposal_rationale,
-                admitted_by, admission_authority_type,
-                admission_authority_reference, proposed_at, admitted_at,
-                rejection_reason
-         FROM state_transitions WHERE project_id = ?
-         ORDER BY proposed_at DESC, id ASC LIMIT ?`,
-      )
-      .all(projectId, PROJECT_HISTORY_LIMIT) as unknown as TransitionRow[];
+      const transitionRows = this.database
+        .prepare(
+          `SELECT id, project_id, from_state, to_state, from_version, to_version,
+                  trigger_type, status, proposed_by, proposal_rationale,
+                  admitted_by, admission_authority_type,
+                  admission_authority_reference, proposed_at, admitted_at,
+                  rejection_reason
+           FROM state_transitions WHERE project_id = ?
+           ORDER BY proposed_at DESC, id ASC LIMIT ?`,
+        )
+        .all(projectId, PROJECT_HISTORY_LIMIT) as unknown as TransitionRow[];
 
-    const tasks = this.database
-      .prepare(
-        `SELECT id, project_id, title, task_kind, status, priority, due_at,
-                record_version, created_by, updated_by, source_transition_id,
-                created_at, updated_at, completed_at
-         FROM tasks
-         WHERE project_id = ? AND status NOT IN ('DONE', 'CANCELLED')
-         ORDER BY created_at DESC`,
-      )
-      .all(projectId) as unknown as TaskRow[];
+      const tasks = this.database
+        .prepare(
+          `SELECT id, project_id, title, task_kind, status, priority, due_at,
+                  record_version, created_by, updated_by, source_transition_id,
+                  created_at, updated_at, completed_at
+           FROM tasks
+           WHERE project_id = ? AND status NOT IN ('DONE', 'CANCELLED')
+           ORDER BY created_at DESC`,
+        )
+        .all(projectId) as unknown as TaskRow[];
 
-    const totalCounts = this.database
-      .prepare(
-        `SELECT
-           (SELECT COUNT(*) FROM resources WHERE project_id = ?) AS resources,
-           (SELECT COUNT(*) FROM state_transitions WHERE project_id = ?) AS transitions,
-           (SELECT COUNT(*) FROM tasks
-            WHERE project_id = ? AND status NOT IN ('DONE', 'CANCELLED')) AS open_tasks`,
-      )
-      .get(projectId, projectId, projectId) as {
-      resources: number;
-      transitions: number;
-      open_tasks: number;
-    };
+      const totalCounts = this.database
+        .prepare(
+          `SELECT
+             (SELECT COUNT(*) FROM resources WHERE project_id = ?) AS resources,
+             (SELECT COUNT(*) FROM state_transitions WHERE project_id = ?) AS transitions,
+             (SELECT COUNT(*) FROM tasks
+              WHERE project_id = ? AND status NOT IN ('DONE', 'CANCELLED')) AS open_tasks`,
+        )
+        .get(projectId, projectId, projectId) as {
+        resources: number;
+        transitions: number;
+        open_tasks: number;
+      };
 
-    return {
-      project,
-      resumeAssociations: project.projectType === "job_application" ? this.jobSearchQueryService.applicationResumes(projectId) : [],
-      applicationProfile: project.projectType === "job_application" ? this.jobSearchQueryService.applicationProfile(projectId) : null,
-      resources: resources.map((row) => this.mapResource(row)),
-      transitions: transitionRows.map((row) => this.mapTransition(row)),
-      openTasks: tasks.map((row) => mapTask(row)),
-      totalCounts: {
-        resources: totalCounts.resources,
-        transitions: totalCounts.transitions,
-        openTasks: totalCounts.open_tasks,
-      },
-    };
+      const resumeAssociations = project.projectType === "job_application"
+        ? this.jobSearchQueryService.applicationResumes(projectId) : [];
+      const applicationProfile = project.projectType === "job_application"
+        ? this.jobSearchQueryService.applicationProfile(projectId) : null;
+      const mappedResources = resources.map((row) => this.mapResource(row));
+      const mappedTransitions = transitionRows.map((row) => this.mapTransition(row));
+      const openTasks = tasks.map((row) => mapTask(row));
+
+      return {
+        project,
+        resumeAssociations,
+        applicationProfile,
+        preparationContext: project.projectType === "job_application"
+          ? this.buildApplicationPreparationContext(
+              project,
+              applicationProfile!,
+              resumeAssociations,
+              options,
+              mappedResources.length,
+              mappedTransitions.length,
+              openTasks.length,
+              totalCounts,
+            )
+          : null,
+        resources: mappedResources,
+        transitions: mappedTransitions,
+        openTasks,
+        totalCounts: {
+          resources: totalCounts.resources,
+          transitions: totalCounts.transitions,
+          openTasks: totalCounts.open_tasks,
+        },
+      };
+    })();
   }
 
   findJobApplication(company: string, role: string): FindJobApplicationResult {
@@ -1347,6 +1436,113 @@ export class WorkspaceService {
     );
   }
 
+  private buildApplicationPreparationContext(
+    project: ProjectRecord,
+    profile: NonNullable<ProjectDetails["applicationProfile"]>,
+    resumeAssociations: ProjectDetails["resumeAssociations"],
+    options: GetProjectOptions,
+    returnedResources: number,
+    returnedTransitions: number,
+    returnedOpenTasks: number,
+    totalCounts: { resources: number; transitions: number; open_tasks: number },
+  ): ApplicationPreparationContext {
+    const parsedProfile = applicationProfileSchema.safeParse(profile.saved?.facts);
+    const profileData = parsedProfile.success ? parsedProfile.data : null;
+    const variants = this.resumeService.listApplicationVariants(project.id);
+    const variantOptions = variants.map((variant) => ({
+      id: variant.id,
+      name: variant.name,
+      company: variant.company,
+      role: variant.role,
+      sourceBaseVersion: variant.sourceBaseVersion,
+      recordVersion: variant.recordVersion,
+      updatedAt: variant.updatedAt,
+    }));
+
+    let selectedVariant = null as ApplicationPreparationContext["workingResume"]["selected"];
+    const selectedOption = options.resumeVariantId
+      ? variantOptions.find((variant) => variant.id === options.resumeVariantId)
+      : variantOptions.length === 1 ? variantOptions[0] : undefined;
+    if (options.resumeVariantId && !selectedOption) {
+      throw new NotFoundError("Resume version was not found for this application");
+    }
+    if (selectedOption) {
+      const saved = this.resumeService.get(selectedOption.id);
+      if (!saved?.variant || saved.variant.projectId !== project.id) {
+        throw new NotFoundError("Resume version was not found for this application");
+      }
+      selectedVariant = {
+        selectionBasis: options.resumeVariantId ? "EXPLICIT_ID" : "SINGLE_APPLICATION_VARIANT",
+        ...selectedOption,
+        content: saved.content,
+      };
+    }
+
+    const confirmedResumes = resumeAssociations.flatMap((association) => {
+      const status = association.facts.interpretation.status;
+      if (status !== "CONFIRMED_FILE" && status !== "CONFIRMED_VERSION") return [];
+      return [{
+        resourceId: association.id,
+        confirmationStatus: status,
+        fileName: association.facts.sourceFacts.fileName,
+        revisionId: association.facts.sourceFacts.revisionId,
+        observedAt: association.observedAt,
+      }];
+    });
+    const submittedStatus = confirmedResumes.length > 1 ? "MULTIPLE_CONFIRMATIONS"
+      : confirmedResumes[0]?.confirmationStatus === "CONFIRMED_VERSION" ? "VERSION_CONFIRMED"
+      : confirmedResumes[0]?.confirmationStatus === "CONFIRMED_FILE" ? "FILE_CONFIRMED"
+      : "MISSING";
+    const missingItems: ApplicationPreparationContext["missingItems"] = [];
+    if (!isUsablePostingReference(project.metadata.postingReference)) missingItems.push("POSTING_REFERENCE");
+    if (!profileData?.jobDescription) missingItems.push("JOB_DESCRIPTION");
+    if (!profileData?.skillMatch?.matches.length) missingItems.push("SKILL_MATCH");
+    if (!confirmedResumes.length) missingItems.push("SUBMITTED_RESUME_FILE");
+    if (!confirmedResumes.some((resume) => resume.confirmationStatus === "CONFIRMED_VERSION")) {
+      missingItems.push("SUBMITTED_RESUME_VERSION");
+    }
+    if (!variantOptions.length) missingItems.push("WORKING_RESUME");
+    else if (!selectedVariant) missingItems.push("WORKING_RESUME_SELECTION");
+
+    return {
+      contractVersion: "job-application-preparation-context-v0.1",
+      readAt: this.clock().toISOString(),
+      dossier: {
+        profileResourceId: profile.saved?.id ?? null,
+        profileProvider: profile.saved?.provider ?? null,
+        profileSavedAt: profile.saved?.savedAt ?? null,
+        jobDescriptionStatus: profileData?.jobDescription ? "AVAILABLE" : "MISSING",
+        skillMatchStatus: profileData?.skillMatch?.matches.length ? "AVAILABLE" : "MISSING",
+      },
+      workingResume: {
+        status: selectedVariant ? "SELECTED" : variantOptions.length ? "SELECTION_REQUIRED" : "MISSING",
+        options: variantOptions,
+        selected: selectedVariant,
+      },
+      submittedResume: { status: submittedStatus, options: confirmedResumes },
+      missingItems,
+      history: {
+        resources: {
+          returned: returnedResources,
+          total: totalCounts.resources,
+          limit: PROJECT_HISTORY_LIMIT,
+          truncated: totalCounts.resources > returnedResources,
+        },
+        transitions: {
+          returned: returnedTransitions,
+          total: totalCounts.transitions,
+          limit: PROJECT_HISTORY_LIMIT,
+          truncated: totalCounts.transitions > returnedTransitions,
+        },
+        openTasks: {
+          returned: returnedOpenTasks,
+          total: totalCounts.open_tasks,
+          truncated: false,
+        },
+      },
+    };
+  }
+
   private runIdempotent<T extends ReplayableResult>(
     workspaceId: string,
     operation: string,
@@ -1763,6 +1959,17 @@ function normalizePostingReference(value: string | null): string | null {
     throw new ValidationError("postingReference must not contain an email address");
   }
   return sanitized;
+}
+
+function isUsablePostingReference(value: JsonValue | undefined): boolean {
+  if (typeof value !== "string") return false;
+  try {
+    const url = new URL(value);
+    return (url.protocol === "https:" || url.protocol === "http:")
+      && !url.username && !url.password;
+  } catch {
+    return false;
+  }
 }
 
 function registrationMetadata(

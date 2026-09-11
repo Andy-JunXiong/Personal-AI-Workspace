@@ -20,6 +20,17 @@ export class ResumeService {
   listVariants(){
     return this.db.prepare("SELECT id,name,company,role,candidate_id AS candidateId,project_id AS projectId,source_base_version AS sourceBaseVersion,record_version AS recordVersion,updated_at AS updatedAt FROM resume_variants WHERE workspace_id=? ORDER BY updated_at DESC,id").all(this.identity().workspaceId) as Array<{id:string;name:string;company:string;role:string;candidateId:string|null;projectId:string|null;sourceBaseVersion:number;recordVersion:number;updatedAt:string}>;
   }
+  listApplicationVariants(projectId:string){
+    z.uuid().parse(projectId);
+    const workspace=this.identity().workspaceId;
+    return this.db.prepare(`SELECT v.id,v.name,v.company,v.role,v.candidate_id AS candidateId,
+      v.project_id AS projectId,v.source_base_version AS sourceBaseVersion,
+      v.record_version AS recordVersion,v.updated_at AS updatedAt
+      FROM resume_variants v JOIN projects p ON p.id=v.project_id
+      WHERE v.workspace_id=? AND v.project_id=? AND p.workspace_id=?
+      AND p.project_type='job_application' ORDER BY v.updated_at DESC,v.id`)
+      .all(workspace,projectId,workspace) as ReturnType<ResumeService["listVariants"]>;
+  }
   targets(){
     const workspace=this.identity().workspaceId;
     const candidates=this.db.prepare("SELECT id,company,role FROM job_candidates WHERE workspace_id=? ORDER BY updated_at DESC,id").all(workspace) as Array<{id:string;company:string;role:string}>;

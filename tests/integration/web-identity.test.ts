@@ -21,6 +21,12 @@ function setup(fileBacked = false) {
   return { ...workspace, links, link, now, advance: (ms: number) => { time += ms; } };
 }
 
+function stableProjectRead(details: ReturnType<WorkspaceService["getProject"]>) {
+  if (!details.preparationContext) return details;
+  const { readAt: _readAt, ...preparationContext } = details.preparationContext;
+  return { ...details, preparationContext };
+}
+
 describe("Explicit web identity association", () => {
   it("keeps existing identity/project rows and resolves by subject, never email", () => {
     const w = setup();
@@ -29,7 +35,7 @@ describe("Explicit web identity association", () => {
     w.link();
     expect(w.links.resolve(identity)).toEqual(w.identity);
     expect(() => w.links.resolve({ ...identity, subject: "other-user" })).toThrow(/not linked/u);
-    expect(w.service.getProject(w.projectId)).toEqual(before);
+    expect(stableProjectRead(w.service.getProject(w.projectId))).toEqual(stableProjectRead(before));
     expect(w.database.prepare("SELECT COUNT(*) AS n FROM principals").get()).toEqual({ n: 1 });
     expect(w.database.prepare("SELECT COUNT(*) AS n FROM workspaces").get()).toEqual({ n: 1 });
     expect(w.database.prepare("SELECT action FROM identity_link_events").all()).toEqual([{ action: "LINK" }]);
@@ -113,7 +119,8 @@ describe("Sessions and immutable application identity", () => {
     const context = verifiedRequestContext(w.database, w.identity, "WEB", randomUUID());
     expect(Object.isFrozen(context)).toBe(true);
     const scoped = new WorkspaceService(w.database, context);
-    expect(scoped.getProject(w.projectId)).toEqual(w.service.getProject(w.projectId));
+    expect(stableProjectRead(scoped.getProject(w.projectId)))
+      .toEqual(stableProjectRead(w.service.getProject(w.projectId)));
     expect(scoped.todayQueryService.getToday()).toEqual(w.service.todayQueryService.getToday());
     expect(() => scoped.ensureDevelopmentIdentity()).toThrow(/cannot initialize/u);
     const authority = { type: "EXPLICIT_USER_DEV" as const, confirmed: true as const, reference: "synthetic" };

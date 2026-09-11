@@ -100,6 +100,19 @@ describe("Streamable HTTP MCP transport", () => {
         },
       });
       expect(
+        tools.tools.find((tool) => tool.name === "workspace_get_project"),
+      ).toMatchObject({
+        annotations: {
+          readOnlyHint: true,
+          destructiveHint: false,
+          openWorldHint: false,
+        },
+        inputSchema: {
+          required: ["projectId"],
+          properties: { resumeVariantId: expect.any(Object) },
+        },
+      });
+      expect(
         tools.tools.find(
           (tool) => tool.name === "workspace_create_job_application",
         ),
@@ -274,6 +287,10 @@ describe("Streamable HTTP MCP transport", () => {
             id: workspace.projectId,
             lifecycleState: "APPLIED",
             lifecycleVersion: 1,
+          },
+          preparationContext: {
+            contractVersion: "job-application-preparation-context-v0.1",
+            workingResume: { status: "MISSING", options: [], selected: null },
           },
         },
       });
