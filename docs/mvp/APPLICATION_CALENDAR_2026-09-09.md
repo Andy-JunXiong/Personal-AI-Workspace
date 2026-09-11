@@ -6,6 +6,30 @@ the original September 9 gate and release evidence retain their historical scope
 
 ## Continuity and benefits
 
+### September 11 user clarification: submission records only
+
+Jun explicitly confirmed that this calendar is for submitted application records
+only; other events do not belong here. This resolves the preceding suggestion to
+add daily application updates to the calendar: that suggestion is not adopted.
+The existing deployed query already enforces this boundary, so this follow-up
+records the requirement without changing runtime behavior or production data.
+
+- Each existing application appears once, using its valid recorded submission
+  date first. When absent, the earliest matching application-confirmation email
+  supplies a clearly labelled fallback date; it is not a separate email event.
+- Ordinary updates, interviews, offers, rejections, task deadlines, registration
+  time and scan/recording time never add dates or move an application to today.
+- A later rejection or closure does not remove the historical submission record.
+- Without either supported date source, retain the undated count rather than
+  inventing a date. The list's recent-update sort remains a separate view.
+
+This preserves accurate submission totals now and prevents future list/Today
+enhancements from changing their meaning. The next product work may proceed
+within that fixed boundary; no calendar event expansion is planned. Verification
+reused the unchanged calendar regression and the preceding 426-test release;
+this documentation-only follow-up checked the query/domain rules and diff, with
+no additional test run, deployment or business writes.
+
 ### September 11 application-list follow-up
 
 The user reported that today's applications were missing from the list below the

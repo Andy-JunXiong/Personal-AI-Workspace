@@ -2,6 +2,13 @@
 
 ## Solution alignment — 2026-09-11
 
+Jun confirmed the [submission calendar](../mvp/APPLICATION_CALENDAR_2026-09-09.md#september-11-user-clarification-submission-records-only)
+contains only application submission records, once per application. A labelled
+confirmation-email date is a fallback when the submission date is missing;
+ordinary updates, interviews, offers, rejections and synchronization timestamps
+never become calendar entries. Ended applications retain their historical
+submission. Recent-update ordering in the application list is independent.
+
 The [current solution and roadmap](../strategy/PRODUCT_SOLUTION_ROADMAP.md) preserves
 this domain contract. ChatGPT remains the primary interaction host and the website
 retains its admitted reporting/editing operations. PAW owns attributable business
