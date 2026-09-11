@@ -15,12 +15,14 @@ It creates no second context store and does not turn suggested actions into gran
 This capability and second-client acceptance remain future work, not current MCP
 features. See the roadmap for sequence and release/real-data gates.
 
-## Per-job resume copies — local source, September 11
+## Per-job resume copies — deployed, September 11
 
 [Named resume versions](RESUME_VARIANTS.md) extend the accepted base editor with
 independent candidate/application working copies. Scoped Web authorization is
 retained; creation and editing do not confirm submission or mutate lifecycle/Tasks.
-Migration 018 and real-data acceptance remain pending deployment.
+Migration 018 is deployed as `resume-variants-20260911-r2`. Authenticated real-copy
+creation, save/reopen and exports passed; see the linked acceptance and PDF
+correction record. The next planned package is bounded read-only preparation context.
 
 ## Platform Watch report decisions — source P0, 2026-09-10
 

@@ -66,13 +66,20 @@ candidate and interview-source storage, and a resume editor with Word/PDF export
 Optional external job matching remains disabled. Detailed dated releases and retained
 acceptance evidence are in [Project history](docs/HISTORY.md).
 
-## Current state ? 2026-09-10
+<a id="current-state--2026-09-10"></a>
 
-Today's accepted Today/Jobs layouts and resume spacing, ordering and gutter
+## Current state — 2026-09-11
+
+The accepted Today/Jobs layouts and resume spacing, ordering and gutter
 navigation are recorded in the [session handoff](docs/mvp/SESSION_CLOSE_2026-09-10.md).
-Latest production is `watch-reading-20260910-r1`, deployed September 10 at
-21:33 Sydney. Reports now use readable paragraphs and per-feature change/no-change
-comparisons. Migration 017 and all existing data were retained.
+Latest production is `resume-variants-20260911-r2`, deployed September 11 at
+10:09 Sydney with migration 018. Named per-job working copies now support
+independent editing, save/reopen, preview and Word/PDF export. Real Nuix-copy
+acceptance preserved saved base version 8. The final education separator was
+corrected; the real base PDF has two pages with unchanged body text. See the
+[release and acceptance record](docs/architecture/RESUME_VARIANTS.md).
+The preceding Watch reading release retains readable paragraphs and per-feature
+change/no-change comparisons.
 
 [OpenAI Platform Watch](docs/strategy/OPENAI_PLATFORM_WATCH.md#directional-reporting-update--2026-09-10)
 now has a read-only procedure, one actual scheduled execution check, and a revised
@@ -89,8 +96,8 @@ the [active contract](docs/architecture/PLATFORM_WATCH_REPORT_DECISIONS.md).
 ## What's next
 
 The [September 11 roadmap](docs/strategy/PRODUCT_SOLUTION_ROADMAP.md#5-project-roadmap)
-sets the development sequence: release the locally verified per-job resume copies,
-expose a bounded read-only application preparation context, then enable attributable
+records R1's deployed per-job resume copies. Next, expose a bounded read-only
+application preparation context, then enable attributable
 job/interview preparation. Daily unattended-run acceptance and Watch decision
 quality remain separate operational tracks. Generic Spaces, agent runtimes and
 workflow engines are outside this plan.

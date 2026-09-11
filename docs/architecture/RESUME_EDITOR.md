@@ -4,8 +4,10 @@ Status: deployed to AWS Lightsail as `resume-editor-20260909-r3` on
 2026-09-10 Sydney time (2026-09-09 UTC), with migration 016 and the private
 baseline initialized as version 1. Production verification is recorded below.
 
-**September 11 follow-up:** [named per-job versions](RESUME_VARIANTS.md) are implemented
-and locally verified; migration 018 and real-data acceptance are not deployed yet.
+**September 11 follow-up:** [named per-job versions](RESUME_VARIANTS.md) are deployed
+as `resume-variants-20260911-r2` with migration 018. Real-copy save/reopen and exports
+passed; the release also removes the final education separator that could create
+a footer-only PDF tail page. The saved base remains version 8.
 
 ## Continuity and benefits
 
