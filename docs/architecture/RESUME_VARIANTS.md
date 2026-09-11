@@ -29,9 +29,24 @@ tool or platform integration is added here.
 
 ## User flow
 
+### September 11 application-page correction
+
+Jun clarified that resume preparation belongs in Jobs, before submission.
+The local application detail now omits working-copy creation/listing while
+retaining saved resume evidence and associations. Candidate detail retains its
+preselected create link. Existing copies and editor/API contracts are preserved.
+This removes the post-submission preparation prompt and keeps preparation distinct
+from submitted records for later review. The next gate is deployment and live
+page acceptance; production has not changed in this correction.
+Two focused web transport cases passed (candidate link and saved application
+materials, including absence of the creation block); both TypeScript checks passed.
+Full-suite and visual viewport checks were not run for this block removal with no
+CSS, persistence or authority changes.
+
 - In Resume, choose the base or a named version using the current-resume selector.
 - Expand the create-version control, choose an existing candidate/application and name it.
-  Candidate and application details also link directly to this preselected flow.
+  Candidate details link directly to this preselected flow. Application details
+  display submitted-material associations and saved resume evidence only.
 - Creation copies the **saved base** and its section/item order. Unsaved edits must
   be saved first. Each copy can then be edited, saved, previewed and exported.
 - The selected copy shows its company/role, base source version and target link.

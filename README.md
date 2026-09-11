@@ -70,6 +70,10 @@ acceptance evidence are in [Project history](docs/HISTORY.md).
 
 ## Current state — 2026-09-11
 
+Local follow-up: [resume creation belongs in Jobs](docs/architecture/RESUME_VARIANTS.md#september-11-application-page-correction).
+Application details retain submitted-material records and omit working-copy
+preparation controls. Focused rendering checks and type checks pass; deployment pending.
+
 The accepted Today/Jobs layouts and resume spacing, ordering and gutter
 navigation are recorded in the [session handoff](docs/mvp/SESSION_CLOSE_2026-09-10.md).
 Latest production is `application-list-20260911-r1`, deployed September 11 at

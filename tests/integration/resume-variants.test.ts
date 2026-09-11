@@ -42,7 +42,9 @@ it("keeps named application/candidate copies independent through persistence, or
     expect(w.database.prepare("SELECT * FROM tasks").all()).toEqual(tasksBefore);
     const html=resumeView(w.service,id);expect(html).toContain(`data-api-path="/variants/${id}"`);expect(html).toContain('data-filename="Nuix AI"');
     expect(html).toContain("Only for this application");expect(html).toContain("来自基础简历版本 1");
-    expect(applicationView(w.service,w.projectId,{},"Australia/Sydney")).toContain(`/resume/variants/${id}`);
+    const applicationPage=applicationView(w.service,w.projectId,{},"Australia/Sydney");
+    expect(applicationPage).not.toContain(`/resume/variants/${id}`);
+    expect(applicationPage).not.toContain("创建职位简历");
     const candidatePage=candidateView(w.service,candidate.id,"Australia/Sydney",new Date().toISOString());
     expect(candidatePage).toContain(`/resume/variants/${second.variant!.id}`);
     expect(candidatePage).toContain("为这个职位准备的简历");

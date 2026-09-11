@@ -888,6 +888,7 @@ describe("Signed OIDC authentication over the isolated web transport", () => {
     const jobHtml = await (await w.request(`/workspace/job-search/jobs/${candidate.id}`, { headers })).text();
     expect(jobHtml).toContain("Matches distributed systems background");
     expect(jobHtml).toContain(`Candidate ${candidate.id}`);
+    expect(jobHtml).toContain(`resume?candidateId=${candidate.id}#resume-versions`);
     expect(jobHtml).toContain("data-library-decision"); // Explicitly scoped candidate operations are available.
     expect((await w.request(`/api/v1/job-search/candidates/${randomUUID()}`, { headers })).status).toBe(404);
     expect(w.database.prepare("SELECT total_changes() AS n").get()).toEqual(before);
@@ -985,6 +986,9 @@ it("renders GPT-written dossiers without browser profile mutation, preserving ve
   expect(html).toContain("AI role v2"); expect(html).toContain("Original GPT report &lt;script&gt;");
   expect(html).not.toContain("<script>bad()"); expect(html).not.toContain("data-profile-form");
   expect(html).toContain("更新或补充资料请在 GPT 中操作");
+  expect(html).not.toContain("创建职位简历");
+  expect(html).not.toContain("resume-target-links");
+  expect(html).toContain("Actual resume");
   const history = await (await w.request(`/workspace/job-search/applications/${w.projectId}?section=resources`, { headers: { cookie } })).text();
   expect(history).toContain("AI role v1"); expect(history).toContain("AI role v2");
   expect(w.database.prepare("SELECT total_changes() n").get()).toEqual(before);
