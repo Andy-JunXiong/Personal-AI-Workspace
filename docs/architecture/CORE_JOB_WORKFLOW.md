@@ -12,8 +12,9 @@ separate gates. Skills describe procedures rather than granting any of those gat
 The bounded [single-application preparation context](APPLICATION_PREPARATION_CONTEXT.md)
 is now implemented and locally verified through `workspace_get_project`, including
 explicitly identified resume versions. It creates no second context store and does
-not turn suggested actions into grants. Production deployment and real-application
-acceptance remain pending; second-client acceptance is still future work. See the
+not turn suggested actions into grants. It is deployed with real Nuix working-copy
+readback and a qualified preparation example; complete-dossier and refreshed
+connector selection checks remain pending. Second-client acceptance is still future work. See the
 roadmap for sequence and release/real-data gates.
 
 ## Per-job resume copies — deployed, September 11
@@ -23,8 +24,8 @@ independent candidate/application working copies. Scoped Web authorization is
 retained; creation and editing do not confirm submission or mutate lifecycle/Tasks.
 Migration 018 is deployed as `resume-variants-20260911-r2`. Authenticated real-copy
 creation, save/reopen and exports passed; see the linked acceptance and PDF
-correction record. The next local package, bounded read-only preparation context,
-is now implemented; its production and real-application acceptance remain pending.
+correction record. Bounded read-only preparation context is now deployed with
+limited real-use acceptance; its active contract records remaining material/client gaps.
 
 ## Platform Watch report decisions — source P0, 2026-09-10
 
