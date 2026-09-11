@@ -84,7 +84,7 @@ flowchart TB
 | R1 职位简历交付 | P0；已上线并完成真实副本操作验收 | 每个职位有独立可编辑简历，基础版与副本互不影响 | 已通过备份恢复、018 迁移和发布检查；真实副本保存、重开、预览及 Word/PDF 导出；基础内容保留，PDF 空白尾页已修正 |
 | O1 每日同步可信运行 | P0；待实际运行验收 | 今天能看到真实更新、完整覆盖或明确失败提示 | 真实定时触发与对应持久回执匹配；按实际结果核对覆盖和发生的写入，无更新时不制造写入 |
 | R2 单申请准备上下文 | P1；已部署，真实读取部分验收通过 | GPT 获取某个申请的 JD、状态、任务和明确选择的工作简历，不必反复找资料 | 已记录真实单次读取、版本与缺失项；完整保存资料场景及刷新后连接器显式选择仍待验收 |
-| R3 有依据的岗位与面试准备 | P1；候选评级存储/接口及 Jobs 展示已本地验证，发布与真实验收待完成；面试准备仍待开发 | 比较岗位要求与真实经历，准备引用相关项目的面试材料 | 一份准备结果可追溯到 JD、简历版本与经历来源；建议与事实分开，用户纠正可保留，资料缺失不被伪造成能力不足 |
+| R3 有依据的岗位与面试准备 | P1；候选评级存储/接口及 Jobs 展示已部署，登录后页面及真实评级验收待完成；面试准备仍待开发 | 比较岗位要求与真实经历，准备引用相关项目的面试材料 | 一份准备结果可追溯到 JD、简历版本与经历来源；建议与事实分开，用户纠正可保留，资料缺失不被伪造成能力不足 |
 | O2 Watch 支持实际决策 | P1；已有报告能力，待持续验收 | 用户看到具体保留/改变建议和后续结果 | 审阅真实周报告、记录用户实际选择，再跟踪有证据的结果；报告建议不自动修改路线图或代码 |
 | R4 第二客户端与维护简化 | P2；待验证 | 在选定的第二客户端读取同一申请得到一致业务状态 | 对同一数据版本核对 ID/来源/状态、权限与错误；不要求自然语言答案逐字一致；按遇到的实际问题整理适配器 |
 
@@ -92,16 +92,17 @@ flowchart TB
 
 ### 待办：职位 JD 匹配评级（R3，2026-09-11）
 
-用户已授权发布；[发布准备记录](../architecture/CANDIDATE_MATCH_GRADES.md#september-11-authorized-release-preparation)
-包含 444 项测试、类型检查和构建通过证据。当前服务器连接受阻，生产迁移、恢复
-演练和真实使用验收尚未完成；上线授权无需重复申请。
+用户授权后已完成[生产发布](../architecture/CANDIDATE_MATCH_GRADES.md#september-11-production-release)：
+Chrome 与服务器连接恢复，migration 019、备份恢复演练、原有数据保留、公网五项
+检查及 31 工具 MCP 读取通过。复用同一源码的 444 项测试、类型检查和构建证据。
+登录后页面及真实评级保存、刷新连接器使用验收仍待完成。
 
 - [ ] 为有完整 JD 的候选职位保存并展示 ChatGPT 生成的 A+、A、A−、B+、B、B− 匹配评级。
 
-**状态：存储、接口及网页展示已本地实现并验证；部署和真实使用验收待完成。** 用户希望沿用自己一直使用的 GPT 岗位评估方式，
+**状态：存储、接口及网页展示已部署；登录后页面和真实评级使用验收待完成。** 用户希望沿用自己一直使用的 GPT 岗位评估方式，
 在职位列表中直接比较申请优先级。[保存与读取契约](../architecture/CANDIDATE_MATCH_GRADES.md)
-已实现输入版本、证据、幂等、历史与失效规则（migration 019、本地 31 个 MCP 工具）；
-列表和详情已接入，72 项相关测试与桌面/390px 布局检查通过；下一步为发布及真实使用验收。
+已实现输入版本、证据、幂等、历史与失效规则（生产 migration 019、31 个 MCP 工具）；
+列表和详情已接入，72 项相关测试与桌面/390px 布局检查通过；下一步为真实使用验收。
 合成测试验证跨客户端读取与旧证据保留，减少重复评估与翻找聊天的实际收益仍待验收；
 长期保留可追溯的匹配依据，支持投递前的职位选择与简历准备。
 
@@ -159,7 +160,7 @@ now captures one-call response size, omissions and selected resume IDs/versions.
 Production checks now record Nuix working-copy v3 and five material gaps. A private
 preparation example used the working copy plus a separately read current official
 vacancy. Next, verify a complete saved dossier and refreshed connector selection;
-R3 candidate assessments now have a locally verified result/provenance and
+R3 candidate assessments now have a deployed result/provenance and
 correction contract; application interview-preparation results remain separate.
 
 ### R3：准备稿与投递证据分开
