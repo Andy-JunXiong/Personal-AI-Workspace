@@ -8,6 +8,16 @@ Current product positioning and the next active boundary remain in README; the
 [documentation index](INDEX.md) identifies authoritative current contracts and
 historical evidence.
 
+## R2 local package — 2026-09-11
+
+The [single-application preparation context](architecture/APPLICATION_PREPARATION_CONTEXT.md)
+extends `workspace_get_project` without adding a tool or migration. It reports
+material gaps and history limits, lists application-linked working resumes, includes
+one unambiguous copy or requires an exact selection, and keeps mutable working
+content separate from Drive-backed submission evidence. Both TypeScript checks and
+38 focused tests passed. This is local implementation evidence only; deployment
+and real-application acceptance remain pending.
+
 ## Current state — 2026-09-10
 
 Current development priority: [nine-region resume editor](architecture/RESUME_EDITOR.md),

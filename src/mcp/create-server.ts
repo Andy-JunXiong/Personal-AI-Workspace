@@ -86,9 +86,12 @@ export function createWorkspaceMcpServer(
     {
       title: "Get a Workspace Project",
       description:
-        "Read one durable Project with current state, all open tasks, the latest 10 Resources and transitions, and total counts. History is bounded by default. Job Applications additionally return current resumeAssociations for each Drive file/revision, including confirmed and dismissed associations, independently of the Resource history limit.",
+        "Read one durable Project with current state, all open tasks, the latest 10 Resources and transitions, and total counts. History is bounded by default. Job Applications additionally return a preparationContext, the latest applicationProfile, current resumeAssociations for each Drive file/revision, and application-linked working resume options. A single working resume is included automatically; when multiple exist, pass its exact resumeVariantId after selecting from the returned options. A working copy is not submission evidence.",
       inputSchema: {
         projectId: z.string().uuid(),
+        resumeVariantId: z.string().uuid().optional().describe(
+          "Exact application-linked working resume to include when preparationContext reports multiple options. Never infer this from recency.",
+        ),
       },
       outputSchema: resultOutputSchema,
       annotations: {
@@ -97,9 +100,12 @@ export function createWorkspaceMcpServer(
         openWorldHint: false,
       },
     },
-    async ({ projectId }) => {
+    async ({ projectId, resumeVariantId }) => {
       try {
-        return successResult(workspaceService.getProject(projectId));
+        return successResult(workspaceService.getProject(
+          projectId,
+          resumeVariantId ? { resumeVariantId } : {},
+        ));
       } catch (error) {
         return errorResult(error);
       }

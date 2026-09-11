@@ -69,6 +69,7 @@ flowchart TB
 | 应用状态、任务、证据、Today/Jobs | 已有生产基础与历史验收 | [核心流程](../architecture/CORE_JOB_WORKFLOW.md)、[UI 验收](../mvp/TODAY_AND_JOBS_2026-09-10.md) |
 | 基础简历、排序、预览、导出、区域导航 | 已上线并获用户验收 | [简历编辑器](../architecture/RESUME_EDITOR.md) |
 | 独立职位简历 | 已上线；migration 018、真实 Nuix 工作稿保存/重开/导出通过，基础版保留 | [副本契约及发布记录](../architecture/RESUME_VARIANTS.md) |
+| 单申请准备上下文 | 已实现并本地验证；沿用 30 个工具和 migration 018，尚未部署/真实申请验收 | [读取契约](../architecture/APPLICATION_PREPARATION_CONTEXT.md) |
 | 申请资料与 Drive 简历关联 | 已有存储、页面及读取；资料完整性仍需逐申请确认 | [申请资料流程](../architecture/APPLICATION_DOSSIER_WORKFLOW.md) |
 | Job Tracker | 已有手动扫描证据；实际无人值守成功回执仍待验收 | [每日验收](../mvp/DAILY_WORKFLOW_ACCEPTANCE.md) |
 | Platform Watch | 报告页面与三份报告已交付；周任务规则已同步；修订后的定时质量与实际人类决定仍待验证 | [Watch](OPENAI_PLATFORM_WATCH.md)、[报告契约](../architecture/PLATFORM_WATCH_REPORT_DECISIONS.md) |
@@ -82,7 +83,7 @@ flowchart TB
 | --- | --- | --- | --- |
 | R1 职位简历交付 | P0；已上线并完成真实副本操作验收 | 每个职位有独立可编辑简历，基础版与副本互不影响 | 已通过备份恢复、018 迁移和发布检查；真实副本保存、重开、预览及 Word/PDF 导出；基础内容保留，PDF 空白尾页已修正 |
 | O1 每日同步可信运行 | P0；待实际运行验收 | 今天能看到真实更新、完整覆盖或明确失败提示 | 真实定时触发与对应持久回执匹配；按实际结果核对覆盖和发生的写入，无更新时不制造写入 |
-| R2 单申请准备上下文 | P1；待开发 | GPT 获取某个申请的 JD、状态、任务和正确简历，不必反复找资料 | 完成下述只读契约；身份隔离、来源/版本、缺失/截断正确；通过真实申请读取验收，记录调用次数与遗漏情况 |
+| R2 单申请准备上下文 | P1；代码与本地验证完成，待发布/真实读取验收 | GPT 获取某个申请的 JD、状态、任务和明确选择的工作简历，不必反复找资料 | 本地契约和隔离/来源/版本/缺失/截断检查已通过；仍需正式发布并通过真实申请读取验收，记录调用次数与遗漏情况 |
 | R3 有依据的岗位与面试准备 | P1；待开发，复用已部署资料库/申请资料 | 比较岗位要求与真实经历，准备引用相关项目的面试材料 | 一份准备结果可追溯到 JD、简历版本与经历来源；建议与事实分开，用户纠正可保留，资料缺失不被伪造成能力不足 |
 | O2 Watch 支持实际决策 | P1；已有报告能力，待持续验收 | 用户看到具体保留/改变建议和后续结果 | 审阅真实周报告、记录用户实际选择，再跟踪有证据的结果；报告建议不自动修改路线图或代码 |
 | R4 第二客户端与维护简化 | P2；待验证 | 在选定的第二客户端读取同一申请得到一致业务状态 | 对同一数据版本核对 ID/来源/状态、权限与错误；不要求自然语言答案逐字一致；按遇到的实际问题整理适配器 |
@@ -100,6 +101,12 @@ flowchart TB
 - **操作提示：** 可以列出所需前提或缺失材料，但不生成可绕过用户/平台授权的许可。
 
 R2 的准备上下文首先服务已存在的申请。申请前的候选职位继续使用现有候选与简历入口；只有实际使用证明重复需求时才增加候选投影，避免为了统一概念创建虚假申请。
+
+September 11 implementation follows this boundary through the existing
+`workspace_get_project`: one linked working copy is included; multiple copies
+require an exact `resumeVariantId`; Drive submission confirmations remain separate.
+See the [active R2 contract](../architecture/APPLICATION_PREPARATION_CONTEXT.md).
+No deployment or real-application acceptance is claimed by the local result.
 
 ### R3：准备稿与投递证据分开
 

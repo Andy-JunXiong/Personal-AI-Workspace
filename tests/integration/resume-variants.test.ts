@@ -16,7 +16,7 @@ it("keeps named application/candidate copies independent through persistence, or
   try{
     const service=w.service.resumeService,content={...resumeFixture(),sectionOrder:[...resumeSections].reverse()};
     service.initialize(Buffer.from("PKsynthetic"),content,"https://drive.google.com/file/d/example/view");
-    const projectBefore=w.service.getProject(w.projectId),tasksBefore=w.database.prepare("SELECT * FROM tasks").all();
+    const {preparationContext:_beforePreparation,...projectBefore}=w.service.getProject(w.projectId),tasksBefore=w.database.prepare("SELECT * FROM tasks").all();
     const candidate=w.service.candidateService.recordCandidate({provider:"seek",postingId:"variant",company:"Nuix",title:"Engineer",role:"Engineer",authority:{type:"EXPLICIT_USER_DEV",confirmed:true,reference:"Test"},idempotencyKey:randomUUID()}).candidate;
     const input={name:"Nuix AI",targetType:"APPLICATION",targetId:w.projectId,expectedBaseVersion:1,intentKey:randomUUID()};
     const first=service.createVariant(input),id=first.variant!.id;
@@ -37,7 +37,9 @@ it("keeps named application/candidate copies independent through persistence, or
     expect(()=>reloaded.save({expectedVersion:1,content},id)).toThrow(/another window/);
     expect(()=>reloaded.exportSnapshot(1,id)).toThrow(/reload/);
     expect(()=>reloaded.save({expectedVersion:2,content:{...edited,name:"Changed"}},id)).toThrow(/fixed/);
-    expect(w.service.getProject(w.projectId)).toEqual(projectBefore);expect(w.database.prepare("SELECT * FROM tasks").all()).toEqual(tasksBefore);
+    const {preparationContext,...projectAfter}=w.service.getProject(w.projectId);
+    expect(projectAfter).toEqual(projectBefore);expect(preparationContext?.workingResume.selected).toMatchObject({id,recordVersion:2});
+    expect(w.database.prepare("SELECT * FROM tasks").all()).toEqual(tasksBefore);
     const html=resumeView(w.service,id);expect(html).toContain(`data-api-path="/variants/${id}"`);expect(html).toContain('data-filename="Nuix AI"');
     expect(html).toContain("Only for this application");expect(html).toContain("来自基础简历版本 1");
     expect(applicationView(w.service,w.projectId,{},"Australia/Sydney")).toContain(`/resume/variants/${id}`);

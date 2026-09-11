@@ -9,11 +9,12 @@ records and domain admission; Gmail/Drive remain authoritative for their native
 records. User authority, platform invocation permission and domain admission are
 separate gates. Skills describe procedures rather than granting any of those gates.
 
-The next planned read capability composes a bounded single-application preparation
-context from existing records, including explicitly identified resume versions.
-It creates no second context store and does not turn suggested actions into grants.
-This capability and second-client acceptance remain future work, not current MCP
-features. See the roadmap for sequence and release/real-data gates.
+The bounded [single-application preparation context](APPLICATION_PREPARATION_CONTEXT.md)
+is now implemented and locally verified through `workspace_get_project`, including
+explicitly identified resume versions. It creates no second context store and does
+not turn suggested actions into grants. Production deployment and real-application
+acceptance remain pending; second-client acceptance is still future work. See the
+roadmap for sequence and release/real-data gates.
 
 ## Per-job resume copies — deployed, September 11
 
@@ -22,7 +23,8 @@ independent candidate/application working copies. Scoped Web authorization is
 retained; creation and editing do not confirm submission or mutate lifecycle/Tasks.
 Migration 018 is deployed as `resume-variants-20260911-r2`. Authenticated real-copy
 creation, save/reopen and exports passed; see the linked acceptance and PDF
-correction record. The next planned package is bounded read-only preparation context.
+correction record. The next local package, bounded read-only preparation context,
+is now implemented; its production and real-application acceptance remain pending.
 
 ## Platform Watch report decisions — source P0, 2026-09-10
 
