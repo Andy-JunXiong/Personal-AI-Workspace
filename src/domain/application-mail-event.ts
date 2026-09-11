@@ -19,7 +19,7 @@ const object = (value: unknown): Record<string, unknown> => value !== null && ty
 const normalize = (value: unknown) => typeof value === "string" ? value.normalize("NFKC").trim().replace(/\s+/gu, " ").toLowerCase() : "";
 
 /** Legacy unclassified mail is shown only with a clear application milestone. */
-export function applicationMailEvent(facts: unknown, company: unknown, role: unknown): { title: string; summary: string; receivedAt: string | null } | null {
+export function applicationMailEvent(facts: unknown, company: unknown, role: unknown): { category: string; title: string; summary: string; receivedAt: string | null } | null {
   const record = object(facts), interpretation = object(record.interpretation), source = object(record.sourceFacts);
   if (record.contractVersion !== "gmail-job-observation-v0.1"
     || !normalize(company) || !normalize(role)
@@ -35,7 +35,7 @@ export function applicationMailEvent(facts: unknown, company: unknown, role: unk
       ["REJECTION", /申请.{0,20}(未通过|被拒|不成功)|未通过.{0,15}(申请|筛选|面试)|不再.{0,12}考虑|拒绝.{0,12}(申请|候选)|申请被拒|application.{0,30}(unsuccessful|rejected)|not.{0,12}(proceed|moving forward)/iu],
       ["OFFER", /录用通知|收到.{0,8}offer|offer of employment|job offer|employment offer/iu],
       ["INTERVIEW", /面试邀请|邀请.{0,15}面试|安排.{0,15}面试|面试.{0,15}(安排|时间|改期|取消)|interview.{0,20}(invitation|scheduled|rescheduled|cancelled)|invite.{0,20}interview/iu],
-      ["APPLICATION_CONFIRMATION", /申请已收到|已收到.{0,20}(申请|简历)|确认收到.{0,100}(申请|简历)|确认.{0,12}(申请|投递)|成功.{0,8}(投递|提交)|application.{0,20}(received|submitted|confirmation|receipt)|received.{0,15}(application|resume)/iu],
+      ["APPLICATION_CONFIRMATION", /申请已收到|已收到.{0,20}(申请|简历)|确认收到.{0,100}(申请|简历)|确认.{0,12}(申请|投递)|成功.{0,8}(投递|提交)|application.{0,20}(received|submitted|confirmation|receipt)|received.{0,15}(application|resume)|(?:confirmed|acknowledged) receipt of (?:the |your |an )?application/iu],
       ["ACTION_REQUEST", /招聘方.{0,20}(联系|沟通|询问|要求)|要求.{0,15}(补充|提交).{0,15}(材料|信息)|recruiter.{0,15}(requested|contacted)|request.{0,15}(availability|documents)/iu],
       ["APPLICATION_UPDATE", /申请状态.{0,15}(in progress|under review|审核|处理中)|申请.{0,15}(进入|下一轮|审核中|审查中|评估中)|application.{0,20}(under review|shortlisted|next stage)/iu],
     ];
@@ -43,5 +43,5 @@ export function applicationMailEvent(facts: unknown, company: unknown, role: unk
   }
   if (!category) return null;
   const receivedAt = typeof source.receivedAt === "string" && Number.isFinite(Date.parse(source.receivedAt)) ? source.receivedAt : null;
-  return { title: applicationMailTitles[category]!, summary, receivedAt };
+  return { category, title: applicationMailTitles[category]!, summary, receivedAt };
 }

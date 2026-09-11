@@ -35,6 +35,29 @@ it("migrates an existing workspace additively and supports repeat and older star
   }finally{w.cleanup();}
 });
 
+it("shows unique Word content and authored corrections while retaining all source records",()=>{
+  const w=createEmptyTestWorkspace();
+  try{
+    const library=w.service.jobLibraryService;
+    const add=(key:string,title:string,content:string,reviewStatus:"SOURCE"|"CONFIRMED"="SOURCE")=>library.saveSource({sourceKey:key,title,content,reviewStatus,sourceUrl:null,expectedVersion:0});
+    add("pdf","Resume.pdf","PDF-only historical content");
+    add("word1","Resume.docx","Built Python APIs");
+    add("word2","Resume copy.docx","Built  Python\nAPIs");
+    add("word3","Resume.docx","Different experience");
+    add("correction","Confirmed employment date","Employment ended July 2025","CONFIRMED");
+    const before=w.database.prepare("SELECT total_changes() n").get();
+    expect(library.sources()).toHaveLength(5);
+    expect(library.visibleSources()).toHaveLength(3);
+    expect(library.snapshot().sources).toHaveLength(3);
+    const html=libraryView(w.service);
+    expect(html).not.toContain("Resume.pdf");
+    expect(html).toContain("Confirmed employment date");
+    expect(html).toContain("Different experience");
+    expect(libraryView(w.service,"PDF-only")).not.toContain("PDF-only historical content");
+    expect(w.database.prepare("SELECT total_changes() n").get()).toEqual(before);
+  }finally{w.cleanup();}
+});
+
 it("isolates source ownership, rejects stale writes and evidence, invalidates fits and preserves edited drafts on comparison races",()=>{
   const w=createEmptyTestWorkspace({clock:()=>new Date("2026-09-09T00:00:00Z")});
   try{

@@ -191,6 +191,20 @@ export class JobSearchQueryService {
       json_extract(metadata_json, '$.appliedDate') AS appliedDate
       FROM projects WHERE workspace_id = ? AND project_type = 'job_application'
       ORDER BY id`).all(identity.workspaceId) as CalendarApplication[];
+    const byId = new Map(applications.map(a => [a.projectId, a]));
+    const mail = this.database.prepare(`SELECT r.id, r.project_id AS projectId, r.observed_facts_json AS facts
+      FROM resources r JOIN projects p ON p.id = r.project_id
+      WHERE p.workspace_id = ? AND p.project_type = 'job_application'
+      AND r.resource_type = 'EMAIL' AND r.provider = 'gmail' ORDER BY r.id`).all(identity.workspaceId) as
+      { id: string; projectId: string; facts: string }[];
+    for (const row of mail) {
+      const app = byId.get(row.projectId)!;
+      const event = applicationMailEvent(JSON.parse(row.facts), app.company, app.role);
+      if (event?.category !== "APPLICATION_CONFIRMATION" || !event.receivedAt
+        || !/^\d{4}-\d{2}-\d{2}T.*(?:Z|[+-]\d{2}:\d{2})$/u.test(event.receivedAt)) continue;
+      if (!app.confirmation || Date.parse(event.receivedAt) < Date.parse(app.confirmation.receivedAt))
+        app.confirmation = { receivedAt: event.receivedAt, resourceId: row.id };
+    }
     return applicationCalendar(applications, this.clock(), zone);
   }
 

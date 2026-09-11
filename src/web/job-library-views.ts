@@ -14,14 +14,19 @@ function sourceForm(source?:LibrarySource){
   <button class="button primary" type="submit">保存资料</button><p data-library-result role="status"></p></form>`;
 }
 
+function sourceVersion(source:LibrarySource,all:LibrarySource[]){
+  const sameTitle=all.filter(s=>s.title===source.title);
+  return sameTitle.length>1?` <small>不同内容 · ${sameTitle.findIndex(s=>s.id===source.id)+1}/${sameTitle.length}</small>`:"";
+}
+
 export function libraryView(service:WorkspaceService,q=""){
-  const all=service.jobLibraryService.sources(),sources=all.filter(s=>`${s.title}\n${s.content}`.toLocaleLowerCase().includes(q.toLocaleLowerCase()));
+  const all=service.jobLibraryService.visibleSources(),sources=all.filter(s=>`${s.title}\n${s.content}`.toLocaleLowerCase().includes(q.toLocaleLowerCase()));
   return document("求职／面试资料库",`<p class="eyebrow">CAREER LIBRARY</p><h1>求职／面试资料库</h1>
-  <p class="subtitle">汇总各版简历、项目证据和面试案例。每个岗位从这里选取相关内容，生成匹配清单与定制简历草稿。</p>
+  <p class="subtitle">汇总 Word 简历、项目证据和面试案例。PDF 不展示，正文相同的资料只保留一份；内容不同的版本分别保留。</p>
   <div class="detail-summary"><div><strong>${all.length}</strong><p>资料来源</p></div><div><strong>${all.filter(s=>s.review_status==="CONFIRMED").length}</strong><p>已核对</p></div><a class="button secondary" href="${rootPath}/jobs">查看候选职位 →</a></div>
   <section class="panel library-panel"><h2>添加资料</h2><p>保留原来的项目、雇主、日期和成果数字。历史简历只是来源；有分歧的经历先核对，再用于投递。</p><details><summary>新增项目、简历或面试案例</summary>${sourceForm()}</details></section>
   <form class="filters" method="get"><label class="search-label">查找技能、经历或素材<input type="search" name="q" value="${e(q)}" maxlength="500"></label><button class="button secondary">搜索</button></form>
-  <section class="panel library-panel"><h2>资料来源 · ${sources.length}</h2>${sources.map(s=>`<details class="library-source" id="source-${e(s.id)}"><summary>${e(s.title)} <small>${s.review_status==="CONFIRMED"?"已核对":s.review_status==="EXCLUDED"?"已排除":"待核对"}</small></summary>${sourceForm(s)}</details>`).join("")||"<p>暂无匹配资料。</p>"}</section>`,true,"library");
+  <section class="panel library-panel"><h2>资料来源 · ${sources.length}</h2>${sources.map(s=>`<details class="library-source" id="source-${e(s.id)}"><summary>${e(s.title)}${sourceVersion(s,all)} <small>${s.review_status==="CONFIRMED"?"已核对":s.review_status==="EXCLUDED"?"已排除":"待核对"}</small></summary>${sourceForm(s)}</details>`).join("")||"<p>暂无匹配资料。</p>"}</section>`,true,"library");
 }
 
 export function fitPanel(service:WorkspaceService,id:string,sourceUrl:string|null,matchingEnabled=false){

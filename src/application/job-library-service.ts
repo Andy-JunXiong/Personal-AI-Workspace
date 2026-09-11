@@ -25,7 +25,21 @@ export class JobLibraryService {
    this.db.prepare("INSERT INTO job_candidate_descriptions VALUES(?,?,?,?,?) ON CONFLICT(candidate_id) DO UPDATE SET jd_text=excluded.jd_text,source_url=excluded.source_url,updated_at=excluded.updated_at")
      .run(id,this.workspaceId(),z.string().min(1).max(50000).parse(jd),z.string().url().parse(url),this.clock().toISOString());}
  sources():LibrarySource[]{return this.db.prepare("SELECT * FROM job_library_sources WHERE workspace_id=? ORDER BY title,id").all(this.identity().workspaceId) as LibrarySource[];}
- snapshot(){const sources=this.sources().filter(s=>s.review_status!=="EXCLUDED");
+ visibleSources():LibrarySource[]{
+   const rank={CONFIRMED:0,SOURCE:1,EXCLUDED:2};
+   const unique=new Map<string,LibrarySource>();
+   for(const source of this.sources()){
+     // Keep authored facts/cases as well as Word files; PDF imports are not used.
+     if(/\.pdf\s*$/iu.test(source.title)||/\.pdf(?:[?#]|$)/iu.test(source.source_url??""))continue;
+     const body=source.content.normalize("NFKC").trim().replace(/\s+/gu," ");
+     // An excluded record does not suppress a separately admitted source.
+     const key=JSON.stringify([source.review_status==="EXCLUDED",body]);
+     const previous=unique.get(key);
+     if(!previous||rank[source.review_status]<rank[previous.review_status])unique.set(key,source);
+   }
+   return [...unique.values()].sort((a,b)=>a.title.localeCompare(b.title)||a.id.localeCompare(b.id));
+ }
+ snapshot(){const sources=this.visibleSources().filter(s=>s.review_status!=="EXCLUDED");
    return {sources,hash:createHash("sha256").update(JSON.stringify(sources.map(s=>[s.id,s.record_version,s.review_status]))).digest("hex")};}
  saveSource(input:unknown){const v=libraryInputSchema.parse(input),ws=this.identity().workspaceId;
    return this.db.transaction(()=>{

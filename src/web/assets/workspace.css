@@ -80,6 +80,7 @@
 .align-right .calendar-day-applications { left: auto; right: 0; }
 .calendar-day-applications h4 { font-size: 14px; }
 .calendar-day-applications ul { margin: 10px 0 0; padding: 0; list-style: none; max-height: 240px; overflow: auto; }
+.calendar-day-applications small { display: block; margin: -4px 0 10px; line-height: 1.5; }
 .calendar-day-applications li + li { border-top: 1px solid var(--line); }
 .calendar-day-applications a { display: block; padding: 10px 0; text-decoration: underline; text-underline-offset: 3px; overflow-wrap: anywhere; }
 .calendar-note { padding: 18px 24px; font-size: 12px; line-height: 1.8; }

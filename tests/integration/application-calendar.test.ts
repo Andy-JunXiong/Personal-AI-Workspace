@@ -6,6 +6,38 @@ import { WorkspaceService } from "../../src/application/workspace-service.js";
 import { createEmptyTestWorkspace } from "../helpers/test-workspace.js";
 
 describe("application submission calendar", () => {
+  it("uses the earliest matching confirmation in local time without inventing an applied date", () => {
+    const w=createEmptyTestWorkspace({clock:()=>new Date("2026-09-11T00:00:00Z")});
+    try {
+      const create=(company:string,appliedDate?:string)=>{
+        const result=w.service.createJobApplication({company,role:"Engineer",appliedDate,
+          authority:{type:"EXPLICIT_USER_DEV",confirmed:true,reference:"Calendar fixture"},idempotencyKey:randomUUID()});
+        if(result.creationStatus!=="CREATED")throw new Error("Expected creation");
+        return result.project.id;
+      };
+      const id=create("Example"),dated=create("Dated","2026-09-08"),unrelated=create("Unrelated");
+      const mail=(projectId:string,company:string,summary:string,receivedAt:string,category?:string,role="Engineer")=>w.service.recordObservation({
+        projectId,provider:"gmail",resourceType:"EMAIL",externalId:randomUUID(),externalUri:null,title:"Confirmation",
+        observedAt:"2026-09-11T00:00:00Z",idempotencyKey:randomUUID(),observedFacts:{contractVersion:"gmail-job-observation-v0.1",
+          sourceFacts:{receivedAt},interpretation:{company,role,emailKind:"OTHER",summary,...(category?{category}:{})}}});
+      mail(id,"Example","Acknowledged receipt of the application","2026-09-10T01:00:00Z");
+      const first=mail(id,"Example","Confirmed receipt of the application","2026-09-09T15:00:00Z");
+      const legacy=mail(id,"Example","Received your application","2026-09-01T00:00:00Z");
+      w.database.prepare("UPDATE resources SET observed_facts_json=json_set(observed_facts_json,'$.interpretation.category','UNRELATED') WHERE id=?").run(legacy.resource.id);
+      mail(id,"Example","Received your application","2026-09-01T00:00:00Z",undefined,"Other role");
+      mail(dated,"Dated","Received your application","2026-09-10T01:00:00Z");
+      mail(unrelated,"Unrelated","Interview scheduled","2026-09-09T01:00:00Z","INTERVIEW");
+      const before=w.database.prepare("SELECT total_changes() n").get();
+      const calendar=w.service.jobSearchQueryService.applicationCalendar("Australia/Sydney");
+      expect(calendar.months[1]!.total).toBe(2);
+      expect(calendar.months[1]!.days[9]!.applications).toMatchObject([{projectId:id,appliedDate:null,dateSource:"CONFIRMATION",confirmation:{resourceId:first.resource.id}}]);
+      expect(calendar.months[1]!.days[7]!.applications[0]?.dateSource).toBe("APPLIED");
+      expect(calendar.undatedCount).toBe(1);
+      expect(applicationListView(w.service,{},"Australia/Sydney")).toContain("确认邮件，投递日期待确认");
+      expect(w.service.getProject(id).project.metadata.appliedDate).toBeNull();
+      expect(w.database.prepare("SELECT total_changes() n").get()).toEqual(before);
+    } finally {w.cleanup();}
+  });
   it("uses the workspace day across year boundaries and handles leap dates and missing dates", () => {
     const calendar = applicationCalendar([], new Date("2025-12-31T14:00:00Z"), "Australia/Sydney");
     expect(calendar.today).toBe("2026-01-01");
@@ -49,7 +81,7 @@ describe("application submission calendar", () => {
       const html = applicationListView(w.service, { pageSize: 1, q: "Current" }, "Australia/Sydney");
       expect(html.indexOf('aria-label="投递时间轴"')).toBeLessThan(html.indexOf('aria-label="邮件更新"'));
       expect(html).toContain('value="ONGOING" selected');
-      expect(html).toContain('aria-label="2026-09-08，2份投递"');
+      expect(html).toContain('aria-label="2026-09-08，2份申请"');
       expect(html).toContain('aria-current="date"');
       expect(html).toContain("&lt;script&gt;Closed&lt;/script&gt;");
       expect(html).not.toContain("<script>Closed</script>");

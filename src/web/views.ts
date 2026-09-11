@@ -152,16 +152,16 @@ export function mailScanPanel(service: WorkspaceService, zone: string): string {
 function applicationCalendarPanel(service: WorkspaceService, zone: string): string {
   const calendar = service.jobSearchQueryService.applicationCalendar(zone);
   return `<section class="panel application-calendar" aria-label="投递时间轴"><header class="section-heading"><h2>投递时间轴</h2><span class="muted">上月 → 本月</span></header>
-    <p class="section-intro">按已记录的投递日期统计，包含已结束申请，不受下方筛选影响。点击有数量的日期查看当天岗位。</p>
-    <div class="calendar-months">${calendar.months.map(month => `<section class="calendar-month" aria-label="${month.year}年${month.month}月"><header><h3>${month.year}年${month.month}月 <span class="muted">${month.offset ? "上月" : "本月"}</span></h3><p><strong>${month.total}</strong> 份投递 <span class="muted">· ${month.activeDays} 天有投递</span></p></header>
+    <p class="section-intro">优先按已记录的投递日期展示；日期缺失时按投递确认邮件日期展示并标注。包含已结束申请，不受下方筛选影响。点击日期查看岗位和日期依据。</p>
+    <div class="calendar-months">${calendar.months.map(month => `<section class="calendar-month" aria-label="${month.year}年${month.month}月"><header><h3>${month.year}年${month.month}月 <span class="muted">${month.offset ? "上月" : "本月"}</span></h3><p><strong>${month.total}</strong> 份申请 <span class="muted">· ${month.activeDays} 天有记录</span></p></header>
       <div class="calendar-grid">${["一", "二", "三", "四", "五", "六", "日"].map(day => `<span class="calendar-weekday" aria-hidden="true">${day}</span>`).join("")}${Array.from({ length: month.leading }, () => '<span aria-hidden="true"></span>').join("")}${month.days.map(day => {
         const count = day.applications.length;
         const current = day.date === calendar.today ? ' aria-current="date"' : "";
         const content = `<time datetime="${day.date}">${day.day}</time>${count ? `<strong class="calendar-count">${count}</strong>` : '<span class="calendar-zero" aria-hidden="true">·</span>'}`;
-        return count ? `<details name="application-day" class="calendar-day has-applications${(month.leading + day.day - 1) % 7 >= 4 ? " align-right" : (month.leading + day.day - 1) % 7 === 3 ? " align-center" : ""}"${current}><summary aria-label="${day.date}，${count}份投递">${content}</summary><div class="calendar-day-applications"><h4>${day.date} · ${count} 份投递</h4><ul>${day.applications.map(app => `<li><a href="${appLink(app.projectId)}">${e(app.company)} · ${e(app.role)}</a></li>`).join("")}</ul></div></details>`
-          : `<div class="calendar-day"${current} aria-label="${day.date}，无已记录投递">${content}</div>`;
+        return count ? `<details name="application-day" class="calendar-day has-applications${(month.leading + day.day - 1) % 7 >= 4 ? " align-right" : (month.leading + day.day - 1) % 7 === 3 ? " align-center" : ""}"${current}><summary aria-label="${day.date}，${count}份申请">${content}</summary><div class="calendar-day-applications"><h4>${day.date} · ${count} 份申请</h4><ul>${day.applications.map(app => `<li><a href="${appLink(app.projectId)}">${e(app.company)} · ${e(app.role)}</a><small class="muted">${app.dateSource === "CONFIRMATION" ? "确认邮件，投递日期待确认" : "已记录的投递日期"}</small></li>`).join("")}</ul></div></details>`
+          : `<div class="calendar-day"${current} aria-label="${day.date}，无申请记录">${content}</div>`;
       }).join("")}</div></section>`).join("")}</div>
-    <p class="calendar-note muted">数字为当天投递数量 · 描边为今天${calendar.undatedCount ? ` · ${calendar.undatedCount} 份申请尚无有效投递日期，未计入日历` : ""}</p></section>`;
+    <p class="calendar-note muted">数字为当天展示的申请数量 · 描边为今天${calendar.undatedCount ? ` · ${calendar.undatedCount} 份申请尚无投递日期或可用确认邮件，未计入日历` : ""}</p></section>`;
 }
 
 export function applicationListView(service: WorkspaceService, query: Record<string, string | number>, zone: string, gmailEnabled = false): string {
