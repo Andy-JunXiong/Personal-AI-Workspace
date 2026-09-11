@@ -57,6 +57,7 @@ const PROJECT_FIELDS = `p.id, p.workspace_id AS workspaceId, p.project_type AS p
   p.created_at AS createdAt, p.updated_at AS updatedAt`;
 
 export interface ApplicationListItem extends JobApplicationSummary {
+  latestActivityAt: string;
   openTaskCount: number;
   nextDueTask: { id: string; title: string; dueAt: string } | null;
 }
@@ -215,7 +216,7 @@ export class JobSearchQueryService {
       const identity = this.resolveIdentity();
       const order = {
         APPLIED_DESC: "appliedDate IS NULL ASC, appliedDate DESC, p.created_at DESC, p.id ASC",
-        UPDATED_DESC: "p.updated_at DESC, p.id ASC",
+        UPDATED_DESC: "latestActivityAt DESC, p.id ASC",
         COMPANY_ASC: "company COLLATE NOCASE ASC, role COLLATE NOCASE ASC, p.id ASC",
         NEXT_DUE_ASC: "n.due_at IS NULL ASC, n.due_at ASC, p.id ASC",
       }[options.sort];
@@ -239,7 +240,10 @@ export class JobSearchQueryService {
           json_extract(p.metadata_json, '$.postingReference') AS postingReference,
           p.status AS projectStatus, p.lifecycle_state AS lifecycleState,
           p.lifecycle_version AS lifecycleVersion, p.record_version AS recordVersion,
-          p.updated_at AS updatedAt, COALESCE(n.open_count, 0) AS openTaskCount,
+          p.updated_at AS updatedAt,
+          MAX(p.updated_at, COALESCE((SELECT MAX(r.created_at) FROM resources r
+            WHERE r.project_id = p.id AND r.resource_type = 'EMAIL'), p.updated_at)) AS latestActivityAt,
+          COALESCE(n.open_count, 0) AS openTaskCount,
           n.id AS nextDueTaskId, n.title AS nextDueTaskTitle, n.due_at AS nextDueAt
         FROM projects p LEFT JOIN ranked_open n ON n.project_id = p.id AND n.position = 1
         WHERE p.workspace_id = @workspace AND p.project_type = 'job_application'

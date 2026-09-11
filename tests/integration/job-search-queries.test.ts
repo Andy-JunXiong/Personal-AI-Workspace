@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { applicationListView } from "../../src/web/views.js";
 import { afterEach, describe, expect, it } from "vitest";
 import { WorkspaceService } from "../../src/application/workspace-service.js";
 import { JobSearchQueryService } from "../../src/application/job-search-query-service.js";
@@ -42,6 +43,29 @@ function addHistory(w: ReturnType<typeof setup>, count: number) {
 }
 
 describe("Bounded application queries", () => {
+  it("surfaces new undated applications and newly saved mail without promoting no-update checks", () => {
+    const w = setup();
+    const older = application(w, "Older dated");
+    const fresh = application(w, "New undated");
+    w.database.prepare("UPDATE projects SET created_at=?,updated_at=?").run("2026-08-28T00:00:00.000Z", "2026-08-28T00:00:00.000Z");
+    w.database.prepare("UPDATE projects SET metadata_json=json_set(metadata_json,'$.appliedDate','2026-08-28') WHERE id=?").run(older);
+    w.database.prepare("UPDATE projects SET created_at=?,updated_at=? WHERE id=?").run("2026-09-11T00:00:00.000Z", "2026-09-11T00:00:00.000Z", fresh);
+    const mail = w.service.recordObservation({projectId:older,resourceType:"EMAIL",provider:"gmail",externalId:randomUUID(),externalUri:null,title:"New reply",observedAt:"2026-09-09T00:00:00Z",observedFacts:{contractVersion:"gmail-job-observation-v0.1",sourceFacts:{receivedAt:"2026-09-09T00:00:00Z"},interpretation:{company:"Older dated",role:"Engineer",emailKind:"OTHER",summary:"Saved reply"}},idempotencyKey:randomUUID()});
+    const check = w.service.recordObservation({projectId:fresh,resourceType:"NOTE",provider:"workspace-gmail-check",externalId:randomUUID(),externalUri:null,title:"No update",observedAt:"2026-09-11T03:00:00Z",observedFacts:{contractVersion:"gmail-application-check-v0.1",status:"NO_UPDATE",matchedMessageCount:0,summary:"No new messages",searchScope:"Synthetic check"},idempotencyKey:randomUUID()});
+    w.database.prepare("UPDATE resources SET created_at=? WHERE id=?").run("2026-09-11T01:00:00.000Z",mail.resource.id);
+    w.database.prepare("UPDATE resources SET created_at=? WHERE id=?").run("2026-09-11T03:00:00.000Z",check.resource.id);
+    const before = w.database.prepare("SELECT total_changes() n").get();
+    const first = w.query.listApplications({sort:"UPDATED_DESC",pageSize:1});
+    expect(first.items[0]).toMatchObject({projectId:older,appliedDate:"2026-08-28",updatedAt:"2026-08-28T00:00:00.000Z",latestActivityAt:"2026-09-11T01:00:00.000Z"});
+    const next = w.query.listApplications({sort:"UPDATED_DESC",pageSize:1,cursor:first.nextCursor!});
+    expect(next.items[0]?.projectId).toBe(fresh);
+    const html = applicationListView(w.service,{},"Australia/Sydney");
+    expect(html).toContain('<option value="UPDATED_DESC" selected>');
+    expect(html).toContain("最近更新：");
+    expect(html.indexOf('<p class="overline">Older dated')).toBeLessThan(html.indexOf('<p class="overline">New undated'));
+    expect(w.query.listApplications({sort:"APPLIED_DESC"}).items[0]?.projectId).toBe(older);
+    expect(w.database.prepare("SELECT total_changes() n").get()).toEqual(before);
+  });
   it("reads past the frozen 100-row cap without duplicates and preserves deterministic tie ordering", () => {
     const w = setup();
     for (let i = 0; i < 106; i++) application(w, `Synthetic ${i.toString().padStart(3, "0")}`);
