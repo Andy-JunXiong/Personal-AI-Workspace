@@ -34,6 +34,21 @@ def synthetic_template(path):
 
 
 class ExportTests(unittest.TestCase):
+    def test_education_does_not_add_a_footer_only_trailing_page(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root=Path(directory);source=root/'source.docx';synthetic_template(source)
+            for pdf in (False,True):
+                template=module.Template(source);content=template.initial()
+                content['education'][-1]['detail']='Final education detail'
+                output=root/'education.docx';template.export(content,output,for_pdf=pdf)
+                with zipfile.ZipFile(output) as z:
+                    doc=module.D.parseString(z.read('word/document.xml'))
+                    ps=module.elements(doc,'w:p')
+                    self.assertEqual(module.text(ps[-1]),'Final education detail')
+                    first_detail=next(i for i,p in enumerate(ps) if module.text(p)=='Example Major')
+                    self.assertEqual(module.text(ps[first_detail+1]),'')
+                    self.assertEqual(module.text(ps[first_detail+2]),'Example UniversityExample City')
+
     def test_section_and_item_order_preserve_complete_blocks_and_template_parts(self):
         with tempfile.TemporaryDirectory() as directory:
             root=Path(directory);source=root/'source.docx';synthetic_template(source)

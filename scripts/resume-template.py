@@ -263,8 +263,11 @@ class Template:
         # with Linux font substitution. PDF always uses explicit right tabs.
         if for_pdf or content['education'] != old['education']:
             nodes = []
-            for item in content['education']:
-                nodes.extend([self.columns(59, item['school'], item['location']), self.columns(60, item['degree'], item['dates']), self.paragraph(61, item['detail']), self.ps[62].cloneNode(True)])
+            for i, item in enumerate(content['education']):
+                nodes.extend([self.columns(59, item['school'], item['location']), self.columns(60, item['degree'], item['dates']), self.paragraph(61, item['detail'])])
+                # A separator belongs between schools. A trailing empty paragraph
+                # can overflow onto a page containing only the footer.
+                if i + 1 < len(content['education']): nodes.append(self.ps[62].cloneNode(True))
             self.replace(59, 66, nodes)
         if for_pdf: self.normalize_pdf_list_spacing()
         if markers:
