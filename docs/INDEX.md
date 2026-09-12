@@ -1,9 +1,10 @@
 # Documentation index
 
-- [整体方案与项目路线图](strategy/PRODUCT_SOLUTION_ROADMAP.md): 当前规划入口；职位 JD 匹配评级已上线并通过登录后页面验收，真实评级保存及刷新连接器验收待完成。职位简历 → 单申请上下文 → 有依据的求职准备，独立跟进每日同步与 Watch 验收。
+- [整体方案与项目路线图](strategy/PRODUCT_SOLUTION_ROADMAP.md): 当前规划入口；统一技能库与每日 GitHub 更新已上线，连接器 schema 已刷新；下一步验收首次定时触发及技能库驱动的真实 JD 报告。职位简历 → 单申请上下文 → 有依据的求职准备，独立跟进每日同步与 Watch 验收。
 
-- [September 11 session closeout](HISTORY.md#september-11-session-closeout): candidate-grade production release and authenticated Jobs acceptance completed; next are real assessment and refreshed connector acceptance, with R2/daily-run/Watch gates retained separately.
-- [September 10 session handoff](mvp/SESSION_CLOSE_2026-09-10.md): historical UI/resume and Watch handoff; the September 11 closeout above records the current release and next steps.
+- [September 12 session closeout](HISTORY.md#september-12-session-closeout): current incremental skill-library release and enabled 07:45 Sydney GitHub task; next verify the first clock-triggered run and real Google skill-based report. R2/Job Tracker/Watch gates remain separate.
+- [September 11 session closeout](HISTORY.md#september-11-session-closeout): historical candidate-grade release and authenticated Jobs acceptance; superseded by the September 12 closeout for current status.
+- [September 10 session handoff](mvp/SESSION_CLOSE_2026-09-10.md): historical UI/resume and Watch handoff; the September 12 closeout above records the current release and next steps.
 
 - [Today updates and candidate layout](mvp/TODAY_AND_JOBS_2026-09-10.md): deployed as today-jobs-20260910-r1; real Nine update, 10 candidate rows and detail layout accepted. Backup/recovery and unchanged database fingerprints passed; synthetic previews cleared.
 

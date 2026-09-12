@@ -79,14 +79,20 @@ catalog retains 32 entries/six projects. ChatGPT daily 07:45 Australia/Sydney ta
 is enabled; both ordinary-chat and saved-task Run-now checks passed without a
 catalog rewrite. First clock-triggered morning acceptance remains pending.
 
+The [September 12 session closeout](docs/HISTORY.md#september-12-session-closeout)
+records the next steps: verify the existing September 13 07:45 scheduled run,
+then save and read back a real Google assessment using the CURRENT skill library.
+
 The [skill and project library](docs/architecture/SKILL_LIBRARY.md) follow-up
 implements consolidated skills/facts/projects from uploaded/Drive evidence,
 public GitHub refresh and JD matching through skill entries. Local verification
 passed 514 tests, type checks/build and desktop synthetic UI inspection; a live
 public-example GitHub read passed. Deployed as `skill-library-20260912-r1` at
 21:19 Sydney with 40 live tools, recovery/data preservation and authenticated
-page/copy checks passed. Real synthesis and user-repository acceptance remain
-pending; existing Google B− report v1 and candidate v2/DISMISSED were preserved.
+page/copy checks passed. This preceding baseline is superseded by the incremental
+release above, whose live checks confirmed catalog v3 and five user repositories.
+Real skill-based report acceptance remains pending; the legacy Google report and
+candidate v2/DISMISSED were preserved.
 
 The [recoverable candidate screening](docs/architecture/JOB_SCREENING.md)
 now includes immutable records, three scoped MCP commands, shared list filtering

@@ -8,6 +8,63 @@ Current product positioning and the next active boundary remain in README; the
 [documentation index](INDEX.md) identifies authoritative current contracts and
 historical evidence.
 
+## September 12 session closeout
+
+### Continuity and benefits
+
+Jun requested ending today's work, updating the relevant documentation, and
+committing and pushing to GitHub main. This closeout records the completed
+GitHub/skill-library work and the next acceptance steps. It changes documentation
+only; it does not rerun business commands or modify the enabled schedule.
+
+GitHub checks now sit above the stable skill library and original sources.
+Incremental maintenance preserves existing evidence, while JD analysis reuses the
+catalog instead of repeatedly reading every resume and checking every repository.
+Empty or accidental catalog replacement is rejected. Detailed contracts and
+release evidence remain in the [skill-library ledger](architecture/SKILL_LIBRARY.md#incremental-updates-and-daily-github-checks--september-12-follow-up).
+
+### Final production state
+
+- Release `skill-updates-20260912-r1`, runtime commit `3f263e0`; release/task
+  acceptance documentation was pushed as `f1a0947` before this closeout.
+- Final runtime verification passed 518 tests, both type checks and build.
+  Production-copy recovery preserved 50 tables / 2,297 rows; public checks,
+  authenticated page inspection and compact/full manifest equality passed.
+- Live catalog is **v3/CURRENT, 32 entries/six projects**. Five registered
+  GitHub repositories returned fresh UNCHANGED receipts in website, ordinary
+  ChatGPT and saved-task Run-now trials. No catalog rewrite was needed.
+- ChatGPT task **PAW GitHub 项目每日更新**, ID
+  `6aa548a566188191a4415bcfcc39558d`, is enabled daily at
+  **07:45 Australia/Sydney**. Saved-task Run now completed in a displayed
+  50 seconds; independent PAW readback verified the five checks.
+- Google candidate remains **v2/DISMISSED**. A new skill-library-based screening
+  and matching report has not yet been accepted through a real saved/read-back run.
+
+### Next session
+
+1. Verify the existing task's first **clock-triggered September 13, 07:45 Sydney**
+   run against fresh PAW receipts and timestamps. Manual Run now is already tested
+   and does not substitute for this evidence; do not create a duplicate task.
+2. Reuse the CURRENT catalog for the real Google JD assessment, using SKILLS for
+   analysis and a fresh MANIFEST before each dependent write. Read back saved
+   screening and matching results. Keep the five-year SWE requirement UNKNOWN,
+   non-FILTER, and preserve candidate v2/DISMISSED and application state.
+3. When a repository actually changes, verify selected-file evidence and MERGE of
+   affected skills through to CURRENT. Do not rebuild the entire library. Real
+   UPDATED/FAILED branches and semantic changes remain unobserved; local tests
+   cover their mechanics. The explicit 8+/10+ commercial SWE FILTER-to-KEEP case
+   remains separate acceptance work.
+
+R2 complete-dossier, Job Tracker clock-trigger/receipt correlation and Watch
+human-quality gates remain independent. Narrow-device rendering is not verified.
+
+### Verification and publication scope
+
+This documentation closeout uses diff and reference checks and reuses the passing
+runtime evidence above. No runtime, dependency or configuration changes invalidate
+those checks, so the test suite is not repeated. Existing unrelated skill-file
+edits are excluded from this documentation commit.
+
 ## September 11 session closeout
 
 ### Continuity and benefits

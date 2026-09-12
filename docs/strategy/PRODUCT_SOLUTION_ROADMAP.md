@@ -96,8 +96,14 @@ September 12 clarification: [skill/project consolidation](../architecture/SKILL_
 adds reusable evidence from uploaded/Drive documents and commit-pinned GitHub
 sources, then matches JD requirements to skill entries. Deployed as
 `skill-library-20260912-r1` with 514-test/type-check/build, recovery and authenticated
-UI evidence; real catalog/repository/skill-based report acceptance remains pending.
-The existing legacy Google B− report was preserved. No new schedule is enabled.
+UI evidence. The subsequent `skill-updates-20260912-r1` release passed 518 tests,
+type checks/build and recovery; live readback confirmed catalog v3/CURRENT with
+32 entries/six projects and five registered repositories. GitHub checks and
+incremental skill maintenance are now separate from JD analysis. The existing
+legacy Google B− report was preserved; real skill-based report acceptance remains
+pending. A daily 07:45 Australia/Sydney GitHub task is enabled and its saved-task
+Run-now trial passed. First clock-triggered acceptance is due September 13;
+see the [session closeout](../HISTORY.md#september-12-session-closeout).
 
 September 12 follow-up: Jun supplied recoverable pre-screening rules before letter
 grading. [Recoverable screening](../architecture/JOB_SCREENING.md) is locally
