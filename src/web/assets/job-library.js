@@ -23,6 +23,23 @@ document.addEventListener('click', async (event) => {
   finally { button.disabled = false; }
 });
 
+document.addEventListener('click', async (event) => {
+  const button = event.target instanceof Element ? event.target.closest('[data-copy-candidate-prompt]') : null;
+  if (!(button instanceof HTMLButtonElement) || button.disabled) return;
+  const panel = button.closest('[data-chatgpt-handoff]');
+  const prompt = panel?.querySelector('[data-chatgpt-prompt]');
+  const status = panel?.querySelector('[data-chatgpt-copy-status]');
+  if (!(prompt instanceof HTMLTextAreaElement) || !(status instanceof HTMLElement)) return;
+  button.disabled = true;
+  try {
+    await navigator.clipboard.writeText(prompt.value);
+    status.textContent = '已复制。请粘贴到 ChatGPT，并通过 @ 选择 Personal AI Workspace。';
+  } catch {
+    prompt.focus(); prompt.select();
+    status.textContent = '未能自动复制，已选中指令，请手动复制。';
+  } finally { button.disabled = false; }
+});
+
 document.addEventListener('submit', async (event) => {
   const form = event.target;
   if (!(form instanceof HTMLFormElement) || !form.matches('[data-library-source], [data-library-compare], [data-library-draft], [data-library-jd]')) return;

@@ -2,6 +2,7 @@ import type {WorkspaceService} from "../application/workspace-service.js";
 import type {LibrarySource} from "../application/job-library-service.js";
 import {jobFitSchema} from "../domain/job-fit.js";
 import {document,escapeHtml as e,rootPath} from "./views.js";
+import {candidateChatgptHandoff} from "./candidate-chatgpt-handoff.js";
 
 function sourceForm(source?:LibrarySource){
   return `<form data-library-source class="library-form">
@@ -40,6 +41,7 @@ export function fitPanel(service:WorkspaceService,id:string,sourceUrl:string|nul
   ${savedJd && !matchingEnabled ? `<div class="candidate-description">${e(savedJd)}</div><details class="candidate-edit-jd"><summary>编辑职位描述</summary>` : `<p class="candidate-jd-help">${savedJd ? "核对完整职位描述，再与我的背景匹配。" : "尚未保存完整职位描述。打开原职位，将岗位要求粘贴到下方。"}</p>`}
   <form ${matchingEnabled?"data-library-compare":"data-library-jd"} data-candidate-id="${e(id)}" class="library-form"><label>职位来源链接<input type="url" name="sourceUrl" maxlength="2000" value="${e(fit?.jd_source_url??description?.source_url??sourceUrl??"")}"></label><label>完整职位描述<textarea name="jd" required minlength="${matchingEnabled?200:1}" maxlength="50000" rows="10">${e(description?.jd_text??fit?.jd_text??"")}</textarea></label><button class="button primary" ${matchingEnabled&&!snapshot.sources.length?"disabled":""}>${matchingEnabled?"匹配背景并准备简历":"保存 JD"}</button><p data-library-result role="status"></p></form>
   ${savedJd && !matchingEnabled ? "</details>" : ""}
+  ${candidateChatgptHandoff(service.jobSearchQueryService.getCandidate(id), !!description?.jd_text.trim())}
   ${report?`<h3>${stale?"资料库已更新 · 请重新匹配":fit!.score===null?"存在待核对信息 · 暂不评分":`有证据的匹配度 ${fit!.score}%`}</h3><p>${e(report.summary)}</p><p class="muted">证据覆盖 ${fit!.coverage}%。必需项权重 3、优先项权重 1；匹配得全分，部分匹配得半分，未知得 0。此分数是资料匹配参考，不是录用概率。</p>${report.conflicts.length?`<ul>${report.conflicts.map(c=>`<li>${e(c)}</li>`).join("")}</ul>`:""}<div class="library-table"><table><thead><tr><th>Job requirement</th><th>匹配情况</th><th>我的技能／经历证据</th><th>差距与说明</th></tr></thead><tbody>${rows}</tbody></table></div>`:""}</section>
   ${fit?`<section class="panel library-panel"><h2>此岗位的简历草稿</h2><p>按岗位选取资料库原文，请核对经历归属、时间和数字后再投递。下载文件名包含公司与岗位。</p><form data-library-draft data-candidate-id="${e(id)}" class="library-form"><input type="hidden" name="expectedUpdatedAt" value="${e(fit.updated_at)}"><label>编辑草稿<textarea name="draft" rows="20" maxlength="50000">${e(fit.resume_draft)}</textarea></label><button class="button secondary">保存草稿</button><p data-library-result role="status"></p></form>${stale?"<p>请先重新匹配，再下载草稿。</p>":`<a class="button primary" download href="/api/v1/job-search/library/candidates/${e(id)}/resume">下载已保存的简历草稿</a>`}</section>`:""}`;
 }

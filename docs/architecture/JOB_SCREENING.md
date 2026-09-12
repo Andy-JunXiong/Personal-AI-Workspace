@@ -534,3 +534,46 @@ the complete Accenture JD with provenance, reread the actual candidate/JD hash,
 then demonstrate FILTER → explicit KEEP → visible again. Existing Profile rules
 need no reconfirmation. If the old conversation cannot discover the command, use
 a new conversation with the confirmed source read from Workspace.
+
+## ChatGPT copy handoff — September 12
+
+### Continuity and benefits
+
+Jun's approved next step connects the deployed JD/profile/screening and match
+assessment commands to a copyable instruction panel at the bottom of each
+candidate's JD. This gives the user a concrete manual route from the reporting
+website to GPT, the primary operations entry in the [core workflow](CORE_JOB_WORKFLOW.md).
+The panel adds candidate identity, a saved/missing-JD hint and a copy button;
+it makes no model or business-write call. Scheduling and external-agent triggers
+are outside this package. The existing [platform ownership decision](../strategy/OPENAI_PLATFORM_WATCH.md)
+remains applicable: PAW owns candidate context and admission; GPT owns analysis.
+
+The immediate benefit is a consistent, candidate-specific prompt without stale
+versions or copied personal evidence. ChatGPT is instructed to reread current
+context, request missing material, save independently structured screening and
+match assessment results through their existing commands, then read back receipts.
+Sending the prompt supplies scoped save authority; copying alone does not.
+Existing decisions, KEEP choices and application/Task state must be preserved.
+The next gate is the user's real ChatGPT copy/paste and report-return trial; the
+8+/10+ FILTER-to-KEEP case remains a separate acceptance step. Longer term, these
+same domain steps can inform scheduled analysis once that workflow is authorized
+and verified; this UI does not establish scheduled execution.
+
+### Implementation and local evidence
+
+- The panel sits below the saved-JD editor, including when external matching is
+  disabled. Its prompt contains only candidate identity and workflow instructions,
+  not raw JD, profile contents, hashes or concurrency versions.
+- Missing JD prompts the user to supply complete text and its source; GPT must
+  save it with authority and reread context before analysis. Missing confirmed
+  profile/evidence remains explicit and must not be fabricated.
+- Clipboard failure selects the readonly prompt for manual copying. The copy
+  handler has no network or save operation.
+- Actual release preparation justified full verification: **502 tests / 62 files**,
+  both TypeScript projects and production build passed. No runtime edit followed.
+- Isolated synthetic browser inspection verified desktop placement, no horizontal
+  overflow, correct per-candidate identity, saved/missing-JD hints and the copy
+  button's success state. The automation's separate virtual clipboard could not
+  paste the native page clipboard; cross-application paste remains a user trial.
+  Narrow viewport and real report writes have not been accepted by these checks.
+- Deployment and production page acceptance are pending at this source checkpoint.
