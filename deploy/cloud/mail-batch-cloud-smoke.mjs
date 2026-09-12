@@ -21,7 +21,7 @@ async function call(name, args = {}) {
 try {
   await client.connect(new StreamableHTTPClientTransport(new URL('http://127.0.0.1:3000/mcp')));
   const { tools } = await client.listTools();
-  assert.equal(tools.length, 36);
+  assert.equal(tools.length, 40);
   for (const name of ['workspace_next_mail_batch', 'workspace_ack_mail_batch',
     'workspace_start_mail_scan', 'workspace_finish_mail_scan', 'workspace_get_mail_scans']) {
     assert(tools.some(tool => tool.name === name), `Missing ${name}`);

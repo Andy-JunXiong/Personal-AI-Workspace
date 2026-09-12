@@ -5,11 +5,22 @@ import type {JobFitAnalyzer} from "../application/job-fit-analyzer.js";
 import {ConcurrencyConflictError,ValidationError} from "../domain/errors.js";
 import type {GmailMcpReader} from "../gmail/mcp-reader.js";
 import {discoverJobs} from "../application/job-discovery.js";
+import {githubRefreshSchema} from "../domain/skill-library.js";
 
 export function createJobLibraryRouter(serviceFor:(request:Request)=>WorkspaceService,
   authorizeWrite:(request:Request)=>unknown,analyzer?:JobFitAnalyzer,reader?:GmailMcpReader){
   const router=Router();
   const active=new Set<string>();
+  router.post("/library/github-projects/refresh",async(request,response)=>{
+    authorizeWrite(request);
+    const input=githubRefreshSchema.omit({userConfirmed:true,authorityReference:true}).parse(request.body);
+    const service=serviceFor(request),key=`github:${service.jobLibraryService.workspaceId()}`;
+    if(active.has(key))throw new ConcurrencyConflictError("A GitHub refresh is already running");
+    active.add(key);
+    try{response.json(await service.skillLibraryService.refreshGithub({...input,userConfirmed:true,
+      authorityReference:`Authenticated GitHub project refresh button ${input.idempotencyKey}`},()=>authorizeWrite(request)));}
+    finally{active.delete(key);}
+  });
   router.get("/library/discovery",(request,response)=>response.json({run:serviceFor(request).jobLibraryService.recentRun()??null}));
   router.post("/library/discovery",(request,response)=>{
     authorizeWrite(request);z.object({}).strict().parse(request.body);

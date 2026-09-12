@@ -1,4 +1,28 @@
 // Delegation survives the Workspace's partial page refreshes.
+document.addEventListener('submit', async (event) => {
+  const form = event.target;
+  if (!(form instanceof HTMLFormElement) || !form.matches('[data-github-project]')) return;
+  event.preventDefault();
+  const button = form.querySelector('button[type="submit"]'), status = form.querySelector('[data-github-result]');
+  if (!(button instanceof HTMLButtonElement) || !(status instanceof HTMLElement) || button.disabled) return;
+  button.disabled = true; status.textContent = '正在检查 GitHub 项目…';
+  const data = new FormData(form);
+  const body = { repositoryUrl: String(data.get('repositoryUrl')).trim(), expectedVersion: Number(data.get('expectedVersion')),
+    paths: String(data.get('paths')).split(/\r?\n/).map(s => s.trim()).filter(Boolean), idempotencyKey: crypto.randomUUID() };
+  try {
+    const session = await fetch('/api/v1/session', { cache: 'no-store', signal: AbortSignal.timeout(15000) });
+    if (!session.ok) throw new Error('请重新登录后再操作。');
+    const { csrfToken } = await session.json();
+    const response = await fetch('/api/v1/job-search/library/github-projects/refresh', { method: 'POST',
+      headers: { 'content-type': 'application/json', 'x-csrf-token': csrfToken }, body: JSON.stringify(body), signal: AbortSignal.timeout(45000) });
+    if (!response.ok) throw new Error(response.status === 409 ? '来源版本已变化，请刷新页面后再试。' : '未能保存项目，请检查地址和文件路径。');
+    const result = await response.json();
+    if (result.status === 'FAILED') { status.textContent = `本次检查失败，旧证据保留。${result.failure || ''}`; return; }
+    location.reload();
+  } catch (error) { status.textContent = error instanceof Error ? error.message : '检查失败，旧证据保留。'; }
+  finally { button.disabled = false; }
+});
+
 document.addEventListener('click', async (event) => {
   const button = event.target instanceof Element ? event.target.closest('[data-screening-override]') : null;
   if (!(button instanceof HTMLButtonElement) || button.disabled) return;

@@ -70,6 +70,13 @@ acceptance evidence are in [Project history](docs/HISTORY.md).
 
 ## Current state — 2026-09-12
 
+The [skill and project library](docs/architecture/SKILL_LIBRARY.md) follow-up
+implements consolidated skills/facts/projects from uploaded/Drive evidence,
+public GitHub refresh and JD matching through skill entries. Local verification
+passed 514 tests, type checks/build and desktop synthetic UI inspection; a live
+public-example GitHub read passed. MCP inventory is 40 in source. Production,
+real synthesis and user-repository acceptance remain separate pending steps.
+
 The [recoverable candidate screening](docs/architecture/JOB_SCREENING.md)
 now includes immutable records, three scoped MCP commands, shared list filtering
 and explicit Web keep/withdraw controls. Local verification passed 490 tests,

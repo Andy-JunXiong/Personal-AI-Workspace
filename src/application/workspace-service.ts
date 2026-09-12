@@ -1,6 +1,7 @@
 import { MailScanLedger } from "./mail-scan-ledger.js";
 import { CandidateScreeningService } from "./candidate-screening-service.js";
 import { ScreeningProfileService } from "./screening-profile-service.js";
+import { SkillLibraryService } from "./skill-library-service.js";
 import { CandidateJobDescriptionService } from "./candidate-job-description-service.js";
 import { applicationMailCategorySchema, isApplicationMailCategory, isVacancyMarketing } from "../domain/application-mail-event.js";
 import { randomUUID } from "node:crypto";
@@ -323,6 +324,7 @@ export class WorkspaceService {
   readonly candidateAssessmentService: CandidateAssessmentService;
   readonly candidateScreeningService: CandidateScreeningService;
   readonly screeningProfileService: ScreeningProfileService;
+  readonly skillLibraryService: SkillLibraryService;
   readonly candidateJobDescriptionService: CandidateJobDescriptionService;
   readonly resumeService: ResumeService;
   readonly jobLibraryService: JobLibraryService;
@@ -352,6 +354,7 @@ export class WorkspaceService {
     this.candidateScreeningService = new CandidateScreeningService(database, resolveTaskContext,
       this.jobSearchQueryService, this.candidateAssessmentService, options.clock);
     this.screeningProfileService = new ScreeningProfileService(database, resolveTaskContext, this.jobLibraryService, options.clock);
+    this.skillLibraryService = new SkillLibraryService(database, resolveTaskContext, this.jobLibraryService, options.clock);
     this.candidateJobDescriptionService = new CandidateJobDescriptionService(database, resolveTaskContext,
       this.jobSearchQueryService, this.jobLibraryService, options.clock);
     this.jobSearchQueryService.screeningSummary = candidate => this.candidateScreeningService.summary(candidate);

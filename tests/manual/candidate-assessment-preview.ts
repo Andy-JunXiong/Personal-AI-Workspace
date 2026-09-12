@@ -2,11 +2,13 @@
 import express from "express";
 import { createEmptyTestWorkspace } from "../helpers/test-workspace.js";
 import { seedCandidateAssessmentViews } from "../helpers/candidate-assessment-fixture.js";
+import { seedSkillLibraryViews } from "../helpers/skill-library-fixture.js";
 import { createJobSearchPageRouter, createWebAssetsRouter } from "../../src/web/page-router.js";
 
 if (!process.argv.includes("--synthetic")) throw new Error("Pass --synthetic for this isolated preview");
 const w = createEmptyTestWorkspace();
 const fixtures = seedCandidateAssessmentViews(w.service);
+if (process.argv.includes("--skills")) seedSkillLibraryViews(w.service, fixtures);
 const app = express();
 app.use(createWebAssetsRouter());
 app.use(createJobSearchPageRouter(() => w.service));

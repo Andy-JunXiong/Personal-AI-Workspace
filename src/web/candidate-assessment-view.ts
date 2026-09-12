@@ -55,7 +55,7 @@ export function candidateAssessmentPanel(detail: Detail, zone: string, historyBe
   const viewedHistorical = saved && (saved.recordVersion !== summary.recordVersion || summary.status !== "CURRENT");
   const status = `<section class="panel assessment-panel" id="match-assessment"><p class="overline">CHATGPT · 岗位匹配</p><h2>这个职位适合我吗？</h2>${assessmentListSummary(summary)}
     ${summary.createdAt ? `<p class="assessment-meta">最近评估 ${e(at(summary.createdAt, zone))} · 第 ${summary.recordVersion} 版</p>` : ""}
-    <p class="assessment-guidance">${summary.status === "CURRENT" ? "评级依据已保存的岗位与经历资料，用于比较申请优先级。" : summary.status === "MISSING_JD" ? "先补充下方的完整职位描述，再在 ChatGPT 中评估并保存。" : summary.status === "STALE" ? "请在 ChatGPT 中读取更新后的资料并重新评估。原评级保留在历史中。" : "在 ChatGPT 中结合完整 JD、基础简历和相关经历评估并保存，结果会显示在这里。"}</p>
+    <p class="assessment-guidance">${summary.status === "CURRENT" ? "评级依据已保存的岗位与经历资料，用于比较申请优先级。" : summary.status === "MISSING_JD" ? "先补充下方的完整职位描述，再在 ChatGPT 中评估并保存。" : summary.status === "STALE" ? "请在 ChatGPT 中读取更新后的资料并重新评估。原评级保留在历史中。" : "在 ChatGPT 中更新技能与项目库，再结合完整 JD 评估并保存，结果会显示在这里。"}</p>
     <p class="assessment-meta">资料中未找到证据，不等于不具备能力。评级不代表录用概率。</p></section>`;
   let report = "";
   if (saved) {
@@ -64,7 +64,15 @@ export function candidateAssessmentPanel(detail: Detail, zone: string, historyBe
     const requirements = assessment.requirements.map((r, index) => `<article class="assessment-requirement" id="assessment-requirement-${v}-${index}">
       <header><div><p class="overline">${r.importance === "REQUIRED" ? "核心要求" : "优先条件"}</p><h3>${e(r.requirement)}</h3></div><span class="assessment-result">${{ MATCH: "有匹配证据", PARTIAL: "部分匹配", UNKNOWN: "证据待补充" }[r.assessment]}</span></header>
       <p class="assessment-label">岗位原文</p><blockquote>${e(r.jdQuote)}</blockquote>
-      <div class="assessment-comparison"><div><h4>经历证据</h4>${r.evidence.length ? r.evidence.map(citation => {
+      <div class="assessment-comparison"><div><h4>${saved.inputs.skillLibrary?.catalog ? "技能与项目证据" : "经历证据"}</h4>${r.evidence.length ? r.evidence.map(citation => {
+        if (citation.kind === "SKILL") {
+          const skill = saved.inputs.skillLibrary?.catalog?.skills.find(s => s.id === citation.skillId);
+          const projects = skill?.projectIds.map(id => saved.inputs.skillLibrary?.catalog?.projects.find(p => p.id === id)).filter(p => !!p) ?? [];
+          return `<div class="assessment-citation"><strong>${e(skill?.name ?? citation.skillId ?? "保存的技能")}</strong><p>${e(citation.quote)}</p>${projects.map(p => `<p>项目：${e(p!.name)} · ${e(p!.contribution)}</p>`).join("")}<details><summary>技能的原始依据</summary>${skill?.evidence.map(ref => {
+            const origin = saved.inputs.sources.find(s => s.id === ref.sourceId);
+            return `<blockquote>${e(ref.quote)}</blockquote><a href="#${sourceAnchor(ref.sourceId)}">${e(origin?.title ?? "保存的来源")} · 版本 ${ref.recordVersion} ↓</a>`;
+          }).join("") ?? ""}</details></div>`;
+        }
         const source = saved.inputs.sources.find(s => s.id === citation.sourceId);
         const label = citation.kind === "BASE_RESUME" ? `基础简历 · 版本 ${saved.inputs.baseResume?.recordVersion}` : `${source?.title ?? "保存的经历资料"} · 版本 ${source?.record_version}`;
         return `<div class="assessment-citation"><blockquote>${e(citation.quote)}</blockquote><a href="#${citation.kind === "BASE_RESUME" ? `assessment-base-${v}` : sourceAnchor(citation.sourceId!)}">${e(label)} ↓</a></div>`;
@@ -73,7 +81,7 @@ export function candidateAssessmentPanel(detail: Detail, zone: string, historyBe
       const index = assessment.requirements.findIndex(r => r.id === item.requirementId);
       return `<li><a href="#assessment-requirement-${v}-${index}">${e(assessment.requirements[index]?.requirement)}</a><p>${e(item.explanation)}</p></li>`;
     }).join("")}</ul></section>` : "";
-    report = `<section class="panel assessment-panel assessment-report"><header class="assessment-report-heading"><div><p class="overline">${viewedHistorical ? "历史评估" : "评估依据"} · 第 ${v} 版</p><h2>${viewedHistorical ? "查看当时的判断与资料" : "岗位要求与经历对照"}</h2></div>${viewedHistorical ? `<span class="assessment-badge historical">历史评级 ${e(assessment.grade ?? "未评级")}</span>` : ""}</header>
+    report = `<section class="panel assessment-panel assessment-report"><header class="assessment-report-heading"><div><p class="overline">${viewedHistorical ? "历史评估" : "评估依据"} · 第 ${v} 版</p><h2>${viewedHistorical ? "查看当时的判断与资料" : saved.inputs.skillLibrary?.catalog ? "岗位要求与技能对照" : "岗位要求与经历对照"}</h2></div>${viewedHistorical ? `<span class="assessment-badge historical">历史评级 ${e(assessment.grade ?? "未评级")}</span>` : ""}</header>
       ${viewedHistorical ? `<p class="assessment-history-notice">这份结果基于当时保存的资料，当前状态以上方提示为准。</p><p>${e(assessment.reason)}</p>` : ""}
       ${saved.recordVersion !== summary.recordVersion ? `<a class="text-link" href="${href()}">返回最新评估 ↑</a>` : ""}
       <p class="assessment-meta">由 ChatGPT 评估 · 保存于 ${e(at(saved.createdAt, zone))}</p>

@@ -3,6 +3,7 @@ import type {LibrarySource} from "../application/job-library-service.js";
 import {jobFitSchema} from "../domain/job-fit.js";
 import {document,escapeHtml as e,rootPath} from "./views.js";
 import {candidateChatgptHandoff} from "./candidate-chatgpt-handoff.js";
+import {skillLibraryPanel} from "./skill-library-view.js";
 
 function sourceForm(source?:LibrarySource){
   return `<form data-library-source class="library-form">
@@ -21,11 +22,12 @@ function sourceVersion(source:LibrarySource,all:LibrarySource[]){
 }
 
 export function libraryView(service:WorkspaceService,q=""){
-  const all=service.jobLibraryService.visibleSources(),sources=all.filter(s=>`${s.title}\n${s.content}`.toLocaleLowerCase().includes(q.toLocaleLowerCase()));
+  const all=service.jobLibraryService.visibleSources().filter(s=>! /^(skills:|github:)/u.test(s.source_key)),sources=all.filter(s=>`${s.title}\n${s.content}`.toLocaleLowerCase().includes(q.toLocaleLowerCase()));
   return document("求职／面试资料库",`<p class="eyebrow">CAREER LIBRARY</p><h1>求职／面试资料库</h1>
   <p class="subtitle">汇总 Word 简历、项目证据和面试案例。PDF 不展示，正文相同的资料只保留一份；内容不同的版本分别保留。</p>
   <div class="detail-summary"><div><strong>${all.length}</strong><p>资料来源</p></div><div><strong>${all.filter(s=>s.review_status==="CONFIRMED").length}</strong><p>已核对</p></div><a class="button secondary" href="${rootPath}/jobs">查看候选职位 →</a></div>
-  <section class="panel library-panel"><h2>添加资料</h2><p>保留原来的项目、雇主、日期和成果数字。历史简历只是来源；有分歧的经历先核对，再用于投递。</p><details><summary>新增项目、简历或面试案例</summary>${sourceForm()}</details></section>
+  ${skillLibraryPanel(service)}
+  <section class="panel library-panel"><h2>添加原始资料</h2><p>保留原来的项目、雇主、日期和成果数字。保存正文后，在上方复制汇总指令更新技能库。历史简历只是来源；有分歧的经历先核对，再用于投递。</p><details><summary>新增项目、简历或面试案例</summary>${sourceForm()}</details></section>
   <form class="filters" method="get"><label class="search-label">查找技能、经历或素材<input type="search" name="q" value="${e(q)}" maxlength="500"></label><button class="button secondary">搜索</button></form>
   <section class="panel library-panel"><h2>资料来源 · ${sources.length}</h2>${sources.map(s=>`<details class="library-source" id="source-${e(s.id)}"><summary>${e(s.title)}${sourceVersion(s,all)} <small>${s.review_status==="CONFIRMED"?"已核对":s.review_status==="EXCLUDED"?"已排除":"待核对"}</small></summary>${sourceForm(s)}</details>`).join("")||"<p>暂无匹配资料。</p>"}</section>`,true,"library");
 }

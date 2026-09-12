@@ -2,7 +2,7 @@ import {createHash,randomUUID} from "node:crypto";
 import {z} from "zod";
 import type {WorkspaceDatabase} from "../persistence/database.js";
 import type {IdentityContext} from "../domain/types.js";
-import {ConcurrencyConflictError,NotFoundError} from "../domain/errors.js";
+import {ConcurrencyConflictError,NotFoundError,ValidationError} from "../domain/errors.js";
 import {validateJobFit} from "../domain/job-fit.js";
 
 export const libraryInputSchema=z.object({sourceKey:z.string().trim().min(1).max(500),title:z.string().trim().min(1).max(500),
@@ -41,7 +41,8 @@ export class JobLibraryService {
  }
  snapshot(){const sources=this.visibleSources().filter(s=>s.review_status!=="EXCLUDED");
    return {sources,hash:createHash("sha256").update(JSON.stringify(sources.map(s=>[s.id,s.record_version,s.review_status]))).digest("hex")};}
- saveSource(input:unknown){const v=libraryInputSchema.parse(input),ws=this.identity().workspaceId;
+ saveSource(input:unknown,managed=false){const v=libraryInputSchema.parse(input),ws=this.identity().workspaceId;
+   if(!managed&&/^(skills:|github:)/u.test(v.sourceKey))throw new ValidationError("Use the managed skill library or GitHub command for this source");
    return this.db.transaction(()=>{
      const old=this.db.prepare("SELECT * FROM job_library_sources WHERE workspace_id=? AND source_key=?").get(ws,v.sourceKey) as LibrarySource|undefined;
      if(old&&old.title===v.title&&old.source_url===v.sourceUrl&&old.content===v.content&&old.review_status===v.reviewStatus)

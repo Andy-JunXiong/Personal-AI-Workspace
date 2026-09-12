@@ -92,6 +92,12 @@ flowchart TB
 
 ### 待办：职位 JD 匹配评级（R3，2026-09-11）
 
+September 12 clarification: [skill/project consolidation](../architecture/SKILL_LIBRARY.md)
+adds reusable evidence from uploaded/Drive documents and commit-pinned GitHub
+sources, then matches JD requirements to skill entries. Implemented locally with
+514-test/type-check/build and synthetic UI evidence; production and real catalog/
+repository/report acceptance remain pending. This does not enable a new schedule.
+
 September 12 follow-up: Jun supplied recoverable pre-screening rules before letter
 grading. [Recoverable screening](../architecture/JOB_SCREENING.md) is locally
 implemented with immutable history, shared list filtering and explicit recovery

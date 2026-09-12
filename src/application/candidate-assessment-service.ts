@@ -11,6 +11,7 @@ import {
 import type { JobLibraryService } from "./job-library-service.js";
 import type { ResumeService } from "./resume-service.js";
 import type { JobSearchQueryService } from "./job-search-query-service.js";
+import { skillLibraryState } from "../domain/skill-library.js";
 
 interface AssessmentRow {
   id: string; record_version: number; supersedes_id: string | null;
@@ -38,8 +39,11 @@ export class CandidateAssessmentService {
 
   inputs(candidate: JobCandidateRecord, requestedIds: string[]) {
     const library = this.library.snapshot();
+    const skillLibrary = skillLibraryState(library.sources);
+    const skillSourceIds = skillLibrary.catalog ? [skillLibrary.source!.id,
+      ...[...skillLibrary.catalog.skills, ...skillLibrary.catalog.projects].flatMap(s => s.evidence.map(e => e.sourceId))] : [];
     // Authored confirmations are always visible alongside selected experience.
-    const ids = [...new Set([...requestedIds, ...library.sources.filter(s => s.review_status === "CONFIRMED").map(s => s.id)])].sort();
+    const ids = [...new Set([...requestedIds, ...skillSourceIds, ...library.sources.filter(s => s.review_status === "CONFIRMED").map(s => s.id)])].sort();
     const sources = library.sources.filter(s => ids.includes(s.id)).sort((a, b) => a.id.localeCompare(b.id));
     const unavailableSourceIds = ids.filter(id => !sources.some(source => source.id === id));
     const description = this.library.description(candidate.id);
@@ -57,11 +61,13 @@ export class CandidateAssessmentService {
       sources: sources.map(s => ({ id: s.id, recordVersion: s.record_version, hash: canonicalHash(s) })),
     };
     const missingMaterials = [
-      ...(!jd ? ["JOB_DESCRIPTION"] : []), ...(!baseResume ? ["BASE_RESUME"] : []),
+      ...(!jd ? ["JOB_DESCRIPTION"] : []), ...(!baseResume && !skillLibrary.catalog ? ["BASE_RESUME"] : []),
+      ...(skillLibrary.source && skillLibrary.status !== "CURRENT" ? [`SKILL_LIBRARY_${skillLibrary.status}`] : []),
+      ...(skillLibrary.catalog && !skillLibrary.catalog.skills.length ? ["SKILL_LIBRARY_EMPTY"] : []),
       ...unavailableSourceIds.map(id => `SOURCE_UNAVAILABLE:${id}`),
       ...(ids.length > 100 ? ["SOURCE_SELECTION_LIMIT"] : []),
     ];
-    const snapshot = { candidateIdentity, jd, baseResume, sources, missingMaterials };
+    const snapshot = { candidateIdentity, jd, baseResume, sources, missingMaterials, skillLibrary };
     return { manifest, snapshot, library, selectedSourceIds: ids, unavailableSourceIds };
   }
 
@@ -71,7 +77,7 @@ export class CandidateAssessmentService {
       id: null, recordVersion: 0, grade: null, previousGrade: null, reason: null, createdAt: null,
       staleReasons: [] as string[], missingMaterials: [
         ...(!this.library.description(candidate.id)?.jd_text.trim() ? ["JOB_DESCRIPTION"] : []),
-        ...(!this.resume.get() ? ["BASE_RESUME"] : []),
+        ...(!this.resume.get() && !skillLibraryState(this.library.snapshot().sources).catalog ? ["BASE_RESUME"] : []),
       ],
     };
     const saved = JSON.parse(row.input_manifest_json) as AssessmentManifest;

@@ -1,5 +1,10 @@
 # 候选职位 JD 匹配评级：保存与读取契约
 
+September 12 successor: the [skill/project library](SKILL_LIBRARY.md) adds
+consolidated evidence and SKILL citations. New matching uses the catalog when
+present; historical direct-resume/source reports remain readable. See that contract
+for current implementation and pending acceptance.
+
 状态：2026-09-12，存储、接口和 Jobs 评级展示已部署；生产恢复、公网、MCP 只读及登录后列表/详情检查通过，真实评级使用验收待完成。当前会话仍暴露旧版连接器 schema，详见文末读取记录。上游为
 [R3 评级待办](../strategy/PRODUCT_SOLUTION_ROADMAP.md#candidate-match-grades)。
 本文限定交互式 ChatGPT 评估结果，不启用后台外部模型匹配。

@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { ValidationError } from "./errors.js";
+import type { skillLibraryState } from "./skill-library.js";
 
 const text = (max: number) => z.string().trim().min(1).max(max);
 const hash = z.string().regex(/^[a-f0-9]{64}$/u);
@@ -36,7 +37,8 @@ export const candidateAssessmentReportSchema = z.object({
     importance: z.enum(["REQUIRED", "PREFERRED"]),
     assessment: z.enum(["MATCH", "PARTIAL", "UNKNOWN"]),
     evidence: z.array(z.object({
-      kind: z.enum(["BASE_RESUME", "LIBRARY_SOURCE"]),
+      kind: z.enum(["BASE_RESUME", "LIBRARY_SOURCE", "SKILL"]),
+      skillId: text(80).optional(),
       sourceId: z.uuid().nullable(), quote: text(2000),
     }).strict()).max(10),
     inference: text(1500),
@@ -81,10 +83,11 @@ export function validateAssessmentEvidence(report: CandidateAssessmentReport, in
   baseResume: { content: unknown } | null;
   sources: Array<{ id: string; content: string }>;
   missingMaterials: string[];
+  skillLibrary?: ReturnType<typeof skillLibraryState>;
 }) {
   if (report.grade !== null && (!report.completeness.fullJdReviewed ||
       report.completeness.missingMaterials.length || inputs.missingMaterials.length || !report.requirements.length)) {
-    throw new ValidationError("A grade requires a reviewed full JD, base resume and complete assessment inputs");
+    throw new ValidationError("A grade requires a reviewed full JD and complete assessment inputs");
   }
   const ids = new Set<string>(), labels = new Set<string>();
   for (const requirement of report.requirements) {
@@ -96,6 +99,18 @@ export function validateAssessmentEvidence(report: CandidateAssessmentReport, in
       throw new ValidationError("Requirement evidence is inconsistent with its assessment");
     }
     for (const evidence of requirement.evidence) {
+      if (inputs.skillLibrary?.catalog && evidence.kind !== "SKILL") {
+        throw new ValidationError("Match against the skill library; cite a skill entry rather than a resume directly");
+      }
+      if (evidence.kind === "SKILL") {
+        const state = inputs.skillLibrary, skill = state?.catalog?.skills.find(s => s.id === evidence.skillId);
+        if (!skill || evidence.sourceId !== state?.source?.id || evidence.quote !== skill.summary ||
+            skill.status !== "SUPPORTED" || state?.staleSkillIds.includes(skill.id) || state?.status !== "CURRENT") {
+          throw new ValidationError("Skill evidence must reference a current supported catalog entry and its exact summary");
+        }
+        continue;
+      }
+      if (evidence.skillId !== undefined) throw new ValidationError("skillId is only valid for SKILL evidence");
       const valid = evidence.kind === "BASE_RESUME"
         ? evidence.sourceId === null && resumeContains(inputs.baseResume?.content, evidence.quote)
         : evidence.sourceId !== null && inputs.sources.some(s => s.id === evidence.sourceId && s.content.includes(evidence.quote));

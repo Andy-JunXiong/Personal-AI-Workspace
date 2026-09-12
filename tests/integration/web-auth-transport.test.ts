@@ -1,4 +1,5 @@
 import * as resumeExport from "../../src/application/resume-export.js";
+import { SkillLibraryService } from "../../src/application/skill-library-service.js";
 import { seedCandidateScreening } from "../helpers/candidate-screening-fixture.js";
 import {resumeFixture} from "../helpers/resume-fixture.js";
 import { request as httpRequest, type Server } from "node:http";
@@ -208,6 +209,27 @@ it("shows the application date and chronological evidence, and renders a saved J
   expect(first.items[0]?.kind).toBe("APPLICATION");
 });
 afterEach(async () => { for (const cleanup of cleanups.splice(0).reverse()) await cleanup(); });
+
+it("admits GitHub checks only through the authenticated CSRF-protected library route", async () => {
+  const w = await setup(); w.link();
+  const cookie = w.sessionCookie(await w.finish(await w.start("/workspace/job-search/library")));
+  const { csrfToken } = await (await w.request("/api/v1/session", { headers: { cookie } })).json();
+  const endpoint = "/api/v1/job-search/library/github-projects/refresh";
+  const body = JSON.stringify({ repositoryUrl: "https://github.com/example/project", paths: ["README.md"], expectedVersion: 0, idempotencyKey: randomUUID() });
+  const refresh = vi.spyOn(SkillLibraryService.prototype, "refreshGithub").mockImplementation(async (input: any, reauthorize) => {
+    expect(input.userConfirmed).toBe(true); expect(input.authorityReference).toContain("Authenticated GitHub");
+    reauthorize?.(); return { status: "FAILED", failure: "Synthetic unavailable source; no network request" };
+  });
+  try {
+    expect((await w.request(endpoint, { method: "POST", headers: { cookie, "content-type": "application/json" }, body })).status).toBe(403);
+    expect(refresh).not.toHaveBeenCalled();
+    const result = await w.request(endpoint, { method: "POST", headers: { cookie, origin: webOrigin, "x-csrf-token": csrfToken, "content-type": "application/json" }, body });
+    expect(result.status).toBe(200); expect(await result.json()).toMatchObject({ status: "FAILED" });
+    expect(refresh).toHaveBeenCalledTimes(1);
+    const page = await (await w.request("/workspace/job-search/library", { headers: { cookie } })).text();
+    expect(page).toContain("技能与项目库"); expect(page).toContain("data-github-project");
+  } finally { refresh.mockRestore(); }
+});
 
 it("allows only CSRF-authorized library and candidate decisions with general browser writes disabled",async()=>{
   const w=await setup();w.link();
