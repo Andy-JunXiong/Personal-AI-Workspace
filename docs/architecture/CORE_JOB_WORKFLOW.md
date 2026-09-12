@@ -6,8 +6,9 @@ September 12 successor: [incremental maintenance](SKILL_LIBRARY.md#incremental-u
 separates daily/manual GitHub checks from JD analysis. Current catalogs are reused;
 only changed evidence is merged, with server-side retention and compact write-input
 reads. This supersedes the following baseline's per-analysis GitHub refresh rule.
-Daily ChatGPT scheduling is authorized; creation and execution evidence are tracked
-separately in the skill-library ledger.
+Daily ChatGPT scheduling is enabled at 07:45 Australia/Sydney; ordinary-chat and
+saved-task Run-now checks passed with v3 unchanged. First clock-triggered morning
+acceptance remains separate in the skill-library ledger.
 
 September 12 clarification: [the skill/project library](SKILL_LIBRARY.md) becomes
 the primary JD matching object; resumes and Drive documents are its sources.

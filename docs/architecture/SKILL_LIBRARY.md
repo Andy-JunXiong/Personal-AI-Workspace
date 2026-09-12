@@ -1,8 +1,7 @@
 # Skill and project evidence library
 
-Status: baseline deployed as `skill-library-20260912-r1`, September 12, 2026.
-Incremental-update follow-up is implemented locally; release and scheduled-task
-evidence are recorded separately below.
+Status: incremental follow-up deployed as `skill-updates-20260912-r1`, September
+12, 2026. Scheduled-task evidence is recorded separately below.
 
 ## Continuity and benefits
 
@@ -225,3 +224,66 @@ both type checks and build. Synthetic desktop readback confirms section order an
 maintenance prompt placement. Recovery, deployed behavior,
 connector schema refresh, manual task trial and actual scheduled trigger are
 separate gates. The 07:45 task is authorized but not yet created at this local stage.
+
+### Incremental production release
+
+- Runtime `3f263e00041329fad5fc2eb1f75d854127014a11`, pushed to main;
+  `skill-updates-20260912-r1` became healthy at `2026-09-12T12:37:06Z` (22:37 Sydney).
+  The public GitHub commit archive was downloaded and checksum-verified before
+  extraction; no credential transfer or temporary cloud object was needed.
+- Archive SHA-256 `d6d3057c550b7a19f35fe383f1ef3a7226925f5889d031db573f3d001cc0b854`;
+  image `sha256:e73469857a778b51d58c1eb976ed1ee329abe66d6a2b25e92e7119edbfce3b0b`.
+- Backups `workspace-20260912T123640Z.db` and `workspace-20260912T123658Z.db`.
+  New and preceding images passed recovery on copies: **50 tables / 2,297 rows**
+  unchanged. Migration 020, persistent volume and Web/Gmail overlays retained.
+  Build, cutover and readback logs use `/srv/paw/deployments/skill-updates-20260912-r1-`.
+- Five public checks passed before and after cutover. Read-only live MCP probe
+  confirms 40 tools, catalog **v3/CURRENT**, **32 entries/six projects**, no source
+  differences, and Google **candidate v2/DISMISSED**. Full/compact manifests are
+  identical. Response lengths for the actual Google input were **394,770 versus
+  21,041 characters** (not bytes); compact is about 95% smaller.
+- Existing ChatGPT connection refreshed successfully: `updateMode` and
+  `contextView` are visible in its advertised schema; permissions unchanged.
+- Authenticated website confirms the new section order. Actual check-all click
+  saved five fresh **UNCHANGED** receipts, zero failures, at
+  `2026-09-12T12:39:29.219Z`–`12:39:30.979Z`. This is the explicitly authorized
+  real GitHub check, not a claim of zero release-session writes. It does not
+  synthesize skills or change candidate/application/Task state.
+- Synthetic desktop copy success and no horizontal overflow passed. Narrow-device
+  rendering remains unverified. No runtime changes followed final 518-test evidence;
+  documentation updates reuse it.
+
+### ChatGPT manual trial and daily task
+
+The new prompt was exercised in a fresh PAW-enabled ChatGPT Work conversation
+before scheduling. It completed in a displayed **1 minute 4 seconds**, saved five
+new UNCHANGED receipts, and did not call the catalog writer. Independent server
+MCP readback confirmed **v3/CURRENT, 32 entries/six projects**, no source changes,
+and five non-replayed, non-failed checks at `12:40:20.833Z` through
+`12:40:37.536Z`. Evidence log:
+`/srv/paw/deployments/skill-updates-20260912-r1-github-trial.log`.
+UPDATED/FAILED/conflict branches passed local tests but did not occur in this real
+trial. The real skill-based Google report remains a separate acceptance step.
+
+ChatGPT created task **PAW GitHub 项目每日更新**, ID
+`6aa548a566188191a4415bcfcc39558d`, enabled, daily **07:45 Australia/Sydney**, first
+scheduled time September 13, 2026. Its returned creation/readback reports the named
+timezone (DST-aware). Independent Scheduled UI inspection confirms an active Work
+task, daily 7:45, no end date and the full prompt. Prompt text matches the tested
+prompt after whitespace normalization; the editor inserts an extra whitespace
+character. Other tasks were not modified.
+
+The creation API supplies no separate plugin-binding receipt. A further **Run now**
+from this exact saved task completed in a displayed **50 seconds** and successfully
+used PAW. It saved five fresh UNCHANGED receipts at `12:44:42.053Z` through
+`12:44:46.568Z`, independently read back through server MCP. Catalog remained
+**v3/CURRENT, 32 entries/six projects**, with no source differences or failures.
+Evidence: `/srv/paw/deployments/skill-updates-20260912-r1-github-plan.log`.
+Scheduled UI still shows the enabled daily task after this run. This validates the
+saved task's current execution path, not only ordinary-chat tool access.
+
+The first clock-triggered morning run remains pending for September 13 at 07:45;
+it is distinct from manual conversation and Run-now acceptance. Future changed-repo
+semantic updates remain to be observed; the unchanged real branches and local
+changed/failure/conflict branches are the evidence available today. Scheduling follows
+the [official ChatGPT workflow](https://learn.chatgpt.com/docs/automations).
