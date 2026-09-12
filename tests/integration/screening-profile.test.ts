@@ -16,11 +16,11 @@ function fixture(fileBacked = false) {
 const content = "Commercial SWE tenure is UNKNOWN. I exclude required commercial software engineering tenure of at least eight years as a preference, not evidence of inability.";
 const request = () => ({ content, expectedProfileVersion: 0, userConfirmed: true,
   authorityReference: "Synthetic user confirmed these exact facts and preferences", idempotencyKey: randomUUID() });
-function candidate(w: ReturnType<typeof fixture>, years: number) {
+function candidate(w: ReturnType<typeof fixture>, years: number, saveJd = true) {
   const c = w.service.candidateService.recordCandidate({ provider: "seek", postingId: randomUUID(), company: "Synthetic",
     title: "Synthetic developer", role: "Synthetic developer", sourceUrl: "https://example.test/job/" + randomUUID(),
     authority: { type: "EXPLICIT_USER_DEV", confirmed: true, reference: "Synthetic job" }, idempotencyKey: randomUUID() }).candidate;
-  w.service.jobLibraryService.saveDescription(c.id, `Required: ${years} years of commercial software development.`, c.sourceUrl!);
+  if (saveJd) w.service.jobLibraryService.saveDescription(c.id, `Required: ${years} years of commercial software development.`, c.sourceUrl!);
   return c;
 }
 async function client(service: WorkspaceService) {
@@ -29,14 +29,30 @@ async function client(service: WorkspaceService) {
   return { c, close: async () => { await c.close(); await server.close(); } };
 }
 
-it("completes MCP confirmation to UNKNOWN screening and preference FILTER to KEEP without seeded confirmed sources", async () => {
-  const w = fixture(), five = candidate(w, 5), eight = candidate(w, 8);
+it("completes MCP JD ingestion and confirmation to UNKNOWN screening and FILTER to KEEP without seeded JDs or confirmed sources", async () => {
+  const w = fixture(), five = candidate(w, 5, false), eight = candidate(w, 8, false);
   w.service.candidateService.decideCandidate({ candidateId: five.id, action: "DISMISS", expectedRecordVersion: 1,
     authority: { type: "EXPLICIT_USER_DEV", confirmed: true, reference: "Synthetic existing dismissal" }, idempotencyKey: randomUUID() });
   expect(w.service.jobLibraryService.sources()).toHaveLength(0);
   const first = await client(w.service);
   let profileId = "";
   try {
+    for (const [c, years] of [[five, 5], [eight, 8]] as const) {
+      const before = w.service.candidateAssessmentService.getCandidate(c.id, { includeAssessmentContext: true });
+      expect(before.matchAssessment.status).toBe("MISSING_JD");
+      expect(before.assessmentContext!.inputManifest.jdHash).toBeNull();
+      const savedJd = await first.c.callTool({ name: "workspace_record_candidate_job_description", arguments: {
+        candidateId: c.id, expectedCandidateVersion: before.recordVersion, expectedJdHash: null,
+        text: `Required: ${years} years of commercial software development.`, sourceUrl: c.sourceUrl!,
+        fullTextProvided: true, provenanceReference: "Complete synthetic posting", userConfirmed: true,
+        authorityReference: "Synthetic user requested JD ingestion and screening", idempotencyKey: randomUUID(),
+      } });
+      expect(savedJd.isError, JSON.stringify(savedJd)).not.toBe(true);
+      const jdReceipt = (savedJd.structuredContent as { result: { jdHash: string } }).result;
+      const after = w.service.candidateAssessmentService.getCandidate(c.id, { includeAssessmentContext: true });
+      expect(after.assessmentContext!.inputManifest.jdHash).toBe(jdReceipt.jdHash);
+      expect(after.recordVersion).toBe(before.recordVersion);
+    }
     const result = await first.c.callTool({ name: "workspace_record_screening_profile", arguments: request() });
     expect(result.isError).not.toBe(true);
     const receipt = (result.structuredContent as { result: { sourceId: string; hash: string } }).result;

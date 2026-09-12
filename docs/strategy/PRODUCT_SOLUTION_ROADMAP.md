@@ -118,6 +118,12 @@ user-reported Accenture Sydney Tech Lead JD is a proposed 10+ commercial SWE tar
 its text must first be saved and read back with a real jdHash. Do not infer a saved
 JD from candidate metadata or treat this documentation update as implementation.
 
+Subsequent [JD admission implementation](../architecture/JOB_SCREENING.md#candidate-jd-admission--september-12)
+now adds the controlled MCP write using candidate-version/JD-hash checks and durable
+attribution receipts over existing storage. Local 502-test/type-check/build evidence
+passes; source inventory is 36 tools. Production release/readback and real 10+
+FILTER → KEEP remain the next gates; no JD was saved to production by local tests.
+
 用户授权后已完成[生产发布](../architecture/CANDIDATE_MATCH_GRADES.md#september-11-production-release)：
 Chrome 与服务器连接恢复，migration 019、备份恢复演练、原有数据保留、公网五项
 检查及 31 工具 MCP 读取通过。复用同一源码的 444 项测试、类型检查和构建证据。

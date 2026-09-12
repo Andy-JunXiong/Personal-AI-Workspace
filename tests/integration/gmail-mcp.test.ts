@@ -80,7 +80,7 @@ it("exposes and invokes all three tools over MCP without database writes", async
   try {
     await server.connect(b); await client.connect(a);
     const before = workspace.database.prepare("SELECT total_changes() AS n").get();
-    expect((await client.listTools()).tools).toHaveLength(35);
+    expect((await client.listTools()).tools).toHaveLength(36);
     for (const [name, args] of [["workspace_get_mail_accounts", {}], ["workspace_list_mail_messages", range], ["workspace_read_mail_message", { mailbox: "mailbox-1", messageId: "ab12" }]] as const) {
       expect((await client.callTool({ name, arguments: args })).isError).not.toBe(true);
     }

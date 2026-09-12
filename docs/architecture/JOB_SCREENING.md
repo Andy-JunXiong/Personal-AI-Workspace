@@ -12,6 +12,10 @@ deployed and verified. [Real-client feedback](#real-client-acceptance-and-jd-ing
 now confirms profile persistence and Google UNKNOWN/non-FILTER screening. Real
 8+/10+ FILTER → KEEP remains blocked on candidate JD ingestion.
 
+Source follow-up: the [controlled JD admission entry](#candidate-jd-admission--september-12)
+is now implemented and locally verified (502 tests, 36-tool source inventory).
+Production deployment and real second-segment acceptance are tracked separately.
+
 ## Continuity and benefits
 
 - Upstream: Jun requested fewer clearly unsuitable jobs, especially roles requiring
@@ -429,3 +433,64 @@ Validation for this update is Level 0: documentation diff, whitespace and local
 references. No runtime input changed, so the existing 496-test release evidence is
 retained without rerunning tests, type checks or build. This update records reported
 acceptance; it does not claim a new live probe, JD ingestion fix or production release.
+
+## Candidate JD admission — September 12
+
+### Continuity and benefits
+
+Jun's real acceptance above exposed the missing JD write entry after successful
+profile/Google screening. This increment exposes one interactive MCP command over
+the existing candidate-description store. It enables externally read full JDs to
+be saved and used by the existing screening/assessment context without a second
+JD store, migration, backend fetcher or model call. Synthetic MCP acceptance now
+starts with missing JDs and no confirmed sources, saves both through commands,
+then verifies UNKNOWN and FILTER → KEEP with preserved DISMISSED. Real Accenture
+ingestion/recovery remains a post-deployment gate. Longer-term benefit is attributable
+JD correction with stale-input protection across clients and preserved receipts.
+The platform ownership boundary remains the one documented above: ChatGPT obtains
+and interprets source material; PAW admits and persists domain inputs/results.
+
+### Command and consistency contract
+
+`workspace_record_candidate_job_description` accepts candidateId,
+expectedCandidateVersion, expectedJdHash, text, sourceUrl, fullTextProvided,
+provenanceReference, userConfirmed, authorityReference and idempotencyKey.
+Read `workspace_get_job_candidate(includeAssessmentContext=true)` first. Echo the
+candidate's recordVersion and inputManifest.jdHash; null means no saved nonempty
+JD. There is no independent JD recordVersion. The existing content/source-URL hash
+is the concurrency token, so changes by the existing Web/discovery writers are
+also detected. Returning to identical content/URL is treated as the same input.
+
+Only mapped interactive MCP identity and explicit user authority are admitted.
+Full text is bounded at 50,000 characters; an HTTP(S) source URL and provenance
+reference identify acquisition and association with the candidate. Completeness
+is an explicit caller assertion, not server proof of page authenticity, correct
+role association or full extraction. JD text remains untrusted source evidence.
+The command makes no network request and cannot confirm a profile or create a job.
+
+The atomic durable receipt preserves the exact saved JD, manifest-compatible jdHash,
+candidateVersion and principal/channel/authority/provenance/time attribution.
+Conflicting keys or stale candidate/JD inputs make zero writes. Exact retries return
+their historical snapshot even after replacement: always reread current context
+after saving/replaying before screening. Candidate version/decision, profile,
+overrides, applications and Tasks remain unchanged. Changed JD text or source URL
+invalidates old screening and match-assessment inputs; existing screening snapshots
+and explicit KEEP survive. Legacy JD writer contracts are unchanged.
+
+### Verification and release gate
+
+The new MCP write authority entry and shared screening validity are the Level 3
+trigger. Initial affected checks passed 20 tests across JD admission, profile flow,
+MCP discovery and Gmail tool inventory. Full `npm.cmd run verify` then passed
+**502 tests in 62 files**, both TypeScript projects and production build with the
+existing Python 3.13 interpreter. Six new cases cover receipts/reopen, no candidate
+side effects, stale/conflicting/invalid/unauthorised writes, workspace isolation,
+legacy-writer URL changes, stale screening/history/KEEP and transactional rollback.
+The profile MCP flow now creates JDs through the actual new command, not fixture
+preseeding. Source tool inventory and existing cloud probes expect **36** tools.
+
+No Web layout or route changed; no additional browser-layout test is required.
+Next release checks are production-copy recovery, unchanged-data cutover and live
+tool discovery/readback. Then refresh ChatGPT's connector and use a new conversation
+if needed, save the real full JD, reread its manifest and complete FILTER → KEEP.
+Passing synthetic tests does not claim that real JD or screening has been saved.

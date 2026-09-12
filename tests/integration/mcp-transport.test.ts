@@ -52,6 +52,7 @@ describe("Streamable HTTP MCP transport", () => {
         "workspace_record_candidate_screening",
           "workspace_override_candidate_screening",
           "workspace_record_screening_profile",
+          "workspace_record_candidate_job_description",
         "workspace_get_project",
         "workspace_get_recommendation_run",
         "workspace_get_mail_scans",

@@ -1,6 +1,7 @@
 import { MailScanLedger } from "./mail-scan-ledger.js";
 import { CandidateScreeningService } from "./candidate-screening-service.js";
 import { ScreeningProfileService } from "./screening-profile-service.js";
+import { CandidateJobDescriptionService } from "./candidate-job-description-service.js";
 import { applicationMailCategorySchema, isApplicationMailCategory, isVacancyMarketing } from "../domain/application-mail-event.js";
 import { randomUUID } from "node:crypto";
 import { gmailCheckSchema } from "../domain/gmail-check.js";
@@ -322,6 +323,7 @@ export class WorkspaceService {
   readonly candidateAssessmentService: CandidateAssessmentService;
   readonly candidateScreeningService: CandidateScreeningService;
   readonly screeningProfileService: ScreeningProfileService;
+  readonly candidateJobDescriptionService: CandidateJobDescriptionService;
   readonly resumeService: ResumeService;
   readonly jobLibraryService: JobLibraryService;
   readonly mailScanLedger: MailScanLedger;
@@ -350,6 +352,8 @@ export class WorkspaceService {
     this.candidateScreeningService = new CandidateScreeningService(database, resolveTaskContext,
       this.jobSearchQueryService, this.candidateAssessmentService, options.clock);
     this.screeningProfileService = new ScreeningProfileService(database, resolveTaskContext, this.jobLibraryService, options.clock);
+    this.candidateJobDescriptionService = new CandidateJobDescriptionService(database, resolveTaskContext,
+      this.jobSearchQueryService, this.jobLibraryService, options.clock);
     this.jobSearchQueryService.screeningSummary = candidate => this.candidateScreeningService.summary(candidate);
     this.mailScanService = new MailScanService(database, resolveTaskContext, options.clock);
     this.mailBatchService = new MailBatchService(database, resolveTaskContext, options.clock);

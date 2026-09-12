@@ -16,7 +16,12 @@ confirms profile v1 / CONFIRMED and Google screening v1 / USER_CONFIRMATION_REQU
 with required 5-year tenure UNKNOWN and candidate v2 / DISMISSED preserved. Real
 8+/10+ FILTER → explicit KEEP acceptance remains blocked on candidate JD ingestion:
 the other nine candidates have MISSING_JD. A controlled JD write entry is the next
-development gap, not an implemented interface or accepted external retrieval flow.
+development gap identified by that feedback. The subsequent
+[JD admission implementation](JOB_SCREENING.md#candidate-jd-admission--september-12)
+adds `workspace_record_candidate_job_description` over existing storage with
+candidate-version/JD-hash concurrency and attributable receipts (502 tests;
+36-tool source inventory). Deployment and real recovery acceptance remain separate.
+ChatGPT still obtains/interprets the full JD; PAW does not add an external fetcher.
 
 Jun also requested [candidate JD match grades](../strategy/PRODUCT_SOLUTION_ROADMAP.md#candidate-match-grades)
 as a development backlog item: ChatGPT assesses JD/resume/experience evidence;

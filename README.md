@@ -91,6 +91,12 @@ candidate JD ingestion entry, then real 8+/10+ FILTER → explicit KEEP acceptan
 The other nine candidates lack saved JDs; the proposed Accenture target is not yet
 ingested or screened.
 
+The candidate JD admission follow-up is now implemented and locally verified:
+`workspace_record_candidate_job_description` saves attributable full text with
+candidate-version/JD-hash checks and durable retry receipts. Source inventory is
+36 tools; 502 tests, both type checks and build passed. Deployment/readback and
+the real 10+ FILTER → KEEP gate are tracked in the linked screening contract.
+
 September 12 [connector preflight](docs/architecture/CANDIDATE_MATCH_GRADES.md#september-12-connector-acceptance-preflight)
 confirmed live candidate-summary reads, but that session still exposed the old
 client schema without assessment-context options or the assessment save command.
