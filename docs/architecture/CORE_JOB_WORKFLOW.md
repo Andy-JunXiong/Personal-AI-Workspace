@@ -28,9 +28,10 @@ ChatGPT still obtains/interprets the full JD; PAW does not add an external fetch
 The [ChatGPT copy handoff](JOB_SCREENING.md#chatgpt-copy-handoff--september-12)
 now provides a manual instruction panel below each JD: the user copies it to GPT,
 which rereads current PAW context and uses existing admission commands to return
-screening and a match report. Local release checks and desktop UI inspection pass;
-deployment and real report-return acceptance remain pending. Copying itself makes
-no business write and this package does not configure the proposed 08:10 schedule.
+screening and a match report. Deployed as `jd-chatgpt-handoff-20260912-r1`, with
+release checks, production-copy recovery and live Google page/copy checks passed.
+Real report-return acceptance remains pending. Copying itself makes no business
+write and this package does not configure the proposed 08:10 schedule.
 
 Jun also requested [candidate JD match grades](../strategy/PRODUCT_SOLUTION_ROADMAP.md#candidate-match-grades)
 as a development backlog item: ChatGPT assesses JD/resume/experience evidence;

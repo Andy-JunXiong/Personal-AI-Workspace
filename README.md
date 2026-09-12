@@ -101,9 +101,10 @@ FILTER → KEEP gate remain pending in the linked screening contract.
 
 The [ChatGPT copy handoff](docs/architecture/JOB_SCREENING.md#chatgpt-copy-handoff--september-12)
 adds candidate-specific analysis instructions below each JD, including missing-JD
-guidance and a copy button. Local release checks passed (502 tests/type checks/build)
-and desktop synthetic UI inspection passed; deployment and the user's real
-ChatGPT report-return trial are pending. No scheduled analysis is enabled.
+guidance and a copy button. Deployed as `jd-chatgpt-handoff-20260912-r1`: 502 tests,
+type checks/build, production-copy recovery, public checks and the live Google
+page/copy-button checks passed. The user's real ChatGPT report-return trial is next.
+No scheduled analysis is enabled.
 
 September 12 [connector preflight](docs/architecture/CANDIDATE_MATCH_GRADES.md#september-12-connector-acceptance-preflight)
 confirmed live candidate-summary reads, but that session still exposed the old

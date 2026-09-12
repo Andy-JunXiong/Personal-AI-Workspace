@@ -576,4 +576,34 @@ and verified; this UI does not establish scheduled execution.
   button's success state. The automation's separate virtual clipboard could not
   paste the native page clipboard; cross-application paste remains a user trial.
   Narrow viewport and real report writes have not been accepted by these checks.
-- Deployment and production page acceptance are pending at this source checkpoint.
+- Deployment and production page evidence follow below; actual ChatGPT report
+  writing remains a separate user trial.
+
+### Copy handoff production release
+
+- Release `jd-chatgpt-handoff-20260912-r1` uses main commit
+  `7d73c2e3dfe76aa98f5839db40786498f84e7c5a`.
+  Archive SHA256: `db92afea17115126b54943d135da1c9dcf8a2be51b642f12d9a923b5faf57419`.
+  Image: `sha256:c0d19fff24436301d89b1011785e800e3b9544f0bf2cf39578e7e35da3bbd382`.
+- Healthy cutover completed **2026-09-12T10:27:19Z** (20:27 Sydney). Backup
+  `workspace-20260912T102652Z.db` passed integrity and both new/prior-image
+  recovery checks, preserving **50 tables / 2265 rows**. Immediate backup:
+  `workspace-20260912T102712Z.db`. Schema, persistent storage and overlays remain
+  unchanged. Build/cutover logs are under `/srv/paw/deployments`.
+- Shell syntax and server archive checksum passed. Private transfer used AES256;
+  the exact temporary S3 object version and local presigned URL file were removed.
+- Public Web checks passed all five boundaries before and after cutover. Following
+  login, the actual Google detail page displays the new panel with its correct
+  candidate ID and saved-JD hint; clicking Copy returns the success message.
+  Desktop visual inspection shows the panel below the editor without horizontal
+  overflow. Existing ignored status and first screening remain visible; match
+  assessment still shows not yet saved. No business-write button or MCP write was
+  invoked during release acceptance.
+- The unchanged local 502-test/type-check/build evidence is reused. The later
+  documentation-only update needs diff/reference review, not another runtime run.
+
+Next user trial: open the Google detail page, copy the instruction, select PAW
+in ChatGPT and send it. Verify actual saved screening and match-assessment receipts,
+then refresh PAW and inspect the report and preserved candidate state. Cross-app
+paste, model analysis and real report-return acceptance are not claimed by the
+release checks above; missing-JD ingestion and FILTER-to-KEEP remain separately open.
