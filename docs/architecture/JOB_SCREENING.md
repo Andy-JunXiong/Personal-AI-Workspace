@@ -5,6 +5,10 @@ interactive MCP commands, shared candidate filtering and Web recovery are deploy
 as `job-screening-20260912-r1`, including migration 020 and the 34-tool server.
 No live candidate or private profile has been written by this package.
 
+The later real-client attempt exposed a missing MCP profile-write path. The
+[profile admission repair](#confirmed-profile-admission-repair--september-12) is
+locally verified; its release status is recorded below.
+
 ## Continuity and benefits
 
 - Upstream: Jun requested fewer clearly unsuitable jobs, especially roles requiring
@@ -252,3 +256,67 @@ repeating application tests. Next: refresh the ChatGPT connector, confirm profil
 source evidence, and perform one complete real-JD screening with human-reviewed
 requirements and independent readback. There is no live screening report yet;
 automatic JD retrieval/scheduled screening and extraction accuracy are not accepted.
+
+## Confirmed-profile admission repair — September 12
+
+### Continuity and benefits
+
+The user's real ChatGPT attempt confirmed new screening/context reads but could
+not create a CONFIRMED profile. The only confirmed library item concerned one
+employment date and must not stand in for an entire profile. The first release's
+tests seeded confirmed sources directly, so its server/read acceptance did not
+prove the full user journey. This repair adds the missing interactive MCP entry
+over the existing library, enabling confirmation → profile save → fresh context →
+screening → independent readback. Synthetic end-to-end evidence now exercises
+that sequence from zero confirmed sources. Real user-profile admission remains
+pending. Longer term, versioned confirmation receipts preserve attribution and
+safe corrections without creating a second profile store or enabling model calls.
+
+### Admission contract
+
+`workspace_record_screening_profile` accepts the exact user-confirmed `content`,
+`expectedProfileVersion`, `userConfirmed`, `authorityReference` and `idempotencyKey`.
+It writes only the dedicated `screening:confirmed-profile` library source with a
+server-controlled title, null source URL and CONFIRMED status. It cannot select or
+confirm an arbitrary imported source, and Web-channel calls are rejected.
+
+First read candidate assessment context. `sourceDirectory.items` now includes
+`sourceKey`, identifying the dedicated profile; page the directory when necessary.
+Use version 0 for initial creation and the observed version for updates. Read the
+existing profile before presenting a replacement to the user. UNKNOWN experience
+and explicit exclusion preferences must remain distinct; neither memory nor a JD
+grants confirmation. This endpoint records user attestation, not independent proof
+of career facts or semantic verification of what was said in a conversation.
+
+The response returns `sourceId`, `recordVersion`, a manifest-compatible `hash`,
+CONFIRMED status, the exact source snapshot and confirmation actor/reference/time.
+The existing durable idempotency receipt stores that snapshot atomically with the
+source write. A retry returns the original receipt even after later edits; changed
+payloads conflict. A stale expected version fails before modifying the library.
+The existing library Web editor retains its versioned editing contract; confirmation
+receipts preserve the original snapshot, not an assertion that the current source
+has never changed. No schema migration is needed.
+
+After any save/replay, reread `workspace_get_job_candidate` with assessment context
+and the returned source ID. The new confirmed source is discoverable and selected;
+its change invalidates earlier library/input manifests and assessments. Never submit
+the pre-save manifest. Existing screening snapshots preserve their historical inputs.
+Source confirmation does not itself screen a candidate, change a KEEP override,
+alter candidate decisions, or create applications/Tasks.
+
+### Local verification
+
+The concrete Level 3 gate is a new confirmed-source authority entry plus release
+preparation. `npm.cmd run verify` passed **496 tests in 61 files**, both type checks
+and the build with the existing Python interpreter. The affected tests first exposed
+a synthetic fixture using the same posting URL for two candidates; the existing
+deduplication correctly treated them as one. Distinct fixture URLs corrected that
+setup; no candidate-deduplication behavior changed.
+
+Six new tests cover the complete MCP flow without seeded confirmations, 5-year
+UNKNOWN, explicit 8-year preference FILTER followed by KEEP, preserved DISMISSED
+version 2, stale reports after profile updates, immutable historical screening
+snapshots, durable confirmation receipts across reopen, stale/conflicting requests,
+unauthorized channels/identities, workspace isolation and atomic rollback when
+the receipt cannot be saved. Tool inventory expectations are now 35; source and
+authority behavior remain scoped to the new command. No live profile was written.

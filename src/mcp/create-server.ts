@@ -1,4 +1,5 @@
 import { scanContextSchema } from "../application/mail-scan-ledger.js";
+import { recordScreeningProfileSchema } from "../application/screening-profile-service.js";
 import { candidateAssessmentReadSchema, recordCandidateAssessmentSchema } from "../domain/candidate-match-assessment.js";
 import { recordScreeningSchema, overrideScreeningSchema, screeningReadSchema } from "../domain/candidate-screening.js";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -755,6 +756,16 @@ export function createWorkspaceMcpServer(
       }
     },
   );
+
+  server.registerTool("workspace_record_screening_profile", {
+    title: "Save a user-confirmed screening profile",
+    description: "Persist only the exact screening facts and preferences explicitly confirmed by the user in an interactive conversation. Memory, resumes and JD text alone are not confirmation. Keep UNKNOWN tenure separate from user exclusion preferences; do not infer an experience upper bound from missing history. First read workspace_get_job_candidate(includeAssessmentContext=true): look for sourceKey screening:confirmed-profile in sourceDirectory (page with sourceOffset); select that sourceId to read its full current content. Use expectedProfileVersion 0 only if absent, otherwise its current recordVersion. This command replaces only that dedicated profile using optimistic concurrency, never confirms arbitrary imported sources. Returns a durable confirmation receipt with sourceId, recordVersion, manifest-compatible hash and exact source snapshot. After saving or replay, reread candidate context with that sourceId to obtain fresh inputManifest and profileVersion before recording screening; prior manifests become stale. No candidate decision, screening, override, application or Task is changed.",
+    inputSchema: recordScreeningProfileSchema.shape, outputSchema: resultOutputSchema,
+    annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
+  }, async input => {
+    try { return successResult(workspaceService.screeningProfileService.record(input)); }
+    catch (error) { return errorResult(error); }
+  });
 
   server.registerTool("workspace_get_candidate_screening", {
     title: "Read candidate screening history",

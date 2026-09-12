@@ -128,7 +128,7 @@ export class CandidateAssessmentService {
           throw new ValidationError("Assessment input exceeds limits; select fewer sources (maximum 100 sources, 600000 characters)");
         }
         const directory = current.library.sources.slice(options.sourceOffset, options.sourceOffset + 50).map(s => ({
-          id: s.id, title: s.title, sourceUrl: s.source_url, recordVersion: s.record_version, reviewStatus: s.review_status,
+          id: s.id, sourceKey: s.source_key, title: s.title, sourceUrl: s.source_url, recordVersion: s.record_version, reviewStatus: s.review_status,
         }));
         assessmentContext = {
           contractVersion: "candidate-assessment-context-v1", readAt: this.clock().toISOString(),

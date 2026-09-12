@@ -1,5 +1,6 @@
 import { MailScanLedger } from "./mail-scan-ledger.js";
 import { CandidateScreeningService } from "./candidate-screening-service.js";
+import { ScreeningProfileService } from "./screening-profile-service.js";
 import { applicationMailCategorySchema, isApplicationMailCategory, isVacancyMarketing } from "../domain/application-mail-event.js";
 import { randomUUID } from "node:crypto";
 import { gmailCheckSchema } from "../domain/gmail-check.js";
@@ -320,6 +321,7 @@ export class WorkspaceService {
   readonly candidateService: CandidateService;
   readonly candidateAssessmentService: CandidateAssessmentService;
   readonly candidateScreeningService: CandidateScreeningService;
+  readonly screeningProfileService: ScreeningProfileService;
   readonly resumeService: ResumeService;
   readonly jobLibraryService: JobLibraryService;
   readonly mailScanLedger: MailScanLedger;
@@ -347,6 +349,7 @@ export class WorkspaceService {
       this.jobSearchQueryService, this.jobLibraryService, this.resumeService, options.clock);
     this.candidateScreeningService = new CandidateScreeningService(database, resolveTaskContext,
       this.jobSearchQueryService, this.candidateAssessmentService, options.clock);
+    this.screeningProfileService = new ScreeningProfileService(database, resolveTaskContext, this.jobLibraryService, options.clock);
     this.jobSearchQueryService.screeningSummary = candidate => this.candidateScreeningService.summary(candidate);
     this.mailScanService = new MailScanService(database, resolveTaskContext, options.clock);
     this.mailBatchService = new MailBatchService(database, resolveTaskContext, options.clock);
