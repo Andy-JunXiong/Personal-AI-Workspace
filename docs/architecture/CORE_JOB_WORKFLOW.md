@@ -5,10 +5,11 @@
 September 12 clarification: [the skill/project library](SKILL_LIBRARY.md) becomes
 the primary JD matching object; resumes and Drive documents are its sources.
 GPT consolidates evidence and checks registered GitHub projects before analysis;
-PAW saves versions, references and immutable reports. Locally implemented with
-40 tools and synthetic verification. Repository technology does not establish
-personal contribution or commercial SWE tenure. Production, real synthesis and
-hosted execution remain separate acceptance gates; no new schedule is configured.
+PAW saves versions, references and immutable reports. Deployed as
+`skill-library-20260912-r1` with 40 tools, 514 tests, recovery/data preservation
+and authenticated page/copy checks. Repository technology does not establish
+personal contribution or commercial SWE tenure. Real synthesis and hosted
+execution remain separate acceptance gates; no new schedule is configured.
 
 September 12 follow-up: Jun requested [recoverable candidate screening](JOB_SCREENING.md)
 before letter grading. Local implementation now persists attributable screening

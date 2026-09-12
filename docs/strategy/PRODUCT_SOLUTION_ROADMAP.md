@@ -94,9 +94,10 @@ flowchart TB
 
 September 12 clarification: [skill/project consolidation](../architecture/SKILL_LIBRARY.md)
 adds reusable evidence from uploaded/Drive documents and commit-pinned GitHub
-sources, then matches JD requirements to skill entries. Implemented locally with
-514-test/type-check/build and synthetic UI evidence; production and real catalog/
-repository/report acceptance remain pending. This does not enable a new schedule.
+sources, then matches JD requirements to skill entries. Deployed as
+`skill-library-20260912-r1` with 514-test/type-check/build, recovery and authenticated
+UI evidence; real catalog/repository/skill-based report acceptance remains pending.
+The existing legacy Google B− report was preserved. No new schedule is enabled.
 
 September 12 follow-up: Jun supplied recoverable pre-screening rules before letter
 grading. [Recoverable screening](../architecture/JOB_SCREENING.md) is locally

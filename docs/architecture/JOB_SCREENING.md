@@ -624,3 +624,9 @@ writes (1 passed; 42 unrelated cases skipped). Diff/whitespace review passed.
 The change removes markup and the unused Candidate branch only; no CSS, write
 contract or shared Application/Task behavior changed, so no full-suite run or
 release preparation was added to this small follow-up.
+
+Subsequent deployment: this cleanup is included in
+[`skill-library-20260912-r1`](SKILL_LIBRARY.md#production-release--september-12).
+The authenticated Google page readback verifies the new analysis panel remains
+and the old generic box is absent. Its existing legacy match report v1 (B−) and
+candidate v2/DISMISSED were preserved; the release probe did not create a report.

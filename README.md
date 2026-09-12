@@ -74,8 +74,10 @@ The [skill and project library](docs/architecture/SKILL_LIBRARY.md) follow-up
 implements consolidated skills/facts/projects from uploaded/Drive evidence,
 public GitHub refresh and JD matching through skill entries. Local verification
 passed 514 tests, type checks/build and desktop synthetic UI inspection; a live
-public-example GitHub read passed. MCP inventory is 40 in source. Production,
-real synthesis and user-repository acceptance remain separate pending steps.
+public-example GitHub read passed. Deployed as `skill-library-20260912-r1` at
+21:19 Sydney with 40 live tools, recovery/data preservation and authenticated
+page/copy checks passed. Real synthesis and user-repository acceptance remain
+pending; existing Google B− report v1 and candidate v2/DISMISSED were preserved.
 
 The [recoverable candidate screening](docs/architecture/JOB_SCREENING.md)
 now includes immutable records, three scoped MCP commands, shared list filtering

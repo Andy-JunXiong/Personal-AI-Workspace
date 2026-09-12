@@ -1,7 +1,7 @@
 # Skill and project evidence library
 
-Status: implemented locally, September 12, 2026. Production and real-data
-acceptance are separate gates below.
+Status: deployed as `skill-library-20260912-r1`, September 12, 2026.
+Real personal-catalog and repository acceptance remain separate gates below.
 
 ## Continuity and benefits
 
@@ -107,7 +107,7 @@ KEEP, application and Task state is preserved.
 ## Verification and pending acceptance
 
 Shared assessment evidence and new MCP/Web authority entries justify full
-regression. Initial `npm run verify` passed **514 tests / 63 files**, both TypeScript
+regression. Final `npm run verify` passed **514 tests / 63 files**, both TypeScript
 projects and build. Twelve new cases cover durable/reopened synthesis, stale/forged
 evidence, duplicate/coverage rejection, rollback, isolation, commit pinning/reuse/
 failures, unsafe paths/redirects/binary content, reauthorization/CAS, matching/history,
@@ -120,5 +120,41 @@ actual reader fetched public `octocat/Hello-World` README at commit
 and actual user-repository acceptance remain pending.
 
 No real catalog, GitHub source or report was saved by these checks. User repository
-selection, real synthesis, connector refresh and report-return acceptance are
-pending. The previous duplicate candidate handoff cleanup is included in source.
+selection, real synthesis and skill-based report-return acceptance are pending.
+
+## Production release — September 12
+
+- Release `skill-library-20260912-r1`, runtime commit
+  `b8f09b51db9a794bb7af18d7e3fc470470140207`, pushed to GitHub main.
+  Healthy cutover: `2026-09-12T11:19:27Z` (21:19 Sydney).
+- Source archive SHA-256:
+  `8f0909e94a3a05853cecce2af049887cf24d550cd1a5cc5cb750e83482eb25c5`.
+  Image: `sha256:b4c8fc8d98ae89cc17b3f4463c6dafc302f87b00cfcb27a352ad2c37893541eb`.
+- Backups `workspace-20260912T111902Z.db` and immediate pre-cutover
+  `workspace-20260912T111920Z.db`. Both new and preceding
+  `jd-chatgpt-handoff-20260912-r1` images passed copy recovery with unchanged
+  **50 tables / 2,271 rows**. Migration 020 and existing volume/Web/Gmail overlays
+  are retained. Temporary encrypted transfer object and local signed URL removed.
+- Build/cutover/readback logs are under `/srv/paw/deployments/` with prefix
+  `skill-library-20260912-r1-`. Shell syntax, archive checksum and five public
+  checks passed. Production read-only MCP probe found **40 tools**, including all
+  four additions. The deployed GitHub reader fetched the public example above.
+- Authenticated library page and MCP agree: catalog **MISSING/version 0**,
+  **38 raw sources / 2 confirmed**, no registered GitHub project. Copying the
+  synthesis prompt shows success. The Google page retains the new analysis panel
+  and no longer renders the old generic ChatGPT box.
+- Readback preserved Google candidate v2/DISMISSED and its existing legacy
+  assessment v1/CURRENT, B−, ID `40371a51-970d-484c-af5e-48f922b69db4`.
+  That previously saved report is not a skill-catalog acceptance result.
+  No candidate, application, source, catalog or report was written by release probes.
+- ChatGPT's existing developer-mode PAW connection was refreshed through its
+  management page. The advertised list changed from 36 to **40**, showing all
+  four new tools. Permissions were unchanged; no ChatGPT prompt was submitted.
+  This verifies metadata refresh, not actual model invocation or report return.
+  Start the real trial in a new conversation, following the
+  [official refresh workflow](https://developers.openai.com/plugins/deploy/connect-chatgpt).
+
+Remaining real-use sequence: select repositories, synthesize existing documents,
+read back the catalog, then save/read a SKILL-based JD report. Scheduled execution,
+narrow-viewport inspection and the separate 8+/10+ FILTER → KEEP trial remain
+unverified. These documentation updates do not invalidate final runtime checks.
