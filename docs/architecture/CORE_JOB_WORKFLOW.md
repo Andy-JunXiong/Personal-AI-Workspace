@@ -6,8 +6,9 @@ September 12 follow-up: Jun requested [recoverable candidate screening](JOB_SCRE
 before letter grading. Local implementation now persists attributable screening
 history and independent keep/withdraw choices; shared Web/MCP lists hide only
 current filters without explicit keep or saved interest. This scoped Web recovery
-does not change candidate decisions, applications or Tasks. Migration 020 is not
-deployed; production and real-use gates remain in the linked contract.
+does not change candidate decisions, applications or Tasks. Migration 020 is
+deployed as `job-screening-20260912-r1`; recovery/data preservation and authenticated
+Web/MCP readback passed. Refreshed-client and real-use gates remain in the linked contract.
 
 Jun also requested [candidate JD match grades](../strategy/PRODUCT_SOLUTION_ROADMAP.md#candidate-match-grades)
 as a development backlog item: ChatGPT assesses JD/resume/experience evidence;

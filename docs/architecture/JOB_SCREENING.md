@@ -1,8 +1,8 @@
 # Recoverable candidate screening
 
 Status: September 12, 2026. Rule evaluator, immutable screening/override storage,
-interactive MCP commands, shared candidate filtering and Web recovery are locally
-implemented and verified. Migration 020 and the 34-tool server are not deployed.
+interactive MCP commands, shared candidate filtering and Web recovery are deployed
+as `job-screening-20260912-r1`, including migration 020 and the 34-tool server.
 No live candidate or private profile has been written by this package.
 
 ## Continuity and benefits
@@ -15,13 +15,14 @@ No live candidate or private profile has been written by this package.
   screening records. Shared queries exclude only current filters, and explicit
   keep/withdraw controls preserve independent human choice. No private profile is
   embedded in source, and no model provider or scheduled ingestion is enabled.
-- Downstream: production backup/recovery and deployment, refreshed-client use,
+- Downstream: refreshed-client use,
   then a real confirmed profile/JD screening with independent readback. The existing
   letter-grade assessment command retains its separate contract and acceptance.
 - Short-term verified benefit: 490 tests pass, including screening history,
   attribution, concurrency, authority, pagination and recovery; a synthetic browser
   flow verifies actual filtering and keep/withdraw. Reduction in real unsuitable
-  jobs remains to be measured after deployment and source-grounded use.
+  jobs remains to be measured through source-grounded use. Production-copy recovery,
+  original-data preservation and authenticated list/detail reads now pass.
 - Long-term expected benefit: explainable candidate selection with retained evidence
   and recoverable decisions, without conflating career preference with lack of ability.
 
@@ -205,3 +206,49 @@ This is baseline availability evidence, not new-feature acceptance. Direct SSH
 timed out and the existing AWS browser session requires sign-in; production-copy
 rehearsal and cutover have not run. Source packaging can proceed while the user
 restores that session. No firewall or account permissions are expanded.
+
+## Production release — September 12
+
+After the user restored AWS sign-in, the existing Lightsail browser SSH session
+confirmed the healthy `candidate-grades-20260911-r1` baseline. A normal browser tab
+was used after the popup terminal failed to respond to interactions. No firewall,
+instance, account role, scheduler or provider setting was changed.
+
+- Release: `job-screening-20260912-r1`; source commit
+  `e3cd5e84770bae3e0c216a2b3419b182ee780e98`.
+- Source archive SHA256:
+  `1e45e824217d7d85614eaac566c0c68fa750c0381d5c9336e6cdcaeaa33f0b01`.
+  Server source: `/opt/paw-job-screening-20260912-r1`.
+- Image ID: `sha256:2ec7068ec46774098e5ef431098de081b8340359e4c4bfa974a17756d7db9ae5`.
+  Cutover reported healthy at **2026-09-12T04:10:56Z** (14:10 Sydney).
+- The existing private S3 transfer bucket retained all four public-access blocks;
+  the archive used AES256 encryption. After server checksum verification, the exact
+  temporary object version and local presigned URL file were removed.
+- Backup `workspace-20260912T041018Z.db` passed integrity checks. The 020 verifier
+  preserved **47 prior business tables**, added only the two empty screening tables,
+  and passed. The candidate image then restarted unchanged, and the previous image
+  started against the same upgraded copy: all three healthy, **50 tables / 2261 rows**,
+  with logical content preserved for repeated/new-old startup.
+- Immediately before cutover, backup `workspace-20260912T041047Z.db` passed. The
+  stopped/checkpointed production data was copied to the release's `-before` and
+  `-after` directories under `/srv/paw/deployments`; the production migration again
+  preserved all 47 prior business tables. Base + Web + Gmail overlays were retained.
+  The rollback handler was available and did not need to run. General Web writes
+  remain off; scoped existing writes retain their contracts.
+- Post-cutover public `web:check --writes off` passed all five checks. An actual
+  loopback MCP client discovered **34 tools**, including all three new commands,
+  verified Workspace identity and read ALL/default/FILTERED counts **10 / 10 / 0**.
+  The exact saved-JD candidate returned UNSCREENED and empty screening/override
+  history. These probes made zero business writes.
+- Authenticated browser acceptance passed after normal Google sign-in: the Jobs
+  list displays 10 candidates and the new selector; choosing “已筛除（可恢复）”
+  displays zero; the saved-JD detail shows “尚未筛选” with the source requirements
+  intact. Existing ignored decisions were preserved. Real recovery clicks remain
+  covered by the synthetic test evidence, not by a production mutation.
+
+The unchanged 490-test/type-check/build evidence was reused; this release turn ran
+production recovery, migration, public and authenticated acceptance instead of
+repeating application tests. Next: refresh the ChatGPT connector, confirm profile
+source evidence, and perform one complete real-JD screening with human-reviewed
+requirements and independent readback. There is no live screening report yet;
+automatic JD retrieval/scheduled screening and extraction accuracy are not accepted.

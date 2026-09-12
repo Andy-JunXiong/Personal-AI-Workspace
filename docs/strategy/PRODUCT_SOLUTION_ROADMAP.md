@@ -97,9 +97,10 @@ grading. [Recoverable screening](../architecture/JOB_SCREENING.md) is locally
 implemented with immutable history, shared list filtering and explicit recovery
 (490 tests, both type checks/build, additive migration and browser checks passed).
 It distinguishes mandatory/preferred requirements, career categories, confirmed
-shortfalls and unknown evidence. Next is production-copy recovery, migration 020
-release and real-JD acceptance. These are not deployed capabilities; existing
-candidate decisions and assessment acceptance remain separate.
+shortfalls and unknown evidence. Migration 020 is deployed as
+`job-screening-20260912-r1`; production-copy recovery, data preservation and
+authenticated Web/MCP reads passed. Next is refreshed-client and real-JD acceptance;
+existing candidate decisions and assessment acceptance remain separate.
 
 用户授权后已完成[生产发布](../architecture/CANDIDATE_MATCH_GRADES.md#september-11-production-release)：
 Chrome 与服务器连接恢复，migration 019、备份恢复演练、原有数据保留、公网五项

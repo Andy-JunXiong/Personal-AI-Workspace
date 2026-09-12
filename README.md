@@ -74,9 +74,10 @@ The [recoverable candidate screening](docs/architecture/JOB_SCREENING.md)
 now includes immutable records, three scoped MCP commands, shared list filtering
 and explicit Web keep/withdraw controls. Local verification passed 490 tests,
 both type checks/build, migration preservation and synthetic browser recovery.
-Migration 020 and the 34-tool source are not deployed; production remains the
-September 11 release. Production-copy recovery, release and real-JD acceptance
-are next, with external matching still off.
+Migration 020 and the 34-tool server are deployed as `job-screening-20260912-r1`.
+Production-copy recovery, preservation of 47 prior business tables, public checks
+and authenticated list/detail acceptance passed. Refreshed-client and real-JD
+screening acceptance are next, with external matching still off.
 
 September 12 [connector preflight](docs/architecture/CANDIDATE_MATCH_GRADES.md#september-12-connector-acceptance-preflight)
 confirms live candidate-summary reads, but this session still exposes the old
