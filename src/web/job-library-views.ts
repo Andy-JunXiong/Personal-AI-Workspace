@@ -27,7 +27,7 @@ export function libraryView(service:WorkspaceService,q=""){
   <p class="subtitle">汇总 Word 简历、项目证据和面试案例。PDF 不展示，正文相同的资料只保留一份；内容不同的版本分别保留。</p>
   <div class="detail-summary"><div><strong>${all.length}</strong><p>资料来源</p></div><div><strong>${all.filter(s=>s.review_status==="CONFIRMED").length}</strong><p>已核对</p></div><a class="button secondary" href="${rootPath}/jobs">查看候选职位 →</a></div>
   ${skillLibraryPanel(service)}
-  <section class="panel library-panel"><h2>添加原始资料</h2><p>保留原来的项目、雇主、日期和成果数字。保存正文后，在上方复制汇总指令更新技能库。历史简历只是来源；有分歧的经历先核对，再用于投递。</p><details><summary>新增项目、简历或面试案例</summary>${sourceForm()}</details></section>
+  <section class="panel library-panel"><h2>原始资料</h2><p>保留原来的项目、雇主、日期和成果数字。保存正文后，在上方使用「更新技能库」处理新增或变化资料。历史简历只是来源；有分歧的经历先核对，再用于投递。</p><details><summary>新增项目、简历或面试案例</summary>${sourceForm()}</details></section>
   <form class="filters" method="get"><label class="search-label">查找技能、经历或素材<input type="search" name="q" value="${e(q)}" maxlength="500"></label><button class="button secondary">搜索</button></form>
   <section class="panel library-panel"><h2>资料来源 · ${sources.length}</h2>${sources.map(s=>`<details class="library-source" id="source-${e(s.id)}"><summary>${e(s.title)}${sourceVersion(s,all)} <small>${s.review_status==="CONFIRMED"?"已核对":s.review_status==="EXCLUDED"?"已排除":"待核对"}</small></summary>${sourceForm(s)}</details>`).join("")||"<p>暂无匹配资料。</p>"}</section>`,true,"library");
 }

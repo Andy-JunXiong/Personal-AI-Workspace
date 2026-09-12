@@ -1,7 +1,8 @@
 # Skill and project evidence library
 
-Status: deployed as `skill-library-20260912-r1`, September 12, 2026.
-Real personal-catalog and repository acceptance remain separate gates below.
+Status: baseline deployed as `skill-library-20260912-r1`, September 12, 2026.
+Incremental-update follow-up is implemented locally; release and scheduled-task
+evidence are recorded separately below.
 
 ## Continuity and benefits
 
@@ -158,3 +159,69 @@ Remaining real-use sequence: select repositories, synthesize existing documents,
 read back the catalog, then save/read a SKILL-based JD report. Scheduled execution,
 narrow-viewport inspection and the separate 8+/10+ FILTER → KEEP trial remain
 unverified. These documentation updates do not invalidate final runtime checks.
+
+## Incremental updates and daily GitHub checks — September 12 follow-up
+
+### Continuity and benefits
+
+Jun's real ChatGPT feedback reports a complete catalog v3 with 32 entries and six
+projects, restored after an accidental empty-catalog replacement. Five registered
+GitHub projects were unchanged; new screening/match writes failed because the
+client did not consume a fresh manifest. The full original response is private.
+An authenticated website read independently confirms 32 entries/six projects;
+the exact v3 and failure narrative remain user-supplied evidence until readback.
+
+This follow-up separates frequent project refresh, stable skill maintenance and
+per-JD analysis. It adds server-side incremental merge, protects existing entries,
+and offers compact exact write inputs. This enables a daily 07:45 Australia/Sydney
+ChatGPT task and faster repeated JD analysis. Immediate benefits to verify are
+retained entries and review coverage, no version churn for unchanged catalogs,
+and identical full/compact manifests. Long-term, many jobs reuse one maintained
+inventory. GPT still interprets evidence; PAW validates/saves it. Scheduling stays
+with ChatGPT, following the existing ownership decision; no new scheduler or
+model service is introduced. Candidate decisions and application/Task state remain
+outside this daily task.
+
+### Current contract (supersedes baseline per-JD refresh instructions)
+
+- Website order: **GitHub projects and updates → My skills and projects → raw
+  documents**. Per-repo checks stay with their source. Check-all runs existing
+  scoped single-project writes sequentially, continues after failures, shows counts
+  and individual outcomes, and retains failed sources. Buttons save source evidence;
+  the adjacent GPT instruction performs semantic skill updates.
+- Existing catalogs use `workspace_record_skill_library(updateMode=MERGE)`.
+  `catalog` contains only changed skill/project upserts, actually reviewed changed
+  source references and added limitations. The server retains all unaffected
+  entries/coverage/limitations, drops coverage for sources no longer effective,
+  then validates the complete merged result. Exact stale evidence must be repaired,
+  not silently assigned a new hash. `changes` identifies added/updated/removed
+  sources without requiring every old resume body again.
+- REPLACE remains for initialization/complete deliberate correction, but cannot
+  silently omit existing IDs. Removals require explicit `removeSkillIds`/
+  `removeProjectIds` and `removalReason`; automated GitHub prompts prohibit these.
+  Empty catalogs are rejected. Identical content retains source version/hash while
+  saving an attributable command receipt. Preceding-release idempotency hashes
+  remain compatible when new controls are omitted.
+- `workspace_get_job_candidate(contextView=SKILLS, includeAssessmentContext=true)`
+  returns JD, catalog, confirmed sources and exact manifest without duplicate raw
+  resume bodies. `contextView=MANIFEST` returns compact current write inputs after
+  evidence review; FULL retains old behavior. All views share admission inputs;
+  projections change neither evidence snapshots nor hash checks. This mitigates
+  oversized responses; it is not proof of the prior client's exact failure cause.
+- JD prompts reuse CURRENT and stop for independent maintenance when stale or
+  missing. They do not refresh GitHub or rewrite the skill library. Recent check
+  times/failures are disclosed; absent daily checks do not establish missing ability.
+- Daily GPT prompt checks registered repos, saves receipts, merges only affected
+  GitHub evidence, and does no catalog write when there is no source difference.
+  Missing/invalid catalog or unrelated document changes are reported for manual
+  maintenance. No catalog initialization, removals, screening or match-report writes.
+  CURRENT means source consistency, not personal confirmation or whole-repo audit.
+
+### Verification and rollout
+
+Focused checks passed: 62 tests across skill library, Web auth and MCP transport;
+both TypeScript projects. Final `npm run verify` passed **518 tests / 63 files**,
+both type checks and build. Synthetic desktop readback confirms section order and
+maintenance prompt placement. Recovery, deployed behavior,
+connector schema refresh, manual task trial and actual scheduled trigger are
+separate gates. The 07:45 task is authorized but not yet created at this local stage.

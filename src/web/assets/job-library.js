@@ -1,26 +1,64 @@
 // Delegation survives the Workspace's partial page refreshes.
+let githubCheckRunning = false;
+/** @param {HTMLFormElement} form */
+async function checkGithubForm(form) {
+  const data = new FormData(form);
+  const body = { repositoryUrl: String(data.get('repositoryUrl')).trim(), expectedVersion: Number(data.get('expectedVersion')),
+    paths: String(data.get('paths')).split(/\r?\n/).map(s => s.trim()).filter(Boolean), idempotencyKey: crypto.randomUUID() };
+  const session = await fetch('/api/v1/session', { cache: 'no-store', signal: AbortSignal.timeout(15000) });
+  if (!session.ok) throw new Error('请重新登录后再操作。');
+  const { csrfToken } = await session.json();
+  const response = await fetch('/api/v1/job-search/library/github-projects/refresh', { method: 'POST',
+    headers: { 'content-type': 'application/json', 'x-csrf-token': csrfToken }, body: JSON.stringify(body), signal: AbortSignal.timeout(45000) });
+  if (!response.ok) throw new Error(response.status === 409 ? '来源版本已变化，请刷新页面后再试。' : '未能保存项目，请检查地址和文件路径。');
+  const result = await response.json();
+  const version = form.elements.namedItem('expectedVersion');
+  if (version instanceof HTMLInputElement) version.value = String(result.recordVersion);
+  return result;
+}
+
+document.addEventListener('click', async event => {
+  const button = event.target instanceof Element ? event.target.closest('[data-github-check-all]') : null;
+  if (!(button instanceof HTMLButtonElement) || button.disabled || githubCheckRunning) return;
+  const panel = button.closest('[data-github-panel]'), status = panel?.querySelector('[data-github-all-result]');
+  if (!(panel instanceof HTMLElement) || !(status instanceof HTMLElement)) return;
+  const forms = Array.from(panel.querySelectorAll('form[data-github-registered]')).filter(f => f instanceof HTMLFormElement);
+  if (!forms.length || forms.some(f => !f.reportValidity())) return;
+  githubCheckRunning = true; button.disabled = true;
+  let updated = 0, unchanged = 0, failed = 0;
+  try {
+    for (const [index, form] of forms.entries()) {
+      status.textContent = `正在检查 ${index + 1}/${forms.length} 个项目…`;
+      const resultLabel = form.querySelector('[data-github-result]');
+      try {
+        const result = await checkGithubForm(form);
+        if (result.status === 'UPDATED') updated++;
+        else if (result.status === 'UNCHANGED') unchanged++;
+        else failed++;
+        if (resultLabel instanceof HTMLElement) resultLabel.textContent = result.status === 'FAILED'
+          ? `检查失败，旧证据保留。${result.failure || ''}` : `${result.status === 'UPDATED' ? '项目证据已更新，待同步相关技能' : '没有变化'} · ${result.checkedAt}`;
+      } catch (error) {
+        failed++;
+        if (resultLabel instanceof HTMLElement) resultLabel.textContent = error instanceof Error ? error.message : '未能确认检查结果。';
+      }
+    }
+    status.textContent = `已完成：${updated} 个更新，${unchanged} 个未变，${failed} 个失败。${updated ? '请使用下方项目更新指令同步相关技能。' : '无需重复汇总未变资料。'} 刷新页面可查看已保存的最新状态。`;
+  } finally { githubCheckRunning = false; button.disabled = false; }
+});
+
 document.addEventListener('submit', async (event) => {
   const form = event.target;
   if (!(form instanceof HTMLFormElement) || !form.matches('[data-github-project]')) return;
   event.preventDefault();
   const button = form.querySelector('button[type="submit"]'), status = form.querySelector('[data-github-result]');
-  if (!(button instanceof HTMLButtonElement) || !(status instanceof HTMLElement) || button.disabled) return;
-  button.disabled = true; status.textContent = '正在检查 GitHub 项目…';
-  const data = new FormData(form);
-  const body = { repositoryUrl: String(data.get('repositoryUrl')).trim(), expectedVersion: Number(data.get('expectedVersion')),
-    paths: String(data.get('paths')).split(/\r?\n/).map(s => s.trim()).filter(Boolean), idempotencyKey: crypto.randomUUID() };
+  if (!(button instanceof HTMLButtonElement) || !(status instanceof HTMLElement) || button.disabled || githubCheckRunning) return;
+  githubCheckRunning = true; button.disabled = true; status.textContent = '正在检查 GitHub 项目…';
   try {
-    const session = await fetch('/api/v1/session', { cache: 'no-store', signal: AbortSignal.timeout(15000) });
-    if (!session.ok) throw new Error('请重新登录后再操作。');
-    const { csrfToken } = await session.json();
-    const response = await fetch('/api/v1/job-search/library/github-projects/refresh', { method: 'POST',
-      headers: { 'content-type': 'application/json', 'x-csrf-token': csrfToken }, body: JSON.stringify(body), signal: AbortSignal.timeout(45000) });
-    if (!response.ok) throw new Error(response.status === 409 ? '来源版本已变化，请刷新页面后再试。' : '未能保存项目，请检查地址和文件路径。');
-    const result = await response.json();
+    const result = await checkGithubForm(form);
     if (result.status === 'FAILED') { status.textContent = `本次检查失败，旧证据保留。${result.failure || ''}`; return; }
     location.reload();
   } catch (error) { status.textContent = error instanceof Error ? error.message : '检查失败，旧证据保留。'; }
-  finally { button.disabled = false; }
+  finally { githubCheckRunning = false; button.disabled = false; }
 });
 
 document.addEventListener('click', async (event) => {

@@ -20,9 +20,15 @@ export class SkillLibraryService {
     const sources = this.library.snapshot().sources;
     const state = skillLibraryState(sources);
     const raw = sources.filter(s => s.source_key !== SKILL_CATALOG_KEY);
+    const reviewed = state.catalog?.reviewedSources ?? [];
+    const changes = {
+      addedSourceIds: raw.filter(s => !reviewed.some(r => r.sourceId === s.id)).map(s => s.id),
+      updatedSourceIds: raw.filter(s => reviewed.some(r => r.sourceId === s.id && (r.recordVersion !== s.record_version || r.hash !== canonicalHash(s)))).map(s => s.id),
+      removedSourceIds: reviewed.filter(r => !raw.some(s => s.id === r.sourceId)).map(r => r.sourceId),
+    };
     const selected = raw.filter(s => options.sourceIds.includes(s.id));
     if (JSON.stringify(selected).length > 600000) throw new ValidationError("Select fewer source documents");
-    return { ...state, version: state.source?.record_version ?? 0,
+    return { ...state, changes, version: state.source?.record_version ?? 0,
       sourceDirectory: { items: raw.slice(options.sourceOffset, options.sourceOffset + 50).map(s => ({
         id: s.id, title: s.title, sourceKey: s.source_key, sourceUrl: s.source_url,
         recordVersion: s.record_version, hash: canonicalHash(s), reviewStatus: s.review_status,
@@ -36,7 +42,7 @@ export class SkillLibraryService {
         return { sourceId: s.id, recordVersion: s.record_version, repositoryUrl: s.source_url,
           commit: snapshot?.commit ?? null, capturedAt: s.updated_at, paths: snapshot?.paths ?? [], lastCheck: last ? JSON.parse(last.response_json) : null };
       }),
-      instructions: "Refresh registered GitHub projects before each analysis. Read raw sources, merge duplicate skills/projects with exact evidence and current versions, preserve UNKNOWN/conflicts. Saving a synthesis does not confirm personal facts. Reread candidate context after updating the library.",
+      instructions: "Reuse a CURRENT catalog for JD matching; do not rewrite it or refresh every repository for each job. GitHub checks are a separate daily/manual workflow. For existing catalogs read only added/updated sources and affected evidence; use updateMode MERGE with changed reviewedSources and skill/project upserts. Unchanged entries and review coverage are retained by the server. Removed entries require explicit IDs and a reason. Never send an empty catalog as a probe. Preserve UNKNOWN/conflicts and reread candidate contextView MANIFEST before writing a JD report.",
     };
   }
 
@@ -67,11 +73,37 @@ export class SkillLibraryService {
 
   record(input: unknown) {
     const parsed = parseAssessment(recordSkillLibrarySchema, input), identity = this.authorize(parsed);
-    const operation = "skills.catalog.record", hash = canonicalHash({ ...parsed, principalId: identity.principalId });
+    const { updateMode, removeSkillIds, removeProjectIds, removalReason, ...legacyInput } = parsed;
+    const hashInput = updateMode === "REPLACE" && !removeSkillIds.length && !removeProjectIds.length && !removalReason
+      ? legacyInput : parsed;
+    const operation = "skills.catalog.record", hash = canonicalHash({ ...hashInput, principalId: identity.principalId });
     return this.db.transaction(() => {
       const prior = this.prior(operation, parsed.idempotencyKey, hash); if (prior) return prior;
       const sources = this.library.snapshot().sources;
-      const catalog = parsed.catalog;
+      const previous = skillLibraryState(sources);
+      if ((previous.source?.record_version ?? 0) !== parsed.expectedVersion) throw new ConcurrencyConflictError("Catalog version changed; reread before updating");
+      if ((parsed.removeSkillIds.length || parsed.removeProjectIds.length) && !parsed.removalReason)
+        throw new ValidationError("Removing or merging away entries requires explicit IDs and removalReason");
+      if (parsed.updateMode === "MERGE" && !previous.catalog) throw new ValidationError("MERGE requires an existing valid catalog; initialize with REPLACE");
+      const merge = <T extends { id: string }>(old: T[], updates: T[], removed: string[]) => [
+        ...old.filter(s => !updates.some(u => u.id === s.id) && !removed.includes(s.id)), ...updates,
+      ];
+      if (parsed.catalog.skills.some(s => parsed.removeSkillIds.includes(s.id)) || parsed.catalog.projects.some(p => parsed.removeProjectIds.includes(p.id)))
+        throw new ValidationError("An entry cannot be removed and upserted together");
+      const catalog = parsed.updateMode === "MERGE" ? {
+        ...parsed.catalog,
+        reviewedSources: [...previous.catalog!.reviewedSources.filter(r => sources.some(s => s.id === r.sourceId) &&
+          !parsed.catalog.reviewedSources.some(u => u.sourceId === r.sourceId)), ...parsed.catalog.reviewedSources],
+        skills: merge(previous.catalog!.skills, parsed.catalog.skills, parsed.removeSkillIds),
+        projects: merge(previous.catalog!.projects, parsed.catalog.projects, parsed.removeProjectIds),
+        limitations: [...new Set([...previous.catalog!.limitations, ...parsed.catalog.limitations])],
+      } : parsed.catalog;
+      // Full replacements cannot silently lose existing entries, including a schema-probe empty payload.
+      if (!catalog.skills.length) throw new ValidationError("An empty skill catalog cannot be saved; existing evidence is retained");
+      if (previous.catalog && (previous.catalog.skills.some(s => !catalog.skills.some(n => n.id === s.id) && !parsed.removeSkillIds.includes(s.id)) ||
+          previous.catalog.projects.some(p => !catalog.projects.some(n => n.id === p.id) && !parsed.removeProjectIds.includes(p.id))))
+        throw new ValidationError("Existing entries omitted; use MERGE or declare explicit removal IDs and reason");
+      parseAssessment(recordSkillLibrarySchema.shape.catalog, catalog);
       const raw = sources.filter(s => s.source_key !== SKILL_CATALOG_KEY);
       if (catalog.reviewedSources.length !== raw.length || new Set(catalog.reviewedSources.map(s => s.sourceId)).size !== raw.length ||
           catalog.reviewedSources.some(ref => !raw.some(s => s.id === ref.sourceId && s.record_version === ref.recordVersion && canonicalHash(s) === ref.hash))) {
@@ -92,8 +124,12 @@ export class SkillLibraryService {
       for (const reference of [...catalog.skills, ...catalog.projects].flatMap(s => s.evidence)) {
         if (!referenceCurrent(reference, sources)) throw new ConcurrencyConflictError("Skill evidence is unavailable, stale or not an exact source quote");
       }
-      const result = this.save(SKILL_CATALOG_KEY, "技能与项目库", null, canonicalJson(catalog), parsed.expectedVersion);
+      const unchanged = previous.catalog && canonicalHash(previous.catalog) === canonicalHash(catalog);
+      const result = unchanged ? { sourceId: previous.source!.id, recordVersion: previous.source!.record_version,
+        hash: canonicalHash(previous.source), source: previous.source } :
+        this.save(SKILL_CATALOG_KEY, "技能与项目库", null, canonicalJson(catalog), parsed.expectedVersion);
       return this.receipt(operation, parsed.idempotencyKey, hash, { ...result,
+        changed: !unchanged,
         authorityReference: parsed.authorityReference, principalId: identity.principalId, savedAt: this.clock().toISOString(), replayed: false });
     })();
   }

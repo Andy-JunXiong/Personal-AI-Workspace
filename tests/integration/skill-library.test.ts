@@ -39,6 +39,9 @@ function github(commit: string, file = "Python API with tests") {
 it("persists a sourced catalog and historical idempotency receipts across reopen", () => {
   const w = fixture(true), request = w.request();
   const saved = w.service.skillLibraryService.record(request) as any;
+  // Defaulted merge controls must not invalidate receipts saved by the preceding release.
+  const stored = w.database.prepare("SELECT request_hash FROM idempotency_records WHERE operation='skills.catalog.record'").get() as any;
+  expect(stored.request_hash).toBe(canonicalHash({ ...request, principalId: saved.principalId }));
   expect(w.service.skillLibraryService.read()).toMatchObject({ version: 1, status: "CURRENT", catalog: w.catalog });
   const next = w.request(); next.catalog.skills[0]!.summary = "Updated synthesis of Python APIs";
   w.service.skillLibraryService.record(next);
@@ -183,6 +186,96 @@ it("exposes actual MCP schemas and saves through the tool without confirming fac
   const result = await client.callTool({ name: "workspace_get_skill_library", arguments: { sourceIds: [w.source.id] } });
   expect(result.isError).not.toBe(true);
   expect(w.service.skillLibraryService.read().source?.review_status).toBe("SOURCE");
-  expect(skillLibraryPanel(w.service)).toContain("复制汇总指令");
+  expect(skillLibraryPanel(w.service)).toContain("复制技能更新指令");
   expect(skillLibraryPanel(w.service)).toContain("API project");
+});
+
+it("blocks empty and undeclared destructive replacements, and does not bump an unchanged catalog", () => {
+  const w = fixture(); w.service.skillLibraryService.record(w.request());
+  const before = w.database.prepare("SELECT total_changes() n").get();
+  const empty = w.request(); empty.catalog.skills = []; empty.catalog.projects = [];
+  expect(() => w.service.skillLibraryService.record(empty)).toThrow(/empty/);
+  const omitted = w.request(); omitted.catalog.projects = []; omitted.catalog.skills[0]!.projectIds = [];
+  expect(() => w.service.skillLibraryService.record(omitted)).toThrow(/omitted/);
+  expect(() => w.service.skillLibraryService.record({ ...omitted, removeProjectIds: ["api-project"] })).toThrow(/removalReason/);
+  expect(w.database.prepare("SELECT total_changes() n").get()).toEqual(before);
+  const noOp = w.service.skillLibraryService.record(w.request());
+  expect(noOp).toMatchObject({ changed: false, recordVersion: 1 });
+  expect(w.service.skillLibraryService.read().version).toBe(1);
+  const removed = w.service.skillLibraryService.record({ ...omitted, removeProjectIds: ["api-project"], removalReason: "User corrected the duplicate project" });
+  expect(removed).toMatchObject({ recordVersion: 2 });
+});
+
+it("merges only changed evidence while retaining unrelated skills, coverage and limitations", () => {
+  const w = fixture(); w.service.skillLibraryService.record(w.request());
+  const added = w.service.skillLibraryService.importSource({ ...authority(), sourceKey: "import:sql", title: "SQL evidence", sourceUrl: null,
+    content: "Built SQL queries", expectedVersion: 0 }) as any;
+  const source = added.source;
+  expect(w.service.skillLibraryService.read().changes.addedSourceIds).toEqual([source.id]);
+  const partial: SkillCatalog = { format: "skill-library-v1", reviewedSources: [{ sourceId: source.id, recordVersion: 1, hash: canonicalHash(source) }],
+    skills: [{ id: "sql", name: "SQL", aliases: [], category: "TECHNICAL", summary: "SQL queries", status: "SUPPORTED", projectIds: [],
+      evidence: [{ sourceId: source.id, recordVersion: 1, hash: canonicalHash(source), quote: source.content }] }], projects: [], limitations: [] };
+  const request = { ...authority(), expectedVersion: 1, updateMode: "MERGE", catalog: partial };
+  w.service.skillLibraryService.record(request);
+  const state = w.service.skillLibraryService.read();
+  expect(state.status).toBe("CURRENT"); expect(state.catalog?.skills).toHaveLength(2);
+  expect(state.catalog?.skills[0]).toEqual(w.catalog.skills[0]);
+  expect(state.catalog?.projects).toEqual(w.catalog.projects);
+  expect(state.catalog?.limitations).toEqual(w.catalog.limitations);
+  expect(state.catalog?.reviewedSources).toHaveLength(2);
+  expect(state.changes).toEqual({ addedSourceIds: [], updatedSourceIds: [], removedSourceIds: [] });
+  expect(() => w.service.skillLibraryService.record({ ...request, idempotencyKey: randomUUID() })).toThrow(/version changed/);
+  expect(w.service.skillLibraryService.record(request)).toMatchObject({ replayed: true, recordVersion: 2 });
+  const html = skillLibraryPanel(w.service);
+  expect(html.indexOf("GitHub 项目与更新")).toBeLessThan(html.indexOf("我的技能与项目库"));
+  expect(html.indexOf("项目 · API project")).toBeLessThan(html.indexOf("更新技能库 ·"));
+});
+
+it("repairs changed GitHub evidence incrementally and leaves an unchanged check's catalog version intact", async () => {
+  const w = fixture();
+  const first = await w.service.skillLibraryService.refreshGithub(repoRequest(), undefined, github(sha1)) as any;
+  const repo = w.service.jobLibraryService.sources().find(s => s.id === first.sourceId)!;
+  const input = w.request();
+  input.catalog.reviewedSources.push({ sourceId: repo.id, recordVersion: 1, hash: canonicalHash(repo) });
+  input.catalog.projects[0]!.repositorySourceId = repo.id;
+  input.catalog.projects[0]!.evidence.push({ sourceId: repo.id, recordVersion: 1, hash: canonicalHash(repo), quote: "Python API with tests" });
+  w.service.skillLibraryService.record(input);
+  await w.service.skillLibraryService.refreshGithub(repoRequest(1), undefined, github(sha1));
+  expect(w.service.skillLibraryService.read()).toMatchObject({ version: 1, status: "CURRENT" });
+  await w.service.skillLibraryService.refreshGithub(repoRequest(1), undefined, github(sha2, "Updated Python API with tests"));
+  expect(w.service.skillLibraryService.read().changes.updatedSourceIds).toEqual([repo.id]);
+  const nextRepo = w.service.jobLibraryService.sources().find(s => s.id === repo.id)!;
+  const project = structuredClone(input.catalog.projects[0]!);
+  project.evidence[1] = { sourceId: repo.id, recordVersion: 2, hash: canonicalHash(nextRepo), quote: "Updated Python API with tests" };
+  w.service.skillLibraryService.record({ ...authority(), expectedVersion: 1, updateMode: "MERGE", catalog: {
+    format: "skill-library-v1", reviewedSources: [{ sourceId: repo.id, recordVersion: 2, hash: canonicalHash(nextRepo) }], skills: [], projects: [project], limitations: [] } });
+  expect(w.service.skillLibraryService.read()).toMatchObject({ version: 2, status: "CURRENT", staleSkillIds: [] });
+  expect(w.service.skillLibraryService.read().catalog?.skills).toEqual(w.catalog.skills);
+});
+
+it("returns identical exact manifests in compact MCP views without repeating raw resume bodies", async () => {
+  const w = fixture(); w.service.skillLibraryService.record(w.request());
+  const candidate = w.service.candidateService.recordCandidate({ provider: "seek", postingId: "compact-test", company: "Example", title: "Python Engineer", role: "Python Engineer",
+    authority: { type: "EXPLICIT_USER_DEV", confirmed: true, reference: "Synthetic" }, idempotencyKey: randomUUID() }).candidate;
+  w.service.jobLibraryService.saveDescription(candidate.id, "Build Python APIs", "https://example.test/job");
+  const server = createWorkspaceMcpServer(w.service), client = new Client({ name: "compact-test", version: "1" });
+  const [a,b] = InMemoryTransport.createLinkedPair(); await server.connect(a); await client.connect(b);
+  cleanup.push(() => { void client.close(); void server.close(); });
+  const read = async (contextView: string) => {
+    const result = await client.callTool({ name: "workspace_get_job_candidate", arguments: { candidateId: candidate.id, includeAssessmentContext: true, contextView } });
+    expect(result.isError).not.toBe(true);
+    return (result.structuredContent as any).result;
+  };
+  const full = await read("FULL"), skills = await read("SKILLS"), manifest = await read("MANIFEST");
+  expect(skills.assessmentContext.inputManifest).toEqual(full.assessmentContext.inputManifest);
+  expect(manifest.assessmentContext.inputManifest).toEqual(full.assessmentContext.inputManifest);
+  expect(skills.assessmentContext.skillLibrary.sourceId).toBe(w.service.skillLibraryService.read().source?.id);
+  expect(skills.assessmentContext.sources).toBeUndefined();
+  expect(manifest.assessmentContext.skillLibrary).toBeUndefined();
+  expect(JSON.stringify(manifest).length).toBeLessThan(JSON.stringify(full).length);
+  const change = w.request(); change.catalog.skills[0]!.summary = "Corrected Python summary";
+  w.service.skillLibraryService.record(change);
+  const fresh = await read("MANIFEST");
+  expect(fresh.assessmentContext.inputManifest.libraryHash).not.toBe(manifest.assessmentContext.inputManifest.libraryHash);
+  expect(fresh.recordVersion).toBe(1); expect(fresh.decision).toBe("UNREVIEWED");
 });

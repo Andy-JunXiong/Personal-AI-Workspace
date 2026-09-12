@@ -2,6 +2,13 @@
 
 ## Solution alignment — 2026-09-11
 
+September 12 successor: [incremental maintenance](SKILL_LIBRARY.md#incremental-updates-and-daily-github-checks--september-12-follow-up)
+separates daily/manual GitHub checks from JD analysis. Current catalogs are reused;
+only changed evidence is merged, with server-side retention and compact write-input
+reads. This supersedes the following baseline's per-analysis GitHub refresh rule.
+Daily ChatGPT scheduling is authorized; creation and execution evidence are tracked
+separately in the skill-library ledger.
+
 September 12 clarification: [the skill/project library](SKILL_LIBRARY.md) becomes
 the primary JD matching object; resumes and Drive documents are its sources.
 GPT consolidates evidence and checks registered GitHub projects before analysis;

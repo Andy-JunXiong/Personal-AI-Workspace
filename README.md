@@ -70,6 +70,11 @@ acceptance evidence are in [Project history](docs/HISTORY.md).
 
 ## Current state — 2026-09-12
 
+The [incremental skill-library follow-up](docs/architecture/SKILL_LIBRARY.md#incremental-updates-and-daily-github-checks--september-12-follow-up)
+separates GitHub checks from stable skill maintenance and JD analysis, protects
+against empty/accidental catalog replacement and adds compact manifest reads.
+Implemented locally; production/task execution evidence is tracked in that ledger.
+
 The [skill and project library](docs/architecture/SKILL_LIBRARY.md) follow-up
 implements consolidated skills/facts/projects from uploaded/Drive evidence,
 public GitHub refresh and JD matching through skill entries. Local verification

@@ -58,6 +58,10 @@ export const skillWriteAuthority = {
 };
 export const recordSkillLibrarySchema = z.object({
   expectedVersion: z.number().int().min(0), catalog: skillCatalogSchema,
+  updateMode: z.enum(["REPLACE", "MERGE"]).default("REPLACE"),
+  removeSkillIds: z.array(key).max(100).default([]),
+  removeProjectIds: z.array(key).max(30).default([]),
+  removalReason: text(1000).optional(),
   ...skillWriteAuthority,
 }).strict();
 export const recordSkillSourceSchema = z.object({
