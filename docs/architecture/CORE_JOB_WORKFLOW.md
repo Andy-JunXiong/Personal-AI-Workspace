@@ -10,8 +10,13 @@ does not change candidate decisions, applications or Tasks. Migration 020 is
 deployed as `job-screening-20260912-r1`; recovery/data preservation and authenticated
 Web/MCP readback passed. A subsequent real-client attempt found the missing confirmed
 profile write entry. `screening-profile-20260912-r1` adds that scoped MCP command
-(35 tools, 496 tests, production copy/readback checks passed). Refreshed-client
-profile-save and real-screening gates remain in the linked contract.
+(35 tools, 496 tests, production copy/readback checks passed). Jun's subsequent
+[ChatGPT readback feedback](JOB_SCREENING.md#real-client-acceptance-and-jd-ingestion-gap--september-12)
+confirms profile v1 / CONFIRMED and Google screening v1 / USER_CONFIRMATION_REQUIRED,
+with required 5-year tenure UNKNOWN and candidate v2 / DISMISSED preserved. Real
+8+/10+ FILTER → explicit KEEP acceptance remains blocked on candidate JD ingestion:
+the other nine candidates have MISSING_JD. A controlled JD write entry is the next
+development gap, not an implemented interface or accepted external retrieval flow.
 
 Jun also requested [candidate JD match grades](../strategy/PRODUCT_SOLUTION_ROADMAP.md#candidate-match-grades)
 as a development backlog item: ChatGPT assesses JD/resume/experience evidence;

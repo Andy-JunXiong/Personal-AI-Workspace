@@ -3,11 +3,14 @@
 Status: September 12, 2026. Rule evaluator, immutable screening/override storage,
 interactive MCP commands, shared candidate filtering and Web recovery are deployed
 as `screening-profile-20260912-r1`, including migration 020 and the 35-tool server.
-No live candidate or private profile has been written by this package.
+Release probes made no live profile or screening writes; subsequent user-reported
+real writes and readback are recorded in the acceptance ledger below.
 
 The later real-client attempt exposed a missing MCP profile-write path. The
 [profile admission repair](#confirmed-profile-admission-repair--september-12) is
-deployed and verified; real profile/screening writes remain pending below.
+deployed and verified. [Real-client feedback](#real-client-acceptance-and-jd-ingestion-gap--september-12)
+now confirms profile persistence and Google UNKNOWN/non-FILTER screening. Real
+8+/10+ FILTER → KEEP remains blocked on candidate JD ingestion.
 
 ## Continuity and benefits
 
@@ -19,8 +22,8 @@ deployed and verified; real profile/screening writes remain pending below.
   screening records. Shared queries exclude only current filters, and explicit
   keep/withdraw controls preserve independent human choice. No private profile is
   embedded in source, and no model provider or scheduled ingestion is enabled.
-- Downstream: refreshed-client use,
-  then a real confirmed profile/JD screening with independent readback. The existing
+- Downstream: controlled candidate JD ingestion, then real 8+/10+ FILTER → KEEP
+  acceptance. Profile/Google readback is now reported complete by the user. The existing
   letter-grade assessment command retains its separate contract and acceptance.
 - Short-term verified benefit: 490 tests pass, including screening history,
   attribution, concurrency, authority, pagination and recovery; a synthetic browser
@@ -353,3 +356,76 @@ the already confirmed profile text, then reread current candidate context using 
 returned source ID before recording screening. Never reuse stale versions/hashes
 from the reported failed attempt. A real confirmed-source write and real screening
 readback still require that user workflow; synthetic success is not live acceptance.
+
+## Real-client acceptance and JD ingestion gap — September 12
+
+### Continuity and benefits
+
+The profile admission repair above unlocked the user's ChatGPT workflow. This
+documentation follow-up records Jun's supplied real-write/readback feedback and
+replaces the current pending-profile gate with the next concrete gap: controlled
+candidate JD ingestion, followed by real FILTER → explicit KEEP recovery. It adds
+no runtime code, deployment or business write. The reported immediate outcome is
+correct handling of unknown tenure with candidate-state isolation; longer-term
+recoverable exclusion of unsuitable jobs still needs the second real-JD exercise.
+
+### Evidence origin and completed gate
+
+Evidence is the ChatGPT acceptance feedback pasted by Jun on September 12, 2026.
+Codex did not independently query production in this documentation turn. The earlier
+release probes and their zero-write observations remain historical evidence.
+Connector discovery was subsequently confirmed by the user, including the profile
+command's five parameters and initial expectedProfileVersion = 0 behavior.
+
+| Readback item | User-reported persisted result |
+| --- | --- |
+| Confirmed profile source | `9ea50d9d-be3d-4234-aede-1d67e31227b8`, recordVersion **1**, reviewStatus **CONFIRMED** |
+| Google role | Senior Software Engineer, Android SRE |
+| Screening | `ca99c2c7-3c99-4789-840f-1dbcfe5173ed`, recordVersion **1** |
+| Computed screening decision | **USER_CONFIRMATION_REQUIRED**, not FILTER |
+| Required 5-year software-development tenure | **TENURE_UNKNOWN** |
+| Bachelor requirement | Satisfied |
+| Preferred Master's CS/Engineering; 2-year distributed systems | Both UNKNOWN |
+| Candidate state | recordVersion **2**, decision **DISMISSED**, unchanged |
+
+The confirmed rule summary keeps commercial SWE tenure UNKNOWN. Approximately
+6.1 years is a relevant-role span, neither established SWE tenure nor an upper
+bound; it cannot prove either satisfaction or shortfall. The personal A-rule
+exclusion applies only to explicit required 8+/10+ commercial/professional software
+development/software engineering tenure, not broad engineering experience. The
+Google 5-year requirement does not trigger that preference. No full private profile
+is copied into this repository.
+
+The feedback reports no candidate restoration, save-interest change, application
+creation or application-state change. Thus the first real segment is reported
+complete: confirmed profile → Google UNKNOWN/non-FILTER → preserved DISMISSED.
+This does not establish letter-grade acceptance or real FILTER → KEEP recovery.
+
+### Remaining gap and proposed next increment
+
+Of the reported 10 candidates, the other **nine have MISSING_JD**. The user's
+ChatGPT session could record candidate metadata but found no exposed command to
+write an external full JD into candidate assessment context. Screening requires
+that saved context and a real jdHash; webpage text or a posting link cannot stand
+in for those persisted inputs. No second screening was fabricated.
+
+The feedback identifies Accenture Sydney's
+[Senior Full Stack Developer — Tech Lead](https://accenture.wd103.myworkdayjobs.com/AccentureCareers/job/Sydney-International-House-3-Sussex-St/Senior-Full-Stack-Developer---Tech-Lead_14489255)
+as a proposed target, quoting “10+ years of commercial software development
+experience”. That external JD was not independently fetched in this documentation
+turn and is not reported as ingested or screened. Verify the complete text and its
+required-clause interpretation when performing the next acceptance exercise.
+
+Proposed development scope is a controlled JD write entry, for example
+`workspace_record_candidate_job_description`; the name and exact schema are not
+implemented contracts. Preserve source attribution, optimistic concurrency,
+idempotency and candidate/application-state isolation. After saving, reread
+candidate context for the actual jdHash, current versions and fresh inputManifest.
+Then verify explicit 10+ commercial SWE → FILTER → human KEEP → list visibility,
+holding independent candidate-decision filters constant. KEEP must not imply an
+application, saved interest or reversal of DISMISSED.
+
+Validation for this update is Level 0: documentation diff, whitespace and local
+references. No runtime input changed, so the existing 496-test release evidence is
+retained without rerunning tests, type checks or build. This update records reported
+acceptance; it does not claim a new live probe, JD ingestion fix or production release.

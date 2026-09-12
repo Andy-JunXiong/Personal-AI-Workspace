@@ -76,20 +76,26 @@ and explicit Web keep/withdraw controls. Local verification passed 490 tests,
 both type checks/build, migration preservation and synthetic browser recovery.
 Migration 020 and the 34-tool server are deployed as `job-screening-20260912-r1`.
 Production-copy recovery, preservation of 47 prior business tables, public checks
-and authenticated list/detail acceptance passed. Refreshed-client and real-JD
-screening acceptance are next, with external matching still off.
+and authenticated list/detail acceptance passed. Subsequent real-client screening
+acceptance is recorded below; external matching remains off.
 
 The subsequent real-client attempt exposed the missing confirmed-profile MCP
 write entry. It is fixed and deployed as `screening-profile-20260912-r1`: **35 tools**,
 including `workspace_record_screening_profile`, with 496 passing tests and production
-copy/readback checks. Refresh the connector, save the confirmed profile and reread
-fresh candidate context before screening. No live profile/screening has been written
-by the release probes; see the linked repair contract and acceptance record.
+copy/readback checks. Jun's September 12 ChatGPT readback feedback confirms the
+profile at v1 / CONFIRMED and Google screening at v1 / USER_CONFIRMATION_REQUIRED:
+the required 5-year tenure is UNKNOWN, not FILTER; candidate v2 / DISMISSED remains
+unchanged. The [real acceptance record](docs/architecture/JOB_SCREENING.md#real-client-acceptance-and-jd-ingestion-gap--september-12)
+distinguishes this user-supplied evidence from release probes. Next: a controlled
+candidate JD ingestion entry, then real 8+/10+ FILTER → explicit KEEP acceptance.
+The other nine candidates lack saved JDs; the proposed Accenture target is not yet
+ingested or screened.
 
 September 12 [connector preflight](docs/architecture/CANDIDATE_MATCH_GRADES.md#september-12-connector-acceptance-preflight)
-confirms live candidate-summary reads, but this session still exposes the old
+confirmed live candidate-summary reads, but that session still exposed the old
 client schema without assessment-context options or the assessment save command.
-Refresh/use acceptance remains pending. Nine candidates lack JDs; the only saved-JD
+The later screening workflow above confirms refreshed-client use; real letter-grade
+write acceptance remains pending. Nine candidates lack JDs; the only saved-JD
 candidate is dismissed, so a real assessment target and its inputs remain to be selected.
 The [daily receipt readback](docs/mvp/DAILY_WORKFLOW_ACCEPTANCE.md#september-12-receipt-readback)
 verifies today's 08:00 SCHEDULED-labelled COMPLETE/CLOSED run, both matching-mail

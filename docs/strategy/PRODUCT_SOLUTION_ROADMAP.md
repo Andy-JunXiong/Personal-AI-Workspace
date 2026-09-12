@@ -99,14 +99,24 @@ implemented with immutable history, shared list filtering and explicit recovery
 It distinguishes mandatory/preferred requirements, career categories, confirmed
 shortfalls and unknown evidence. Migration 020 is deployed as
 `job-screening-20260912-r1`; production-copy recovery, data preservation and
-authenticated Web/MCP reads passed. Next is refreshed-client and real-JD acceptance;
+authenticated Web/MCP reads passed. Subsequent real-client evidence follows;
 existing candidate decisions and assessment acceptance remain separate.
 
 Real-client testing then exposed the missing confirmed-profile admission command.
 `screening-profile-20260912-r1` repairs it through the existing source library:
 35 tools, 496 passing tests, production-copy recovery and actual server readback.
-The next user step is confirmed-profile save → fresh context → screening → readback;
-no successful real profile/screening write is claimed yet.
+Jun's September 12 [ChatGPT readback feedback](../architecture/JOB_SCREENING.md#real-client-acceptance-and-jd-ingestion-gap--september-12)
+confirms profile v1 / CONFIRMED and Google screening v1 / USER_CONFIRMATION_REQUIRED
+(5-year tenure UNKNOWN, not FILTER), preserving candidate v2 / DISMISSED. This is
+user-supplied real-use evidence, not a new Codex production probe.
+
+Next screening increment: expose controlled candidate JD ingestion with attributable
+full text, version/idempotency checks and fresh assessment-context readback. Exact
+API design remains pending. Nine other candidates report MISSING_JD, so real
+8+/10+ FILTER → explicit KEEP → visible-again acceptance is still blocked. The
+user-reported Accenture Sydney Tech Lead JD is a proposed 10+ commercial SWE target;
+its text must first be saved and read back with a real jdHash. Do not infer a saved
+JD from candidate metadata or treat this documentation update as implementation.
 
 用户授权后已完成[生产发布](../architecture/CANDIDATE_MATCH_GRADES.md#september-11-production-release)：
 Chrome 与服务器连接恢复，migration 019、备份恢复演练、原有数据保留、公网五项
