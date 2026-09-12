@@ -79,6 +79,13 @@ Production-copy recovery, preservation of 47 prior business tables, public check
 and authenticated list/detail acceptance passed. Refreshed-client and real-JD
 screening acceptance are next, with external matching still off.
 
+The subsequent real-client attempt exposed the missing confirmed-profile MCP
+write entry. It is fixed and deployed as `screening-profile-20260912-r1`: **35 tools**,
+including `workspace_record_screening_profile`, with 496 passing tests and production
+copy/readback checks. Refresh the connector, save the confirmed profile and reread
+fresh candidate context before screening. No live profile/screening has been written
+by the release probes; see the linked repair contract and acceptance record.
+
 September 12 [connector preflight](docs/architecture/CANDIDATE_MATCH_GRADES.md#september-12-connector-acceptance-preflight)
 confirms live candidate-summary reads, but this session still exposes the old
 client schema without assessment-context options or the assessment save command.

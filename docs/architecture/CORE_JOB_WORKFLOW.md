@@ -8,7 +8,10 @@ history and independent keep/withdraw choices; shared Web/MCP lists hide only
 current filters without explicit keep or saved interest. This scoped Web recovery
 does not change candidate decisions, applications or Tasks. Migration 020 is
 deployed as `job-screening-20260912-r1`; recovery/data preservation and authenticated
-Web/MCP readback passed. Refreshed-client and real-use gates remain in the linked contract.
+Web/MCP readback passed. A subsequent real-client attempt found the missing confirmed
+profile write entry. `screening-profile-20260912-r1` adds that scoped MCP command
+(35 tools, 496 tests, production copy/readback checks passed). Refreshed-client
+profile-save and real-screening gates remain in the linked contract.
 
 Jun also requested [candidate JD match grades](../strategy/PRODUCT_SOLUTION_ROADMAP.md#candidate-match-grades)
 as a development backlog item: ChatGPT assesses JD/resume/experience evidence;

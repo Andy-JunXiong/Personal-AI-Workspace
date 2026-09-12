@@ -2,12 +2,12 @@
 
 Status: September 12, 2026. Rule evaluator, immutable screening/override storage,
 interactive MCP commands, shared candidate filtering and Web recovery are deployed
-as `job-screening-20260912-r1`, including migration 020 and the 34-tool server.
+as `screening-profile-20260912-r1`, including migration 020 and the 35-tool server.
 No live candidate or private profile has been written by this package.
 
 The later real-client attempt exposed a missing MCP profile-write path. The
 [profile admission repair](#confirmed-profile-admission-repair--september-12) is
-locally verified; its release status is recorded below.
+deployed and verified; real profile/screening writes remain pending below.
 
 ## Continuity and benefits
 
@@ -320,3 +320,36 @@ snapshots, durable confirmation receipts across reopen, stale/conflicting reques
 unauthorized channels/identities, workspace isolation and atomic rollback when
 the receipt cannot be saved. Tool inventory expectations are now 35; source and
 authority behavior remain scoped to the new command. No live profile was written.
+
+### Profile repair production release
+
+- Deployed `screening-profile-20260912-r1` from commit
+  `bdc695688b9896daf074b0a17adb691f14bc59f5`; archive SHA256
+  `b2d1f870625353128f6cb647a86a7eed61373f9e10594639e8006e35b6b54d4d`.
+- Image: `sha256:dc0ecde05b7baf9cbade22aab9f586bc3fbe793b528c85dcdef23597a0154099`.
+  Healthy cutover **2026-09-12T04:43:09Z** (14:43 Sydney). Source and logs remain
+  under `/opt/paw-screening-profile-20260912-r1` and `/srv/paw/deployments`.
+- Backup `workspace-20260912T044243Z.db` passed integrity. Candidate and previous
+  `job-screening-20260912-r1` images both started against isolated copies with
+  unchanged logical contents: **50 tables / 2261 rows**. The immediate pre-cutover
+  backup was `workspace-20260912T044301Z.db`. No new migration, schema rollback or
+  persistent-volume replacement occurred; base/Web/Gmail overlays were retained.
+- The private transfer retained public-access blocks and AES256 object encryption.
+  A terminal input sequencing error initially prevented the download command from
+  running; separate input/submission steps resolved it. The downloaded archive hash
+  and built image were independently read back. The exact temporary S3 object
+  version and local presigned URL file were deleted after verification.
+- Public Web checks passed all five boundaries with general writes off. Actual
+  server MCP discovery returned **35 tools** and verified all five required profile
+  command parameters. Authenticated loopback candidate context preserved Google
+  candidate **v2 / DISMISSED**, screening **v0**, base resume **v8**, and **37** source
+  directory entries with discoverable sourceKey metadata. No dedicated profile or
+  screening report was inserted by the release probe.
+
+The 496-test release evidence is reused after this documentation update. Browser
+layout/recovery was not retested because no Web UI or route changed in this repair.
+Next, refresh the client to discover `workspace_record_screening_profile`, save only
+the already confirmed profile text, then reread current candidate context using the
+returned source ID before recording screening. Never reuse stale versions/hashes
+from the reported failed attempt. A real confirmed-source write and real screening
+readback still require that user workflow; synthetic success is not live acceptance.

@@ -102,6 +102,12 @@ shortfalls and unknown evidence. Migration 020 is deployed as
 authenticated Web/MCP reads passed. Next is refreshed-client and real-JD acceptance;
 existing candidate decisions and assessment acceptance remain separate.
 
+Real-client testing then exposed the missing confirmed-profile admission command.
+`screening-profile-20260912-r1` repairs it through the existing source library:
+35 tools, 496 passing tests, production-copy recovery and actual server readback.
+The next user step is confirmed-profile save → fresh context → screening → readback;
+no successful real profile/screening write is claimed yet.
+
 用户授权后已完成[生产发布](../architecture/CANDIDATE_MATCH_GRADES.md#september-11-production-release)：
 Chrome 与服务器连接恢复，migration 019、备份恢复演练、原有数据保留、公网五项
 检查及 31 工具 MCP 读取通过。复用同一源码的 444 项测试、类型检查和构建证据。
