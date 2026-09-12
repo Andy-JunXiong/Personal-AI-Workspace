@@ -1,6 +1,6 @@
 # 候选职位 JD 匹配评级：保存与读取契约
 
-状态：2026-09-11，存储、接口和 Jobs 评级展示已部署；生产恢复、公网、MCP 只读及登录后列表/详情检查通过，真实评级使用验收待完成。上游为
+状态：2026-09-12，存储、接口和 Jobs 评级展示已部署；生产恢复、公网、MCP 只读及登录后列表/详情检查通过，真实评级使用验收待完成。当前会话仍暴露旧版连接器 schema，详见文末读取记录。上游为
 [R3 评级待办](../strategy/PRODUCT_SOLUTION_ROADMAP.md#candidate-match-grades)。
 本文限定交互式 ChatGPT 评估结果，不启用后台外部模型匹配。
 
@@ -321,3 +321,41 @@ kernel-assets 路径不存在，无法建立用于 AWS 浏览器 SSH 的控制�
 登录后的发布页面门禁已完成；真实评级保存、历史/纠正/失效的生产使用及刷新后的
 ChatGPT 连接器跨会话验收继续保留。此次只有验收记录更新，差异和相关引用检查
 通过，未重新运行此前未失效的完整测试、构建或部署。
+
+## September 12 connector acceptance preflight
+
+### Continuity and benefits
+
+This follows the [September 11 handoff](../HISTORY.md#september-11-session-closeout)
+and its real-assessment acceptance gate. The bounded package reconciles live
+read evidence with the client schema and fixes the stale deployment statement in
+the core workflow. It identifies the concrete prerequisites for the first grounded
+assessment: updated callable tools, a selected candidate with a complete saved JD,
+and explicit current resume/source inputs. Immediately, the handoff no longer
+mistakes missing client capabilities for an undeployed server. Longer term, this
+preserves traceable cross-conversation assessment acceptance. No runtime, business
+data, deployment, model-provider or scheduler changes are included.
+
+- At approximately 13:12 Sydney on September 12, the connected MCP ping returned
+  the existing Workspace and an available database. The complete candidate list
+  returned ten records: nine `MISSING_JD`, one `UNASSESSED`, and no saved grade.
+- The only candidate with a saved JD, Google
+  `0cbea559-464d-4c1f-88ed-4acf9bb0855c`, is `DISMISSED`, version 2.
+  Exact detail readback agrees with the list and returns zero assessment history.
+  It was not silently selected for a new assessment or restored to active interest.
+- This session's callable `workspace_get_job_candidate` schema accepts only
+  `candidateId`; it lacks `includeAssessmentContext` and source/version options.
+  The tool catalog does not expose `workspace_record_candidate_match_assessment`.
+  Default detail reads return `assessmentContext: null`; this is not evidence
+  that the stored resume or experience library is absent.
+- Repository registration includes both the expanded read schema and save tool;
+  September 11 running-server discovery already passed. Client refresh and a
+  subsequent session's actual schema/use check remain necessary. This read-only
+  preflight does not claim refreshed-client acceptance or a new server discovery.
+- The user was asked to refresh the connector and identify a target if desired.
+  No assessment save, correction, staleness mutation or cross-conversation saved
+  assessment readback was attempted. Those real-use gates remain open.
+
+Verification scope is Level 0: documentation diff and affected references.
+Runtime source is unchanged, so previous runtime evidence remains applicable;
+application tests, build and deployment are not repeated for this record.

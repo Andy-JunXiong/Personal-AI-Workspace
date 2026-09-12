@@ -198,8 +198,11 @@ it("migrates retained data additively and allows repeat/current and previous-cod
   const service = new WorkspaceService(baseline, testPrincipal); service.ensureDevelopmentIdentity();
   service.candidateService.recordCandidate({ provider: "seek", postingId: "retained", company: "Retained", role: "Engineer", title: "Engineer", authority, idempotencyKey: randomUUID() });
   baseline.close(); copyFileSync(before, after);
-  openDatabase(after).close(); openDatabase(after).close(); openDatabase(after, old).close();
-  expect(verifyCandidateAssessmentsMigration(before, after)).toMatchObject({ status: "PASS", addedTables: ["candidate_match_assessments"] });
+  // Freeze this historical 018 -> 019 proof; later migrations have their own gate.
+  const release = join(w.directory, "migrations019"); mkdirSync(release);
+  for (const file of readdirSync("db/migrations").filter(f => f.endsWith(".sql") && f < "020_")) copyFileSync(join("db/migrations", file), join(release, file));
+  openDatabase(after, release).close(); openDatabase(after, release).close(); openDatabase(after, old).close();
+  expect(verifyCandidateAssessmentsMigration(before, after, release)).toMatchObject({ status: "PASS", addedTables: ["candidate_match_assessments"] });
 });
 
 it("discovers the MCP schema and supports context/save/replay/version read through a fresh client", async () => {

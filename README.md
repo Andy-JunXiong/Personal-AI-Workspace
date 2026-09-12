@@ -68,9 +68,27 @@ acceptance evidence are in [Project history](docs/HISTORY.md).
 
 <a id="current-state--2026-09-10"></a>
 
-## Current state — 2026-09-11
+## Current state — 2026-09-12
 
-Today's [session closeout and next steps](docs/HISTORY.md#september-11-session-closeout)
+The [recoverable candidate screening](docs/architecture/JOB_SCREENING.md)
+now includes immutable records, three scoped MCP commands, shared list filtering
+and explicit Web keep/withdraw controls. Local verification passed 490 tests,
+both type checks/build, migration preservation and synthetic browser recovery.
+Migration 020 and the 34-tool source are not deployed; production remains the
+September 11 release. Production-copy recovery, release and real-JD acceptance
+are next, with external matching still off.
+
+September 12 [connector preflight](docs/architecture/CANDIDATE_MATCH_GRADES.md#september-12-connector-acceptance-preflight)
+confirms live candidate-summary reads, but this session still exposes the old
+client schema without assessment-context options or the assessment save command.
+Refresh/use acceptance remains pending. Nine candidates lack JDs; the only saved-JD
+candidate is dismissed, so a real assessment target and its inputs remain to be selected.
+The [daily receipt readback](docs/mvp/DAILY_WORKFLOW_ACCEPTANCE.md#september-12-receipt-readback)
+verifies today's 08:00 SCHEDULED-labelled COMPLETE/CLOSED run, both matching-mail
+scopes, empty queues and zero business additions. Its execution reference is empty;
+independent hosted-trigger correlation and scheduled website acceptance remain open.
+
+The September 11 [session closeout and next steps](docs/HISTORY.md#september-11-session-closeout)
 consolidate the accepted release and remaining real-use gates.
 
 Deployed follow-up: [candidate JD match grades](docs/strategy/PRODUCT_SOLUTION_ROADMAP.md#candidate-match-grades)

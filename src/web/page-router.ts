@@ -74,7 +74,7 @@ export function createJobSearchPageRouter(serviceFor: (request: Request) => Work
   page("/tasks/:id", (service, request) => { query(request, []); return taskView(service,
     request.params.id as string, timeZone, new Date(now()).toISOString(), completionEnabled); });
   page("/jobs", (service, request) => candidateListView(service,
-    query(request, ["q", "decision", "linked", "sort", "cursor", "pageSize"]), timeZone, matchingEnabled));
+    query(request, ["q", "decision", "linked", "sort", "screening", "cursor", "pageSize"]), timeZone, matchingEnabled));
   page("/resume", (service, request) => { const q=query(request, ["candidateId","projectId"]); if(q.candidateId&&q.projectId)throw new ValidationError("Select one job target"); const id=q.candidateId??q.projectId; return resumeView(service,undefined,id?{type:q.candidateId?"CANDIDATE":"APPLICATION",id:z.uuid().parse(id)}:undefined); });
   page("/resume/variants/:id", (service, request) => { query(request, []); return resumeView(service,z.uuid().parse(request.params.id)); });
   page("/library", (service, request) => libraryView(service, String(query(request, ["q"]).q ?? "")));
@@ -84,6 +84,6 @@ export function createJobSearchPageRouter(serviceFor: (request: Request) => Work
     request.params.id as string, timeZone, new Date(now()).toISOString(), true); });
   page("/jobs/:id", (service, request) => candidateView(service,
     request.params.id as string, timeZone, new Date(now()).toISOString(), completionEnabled, matchingEnabled,
-    query(request, ["assessmentVersion", "historyBeforeVersion"])));
+    query(request, ["assessmentVersion", "historyBeforeVersion", "screeningVersion", "screeningBeforeVersion", "overrideBeforeVersion"])));
   return router;
 }

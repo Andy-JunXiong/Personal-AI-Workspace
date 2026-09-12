@@ -1,7 +1,7 @@
 # Daily workflow recovery and acceptance
 
-**Status:** Filtered manual coverage and website readback passed. Run 6933e727-e6c8-4f48-9fdd-5913724a7e60 is COMPLETE/CLOSED for both mailboxes; pending/blocked sources and unresolved actions are zero. Retained daily task enabled with the verified new policy; obsolete task paused. Scheduled acceptance remains pending.
-**Last checked:** 2026-09-09, after the manual/website gate and approximately 14:14 Australia/Sydney task activation/readback.
+**Status:** Filtered manual coverage and website readback passed. September 12 exact readback now verifies a persisted SCHEDULED-labelled COMPLETE/CLOSED receipt for both mailboxes with no pending/blocked sources or unresolved actions. Independent platform-trigger correlation and scheduled website acceptance remain pending; see the latest evidence below. Retained daily task configuration was last verified enabled, with the obsolete task paused.
+**Last checked:** 2026-09-12, approximately 13:13 Australia/Sydney, read-only Workspace MCP receipt check. Task configuration was not rechecked.
 
 ## Continuity and benefits
 
@@ -16,7 +16,42 @@ daily use. Following successful manual/website acceptance, Jun authorized saving
 and enabling the retained daily task; this configuration result is recorded
 separately from the still-pending first real scheduled execution.
 
-## Current evidence and next gate
+## September 12 receipt readback
+
+### Continuity and benefits
+
+The [September 11 handoff](../HISTORY.md#september-11-session-closeout) retains O1
+as an independent acceptance track. This read-only follow-up records the existing
+receipt and processing state, enabling the remaining platform-trigger and website
+correlation without starting another manual scan. The verified immediate benefit
+is a concrete run ID, bounded coverage and empty queues; durable operational
+confidence still requires independent trigger evidence and sustained use. No
+business records, task configuration or runtime code were changed.
+
+Exact `workspace_get_mail_scans` readback for
+`91f98d36-d6b9-46f3-8db8-977950e42e48` returned:
+
+- September 12 08:00:24.632–08:02:19.247 Sydney
+  (`2026-09-11T22:00:24.632Z`–`2026-09-11T22:02:19.247Z`).
+- `triggerType: SCHEDULED`, `receiptMode: BACKEND`, `status: COMPLETE`,
+  ledger liveness `CLOSED`, and zero unresolved actions.
+- Both mailboxes COMPLETE for their matching-job-mail scope, from September 11
+  08:00:24.632 to September 12 08:00:24.632 Sydney; `JOB_METADATA`, 24 hours.
+  This is not whole-mailbox coverage.
+- Seven metadata checks; zero excluded-without-body in that counter. Both RECENT
+  streams reached the cutoff. All four streams have zero pending and blocked
+  messages and no active batch. No application, evidence, transition or Task
+  additions are recorded in this run.
+- `executionReference` is empty. The stored trigger label and timing alone do
+  not independently establish which hosted task execution produced the receipt.
+
+Next: correlate this exact run with the retained task's execution output and
+check the website's same-run display. This session did not inspect individual
+message acknowledgements or hosted task execution, and does not claim the complete
+unattended acceptance gate, new-write behavior, or M4 v0.3 start. Documentation
+diff/reference checks are sufficient for this record; no runtime tests are needed.
+
+## September 9 evidence and next gate (historical)
 
 End-of-day handoff: production is now
 [`resume-20260909-r2`](../architecture/APPLICATION_RESUME_ASSOCIATIONS.md#validation-and-release-evidence),

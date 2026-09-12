@@ -2,12 +2,21 @@
 
 ## Solution alignment — 2026-09-11
 
+September 12 follow-up: Jun requested [recoverable candidate screening](JOB_SCREENING.md)
+before letter grading. Local implementation now persists attributable screening
+history and independent keep/withdraw choices; shared Web/MCP lists hide only
+current filters without explicit keep or saved interest. This scoped Web recovery
+does not change candidate decisions, applications or Tasks. Migration 020 is not
+deployed; production and real-use gates remain in the linked contract.
+
 Jun also requested [candidate JD match grades](../strategy/PRODUCT_SOLUTION_ROADMAP.md#candidate-match-grades)
 as a development backlog item: ChatGPT assesses JD/resume/experience evidence;
 Workspace saves and displays A+ through B− with provenance and missing/stale
 indicators. [Storage, MCP and Jobs display](CANDIDATE_MATCH_GRADES.md) are locally
-implemented; the authorized release gate passed 444 tests, both type checks and
-build. Server access currently blocks deployment. This does not enable backend
+implemented and deployed as `candidate-grades-20260911-r1`; the authorized release
+gate passed 444 tests, both type checks and build. Production and authenticated
+Jobs checks passed; real-grade and refreshed-client acceptance remain pending
+(see the linked contract's September 12 readback). This does not enable backend
 model matching or create submitted applications from candidate assessments.
 
 Jun confirmed the [submission calendar](../mvp/APPLICATION_CALENDAR_2026-09-09.md#september-11-user-clarification-submission-records-only)

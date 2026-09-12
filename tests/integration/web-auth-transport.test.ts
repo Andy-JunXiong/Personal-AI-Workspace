@@ -1,4 +1,5 @@
 import * as resumeExport from "../../src/application/resume-export.js";
+import { seedCandidateScreening } from "../helpers/candidate-screening-fixture.js";
 import {resumeFixture} from "../helpers/resume-fixture.js";
 import { request as httpRequest, type Server } from "node:http";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -235,6 +236,33 @@ it("allows only CSRF-authorized library and candidate decisions with general bro
   expect(candidatePage).toContain("data-library-jd");expect(candidatePage).not.toContain("data-library-compare");
   expect((await w.request(`/api/v1/job-search/tasks/${randomUUID()}/complete`,{method:"POST",headers,body:"{}"})).status).toBe(404);
   expect((await w.request(`/api/v1/job-search/library/candidates/${randomUUID()}/draft`,{method:"POST",headers,body:JSON.stringify({draft:"x",expectedUpdatedAt:new Date().toISOString()})})).status).toBe(404);
+});
+
+it("recovers screening only through authenticated same-origin CSRF-protected user intent", async () => {
+  const w = await setup(true, "Australia/Sydney", false); w.link();
+  const data = seedCandidateScreening(w.service); w.service.candidateScreeningService.record(data.request());
+  const cookie = w.sessionCookie(await w.finish(await w.start()));
+  const session = await (await w.request("/api/v1/session", { headers: { cookie } })).json();
+  const headers = { cookie, origin: webOrigin, "content-type": "application/json", "x-csrf-token": session.csrfToken };
+  const endpoint = `/api/v1/job-search/library/candidates/${data.candidate.id}/screening-override`;
+  const body = { mode: "KEEP", expectedCandidateVersion: 1, expectedScreeningVersion: 1, expectedOverrideVersion: 0, intentKey: randomUUID() };
+  const before = w.database.prepare("SELECT total_changes() n").get();
+  const invalidHeaders: Record<string, string>[] = [{ "content-type": "application/json" }, { cookie, "content-type": "application/json" }, { ...headers, origin: "https://foreign.test" }];
+  for (const invalid of invalidHeaders) {
+    expect((await w.request(endpoint, { method: "POST", headers: invalid, body: JSON.stringify(body) })).status).toBe(invalid.cookie ? 403 : 401);
+  }
+  expect(w.database.prepare("SELECT total_changes() n").get()).toEqual(before);
+  expect((await w.request(endpoint, { method: "POST", headers, body: JSON.stringify({ ...body, userConfirmed: true }) })).status).toBe(422);
+  expect((await w.request(endpoint.replace(data.candidate.id, randomUUID()), { method: "POST", headers, body: JSON.stringify(body) })).status).toBe(404);
+  expect((await w.request(endpoint, { method: "POST", headers, body: JSON.stringify(body) })).status).toBe(200);
+  expect((await w.request(endpoint, { method: "POST", headers, body: JSON.stringify(body) })).status).toBe(200);
+  expect((await w.request(endpoint, { method: "POST", headers, body: JSON.stringify({ ...body, intentKey: randomUUID() }) })).status).toBe(409);
+  expect(w.service.candidateScreeningService.get(data.candidate.id).summary.hidden).toBe(false);
+  expect(w.service.jobSearchQueryService.getCandidate(data.candidate.id).decision).toBe("UNREVIEWED");
+  const list = await w.request("/api/v1/job-search/candidates?screening=VISIBLE", { headers: { cookie } });
+  expect((await list.json()).items.some((item: { id: string }) => item.id === data.candidate.id)).toBe(true);
+  expect((await w.request(`/workspace/job-search/jobs/${data.candidate.id}?screeningVersion=0`, { headers: { cookie } })).status).toBe(400);
+  expect((await w.request(`/workspace/job-search/jobs/${data.candidate.id}?screeningVersion=1`, { headers: { cookie } })).status).toBe(200);
 });
 
 it.each([false, true])("imports scoped Platform Watch reports with general writes enabled=%s", async (writesEnabled) => {

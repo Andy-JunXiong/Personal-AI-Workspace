@@ -36,7 +36,7 @@ export class CandidateAssessmentService {
       .get(this.identity().workspaceId, candidateId) as AssessmentRow | undefined;
   }
 
-  private inputs(candidate: JobCandidateRecord, requestedIds: string[]) {
+  inputs(candidate: JobCandidateRecord, requestedIds: string[]) {
     const library = this.library.snapshot();
     // Authored confirmations are always visible alongside selected experience.
     const ids = [...new Set([...requestedIds, ...library.sources.filter(s => s.review_status === "CONFIRMED").map(s => s.id)])].sort();

@@ -31,6 +31,17 @@ export function createJobLibraryRouter(serviceFor:(request:Request)=>WorkspaceSe
     const input=z.object({action:z.enum(["SAVE","DISMISS","RESTORE"]),expectedRecordVersion:z.number().int().positive(),intentKey:z.string().uuid()}).strict().parse(request.body);
     response.json(serviceFor(request).candidateService.decideCandidateFromWeb({...input,candidateId:z.string().uuid().parse(request.params.id)}));
   });
+  router.post("/library/candidates/:id/screening-override", (request, response) => {
+    authorizeWrite(request);
+    const input = z.object({ mode: z.enum(["KEEP", "AUTOMATIC"]), expectedCandidateVersion: z.number().int().positive(),
+      expectedScreeningVersion: z.number().int().min(0), expectedOverrideVersion: z.number().int().min(0),
+      intentKey: z.uuid() }).strict().parse(request.body);
+    const { intentKey, ...versions } = input;
+    response.json(serviceFor(request).candidateScreeningService.setOverride({ ...versions,
+      candidateId: z.uuid().parse(request.params.id), userConfirmed: true, idempotencyKey: intentKey,
+      reason: input.mode === "KEEP" ? "用户选择保留此职位，不受自动筛选隐藏。" : "用户选择取消保留，恢复按筛选结果显示。",
+      authorityReference: `Authenticated website screening ${input.mode} button intent ${intentKey}` }));
+  });
   router.post("/library/candidates/:id/compare",async(request,response)=>{
     authorizeWrite(request);
     const service=serviceFor(request),id=z.string().uuid().parse(request.params.id);

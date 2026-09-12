@@ -92,6 +92,15 @@ flowchart TB
 
 ### 待办：职位 JD 匹配评级（R3，2026-09-11）
 
+September 12 follow-up: Jun supplied recoverable pre-screening rules before letter
+grading. [Recoverable screening](../architecture/JOB_SCREENING.md) is locally
+implemented with immutable history, shared list filtering and explicit recovery
+(490 tests, both type checks/build, additive migration and browser checks passed).
+It distinguishes mandatory/preferred requirements, career categories, confirmed
+shortfalls and unknown evidence. Next is production-copy recovery, migration 020
+release and real-JD acceptance. These are not deployed capabilities; existing
+candidate decisions and assessment acceptance remain separate.
+
 用户授权后已完成[生产发布](../architecture/CANDIDATE_MATCH_GRADES.md#september-11-production-release)：
 Chrome 与服务器连接恢复，migration 019、备份恢复演练、原有数据保留、公网五项
 检查及 31 工具 MCP 读取通过。复用同一源码的 444 项测试、类型检查和构建证据。

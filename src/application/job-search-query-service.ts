@@ -1,4 +1,5 @@
 import { applicationMailEvent } from "../domain/application-mail-event.js";
+import type { CandidateScreeningSummary } from "../domain/candidate-screening.js";
 import { z } from "zod";
 import { applicationCalendar, type CalendarApplication } from "../domain/application-calendar.js";
 import { applicationResumeSchema, type ApplicationResume } from "../domain/application-resume.js";
@@ -32,6 +33,7 @@ const historySchema = z.object({ ...pageFields,
 const resourceSchema = z.object(pageFields).strict();
 const candidateSchema = z.object({
   ...pageFields,
+  screening: z.enum(["VISIBLE", "FILTERED", "ALL"]).default("VISIBLE"),
   decision: z.enum(["UNREVIEWED", "SAVED", "DISMISSED", "ALL"]).default("ALL"),
   linked: z.enum(["ALL", "LINKED", "UNLINKED"]).default("ALL"),
   sort: z.enum(["UPDATED_DESC", "FIT_DESC"]).default("UPDATED_DESC"),
@@ -106,6 +108,7 @@ function mapRecommendationRun(row: RecommendationRunRow): RecommendationRunRecor
 const searchText = (value: string): string => value.normalize("NFKC").trim().replace(/\s+/gu, " ").toLowerCase();
 
 export class JobSearchQueryService {
+  screeningSummary?: (candidate: JobCandidateRecord) => CandidateScreeningSummary;
   constructor(private readonly database: WorkspaceDatabase,
     private readonly resolveIdentity: () => IdentityContext,
     private readonly clock: Clock = () => new Date()) {}
@@ -387,29 +390,34 @@ export class JobSearchQueryService {
           updated_at DESC, id ASC`
       ).iterate({ workspace: identity.workspaceId, decision: options.decision, linked: options.linked,
         sort: options.sort, libraryHash }) as Iterable<CandidateRow>;
-      function* candidates(): Generator<JobCandidateRecord> {
+      const summarize = this.screeningSummary;
+      function* candidates(): Generator<JobCandidateRecord & { screening: CandidateScreeningSummary | null }> {
         for (const row of rows()) {
           const candidate = mapCandidateRow(row);
           if (q && !searchText(candidate.company).includes(q) &&
             !searchText(candidate.role).includes(q) &&
             !searchText(candidate.title).includes(q)) continue;
-          yield candidate;
+          const screening = summarize?.(candidate) ?? null;
+          if (options.screening === "VISIBLE" && screening?.hidden) continue;
+          if (options.screening === "FILTERED" && !screening?.hidden) continue;
+          yield { ...candidate, screening };
         }
       }
       return readPage(candidates, { kind: "candidates", principalId: identity.principalId, workspaceId: identity.workspaceId,
-        decision: options.decision, linked: options.linked, sort: options.sort, libraryHash, q, pageSize: options.pageSize },
+        decision: options.decision, linked: options.linked, sort: options.sort, libraryHash, q, screening: options.screening, pageSize: options.pageSize },
       options.pageSize, options.cursor, this.clock().valueOf());
     })();
   }
 
-  getCandidate(candidateId: string): JobCandidateRecord {
+  getCandidate(candidateId: string): JobCandidateRecord & { screening: CandidateScreeningSummary | null } {
     parse(idSchema, candidateId);
     return this.database.transaction(() => {
       const identity = this.resolveIdentity();
       const row = this.database.prepare("SELECT * FROM job_candidates WHERE id = ? AND workspace_id = ?"
       ).get(candidateId, identity.workspaceId) as CandidateRow | undefined;
       if (!row) throw new NotFoundError("Candidate was not found");
-      return mapCandidateRow(row);
+      const candidate = mapCandidateRow(row);
+      return { ...candidate, screening: this.screeningSummary?.(candidate) ?? null };
     })();
   }
 

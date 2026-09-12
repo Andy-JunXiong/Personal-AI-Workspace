@@ -1,4 +1,28 @@
 // Delegation survives the Workspace's partial page refreshes.
+document.addEventListener('click', async (event) => {
+  const button = event.target instanceof Element ? event.target.closest('[data-screening-override]') : null;
+  if (!(button instanceof HTMLButtonElement) || button.disabled) return;
+  const status = button.parentElement?.querySelector('[data-screening-result]');
+  if (!(status instanceof HTMLElement)) return;
+  button.disabled = true; status.textContent = '正在保存你的选择…';
+  button.dataset.intentKey ||= crypto.randomUUID();
+  const body = { mode: button.dataset.mode, expectedCandidateVersion: Number(button.dataset.candidateVersion),
+    expectedScreeningVersion: Number(button.dataset.screeningVersion), expectedOverrideVersion: Number(button.dataset.overrideVersion),
+    intentKey: button.dataset.intentKey };
+  try {
+    const session = await fetch('/api/v1/session', { cache: 'no-store', signal: AbortSignal.timeout(15000) });
+    if (!session.ok) throw new Error('请重新登录后再保存。');
+    const { csrfToken } = await session.json();
+    const response = await fetch(`/api/v1/job-search/library/candidates/${encodeURIComponent(button.dataset.candidateId || '')}/screening-override`, {
+      method: 'POST', headers: { 'content-type': 'application/json', 'x-csrf-token': csrfToken },
+      body: JSON.stringify(body), signal: AbortSignal.timeout(15000),
+    });
+    if (!response.ok) throw new Error(response.status === 409 ? '职位或筛选结果已变化，请刷新后重新选择。' : '未能确认保存成功，请稍后重试。');
+    location.reload();
+  } catch (error) { status.textContent = error instanceof Error ? error.message : '保存失败，请稍后重试。'; }
+  finally { button.disabled = false; }
+});
+
 document.addEventListener('submit', async (event) => {
   const form = event.target;
   if (!(form instanceof HTMLFormElement) || !form.matches('[data-library-source], [data-library-compare], [data-library-draft], [data-library-jd]')) return;
