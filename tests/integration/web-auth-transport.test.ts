@@ -915,7 +915,9 @@ describe("Signed OIDC authentication over the isolated web transport", () => {
     expect(jobsHtml).toContain("候选职位"); expect(jobsHtml).toContain("Acme"); expect(jobsHtml).toContain("Senior Engineer");
     const jobHtml = await (await w.request(`/workspace/job-search/jobs/${candidate.id}`, { headers })).text();
     expect(jobHtml).toContain("Matches distributed systems background");
-    expect(jobHtml).toContain(`Candidate ${candidate.id}`);
+    expect(jobHtml).toContain("用 ChatGPT 分析并回填");
+    expect(jobHtml).toContain(`&quot;candidateId&quot;:&quot;${candidate.id}&quot;`);
+    expect(jobHtml).not.toContain('class="context-handoff"');
     expect(jobHtml).toContain(`resume?candidateId=${candidate.id}#resume-versions`);
     expect(jobHtml).toContain("data-library-decision"); // Explicitly scoped candidate operations are available.
     expect((await w.request(`/api/v1/job-search/candidates/${randomUUID()}`, { headers })).status).toBe(404);

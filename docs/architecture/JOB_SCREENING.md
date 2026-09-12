@@ -607,3 +607,20 @@ in ChatGPT and send it. Verify actual saved screening and match-assessment recei
 then refresh PAW and inspect the report and preserved candidate state. Cross-app
 paste, model analysis and real report-return acceptance are not claimed by the
 release checks above; missing-JD ingestion and FILTER-to-KEEP remain separately open.
+
+### Duplicate handoff cleanup
+
+Jun's screenshot identified the older generic "在 ChatGPT 中处理" box below the
+new JD analysis panel as redundant. The candidate detail renderer now omits that
+box, leaving one candidate-specific analysis/copy entry. Application and Task
+handoffs retain their existing rendering. This removes competing instructions
+before the real report-return trial and keeps the JD analysis workflow in one
+place. This follow-up is a local UI change; the preceding production release
+record does not establish deployment of this cleanup.
+
+Verification: the existing candidate Web read/render test passes with assertions
+for the new panel and candidate identity, absence of the old box, and zero read
+writes (1 passed; 42 unrelated cases skipped). Diff/whitespace review passed.
+The change removes markup and the unused Candidate branch only; no CSS, write
+contract or shared Application/Task behavior changed, so no full-suite run or
+release preparation was added to this small follow-up.
