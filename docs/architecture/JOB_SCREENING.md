@@ -12,9 +12,10 @@ deployed and verified. [Real-client feedback](#real-client-acceptance-and-jd-ing
 now confirms profile persistence and Google UNKNOWN/non-FILTER screening. Real
 8+/10+ FILTER → KEEP remains blocked on candidate JD ingestion.
 
-Source follow-up: the [controlled JD admission entry](#candidate-jd-admission--september-12)
-is now implemented and locally verified (502 tests, 36-tool source inventory).
-Production deployment and real second-segment acceptance are tracked separately.
+The [controlled JD admission entry](#candidate-jd-admission--september-12) is now
+deployed as `candidate-jd-20260912-r1` (502 tests; live server and refreshed ChatGPT
+management metadata both expose 36 tools). Real second-segment writes/recovery
+remain pending; release readback preserved the existing Google/Profile records.
 
 ## Continuity and benefits
 
@@ -494,3 +495,42 @@ Next release checks are production-copy recovery, unchanged-data cutover and liv
 tool discovery/readback. Then refresh ChatGPT's connector and use a new conversation
 if needed, save the real full JD, reread its manifest and complete FILTER → KEEP.
 Passing synthetic tests does not claim that real JD or screening has been saved.
+
+### JD admission production release
+
+- Release `candidate-jd-20260912-r1` uses commit
+  `2133c8c8309e11000ac154ba90e525c0315f068e`, pushed to GitHub main.
+- Source archive SHA256:
+  `fdf658efed84473e30c0345c01aa86f8754ee756348f616749c1dbef47aecd83`.
+  Server source: `/opt/paw-candidate-jd-20260912-r1`.
+- Image ID: `sha256:9d9a8d584922fcf4b05f890aa7a6b54554b6f20282a5eaf8f893d577879cb87e`.
+  Healthy cutover: **2026-09-12T09:32:37Z** (19:32 Sydney).
+- Backup `workspace-20260912T093211Z.db` passed integrity; both candidate and prior
+  `screening-profile-20260912-r1` images started against isolated copies with
+  unchanged logical contents: **50 tables / 2265 rows**. Immediate pre-cutover
+  backup: `workspace-20260912T093229Z.db`. Migration 020, persistent volume and
+  base/Web/Gmail overlays are unchanged; no schema rollback was required.
+- Release shell syntax passed. The private source transfer retained all four S3
+  public-access blocks and AES256 encryption. Server archive checksum passed;
+  the exact temporary object version and local presigned URL file were removed.
+  Build/cutover logs remain under `/srv/paw/deployments`.
+- Public Web checks passed all five boundaries both before and after cutover,
+  with general Web writes off. An actual loopback MCP client verified Workspace
+  identity, **36 tools** and all ten required JD command parameters.
+- Independent release readback now corroborates Jun's earlier feedback: profile
+  `9ea50d9d-be3d-4234-aede-1d67e31227b8` remains **v1 / CONFIRMED**; Google candidate
+  remains **v2 / DISMISSED**, screening **v1 / CURRENT / USER_CONFIRMATION_REQUIRED**,
+  override **v0 / AUTOMATIC**, hidden=false and savedByUser=false. No JD, profile,
+  screening, override or application write was performed by these probes.
+- ChatGPT's connected-plugin management initially lacked the JD command. After
+  clicking Refresh, its visible metadata lists **36 tools**, including
+  `workspace_record_candidate_job_description` and `expectedJdHash`. This verifies
+  connection metadata, not invocation in an already-open conversation. No permission
+  setting was changed and no chat prompt was submitted.
+
+The unchanged 502-test/type-check/build evidence is reused for this release and
+documentation follow-up. Real acceptance still requires ChatGPT to obtain and save
+the complete Accenture JD with provenance, reread the actual candidate/JD hash,
+then demonstrate FILTER → explicit KEEP → visible again. Existing Profile rules
+need no reconfirmation. If the old conversation cannot discover the command, use
+a new conversation with the confirmed source read from Workspace.

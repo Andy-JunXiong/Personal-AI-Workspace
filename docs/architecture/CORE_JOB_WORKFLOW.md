@@ -20,7 +20,9 @@ development gap identified by that feedback. The subsequent
 [JD admission implementation](JOB_SCREENING.md#candidate-jd-admission--september-12)
 adds `workspace_record_candidate_job_description` over existing storage with
 candidate-version/JD-hash concurrency and attributable receipts (502 tests;
-36-tool source inventory). Deployment and real recovery acceptance remain separate.
+36 tools). It is deployed as `candidate-jd-20260912-r1`; production-copy recovery,
+live Google/Profile readback and refreshed connector metadata passed. Real JD
+ingestion and FILTER → KEEP acceptance remain separate pending gates.
 ChatGPT still obtains/interprets the full JD; PAW does not add an external fetcher.
 
 Jun also requested [candidate JD match grades](../strategy/PRODUCT_SOLUTION_ROADMAP.md#candidate-match-grades)

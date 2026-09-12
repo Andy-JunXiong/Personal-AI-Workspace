@@ -91,11 +91,13 @@ candidate JD ingestion entry, then real 8+/10+ FILTER → explicit KEEP acceptan
 The other nine candidates lack saved JDs; the proposed Accenture target is not yet
 ingested or screened.
 
-The candidate JD admission follow-up is now implemented and locally verified:
+The candidate JD admission follow-up is deployed as `candidate-jd-20260912-r1`:
 `workspace_record_candidate_job_description` saves attributable full text with
 candidate-version/JD-hash checks and durable retry receipts. Source inventory is
-36 tools; 502 tests, both type checks and build passed. Deployment/readback and
-the real 10+ FILTER → KEEP gate are tracked in the linked screening contract.
+36 tools; 502 tests, both type checks and build passed. Production-copy recovery,
+public checks and live readback passed, preserving Google/Profile state. Refreshed
+ChatGPT management metadata exposes the new command. Real JD saving and the 10+
+FILTER → KEEP gate remain pending in the linked screening contract.
 
 September 12 [connector preflight](docs/architecture/CANDIDATE_MATCH_GRADES.md#september-12-connector-acceptance-preflight)
 confirmed live candidate-summary reads, but that session still exposed the old

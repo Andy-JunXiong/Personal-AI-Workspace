@@ -121,8 +121,10 @@ JD from candidate metadata or treat this documentation update as implementation.
 Subsequent [JD admission implementation](../architecture/JOB_SCREENING.md#candidate-jd-admission--september-12)
 now adds the controlled MCP write using candidate-version/JD-hash checks and durable
 attribution receipts over existing storage. Local 502-test/type-check/build evidence
-passes; source inventory is 36 tools. Production release/readback and real 10+
-FILTER → KEEP remain the next gates; no JD was saved to production by local tests.
+passes; inventory is 36 tools. `candidate-jd-20260912-r1` is deployed with
+production-copy recovery, live Google/Profile readback and refreshed ChatGPT
+management metadata verified. Real JD ingestion and 10+ FILTER → KEEP are next;
+no JD was saved to production by release probes or local tests.
 
 用户授权后已完成[生产发布](../architecture/CANDIDATE_MATCH_GRADES.md#september-11-production-release)：
 Chrome 与服务器连接恢复，migration 019、备份恢复演练、原有数据保留、公网五项
